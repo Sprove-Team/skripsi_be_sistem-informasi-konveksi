@@ -1,7 +1,7 @@
 package global
 
 import (
-	response "github.com/be-sistem-informasi-konveksi/common/reponse"
+	response "github.com/be-sistem-informasi-konveksi/common/response"
 )
 
 func CustomRes(status int, message string, data *map[string]interface{}) *response.BaseFormatRes {

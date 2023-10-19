@@ -1,14 +1,13 @@
-package direktur
+package produk 
 
 import (
 	"log"
-	"strconv"
 
 	"github.com/gofiber/fiber/v2"
 
 	"github.com/be-sistem-informasi-konveksi/common/message"
-	resGlobal "github.com/be-sistem-informasi-konveksi/common/reponse/global"
-	req "github.com/be-sistem-informasi-konveksi/common/request/direktur"
+	resGlobal "github.com/be-sistem-informasi-konveksi/common/response/global"
+	req "github.com/be-sistem-informasi-konveksi/common/request/produk"
 	helper "github.com/be-sistem-informasi-konveksi/helper"
 	usecase "github.com/be-sistem-informasi-konveksi/usecase/produk"
 )
@@ -54,9 +53,15 @@ func (h *produkHandler) Create(c *fiber.Ctx) error {
 }
 
 func (h *produkHandler) GetById(c *fiber.Ctx) error {
-	id := c.Params("id", "0")
-	id64, err := strconv.ParseUint(id, 10, 64)
+	id := c.Params("id", "")
+	data, err := h.uc.GetById(id)
 	if err != nil {
+		if err.Error() == "record not found" {
+			return c.Status(fiber.StatusNotFound).JSON(resGlobal.ErrorResWithoutData(fiber.StatusNotFound))
+		}
+		log.Println(err)
 		return c.Status(fiber.StatusInternalServerError).JSON(resGlobal.ErrorResWithoutData(fiber.StatusInternalServerError))
 	}
+
+	return c.Status(fiber.StatusOK).JSON(resGlobal.SuccessResWithData(data, "R"))
 }

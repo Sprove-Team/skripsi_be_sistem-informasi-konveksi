@@ -1,4 +1,4 @@
-package direktur
+package produk 
 
 import (
 	"gorm.io/gorm"
@@ -7,6 +7,7 @@ import (
 )
 
 type ProdukRepo interface {
+	GetById(id string) (entity.Produk, error)
 	Create(produk *entity.Produk) error
 }
 
@@ -20,4 +21,10 @@ func NewProdukRepo(DB *gorm.DB) ProdukRepo {
 
 func (r *produkRepo) Create(produk *entity.Produk) error {
 	return r.DB.Create(&produk).Error
+}
+
+func (r *produkRepo) GetById(id string) (entity.Produk, error) {
+	produkD := entity.Produk{}
+	err := r.DB.Preload("HargaDetails").First(&produkD, "id = ?", id).Error
+	return produkD, err
 }

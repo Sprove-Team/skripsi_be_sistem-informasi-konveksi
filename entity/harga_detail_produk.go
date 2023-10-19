@@ -3,7 +3,7 @@ package entity
 type HargaDetailProduk struct {
 	ProdukID string  `gorm:"type:varchar(36)" json:"produk_id"`
 	ID       uint    `gorm:"primaryKey;not null" json:"id"`
-	QTY      uint    `gorm:"default:0" json:"qty"`
+	QTY      uint    `gorm:"default:0;uniqueIndex" json:"qty"`
 	Harga    float64 `gorm:"type:decimal(10, 2);" json:"harga"`
 }
 

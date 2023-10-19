@@ -21,6 +21,11 @@ func (g googleUUID) GenerateUUID() (string, error) {
 	if err != nil {
 		return "", err
 	}
-  uuidString := strings.ReplaceAll(uuid.String(), "-", "")
+	uuidString := strings.ReplaceAll(uuid.String(), "-", "")
 	return uuidString, nil
+}
+
+func (g googleUUID) CheckValidUUID(uids string) bool {
+	_, err := uuid.Parse(uids)
+	return err == nil
 }

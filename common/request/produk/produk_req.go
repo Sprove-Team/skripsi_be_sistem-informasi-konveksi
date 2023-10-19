@@ -1,4 +1,4 @@
-package direktur
+package produk
 
 type CreateProduk struct {
 	Nama       string `json:"nama" validate:"required,ascii"`

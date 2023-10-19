@@ -28,13 +28,15 @@ func main() {
 
 	// handler init
 	direkturHandler := direktur.NewDirekturHandlerInit(dbGorm, validator, uuidGen)
-
+	
 	// route
+	app.Get("/direktur/produk/:id", direkturHandler.ProdukHandler().GetById)
 	app.Post("/direktur/produk", direkturHandler.ProdukHandler().Create)
 
 	app.Post("/direktur/produk/kategori", direkturHandler.KategoriProdukHandler().Create)
 	app.Delete("/direktur/produk/kategori/:id", direkturHandler.KategoriProdukHandler().Delete)
 
 	app.Post("/direktur/produk/harga_detail", direkturHandler.HargaDetailProdukHandler().Create)
+
 	app.Listen(":8000")
 }

@@ -2,7 +2,7 @@ package global
 
 import (
 	"github.com/be-sistem-informasi-konveksi/common/message"
-	response "github.com/be-sistem-informasi-konveksi/common/reponse"
+	response "github.com/be-sistem-informasi-konveksi/common/response"
 )
 
 func getTypeMessage(char string) (int, string) {
@@ -20,7 +20,7 @@ func getTypeMessage(char string) (int, string) {
 	}
 }
 
-func SuccessResWithData(data map[string]interface{}, chars ...string) *response.BaseFormatRes {
+func SuccessResWithData(data interface{}, chars ...string) *response.BaseFormatRes {
 	status, msg := getTypeMessage(chars[0])
 	return &response.BaseFormatRes{
 		Status:  status,

@@ -1,4 +1,4 @@
-package direktur
+package produk 
 
 import (
 	"log"
@@ -7,8 +7,8 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 
-	resGlobal "github.com/be-sistem-informasi-konveksi/common/reponse/global"
-	req "github.com/be-sistem-informasi-konveksi/common/request/direktur"
+	resGlobal "github.com/be-sistem-informasi-konveksi/common/response/global"
+	req "github.com/be-sistem-informasi-konveksi/common/request/produk"
 	"github.com/be-sistem-informasi-konveksi/helper"
 	usecase "github.com/be-sistem-informasi-konveksi/usecase/produk"
 )

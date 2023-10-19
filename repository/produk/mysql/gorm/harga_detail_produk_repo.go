@@ -1,4 +1,4 @@
-package direktur
+package produk
 
 import (
 	"gorm.io/gorm"
@@ -7,6 +7,7 @@ import (
 )
 
 type HargaDetailProdukRepo interface {
+	GetByQty(qty uint) ([]entity.HargaDetailProduk, error)
 	Create(hargaDetailProduk *entity.HargaDetailProduk) error
 }
 
@@ -19,7 +20,13 @@ func NewHargaDetailProdukRepo(DB *gorm.DB) HargaDetailProdukRepo {
 }
 
 func (r *hargaDetailProdukRepo) Create(hargaDetailProduk *entity.HargaDetailProduk) error {
-	return r.DB.Create(hargaDetailProduk).Error
+	return r.DB.Save(hargaDetailProduk).Error
+}
+
+func (r *hargaDetailProdukRepo) GetByQty(qty uint) ([]entity.HargaDetailProduk, error) {
+	data := []entity.HargaDetailProduk{}
+	err := r.DB.Find(&data, "qty = ?", qty).Error
+	return data, err
 }
 
 // func (r *hargaDetailProdukRepo) Create(hargaDetailProduk *entity.HargaDetailProduk) error {

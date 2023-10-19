@@ -1,4 +1,4 @@
-package direktur
+package produk 
 
 import (
 	"gorm.io/gorm"
