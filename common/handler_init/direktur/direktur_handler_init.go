@@ -3,10 +3,10 @@ package direktur
 import (
 	"gorm.io/gorm"
 
-	handler "github.com/be-sistem-informasi-konveksi/handler/direktur/produk"
+	handler "github.com/be-sistem-informasi-konveksi/handler/produk"
 	"github.com/be-sistem-informasi-konveksi/helper"
-	repo "github.com/be-sistem-informasi-konveksi/repository/direktur/produk/mysql/gorm"
-	usecase "github.com/be-sistem-informasi-konveksi/usecase/direktur/produk"
+	repo "github.com/be-sistem-informasi-konveksi/repository/produk/mysql/gorm"
+	usecase "github.com/be-sistem-informasi-konveksi/usecase/produk"
 )
 
 type DirekturHandlerInit interface {
@@ -26,7 +26,8 @@ func NewDirekturHandlerInit(DB *gorm.DB, validator helper.Validator, uuidGen hel
 
 func (d *direkturHandlerInit) ProdukHandler() handler.ProdukHandler {
 	r := repo.NewProdukRepo(d.DB)
-	uc := usecase.NewProdukUsecase(r, d.uuidGen)
+	kategoriR := repo.NewKategoriProdukRepo(d.DB)
+	uc := usecase.NewProdukUsecase(r, kategoriR, d.uuidGen)
 	h := handler.NewProdukHandler(uc, d.validator)
 	return h
 }

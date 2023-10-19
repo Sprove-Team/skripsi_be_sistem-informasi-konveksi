@@ -3,7 +3,7 @@ package direktur
 import (
 	req "github.com/be-sistem-informasi-konveksi/common/request/direktur"
 	"github.com/be-sistem-informasi-konveksi/entity"
-	repo "github.com/be-sistem-informasi-konveksi/repository/direktur/produk/mysql/gorm"
+	repo "github.com/be-sistem-informasi-konveksi/repository/produk/mysql/gorm"
 )
 
 type HargaDetailProdukUsecase interface {
@@ -26,3 +26,4 @@ func (u *hargaDetailProdukUsecase) Create(hargaDetailProduk req.CreateHargaDetai
 	}
 	return u.repo.Create(&hargaDetailProdukR)
 }
+
