@@ -4,15 +4,15 @@ import (
 	"sync"
 
 	req "github.com/be-sistem-informasi-konveksi/common/request/produk"
-	res "github.com/be-sistem-informasi-konveksi/common/response/produk"
 	"github.com/be-sistem-informasi-konveksi/entity"
 	"github.com/be-sistem-informasi-konveksi/helper"
 	repo "github.com/be-sistem-informasi-konveksi/repository/produk/mysql/gorm"
+	"golang.org/x/net/context"
 )
 
 type ProdukUsecase interface {
-	GetById(id string) (res.DataProdukRes, error)
-	Create(produk req.CreateProduk) error
+	GetById(ctx context.Context, id string) (entity.Produk, error)
+	Create(ctx context.Context,produk req.CreateProduk) error
 }
 
 type produkUsecase struct {
@@ -25,7 +25,7 @@ func NewProdukUsecase(repo repo.ProdukRepo, kategoriRepo repo.KategoriProdukRepo
 	return &produkUsecase{repo, kategoriRepo, uuidGen}
 }
 
-func (u *produkUsecase) Create(produk req.CreateProduk) error {
+func (u *produkUsecase) Create(ctx context.Context,produk req.CreateProduk) error {
 	_, err := u.kategoriRepo.GetById(uint64(produk.IDKategori))
 	if err != nil {
 		return err
@@ -39,20 +39,12 @@ func (u *produkUsecase) Create(produk req.CreateProduk) error {
 	return u.repo.Create(&produkR)
 }
 
-func (u *produkUsecase) GetById(id string) (res.DataProdukRes, error) {
-	produkR, err := u.repo.GetById(id)
-
-	produkRes := res.DataProdukRes{}
-
-	if err != nil {
-		return produkRes, err
-	}
-
-	produkRes.ID = produkR.ID
-	produkRes.Nama = produkR.Nama
-	produkRes.KategoriId = produkR.KategoriProdukID
-
-	hargaProdukDetails := make([]res.HargaDetailsRes, len(produkR.HargaDetails))
+func (u *produkUsecase) GetById(ctx context.Context, id string) (entity.Produk, error) {
+	produkR, err := u.repo.GetById(ctx, id)
+  
+  if err != nil {
+    return produkR, err
+  }
 
 	wg := new(sync.WaitGroup)
 
@@ -60,16 +52,14 @@ func (u *produkUsecase) GetById(id string) (res.DataProdukRes, error) {
 		wg.Add(1)
 		go func(i int, d entity.HargaDetailProduk) {
 			defer wg.Done()
-			hargaProdukDetails[i] = res.HargaDetailsRes{
-				ID:    d.ID,
-				QTY:   d.QTY,
-				Harga: d.Harga,
-			}
+      produkR.HargaDetails[i] = entity.HargaDetailProduk{
+        QTY: d.QTY,
+        ID: d.ID,
+        Harga: d.Harga,
+      }	
 		}(i, d)
 	}
 	wg.Wait()
 
-	produkRes.HargaDetail = hargaProdukDetails
-
-	return produkRes, nil
+	return produkR, nil
 }

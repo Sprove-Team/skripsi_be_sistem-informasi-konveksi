@@ -1,4 +1,4 @@
-package produk 
+package produk
 
 import (
 	"gorm.io/gorm"
@@ -8,8 +8,9 @@ import (
 
 type KategoriProdukRepo interface {
 	Create(kategori *entity.KategoriProduk) error
+	Update(kategori *entity.KategoriProduk) error
 	Delete(id uint64) error
-  GetById(id uint64) (entity.KategoriProduk, error)
+	GetById(id uint64) (entity.KategoriProduk, error)
 }
 
 type kategoriRepo struct {
@@ -24,10 +25,14 @@ func (r *kategoriRepo) Create(kategori *entity.KategoriProduk) error {
 	return r.DB.Create(kategori).Error
 }
 
+func (r *kategoriRepo) Update(kategori *entity.KategoriProduk) error {
+	return r.DB.Updates(kategori).Error
+}
+
 func (r *kategoriRepo) GetById(id uint64) (entity.KategoriProduk, error) {
-  var data entity.KategoriProduk
-  err := r.DB.First(&data, "id = ?", id).Error
-  return data, err
+	var data entity.KategoriProduk
+	err := r.DB.First(&data, "id = ?", id).Error
+	return data, err
 }
 
 func (r *kategoriRepo) Delete(id uint64) error {

@@ -1,13 +1,14 @@
-package produk 
+package produk
 
 import (
+	"context"
 	"log"
 
 	"github.com/gofiber/fiber/v2"
 
 	"github.com/be-sistem-informasi-konveksi/common/message"
-	resGlobal "github.com/be-sistem-informasi-konveksi/common/response/global"
 	req "github.com/be-sistem-informasi-konveksi/common/request/produk"
+	resGlobal "github.com/be-sistem-informasi-konveksi/common/response/global"
 	helper "github.com/be-sistem-informasi-konveksi/helper"
 	usecase "github.com/be-sistem-informasi-konveksi/usecase/produk"
 )
@@ -37,7 +38,7 @@ func (h *produkHandler) Create(c *fiber.Ctx) error {
 	if len(errValidate) > 0 {
 		return c.Status(fiber.StatusBadRequest).JSON(resGlobal.ErrorResWithData(errValidate, fiber.StatusBadRequest))
 	}
-	err := h.uc.Create(*req)
+	err := h.uc.Create(c.UserContext(), *req)
 	if err != nil {
 		if err.Error() == "duplicated key not allowed" {
 			return c.Status(fiber.StatusConflict).JSON(resGlobal.ErrorResWithoutData(fiber.StatusConflict))
@@ -54,7 +55,13 @@ func (h *produkHandler) Create(c *fiber.Ctx) error {
 
 func (h *produkHandler) GetById(c *fiber.Ctx) error {
 	id := c.Params("id", "")
-	data, err := h.uc.GetById(id)
+	ctx := c.UserContext()
+	data, err := h.uc.GetById(ctx, id)
+
+	if ctx.Err() == context.DeadlineExceeded {
+		return c.Status(fiber.StatusRequestTimeout).JSON(resGlobal.ErrorResWithoutData(fiber.StatusRequestTimeout))
+	}
+
 	if err != nil {
 		if err.Error() == "record not found" {
 			return c.Status(fiber.StatusNotFound).JSON(resGlobal.ErrorResWithoutData(fiber.StatusNotFound))
