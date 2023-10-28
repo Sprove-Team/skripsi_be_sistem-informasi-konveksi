@@ -1,4 +1,4 @@
-package direktur
+package handler_init
 
 import (
 	"gorm.io/gorm"
@@ -9,39 +9,41 @@ import (
 	usecase "github.com/be-sistem-informasi-konveksi/usecase/produk"
 )
 
-type DirekturHandlerInit interface {
+type ProdukHandlerInit interface {
 	ProdukHandler() handler.ProdukHandler
 	KategoriProdukHandler() handler.KategoriProdukHandler
 	HargaDetailProdukHandler() handler.HargaDetailProdukHandler
 }
-type direkturHandlerInit struct {
+type produkHandlerInit struct {
 	DB        *gorm.DB
 	validator helper.Validator
 	uuidGen   helper.UuidGenerator
+	paginate  helper.Paginate
 }
 
-func NewDirekturHandlerInit(DB *gorm.DB, validator helper.Validator, uuidGen helper.UuidGenerator) DirekturHandlerInit {
-	return &direkturHandlerInit{DB, validator, uuidGen}
+func NewProdukHandlerInit(DB *gorm.DB, validator helper.Validator, uuidGen helper.UuidGenerator, paginate helper.Paginate) ProdukHandlerInit {
+	return &produkHandlerInit{DB, validator, uuidGen, paginate}
 }
 
-func (d *direkturHandlerInit) ProdukHandler() handler.ProdukHandler {
+func (d *produkHandlerInit) ProdukHandler() handler.ProdukHandler {
 	r := repo.NewProdukRepo(d.DB)
 	kategoriR := repo.NewKategoriProdukRepo(d.DB)
-	uc := usecase.NewProdukUsecase(r, kategoriR, d.uuidGen)
+	uc := usecase.NewProdukUsecase(r, kategoriR, d.uuidGen, d.paginate)
 	h := handler.NewProdukHandler(uc, d.validator)
 	return h
 }
 
-func (d *direkturHandlerInit) KategoriProdukHandler() handler.KategoriProdukHandler {
+func (d *produkHandlerInit) KategoriProdukHandler() handler.KategoriProdukHandler {
 	r := repo.NewKategoriProdukRepo(d.DB)
-	uc := usecase.NewKategoriProdukUsecase(r)
+	uc := usecase.NewKategoriProdukUsecase(r, d.uuidGen)
 	h := handler.NewKategoriProdukHandler(uc, d.validator)
 	return h
 }
 
-func (d *direkturHandlerInit) HargaDetailProdukHandler() handler.HargaDetailProdukHandler {
+func (d *produkHandlerInit) HargaDetailProdukHandler() handler.HargaDetailProdukHandler {
 	r := repo.NewHargaDetailProdukRepo(d.DB)
-	uc := usecase.NewHargaDetailProdukUsecase(r)
+  produkR := repo.NewProdukRepo(d.DB)
+	uc := usecase.NewHargaDetailProdukUsecase(r, produkR, d.uuidGen)
 	h := handler.NewHargaDetailProdukHandler(uc, d.validator)
 	return h
 }

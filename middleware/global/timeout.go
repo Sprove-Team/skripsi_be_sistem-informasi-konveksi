@@ -10,9 +10,12 @@ import (
 
 var errorMessage = errors.New("server timeout")
 
-func TimeoutMid(h func(c *fiber.Ctx) error, t *time.Duration) func(c *fiber.Ctx) error {
+func TimeoutMid(t *time.Duration) func(c *fiber.Ctx) error {
+	h := func(c *fiber.Ctx) error {
+		return c.Next()
+	}
 	if t == nil {
-		return timeout.NewWithContext(h, 5*time.Second, errorMessage)
+		return timeout.NewWithContext(h, 10*time.Second, errorMessage)
 	}
 	return timeout.NewWithContext(h, *t, errorMessage)
 }

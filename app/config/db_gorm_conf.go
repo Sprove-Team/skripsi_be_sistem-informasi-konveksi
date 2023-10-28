@@ -50,9 +50,20 @@ func (dbgc *DBGormConf) InitDBGormConf() *gorm.DB {
 		log.Fatal(err)
 		os.Exit(1)
 	}
-	db.AutoMigrate(&entity.Produk{})
-	db.AutoMigrate(&entity.KategoriProduk{})
-	db.AutoMigrate(&entity.HargaDetailProduk{})
+	// produk
+	autoMigrateEntities(db, &entity.Produk{}, &entity.HargaDetailProduk{}, &entity.KategoriProduk{})
 
+	// user & jenis spv
+	autoMigrateEntities(db,&entity.JenisSpv{}, &entity.User{})
+	
 	return db
 }
+
+func autoMigrateEntities(db *gorm.DB, entities ...interface{}) {
+    for _, entity := range entities {
+        if err := db.AutoMigrate(entity); err != nil {
+            panic(err)
+        }
+    }
+}
+

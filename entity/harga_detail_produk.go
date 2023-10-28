@@ -1,9 +1,9 @@
 package entity
 
 type HargaDetailProduk struct {
-	ProdukID string  `gorm:"type:varchar(32);primaryKey;uniqueIndex;not null" json:"produk_id,omitempty"`
-	ID       uint    `gorm:"primaryKey;not null" json:"id"`
-	QTY      uint    `gorm:"type:int(10) unsigned;uniqueIndex;not null;" json:"qty"`
+	ProdukID string  `gorm:"type:varchar(32);index:idx_produk_id;not null" json:"produk_id"`
+	ID       string  `gorm:"type:varchar(32);primaryKey;uniqueIndex;not null" json:"id"`
+	QTY      uint    `gorm:"type:int(10) unsigned;not null;" json:"qty"`
 	Harga    float64 `gorm:"type:decimal(10, 2);" json:"harga"`
 }
 

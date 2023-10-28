@@ -5,6 +5,6 @@ type CreateKategoriProduk struct {
 }
 
 type UpdateKategoriProduk struct {
-	Nama string `json:"nama" validate:"required,ascii"`
-	ID   uint   `params:"id" validate:"required,number"`
+	Nama string `json:"nama" validate:"omitempty,ascii"`
+	ID   string `json:"id" validate:"required,uuidv4_no_hyphens"`
 }

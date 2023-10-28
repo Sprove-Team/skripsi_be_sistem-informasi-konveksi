@@ -7,10 +7,10 @@ import (
 
 func getErrStatusMessage(status int) string {
 	switch status {
+  case 400:
+    return message.BadRequest
 	case 408:
 		return message.RequestTimeout
-	case 400:
-		return message.BadRequest
 	case 409:
 		return message.Conflict
 	case 404:

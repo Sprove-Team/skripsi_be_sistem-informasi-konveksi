@@ -6,23 +6,19 @@ import (
 	"sync"
 	"unicode"
 
+	"github.com/be-sistem-informasi-konveksi/common/response"
 	"github.com/go-playground/validator/v10"
 	id_translations "github.com/go-playground/validator/v10/translations/id"
 )
 
 type (
-	ErrorResponse struct {
-		ValueInput   interface{} `json:"value_input"`
-		ErrorMessage string      `json:"error_message"`
-	}
-
 	xValidator struct {
 		validator *validator.Validate
 	}
 )
 
 type Validator interface {
-	Validate(d interface{}) []ErrorResponse
+	Validate(d interface{}) []response.BaseFormatError
 }
 
 
@@ -76,18 +72,18 @@ func wordToSnake(s string) string {
 	return strings.Join(ss, " ")
 }
 
-func (x *xValidator) Validate(d interface{}) []ErrorResponse {
+func (x *xValidator) Validate(d interface{}) []response.BaseFormatError {
 	trans := (&translator{}).Translator()
 
 	id_translations.RegisterDefaultTranslations(x.validator, trans)
 
-	validatorErrors := []ErrorResponse{}
+	validatorErrors := []response.BaseFormatError{}
 
 	errs := x.validator.Struct(d)
 
 	if errs != nil {
 		for _, err := range errs.(validator.ValidationErrors) {
-			var elem ErrorResponse
+			var elem response.BaseFormatError
 			elem.ValueInput = err.Value()
       // fmt.Println(err.Tag())
 			if err.Tag() == "uuidv4_no_hyphens" {

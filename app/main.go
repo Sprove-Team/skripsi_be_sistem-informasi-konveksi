@@ -7,7 +7,7 @@ import (
 	_ "github.com/joho/godotenv/autoload"
 
 	"github.com/be-sistem-informasi-konveksi/app/config"
-	"github.com/be-sistem-informasi-konveksi/common/handler_init/direktur"
+	"github.com/be-sistem-informasi-konveksi/common/handler_init"
 	helper "github.com/be-sistem-informasi-konveksi/helper"
 	midGlobal "github.com/be-sistem-informasi-konveksi/middleware/global"
 )
@@ -26,19 +26,42 @@ func main() {
 	// helper
 	validator := helper.NewValidator()
 	uuidGen := helper.NewGoogleUUID()
+	paginate := helper.NewPaginate()
 
 	// handler init
-	direkturHandler := direktur.NewDirekturHandlerInit(dbGorm, validator, uuidGen)
+	produkHandler := handler_init.NewProdukHandlerInit(dbGorm, validator, uuidGen, paginate)
 
 	// route
-	app.Get("/direktur/produk/:id", midGlobal.TimeoutMid(direkturHandler.ProdukHandler().GetById, nil))
-	app.Post("/direktur/produk", direkturHandler.ProdukHandler().Create)
+	api := app.Group("/api")
+	v1 := api.Group("/v1")
+	direktur := v1.Group("/direktur", midGlobal.TimeoutMid(nil))
+	{
+		produkData := direktur.Group("/produk")
+		kategoriProduk := produkData.Group("/kategori")
+		hargaDetailProduk := produkData.Group("/harga_detail")
+		{
+			produkData.Get("", produkHandler.ProdukHandler().GetAll)
+			kategoriProduk.Get("", produkHandler.KategoriProdukHandler().GetAll)
+			hargaDetailProduk.Get("", produkHandler.HargaDetailProdukHandler().GetAll) // tidak perlu isi ini (lihat frontend dulu)
 
-	app.Post("/direktur/produk/kategori", direkturHandler.KategoriProdukHandler().Create)
-	app.Put("/direktur/produk/:id", direkturHandler.KategoriProdukHandler().Update)
-	app.Delete("/direktur/produk/kategori/:id", direkturHandler.KategoriProdukHandler().Delete)
+			produkData.Get("/:id", produkHandler.ProdukHandler().GetById)
+			kategoriProduk.Get("/:id", produkHandler.KategoriProdukHandler().GetById)
+			hargaDetailProduk.Get("/:produk_id", produkHandler.HargaDetailProdukHandler().GetByProdukId)
 
-	app.Post("/direktur/produk/harga_detail", direkturHandler.HargaDetailProdukHandler().Create)
+			produkData.Post("", produkHandler.ProdukHandler().Create)
+			kategoriProduk.Post("", produkHandler.KategoriProdukHandler().Create)
+			hargaDetailProduk.Post("", produkHandler.HargaDetailProdukHandler().Create)
+
+			produkData.Put("/:id", produkHandler.ProdukHandler().Update)
+			kategoriProduk.Put("/:id", produkHandler.KategoriProdukHandler().Update)
+			hargaDetailProduk.Put("/:id", produkHandler.HargaDetailProdukHandler().Update)
+
+			produkData.Delete("/:id", produkHandler.ProdukHandler().Delete)
+			kategoriProduk.Delete("/:id", produkHandler.KategoriProdukHandler().Delete)
+			hargaDetailProduk.Delete("/:id", produkHandler.HargaDetailProdukHandler().Delete)
+			hargaDetailProduk.Delete("/:produk_id", produkHandler.HargaDetailProdukHandler().DeleteByProdukId)
+		}
+	}
 
 	app.Listen(":8000")
 }
