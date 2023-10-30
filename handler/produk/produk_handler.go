@@ -7,6 +7,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 
 	"github.com/be-sistem-informasi-konveksi/common/message"
+	reqGlobal "github.com/be-sistem-informasi-konveksi/common/request/global"
 	req "github.com/be-sistem-informasi-konveksi/common/request/produk"
 	"github.com/be-sistem-informasi-konveksi/common/response"
 	resGlobal "github.com/be-sistem-informasi-konveksi/common/response/global"
@@ -103,7 +104,7 @@ func (h *produkHandler) Update(c *fiber.Ctx) error {
 }
 
 func (h *produkHandler) Delete(c *fiber.Ctx) error {
-	req := new(req.ParamByID)
+	req := new(reqGlobal.ParamByID)
 	if err := c.ParamsParser(req); err != nil {
 		log.Println(err)
 		return c.Status(fiber.StatusBadRequest).JSON(resGlobal.ErrorResWithoutData(fiber.StatusBadRequest))
@@ -129,7 +130,7 @@ func (h *produkHandler) Delete(c *fiber.Ctx) error {
 }
 
 func (h *produkHandler) GetById(c *fiber.Ctx) error {
-	req := new(req.ParamByID)
+	req := new(reqGlobal.ParamByID)
 	if err := c.ParamsParser(req); err != nil {
 		log.Println(err)
 		return c.Status(fiber.StatusBadRequest).JSON(resGlobal.ErrorResWithoutData(fiber.StatusBadRequest))
@@ -155,10 +156,10 @@ func (h *produkHandler) GetById(c *fiber.Ctx) error {
 }
 
 func (h *produkHandler) GetAll(c *fiber.Ctx) error {
-	reqU := new(req.GetAll)
+	reqU := new(req.GetAllProduk)
 	c.BodyParser(reqU)
 	c.QueryParser(reqU)
-
+  log.Println(*reqU)
 	errValidate := h.validator.Validate(reqU)
 	if len(errValidate) > 0 {
 		return c.Status(fiber.StatusBadRequest).JSON(resGlobal.ErrorResWithData(errValidate, fiber.StatusBadRequest))

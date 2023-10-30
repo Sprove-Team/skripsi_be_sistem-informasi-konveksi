@@ -13,7 +13,7 @@ type KategoriProdukRepo interface {
 	Update(ctx context.Context, kategori *entity.KategoriProduk) error
 	Delete(ctx context.Context, id string) error
 	GetById(ctx context.Context, id string) (entity.KategoriProduk, error)
-	GetAll(ctx context.Context) ([]entity.KategoriProduk, error)
+	GetAll(ctx context.Context, param SearchKategoriProduk) ([]entity.KategoriProduk, int64,error)
 }
 
 type kategoriRepo struct {
@@ -29,7 +29,7 @@ func (r *kategoriRepo) Create(ctx context.Context, kategori *entity.KategoriProd
 }
 
 func (r *kategoriRepo) Update(ctx context.Context, kategori *entity.KategoriProduk) error {
-	return r.DB.WithContext(ctx).Updates(kategori).Error
+	return r.DB.WithContext(ctx).Omit("id").Updates(kategori).Error
 }
 
 func (r *kategoriRepo) GetById(ctx context.Context, id string) (entity.KategoriProduk, error) {
@@ -42,8 +42,19 @@ func (r *kategoriRepo) Delete(ctx context.Context, id string) error {
 	return r.DB.WithContext(ctx).Delete(&entity.KategoriProduk{}, "id = ?", id).Error
 }
 
-func (r *kategoriRepo) GetAll(ctx context.Context) ([]entity.KategoriProduk, error) {
-	var datas []entity.KategoriProduk
-	err := r.DB.WithContext(ctx).Find(&datas).Error
-	return datas, err
+type SearchKategoriProduk struct {
+	Nama             string
+	Limit            int
+	Offset           int
+}
+
+func (r *kategoriRepo) GetAll(ctx context.Context, param SearchKategoriProduk) ([]entity.KategoriProduk, int64,error) {
+	datas := []entity.KategoriProduk{}
+	var totalData int64
+
+	tx := r.DB.WithContext(ctx).Model(&entity.KategoriProduk{})
+	tx = tx.Where("nama LIKE ?", "%"+param.Nama+"%")
+
+	err := tx.Count(&totalData).Limit(param.Limit).Offset(param.Offset).Find(&datas).Error
+	return datas, totalData, err
 }

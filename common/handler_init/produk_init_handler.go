@@ -35,14 +35,14 @@ func (d *produkHandlerInit) ProdukHandler() handler.ProdukHandler {
 
 func (d *produkHandlerInit) KategoriProdukHandler() handler.KategoriProdukHandler {
 	r := repo.NewKategoriProdukRepo(d.DB)
-	uc := usecase.NewKategoriProdukUsecase(r, d.uuidGen)
+	uc := usecase.NewKategoriProdukUsecase(r, d.uuidGen, d.paginate)
 	h := handler.NewKategoriProdukHandler(uc, d.validator)
 	return h
 }
 
 func (d *produkHandlerInit) HargaDetailProdukHandler() handler.HargaDetailProdukHandler {
 	r := repo.NewHargaDetailProdukRepo(d.DB)
-  produkR := repo.NewProdukRepo(d.DB)
+  	produkR := repo.NewProdukRepo(d.DB)
 	uc := usecase.NewHargaDetailProdukUsecase(r, produkR, d.uuidGen)
 	h := handler.NewHargaDetailProdukHandler(uc, d.validator)
 	return h

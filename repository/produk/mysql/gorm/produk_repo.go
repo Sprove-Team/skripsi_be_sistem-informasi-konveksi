@@ -9,7 +9,7 @@ import (
 )
 
 type ProdukRepo interface {
-	GetAll(ctx context.Context, param SearchParams) ([]entity.Produk, int64, error)
+	GetAll(ctx context.Context, param SearchProduk) ([]entity.Produk, int64, error)
 	GetById(ctx context.Context, id string) (entity.Produk, error)
 	Create(ctx context.Context, produk *entity.Produk) error
 	Update(ctx context.Context, produk *entity.Produk) error
@@ -33,24 +33,25 @@ func (r *produkRepo) Delete(ctx context.Context, id string) error {
 }
 
 func (r *produkRepo) Update(ctx context.Context, produk *entity.Produk) error {
-	return r.DB.WithContext(ctx).Updates(produk).Error
+	return r.DB.WithContext(ctx).Omit("id").Updates(produk).Error
 }
 
 func (r *produkRepo) GetById(ctx context.Context, id string) (entity.Produk, error) {
-	produkD := entity.Produk{}
-  err := r.DB.WithContext(ctx).Where("id = ?", id).Preload("HargaDetails").First(&produkD).Error
-	return produkD, err
+	data := entity.Produk{}
+	err := r.DB.WithContext(ctx).Where("id = ?", id).Preload("HargaDetails").First(&data).Error
+	return data, err
 }
 
-type SearchParams struct {
+type SearchProduk struct {
 	Nama             string
 	KategoriProdukId string
+	HasHargaDetail  bool 
 	Limit            int
 	Offset           int
 }
 
-func (r *produkRepo) GetAll(ctx context.Context, param SearchParams) ([]entity.Produk, int64, error) {
-	produkDs := []entity.Produk{}
+func (r *produkRepo) GetAll(ctx context.Context, param SearchProduk) ([]entity.Produk, int64, error) {
+	datas := []entity.Produk{}
 	var totalData int64
 
 	tx := r.DB.WithContext(ctx).Model(&entity.Produk{})
@@ -59,7 +60,12 @@ func (r *produkRepo) GetAll(ctx context.Context, param SearchParams) ([]entity.P
 	if param.KategoriProdukId != "" {
 		tx = tx.Where("kategori_produk_id = ?", param.KategoriProdukId)
 	}
+	var err error
+	if param.HasHargaDetail{
+		err = tx.InnerJoins("HargaDetails").Preload("HargaDetails").Count(&totalData).Find(&datas).Error
+	} else {
+		err = tx.Preload("HargaDetails").Joins("LEFT JOIN harga_detail_produk hd on hd.produk_id = produk.id").Where("hd.id IS NULL").Count(&totalData).Find(&datas).Error
+	}
 
-	err := tx.Count(&totalData).Limit(param.Limit).Offset(param.Offset).Preload("HargaDetails").Find(&produkDs).Error
-	return produkDs, totalData, err
+	return datas, totalData, err
 }

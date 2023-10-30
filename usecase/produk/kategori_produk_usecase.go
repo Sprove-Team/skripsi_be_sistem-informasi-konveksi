@@ -13,17 +13,18 @@ type KategoriProdukUsecase interface {
 	Create(ctx context.Context, kategoriProduk req.CreateKategoriProduk) error
 	Delete(ctx context.Context, id string) error
 	Update(ctx context.Context, kategoriProduk req.UpdateKategoriProduk) error
-	GetAll(ctx context.Context) ([]entity.KategoriProduk, error)
+	GetAll(ctx context.Context, get req.GetAllKategoriProduk) ([]entity.KategoriProduk, int, int, error)
 	GetById(ctx context.Context, id string) (entity.KategoriProduk, error)
 }
 
 type kategoriProdukUsecase struct {
 	repo repo.KategoriProdukRepo
 	uuidGen         helper.UuidGenerator
+	paginate        helper.Paginate
 }
 
-func NewKategoriProdukUsecase(repo repo.KategoriProdukRepo, uuidGen helper.UuidGenerator) KategoriProdukUsecase {
-	return &kategoriProdukUsecase{repo, uuidGen}
+func NewKategoriProdukUsecase(repo repo.KategoriProdukRepo, uuidGen helper.UuidGenerator, paginate        helper.Paginate) KategoriProdukUsecase {
+	return &kategoriProdukUsecase{repo, uuidGen, paginate}
 }
 
 func (u *kategoriProdukUsecase) Create(ctx context.Context, kategoriProduk req.CreateKategoriProduk) error {
@@ -62,7 +63,18 @@ func (u *kategoriProdukUsecase) GetById(ctx context.Context, id string) (entity.
 	return kategoriProduk, err
 }
 
-func (u *kategoriProdukUsecase) GetAll(ctx context.Context) ([]entity.KategoriProduk, error) {
-	kategoriProduks, err := u.repo.GetAll(ctx)
-	return kategoriProduks, err
+func (u *kategoriProdukUsecase) GetAll(ctx context.Context, get req.GetAllKategoriProduk) ([]entity.KategoriProduk, int, int, error) {
+	currentPage, offset, limit := u.paginate.GetPaginateData(get.Page, get.Limit)
+
+	datas, totalData, err := u.repo.GetAll(ctx, repo.SearchKategoriProduk{
+		Nama: get.Search.Nama,
+		Limit: limit,
+		Offset: offset,
+	})
+	if err != nil {
+		return nil, currentPage, 0, err
+	}
+	totalPage := u.paginate.GetTotalPages(int(totalData), limit)
+
+	return datas, currentPage, totalPage, err
 }

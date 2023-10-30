@@ -9,7 +9,6 @@ import (
 )
 
 type HargaDetailProdukRepo interface {
-	GetAll(ctx context.Context) ([]entity.HargaDetailProduk, error)
 	GetByQtyProdukId(ctx context.Context, qty uint, produkId string) (entity.HargaDetailProduk, error)
 	GetById(ctx context.Context, id string) (entity.HargaDetailProduk, error)
 	Delete(ctx context.Context, id string) error
@@ -40,7 +39,7 @@ func (r *hargaDetailProdukRepo) DeleteByProdukId(ctx context.Context, produk_id 
 }
 
 func (r *hargaDetailProdukRepo) UpdateById(ctx context.Context, hargaDetailProduk *entity.HargaDetailProduk) error {
-	return r.DB.WithContext(ctx).Updates(hargaDetailProduk).Error
+	return r.DB.WithContext(ctx).Omit("id").Updates(hargaDetailProduk).Error
 }
 
 func (r *hargaDetailProdukRepo) GetByQtyProdukId(ctx context.Context, qty uint, produkId string) (entity.HargaDetailProduk, error) {
@@ -59,10 +58,4 @@ func (r *hargaDetailProdukRepo) GetById(ctx context.Context, id string) (entity.
 	var data entity.HargaDetailProduk
 	err := r.DB.WithContext(ctx).First(&data, "id = ?", id).Error
 	return data, err
-}
-
-func (r *hargaDetailProdukRepo) GetAll(ctx context.Context) ([]entity.HargaDetailProduk, error){
-	var datas []entity.HargaDetailProduk
-	err := r.DB.WithContext(ctx).Find(&datas).Error
-	return datas, err
 }

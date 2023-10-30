@@ -42,7 +42,7 @@ func main() {
 		{
 			produkData.Get("", produkHandler.ProdukHandler().GetAll)
 			kategoriProduk.Get("", produkHandler.KategoriProdukHandler().GetAll)
-			hargaDetailProduk.Get("", produkHandler.HargaDetailProdukHandler().GetAll) // tidak perlu isi ini (lihat frontend dulu)
+			// hargaDetailProduk.Get("", produkHandler.HargaDetailProdukHandler().GetAll) // tidak perlu isi ini (lihat frontend dulu)
 
 			produkData.Get("/:id", produkHandler.ProdukHandler().GetById)
 			kategoriProduk.Get("/:id", produkHandler.KategoriProdukHandler().GetById)

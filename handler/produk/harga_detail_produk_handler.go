@@ -7,6 +7,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 
 	"github.com/be-sistem-informasi-konveksi/common/message"
+	reqGlobal "github.com/be-sistem-informasi-konveksi/common/request/global"
 	req "github.com/be-sistem-informasi-konveksi/common/request/produk"
 	"github.com/be-sistem-informasi-konveksi/common/response"
 	resGlobal "github.com/be-sistem-informasi-konveksi/common/response/global"
@@ -68,7 +69,7 @@ func (h *hargaDetailProdukHandler) Create(c *fiber.Ctx) error {
 }
 
 func (h *hargaDetailProdukHandler) Delete(c *fiber.Ctx) error {
-	req := new(req.ParamByID)
+	req := new(reqGlobal.ParamByID)
 	if err := c.ParamsParser(req); err != nil {
 		log.Println(err)
 		return c.Status(fiber.StatusBadRequest).JSON(resGlobal.ErrorResWithoutData(fiber.StatusBadRequest))
@@ -174,7 +175,7 @@ func (h *hargaDetailProdukHandler) GetByProdukId(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(resGlobal.ErrorResWithData(errValidate, fiber.StatusBadRequest))
 	}
 	ctx := c.UserContext()
-	data, err := h.uc.GetByProdukId(ctx, req.ProdukId)
+	data, err := h.uc.GetByProdukId(ctx, *req)
 	if ctx.Err() == context.DeadlineExceeded {
 		return c.Status(fiber.StatusRequestTimeout).JSON(resGlobal.ErrorResWithoutData(fiber.StatusRequestTimeout))
 	}

@@ -3,12 +3,12 @@ package helper
 import (
 	"bytes"
 	"strings"
-	"sync"
 	"unicode"
 
-	"github.com/be-sistem-informasi-konveksi/common/response"
 	"github.com/go-playground/validator/v10"
 	id_translations "github.com/go-playground/validator/v10/translations/id"
+
+	"github.com/be-sistem-informasi-konveksi/common/response"
 )
 
 type (
@@ -20,8 +20,6 @@ type (
 type Validator interface {
 	Validate(d interface{}) []response.BaseFormatError
 }
-
-
 
 func NewValidator() Validator {
 	validate := validator.New()
@@ -58,19 +56,19 @@ func camelToSnake(s string) string {
 	return buf.String()
 }
 
-func wordToSnake(s string) string {
-	ss := strings.Split(s, " ")
-	wg := &sync.WaitGroup{}
-	for i, d := range ss {
-		wg.Add(1)
-		go func(i int, d string) {
-			defer wg.Done()
-			ss[i] = camelToSnake(d)
-		}(i, d)
-	}
-	wg.Wait()
-	return strings.Join(ss, " ")
-}
+// func wordToSnake(s string) string {
+// 	ss := strings.Split(s, " ")
+// 	wg := &sync.WaitGroup{}
+// 	for i, d := range ss {
+// 		wg.Add(1)
+// 		go func(i int, d string) {
+// 			defer wg.Done()
+// 			ss[i] = camelToSnake(d)
+// 		}(i, d)
+// 	}
+// 	wg.Wait()
+// 	return strings.Join(ss, " ")
+// }
 
 func (x *xValidator) Validate(d interface{}) []response.BaseFormatError {
 	trans := (&translator{}).Translator()
@@ -85,14 +83,14 @@ func (x *xValidator) Validate(d interface{}) []response.BaseFormatError {
 		for _, err := range errs.(validator.ValidationErrors) {
 			var elem response.BaseFormatError
 			elem.ValueInput = err.Value()
-      // fmt.Println(err.Tag())
+			// fmt.Println(err.Tag())
 			if err.Tag() == "uuidv4_no_hyphens" {
-				elem.ErrorMessage = wordToSnake(err.Field()) + " tidak berupa uuid versi 4"
+				elem.ErrorMessage = camelToSnake(err.Field()) + " tidak berupa uuid versi 4"
 				validatorErrors = append(validatorErrors, elem)
 				continue
 			}
-      // fmt.Println()
-			elem.ErrorMessage = wordToSnake(err.Translate(trans))
+			// fmt.Println()
+			elem.ErrorMessage = strings.ReplaceAll(err.Translate(trans), err.Field(), camelToSnake(err.Field()))
 			validatorErrors = append(validatorErrors, elem)
 
 		}
