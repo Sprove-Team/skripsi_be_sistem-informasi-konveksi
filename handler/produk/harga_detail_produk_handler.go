@@ -20,7 +20,6 @@ type HargaDetailProdukHandler interface {
 	Update(c *fiber.Ctx) error
 	Delete(c *fiber.Ctx) error
 	DeleteByProdukId(c *fiber.Ctx) error
-	GetAll(c *fiber.Ctx) error
 	GetByProdukId(c *fiber.Ctx) error
 }
 
@@ -146,22 +145,6 @@ func (h *hargaDetailProdukHandler) Update(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(resGlobal.ErrorResWithoutData(fiber.StatusInternalServerError))
 	}
 	return c.Status(fiber.StatusCreated).JSON(resGlobal.SuccessResWithoutData("U"))
-}
-
-func (h *hargaDetailProdukHandler) GetAll(c *fiber.Ctx) error {
-	c.Accepts("application/json")
-	ctx := c.UserContext()
-	datas, err := h.uc.GetAll(ctx)
-	if ctx.Err() == context.DeadlineExceeded {
-		return c.Status(fiber.StatusRequestTimeout).JSON(resGlobal.ErrorResWithoutData(fiber.StatusRequestTimeout))
-	}
-	if err != nil && err.Error() == "record not found" {
-		if err.Error() == "record not found" {
-			return c.Status(fiber.StatusNotFound).JSON(resGlobal.ErrorResWithoutData(fiber.StatusNotFound))
-		}
-		return c.Status(fiber.StatusInternalServerError).JSON(resGlobal.ErrorResWithoutData(fiber.StatusInternalServerError))
-	}
-	return c.Status(fiber.StatusOK).JSON(resGlobal.SuccessResWithData(datas, "R"))
 }
 
 func (h *hargaDetailProdukHandler) GetByProdukId(c *fiber.Ctx) error {
