@@ -10,30 +10,31 @@ import (
 )
 
 type BordirUsecase interface {
-	Create(ctx context.Context, kategoriProduk req.CreateBordir) error
+	Create(ctx context.Context, bordir req.CreateBordir) error
 	Delete(ctx context.Context, id string) error
-	Update(ctx context.Context, kategoriProduk req.UpdateBordir) error
-	GetAll(ctx context.Context, get req.GetAllBordir) ([]entity.Bordir, int, int,error)
+	Update(ctx context.Context, bordir req.UpdateBordir) error
+	GetAll(ctx context.Context, get req.GetAllBordir) ([]entity.Bordir, int, int, error)
 	GetById(ctx context.Context, id string) (entity.Bordir, error)
 }
 
 type bordirUsecase struct {
-	repo    repo.BordirRepo
-	uuidGen helper.UuidGenerator
+	repo     repo.BordirRepo
+	uuidGen  helper.UuidGenerator
 	paginate helper.Paginate
 }
 
-func NewKategoriProdukUsecase(repo repo.BordirRepo, uuidGen helper.UuidGenerator, paginate helper.Paginate) BordirUsecase {
+func NewBordirUsecase(repo repo.BordirRepo, uuidGen helper.UuidGenerator, paginate helper.Paginate) BordirUsecase {
 	return &bordirUsecase{repo, uuidGen, paginate}
 }
 
-func (u *bordirUsecase) Create(ctx context.Context, kategoriProduk req.CreateBordir) error {
+func (u *bordirUsecase) Create(ctx context.Context, bordir req.CreateBordir) error {
 	id, _ := u.uuidGen.GenerateUUID()
-	kategoriProdukR := entity.Bordir{
-		ID:   id,
-		Nama: kategoriProduk.Nama,
+	data := entity.Bordir{
+		ID:    id,
+		Nama:  bordir.Nama,
+		Harga: bordir.Harga,
 	}
-	return u.repo.Create(ctx, &kategoriProdukR)
+	return u.repo.Create(ctx, &data)
 }
 
 func (u *bordirUsecase) Update(ctx context.Context, bordir req.UpdateBordir) error {
@@ -41,13 +42,13 @@ func (u *bordirUsecase) Update(ctx context.Context, bordir req.UpdateBordir) err
 	if err != nil {
 		return err
 	}
-	bordirR := entity.Bordir{
-		ID:   bordir.ID,
-		Nama: bordir.Nama,
+	data := entity.Bordir{
+		ID:    bordir.ID,
+		Nama:  bordir.Nama,
 		Harga: bordir.Harga,
 	}
 
-	return u.repo.Update(ctx, &bordirR)
+	return u.repo.Update(ctx, &data)
 }
 
 func (u *bordirUsecase) Delete(ctx context.Context, id string) error {
@@ -60,25 +61,23 @@ func (u *bordirUsecase) Delete(ctx context.Context, id string) error {
 }
 
 func (u *bordirUsecase) GetById(ctx context.Context, id string) (entity.Bordir, error) {
-	kategoriProduk, err := u.repo.GetById(ctx, id)
-	return kategoriProduk, err
+	data, err := u.repo.GetById(ctx, id)
+	return data, err
 }
 
-func (u *bordirUsecase) GetAll(ctx context.Context, get req.GetAllBordir) ([]entity.Bordir, int, int,error) {
-	
+func (u *bordirUsecase) GetAll(ctx context.Context, get req.GetAllBordir) ([]entity.Bordir, int, int, error) {
 	currentPage, offset, limit := u.paginate.GetPaginateData(get.Page, get.Limit)
 
-	bordirs, totalData, err := u.repo.GetAll(ctx, repo.SearchParams{
-		Nama:             get.Search.Nama,
-		Limit:            limit,
-		Offset:           offset,
+	datas, totalData, err := u.repo.GetAll(ctx, repo.SearchBordir{
+		Nama:   get.Search.Nama,
+		Limit:  limit,
+		Offset: offset,
 	})
-
 	if err != nil {
 		return nil, currentPage, 0, err
 	}
 
 	totalPage := u.paginate.GetTotalPages(int(totalData), limit)
 
-	return bordirs, currentPage, totalPage, err
+	return datas, currentPage, totalPage, err
 }

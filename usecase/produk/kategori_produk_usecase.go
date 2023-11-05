@@ -29,11 +29,11 @@ func NewKategoriProdukUsecase(repo repo.KategoriProdukRepo, uuidGen helper.UuidG
 
 func (u *kategoriProdukUsecase) Create(ctx context.Context, kategoriProduk req.CreateKategoriProduk) error {
 	id, _ := u.uuidGen.GenerateUUID()
-	kategoriProdukR := entity.KategoriProduk{
+	data := entity.KategoriProduk{
 		ID: id,
 		Nama: kategoriProduk.Nama,
 	}
-	return u.repo.Create(ctx, &kategoriProdukR)
+	return u.repo.Create(ctx, &data)
 }
 
 func (u *kategoriProdukUsecase) Update(ctx context.Context, kategoriProduk req.UpdateKategoriProduk) error {
@@ -41,12 +41,12 @@ func (u *kategoriProdukUsecase) Update(ctx context.Context, kategoriProduk req.U
 	if err != nil {
 		return err
 	}
-	ketegoriProdukR := entity.KategoriProduk{
+	data := entity.KategoriProduk{
 		ID:   kategoriProduk.ID,
 		Nama: kategoriProduk.Nama,
 	}
 
-	return u.repo.Update(ctx, &ketegoriProdukR)
+	return u.repo.Update(ctx, &data)
 }
 
 func (u *kategoriProdukUsecase) Delete(ctx context.Context, id string) error {
@@ -59,8 +59,8 @@ func (u *kategoriProdukUsecase) Delete(ctx context.Context, id string) error {
 }
 
 func (u *kategoriProdukUsecase) GetById(ctx context.Context, id string) (entity.KategoriProduk, error){
-	kategoriProduk, err := u.repo.GetById(ctx, id)
-	return kategoriProduk, err
+	data, err := u.repo.GetById(ctx, id)
+	return data, err
 }
 
 func (u *kategoriProdukUsecase) GetAll(ctx context.Context, get req.GetAllKategoriProduk) ([]entity.KategoriProduk, int, int, error) {

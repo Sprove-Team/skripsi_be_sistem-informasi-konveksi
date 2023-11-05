@@ -53,19 +53,21 @@ type SearchProduk struct {
 func (r *produkRepo) GetAll(ctx context.Context, param SearchProduk) ([]entity.Produk, int64, error) {
 	datas := []entity.Produk{}
 	var totalData int64
-
+	
 	tx := r.DB.WithContext(ctx).Model(&entity.Produk{})
 	tx = tx.Where("nama LIKE ?", "%"+param.Nama+"%")
 
 	if param.KategoriProdukId != "" {
 		tx = tx.Where("kategori_produk_id = ?", param.KategoriProdukId)
 	}
-	var err error
+
 	if param.HasHargaDetail{
-		err = tx.InnerJoins("HargaDetails").Preload("HargaDetails").Count(&totalData).Find(&datas).Error
+		tx = tx.InnerJoins("HargaDetails").Preload("HargaDetails").Count(&totalData)
 	} else {
-		err = tx.Preload("HargaDetails").Joins("LEFT JOIN harga_detail_produk hd on hd.produk_id = produk.id").Where("hd.id IS NULL").Count(&totalData).Find(&datas).Error
+		tx = tx.Preload("HargaDetails").Joins("LEFT JOIN harga_detail_produk hd on hd.produk_id = produk.id").Where("hd.id IS NULL").Count(&totalData)
 	}
+
+	err := tx.Limit(param.Limit).Offset(param.Offset).Find(&datas).Error
 
 	return datas, totalData, err
 }

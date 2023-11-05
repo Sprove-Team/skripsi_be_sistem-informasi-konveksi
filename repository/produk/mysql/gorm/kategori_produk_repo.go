@@ -51,10 +51,7 @@ type SearchKategoriProduk struct {
 func (r *kategoriRepo) GetAll(ctx context.Context, param SearchKategoriProduk) ([]entity.KategoriProduk, int64,error) {
 	datas := []entity.KategoriProduk{}
 	var totalData int64
-
-	tx := r.DB.WithContext(ctx).Model(&entity.KategoriProduk{})
-	tx = tx.Where("nama LIKE ?", "%"+param.Nama+"%")
-
+	tx := r.DB.WithContext(ctx).Model(&entity.KategoriProduk{}).Where("nama LIKE ?", "%"+param.Nama+"%")
 	err := tx.Count(&totalData).Limit(param.Limit).Offset(param.Offset).Find(&datas).Error
 	return datas, totalData, err
 }

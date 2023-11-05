@@ -27,22 +27,25 @@ func main() {
 	validator := helper.NewValidator()
 	uuidGen := helper.NewGoogleUUID()
 	paginate := helper.NewPaginate()
+	encryptor := helper.NewEncryptor()
 
 	// handler init
 	produkHandler := handler_init.NewProdukHandlerInit(dbGorm, validator, uuidGen, paginate)
-
+	bordirHandler := handler_init.NewBordirHandlerInit(dbGorm, validator, uuidGen, paginate)
+	sablonHandler := handler_init.NewSablonHandlerInit(dbGorm, validator, uuidGen, paginate)
+	userHandler := handler_init.NewUserHandlerInit(dbGorm, validator, uuidGen, paginate, encryptor)
 	// route
 	api := app.Group("/api")
 	v1 := api.Group("/v1")
 	direktur := v1.Group("/direktur", midGlobal.TimeoutMid(nil))
 	{
+		// produk
 		produkData := direktur.Group("/produk")
 		kategoriProduk := produkData.Group("/kategori")
 		hargaDetailProduk := produkData.Group("/harga_detail")
 		{
 			produkData.Get("", produkHandler.ProdukHandler().GetAll)
 			kategoriProduk.Get("", produkHandler.KategoriProdukHandler().GetAll)
-			// hargaDetailProduk.Get("", produkHandler.HargaDetailProdukHandler().GetAll) // tidak perlu isi ini (lihat frontend dulu)
 
 			produkData.Get("/:id", produkHandler.ProdukHandler().GetById)
 			kategoriProduk.Get("/:id", produkHandler.KategoriProdukHandler().GetById)
@@ -60,6 +63,37 @@ func main() {
 			kategoriProduk.Delete("/:id", produkHandler.KategoriProdukHandler().Delete)
 			hargaDetailProduk.Delete("/:id", produkHandler.HargaDetailProdukHandler().Delete)
 			hargaDetailProduk.Delete("/:produk_id", produkHandler.HargaDetailProdukHandler().DeleteByProdukId)
+		}
+		// bordir
+		bordir := direktur.Group("/bordir")
+		{
+			bordir.Get("", bordirHandler.BordirHandler().GetAll)
+
+			bordir.Get("/:id", bordirHandler.BordirHandler().GetById)
+
+			bordir.Post("", bordirHandler.BordirHandler().Create)
+
+			bordir.Put("/:id", bordirHandler.BordirHandler().Update)
+
+			bordir.Delete("/:id", bordirHandler.BordirHandler().Delete)
+		}
+		// sablon
+		sablon := direktur.Group("/sablon")
+		{
+			sablon.Get("", sablonHandler.SablonHandler().GetAll)
+
+			sablon.Get("/:id", sablonHandler.SablonHandler().GetById)
+
+			sablon.Post("", sablonHandler.SablonHandler().Create)
+
+			sablon.Put("/:id", sablonHandler.SablonHandler().Update)
+
+			sablon.Delete("/:id", sablonHandler.SablonHandler().Delete)
+		}
+		// user
+		user := direktur.Group("/user")
+		{
+			user.Post("", userHandler.UserHandler().Create)
 		}
 	}
 

@@ -9,7 +9,7 @@ import (
 )
 
 type SablonRepo interface {
-	GetAll(ctx context.Context, param SearchParams) ([]entity.Sablon, int64, error)
+	GetAll(ctx context.Context, param SearchSablon) ([]entity.Sablon, int64, error)
 	GetById(ctx context.Context, id string) (entity.Sablon, error)
 	Create(ctx context.Context, sablon *entity.Sablon) error
 	Update(ctx context.Context, sablon *entity.Sablon) error
@@ -42,13 +42,13 @@ func (r *sablonRepo) GetById(ctx context.Context, id string) (entity.Sablon, err
 	return data, err
 }
 
-type SearchParams struct {
+type SearchSablon struct {
 	Nama   string
 	Limit  int
 	Offset int
 }
 
-func (r *sablonRepo) GetAll(ctx context.Context, param SearchParams) ([]entity.Sablon, int64, error) {
+func (r *sablonRepo) GetAll(ctx context.Context, param SearchSablon) ([]entity.Sablon, int64, error) {
 	datas := []entity.Sablon{}
 	var totalData int64
 

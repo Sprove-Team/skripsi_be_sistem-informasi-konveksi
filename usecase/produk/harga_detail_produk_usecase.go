@@ -33,14 +33,10 @@ func NewHargaDetailProdukUsecase(repo repo.HargaDetailProdukRepo, produkR repo.P
 }
 
 func (u *hargaDetailProdukUsecase) Create(ctx context.Context, hargaDetailProduk req.CreateHargaDetailProduk) error {
-	_, err := u.repo.GetByProdukId(ctx, hargaDetailProduk.ProdukId)
-	if err != nil {
-		if err.Error() == "record not found" {
-			return errors.New(message.ProdukNotFound)
-		}
-		return err
+	datas, _ := u.repo.GetByProdukId(ctx, hargaDetailProduk.ProdukId)
+	if len(datas) <= 0 {
+		return errors.New(message.ProdukNotFound)
 	}
-
 	g := errgroup.Group{}
 
 	if len(hargaDetailProduk.HargaDetail) > 0 {
@@ -56,13 +52,13 @@ func (u *hargaDetailProdukUsecase) Create(ctx context.Context, hargaDetailProduk
 					return errors.New("duplicated key not allowed")
 				}
 				id, _ := u.uuidGen.GenerateUUID()
-				hargaDetailProdukR := entity.HargaDetailProduk{
+				data := entity.HargaDetailProduk{
 					ID:       id,
 					ProdukID: hargaDetailProduk.ProdukId,
 					QTY:      hargaDetailProduk.HargaDetail[i].QTY,
 					Harga:    hargaDetailProduk.HargaDetail[i].Harga,
 				}
-				err = u.repo.Create(ctx, &hargaDetailProdukR)
+				err = u.repo.Create(ctx, &data)
 				if err != nil {
 					return err
 				}
@@ -78,13 +74,13 @@ func (u *hargaDetailProdukUsecase) Create(ctx context.Context, hargaDetailProduk
 }
 
 func (u *hargaDetailProdukUsecase) UpdateById(ctx context.Context, hargaDetailProduk req.UpdateHargaDetailProdukById) error {
-	hargaDetailProdukR := entity.HargaDetailProduk{
-		ID:       hargaDetailProduk.ID,
-		QTY:      hargaDetailProduk.QTY,
-		Harga:    float64(hargaDetailProduk.Harga),
-		ProdukID: hargaDetailProduk.ProdukId,
+	data := entity.HargaDetailProduk{
+		ID:    hargaDetailProduk.ID,
+		QTY:   hargaDetailProduk.QTY,
+		Harga: float64(hargaDetailProduk.Harga),
+		// ProdukID: hargaDetailProduk.ProdukId,
 	}
-	return u.repo.UpdateById(ctx, &hargaDetailProdukR)
+	return u.repo.UpdateById(ctx, &data)
 }
 
 func (u *hargaDetailProdukUsecase) Delete(ctx context.Context, id string) error {
@@ -106,6 +102,6 @@ func (u *hargaDetailProdukUsecase) DeleteByProdukId(ctx context.Context, produkI
 }
 
 func (u *hargaDetailProdukUsecase) GetByProdukId(ctx context.Context, get req.GetByProdukId) ([]entity.HargaDetailProduk, error) {
-	hargaDetailProduks, err := u.repo.GetByProdukId(ctx, get.ProdukId)
-	return hargaDetailProduks, err
+	datas, err := u.repo.GetByProdukId(ctx, get.ProdukId)
+	return datas, err
 }

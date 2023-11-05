@@ -14,7 +14,7 @@ type HargaDetailProdukRepo interface {
 	Delete(ctx context.Context, id string) error
 	DeleteByProdukId(ctx context.Context, produk_id string) error
 	UpdateById(ctx context.Context, hargaDetailProduk *entity.HargaDetailProduk) error
-    GetByProdukId(ctx context.Context, id string) ([]entity.HargaDetailProduk, error)
+	GetByProdukId(ctx context.Context, id string) ([]entity.HargaDetailProduk, error)
 	Create(ctx context.Context, hargaDetailProduk *entity.HargaDetailProduk) error
 }
 
@@ -49,9 +49,9 @@ func (r *hargaDetailProdukRepo) GetByQtyProdukId(ctx context.Context, qty uint, 
 }
 
 func (r *hargaDetailProdukRepo) GetByProdukId(ctx context.Context, produk_id string) ([]entity.HargaDetailProduk, error) {
-  datas := []entity.HargaDetailProduk{}
-  err := r.DB.WithContext(ctx).Find(&datas,"produk_id = ?", produk_id).Error
-  return datas, err
+	datas := []entity.HargaDetailProduk{}
+	err := r.DB.WithContext(ctx).Find(&datas, "produk_id = ?", produk_id).Error
+	return datas, err
 }
 
 func (r *hargaDetailProdukRepo) GetById(ctx context.Context, id string) (entity.HargaDetailProduk, error) {

@@ -5,6 +5,7 @@ import (
 	"strings"
 	"unicode"
 
+	ut "github.com/go-playground/universal-translator"
 	"github.com/go-playground/validator/v10"
 	id_translations "github.com/go-playground/validator/v10/translations/id"
 
@@ -14,6 +15,7 @@ import (
 type (
 	xValidator struct {
 		validator *validator.Validate
+		trans     ut.Translator
 	}
 )
 
@@ -23,10 +25,41 @@ type Validator interface {
 
 func NewValidator() Validator {
 	validate := validator.New()
+	// custom validation
 	validate.RegisterValidation("uuidv4_no_hyphens", validateUUIDv4WithoutHyphens)
-	return &xValidator{validate}
+
+	// default translations
+	trans := (&translator{}).Translator()
+	id_translations.RegisterDefaultTranslations(validate, trans)
+
+	// custom translations
+
+	validate.RegisterTranslation("uuidv4_no_hyphens", trans, func(ut ut.Translator) error {
+		return ut.Add("uuidv4_no_hyphens", "{0} tidak berupa uuid versi 4", true)
+	}, func(ut ut.Translator, fe validator.FieldError) string {
+		t, _ := ut.T("uuidv4_no_hyphens", strings.ToLower(fe.Field()))
+		return t
+	})
+
+	validate.RegisterTranslation("required_if", trans, func(ut ut.Translator) error {
+		return ut.Add("required_if", "{0} wajib diisi ketika {1}", true)
+	}, func(ut ut.Translator, fe validator.FieldError) string {
+		param := strings.Split(fe.Param(), " ")
+		t, _ := ut.T("required_if", fe.Field(), strings.ToLower(param[0])+" "+param[1])
+		return t
+	})
+
+	validate.RegisterTranslation("e164", trans, func(ut ut.Translator) error {
+		return ut.Add("e164", "{0} harus berformat e164", true)
+	}, func(ut ut.Translator, fe validator.FieldError) string {
+		t, _ := ut.T("e164", camelToSnake(fe.Field()))
+		return t
+	})
+
+	return &xValidator{validate, trans}
 }
 
+// custom validation
 func validateUUIDv4WithoutHyphens(fl validator.FieldLevel) bool {
 	uuid := fl.Field().String()
 	uuidGoogle := NewGoogleUUID()
@@ -56,25 +89,7 @@ func camelToSnake(s string) string {
 	return buf.String()
 }
 
-// func wordToSnake(s string) string {
-// 	ss := strings.Split(s, " ")
-// 	wg := &sync.WaitGroup{}
-// 	for i, d := range ss {
-// 		wg.Add(1)
-// 		go func(i int, d string) {
-// 			defer wg.Done()
-// 			ss[i] = camelToSnake(d)
-// 		}(i, d)
-// 	}
-// 	wg.Wait()
-// 	return strings.Join(ss, " ")
-// }
-
 func (x *xValidator) Validate(d interface{}) []response.BaseFormatError {
-	trans := (&translator{}).Translator()
-
-	id_translations.RegisterDefaultTranslations(x.validator, trans)
-
 	validatorErrors := []response.BaseFormatError{}
 
 	errs := x.validator.Struct(d)
@@ -83,14 +98,7 @@ func (x *xValidator) Validate(d interface{}) []response.BaseFormatError {
 		for _, err := range errs.(validator.ValidationErrors) {
 			var elem response.BaseFormatError
 			elem.ValueInput = err.Value()
-			// fmt.Println(err.Tag())
-			if err.Tag() == "uuidv4_no_hyphens" {
-				elem.ErrorMessage = camelToSnake(err.Field()) + " tidak berupa uuid versi 4"
-				validatorErrors = append(validatorErrors, elem)
-				continue
-			}
-			// fmt.Println()
-			elem.ErrorMessage = strings.ReplaceAll(err.Translate(trans), err.Field(), camelToSnake(err.Field()))
+			elem.ErrorMessage = strings.ReplaceAll(err.Translate(x.trans), err.Field(), camelToSnake(err.Field()))
 			validatorErrors = append(validatorErrors, elem)
 
 		}

@@ -6,7 +6,6 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 
-	"github.com/be-sistem-informasi-konveksi/common/message"
 	req "github.com/be-sistem-informasi-konveksi/common/request/bordir"
 	reqGlobal "github.com/be-sistem-informasi-konveksi/common/request/global"
 	resGlobal "github.com/be-sistem-informasi-konveksi/common/response/global"
@@ -27,7 +26,7 @@ type bordirHandler struct {
 	validator helper.Validator
 }
 
-func NewProdukHandler(uc usecase.BordirUsecase, validator helper.Validator) BordirHandler {
+func NewBordirHandler(uc usecase.BordirUsecase, validator helper.Validator) BordirHandler {
 	return &bordirHandler{uc, validator}
 }
 
@@ -52,9 +51,6 @@ func (h *bordirHandler) Create(c *fiber.Ctx) error {
 	if err != nil {
 		if err.Error() == "duplicated key not allowed" {
 			return c.Status(fiber.StatusConflict).JSON(resGlobal.ErrorResWithoutData(fiber.StatusConflict))
-		}
-		if err.Error() == "record not found" {
-			return c.Status(fiber.StatusBadRequest).JSON(resGlobal.CustomRes(fiber.StatusBadRequest, message.KategoriNotFound, nil))
 		}
 
 		log.Println(err)
@@ -165,7 +161,7 @@ func (h *bordirHandler) GetAll(c *fiber.Ctx) error {
 	}
 
 	dataRes := fiber.Map{
-		"bordirs":      data,
+		"bordir":      data,
 		"current_page": currentPage,
 		"total_page":   totalPage,
 	}

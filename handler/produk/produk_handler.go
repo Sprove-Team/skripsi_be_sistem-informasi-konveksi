@@ -3,6 +3,7 @@ package produk
 import (
 	"context"
 	"log"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
 
@@ -44,7 +45,6 @@ func (h *produkHandler) Create(c *fiber.Ctx) error {
 	}
 	ctx := c.UserContext()
 	err := h.uc.Create(ctx, *req)
-	
 
 	if ctx.Err() == context.DeadlineExceeded {
 		return c.Status(fiber.StatusRequestTimeout).JSON(resGlobal.ErrorResWithoutData(fiber.StatusRequestTimeout))
@@ -54,7 +54,8 @@ func (h *produkHandler) Create(c *fiber.Ctx) error {
 		if err.Error() == "duplicated key not allowed" {
 			return c.Status(fiber.StatusConflict).JSON(resGlobal.ErrorResWithoutData(fiber.StatusConflict))
 		}
-		if err.Error() == "record not found" {
+		
+		if err.Error() == message.KategoriNotFound {
 			return c.Status(fiber.StatusBadRequest).JSON(resGlobal.CustomRes(fiber.StatusBadRequest, message.KategoriNotFound, nil))
 		}
 
@@ -85,7 +86,7 @@ func (h *produkHandler) Update(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusRequestTimeout).JSON(resGlobal.ErrorResWithoutData(fiber.StatusRequestTimeout))
 	}
 	if err != nil {
-		if err.Error() == message.KategoriNotFound {
+		if err.Error() == message.KategoriNotFound { 
 			return c.Status(fiber.StatusBadRequest).JSON(resGlobal.ErrorResWithData([]response.BaseFormatError{
 				{
 					ValueInput:   req.KategoriID,
@@ -159,7 +160,9 @@ func (h *produkHandler) GetAll(c *fiber.Ctx) error {
 	reqU := new(req.GetAllProduk)
 	c.BodyParser(reqU)
 	c.QueryParser(reqU)
-  log.Println(*reqU)
+
+	reqU.Search.HargaDetail = strings.ToLower(reqU.Search.HargaDetail)
+
 	errValidate := h.validator.Validate(reqU)
 	if len(errValidate) > 0 {
 		return c.Status(fiber.StatusBadRequest).JSON(resGlobal.ErrorResWithData(errValidate, fiber.StatusBadRequest))
@@ -178,7 +181,7 @@ func (h *produkHandler) GetAll(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(resGlobal.ErrorResWithoutData(fiber.StatusInternalServerError))
 	}
 	dataRes := fiber.Map{
-		"produks":      data,
+		"produk":       data,
 		"current_page": currentPage,
 		"total_page":   totalPage,
 	}

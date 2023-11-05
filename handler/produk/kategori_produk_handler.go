@@ -115,7 +115,7 @@ func (h *kategoriProdukHandler) GetAll(c *fiber.Ctx) error {
 	req := new(req.GetAllKategoriProduk)
 	c.BodyParser(req)
 	c.QueryParser(req)
-	
+
 	errValidate := h.validator.Validate(req)
 	if len(errValidate) > 0 {
 		return c.Status(fiber.StatusBadRequest).JSON(resGlobal.ErrorResWithData(errValidate, fiber.StatusBadRequest))
@@ -134,9 +134,9 @@ func (h *kategoriProdukHandler) GetAll(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(resGlobal.ErrorResWithoutData(fiber.StatusInternalServerError))
 	}
 	dataRes := fiber.Map{
-		"kategori_produks":      data,
-		"current_page": currentPage,
-		"total_page":   totalPage,
+		"kategori_produk": data,
+		"current_page":    currentPage,
+		"total_page":      totalPage,
 	}
 	return c.Status(fiber.StatusOK).JSON(resGlobal.SuccessResWithData(dataRes, "R"))
 }

@@ -8,5 +8,5 @@ type BaseFormatRes struct {
 
 type BaseFormatError struct {
 	ValueInput   interface{} `json:"value_input"`
-	ErrorMessage string      `json:"error_message"`  
+	ErrorMessage string      `json:"error_message"`
 }

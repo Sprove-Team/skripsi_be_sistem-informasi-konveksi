@@ -9,7 +9,7 @@ import (
 )
 
 type BordirRepo interface {
-	GetAll(ctx context.Context, param SearchParams) ([]entity.Bordir, int64, error)
+	GetAll(ctx context.Context, param SearchBordir) ([]entity.Bordir, int64, error)
 	GetById(ctx context.Context, id string) (entity.Bordir, error)
 	Create(ctx context.Context, bordir *entity.Bordir) error
 	Update(ctx context.Context, bordir *entity.Bordir) error
@@ -42,13 +42,13 @@ func (r *bordirRepo) GetById(ctx context.Context, id string) (entity.Bordir, err
 	return data, err
 }
 
-type SearchParams struct {
+type SearchBordir struct {
 	Nama   string
 	Limit  int
 	Offset int
 }
 
-func (r *bordirRepo) GetAll(ctx context.Context, param SearchParams) ([]entity.Bordir, int64, error) {
+func (r *bordirRepo) GetAll(ctx context.Context, param SearchBordir) ([]entity.Bordir, int64, error) {
 	datas := []entity.Bordir{}
 	var totalData int64
 

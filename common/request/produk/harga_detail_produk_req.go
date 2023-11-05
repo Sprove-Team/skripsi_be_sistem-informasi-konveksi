@@ -11,10 +11,10 @@ type CreateHargaDetailProduk struct {
 }
 
 type UpdateHargaDetailProdukById struct {
-	ProdukId string  `json:"produk_id" validate:"omitempty,uuidv4_no_hyphens"`
-	ID       string  `json:"id" validate:"required,uuidv4_no_hyphens"`
-	QTY      uint    `json:"qty" validate:"omitempty,number"`
-	Harga    float64 `json:"harga" validate:"omitempty,number"`
+	ID string `params:"id" validate:"required,uuidv4_no_hyphens"`
+	// ProdukId string  `json:"produk_id" validate:"omitempty,uuidv4_no_hyphens"`
+	QTY   uint    `json:"qty" validate:"omitempty,number"`
+	Harga float64 `json:"harga" validate:"omitempty,number"`
 }
 
 type DeleteByProdukId struct {
