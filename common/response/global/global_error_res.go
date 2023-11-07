@@ -7,8 +7,8 @@ import (
 
 func getErrStatusMessage(status int) string {
 	switch status {
-  case 400:
-    return message.BadRequest
+	case 400:
+		return message.BadRequest
 	case 408:
 		return message.RequestTimeout
 	case 409:
@@ -32,7 +32,7 @@ func ErrorResWithData(data interface{}, status int) *response.BaseFormatRes {
 		Message: getErrStatusMessage(status),
 		Status:  status,
 		Data: map[string]interface{}{
-			"errors": data,
+			"error_field": data,
 		},
 	}
 }

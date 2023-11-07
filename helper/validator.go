@@ -37,7 +37,7 @@ func NewValidator() Validator {
 	validate.RegisterTranslation("uuidv4_no_hyphens", trans, func(ut ut.Translator) error {
 		return ut.Add("uuidv4_no_hyphens", "{0} tidak berupa uuid versi 4", true)
 	}, func(ut ut.Translator, fe validator.FieldError) string {
-		t, _ := ut.T("uuidv4_no_hyphens", strings.ToLower(fe.Field()))
+		t, _ := ut.T("uuidv4_no_hyphens", camelToSnake(fe.Field()))
 		return t
 	})
 
@@ -97,10 +97,10 @@ func (x *xValidator) Validate(d interface{}) []response.BaseFormatError {
 	if errs != nil {
 		for _, err := range errs.(validator.ValidationErrors) {
 			var elem response.BaseFormatError
-			elem.ValueInput = err.Value()
-			elem.ErrorMessage = strings.ReplaceAll(err.Translate(x.trans), err.Field(), camelToSnake(err.Field()))
+			field := camelToSnake(err.Field())
+			elem.FieldName = field
+			elem.Message = strings.ReplaceAll(err.Translate(x.trans), err.Field(), field)
 			validatorErrors = append(validatorErrors, elem)
-
 		}
 	}
 	return validatorErrors

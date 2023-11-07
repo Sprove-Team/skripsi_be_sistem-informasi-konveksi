@@ -6,10 +6,10 @@ import (
 	"github.com/gofiber/fiber/v2"
 	_ "github.com/joho/godotenv/autoload"
 
+	handler_init "github.com/be-sistem-informasi-konveksi/api/handler/_init"
+	midGlobal "github.com/be-sistem-informasi-konveksi/api/middleware/global"
 	"github.com/be-sistem-informasi-konveksi/app/config"
-	"github.com/be-sistem-informasi-konveksi/common/handler_init"
 	helper "github.com/be-sistem-informasi-konveksi/helper"
-	midGlobal "github.com/be-sistem-informasi-konveksi/middleware/global"
 )
 
 func main() {
@@ -93,6 +93,7 @@ func main() {
 		// user
 		user := direktur.Group("/user")
 		{
+			user.Get("", userHandler.UserHandler().GetAll)
 			user.Post("", userHandler.UserHandler().Create)
 		}
 	}
