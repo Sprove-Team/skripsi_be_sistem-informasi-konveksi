@@ -22,13 +22,13 @@ type UpdateUser struct {
 }
 
 type SearchFilterUser struct {
-	Nama           string `json:"nama" validate:"omitempty,printascii"`
-	Role           string `json:"role" validate:"omitempty,oneof=DIREKTUR ADMIN BENDAHARA MANAJER_PRODUKSI SUPERVISOR"`
-	Username       string `json:"username" validate:"omitempty,printascii"`
-	Alamat         string `json:"alamat" validate:"omitempty,printascii"`
-	NoTelp         string `json:"no_telp" validate:"omitempty,e164"`
-	JenisSpvID     string `json:"jenis_spv_id" validate:"required_if=GetAllJenisSpv true,omitempty,uuidv4_no_hyphens"`
-	GetAllJenisSpv bool   `json:"jenis_spv" validate:"omitempty,boolean"`
+	Nama        string `json:"nama" validate:"omitempty,printascii"`
+	Role        string `json:"role" validate:"omitempty,oneof=DIREKTUR ADMIN BENDAHARA MANAJER_PRODUKSI SUPERVISOR"`
+	Username    string `json:"username" validate:"omitempty,printascii"`
+	Alamat      string `json:"alamat" validate:"omitempty,printascii"`
+	NoTelp      string `json:"no_telp" validate:"omitempty,e164"`
+	JenisSpvID  string `json:"jenis_spv_id" validate:"required_if=AllJenisSpv false,omitempty,uuidv4_no_hyphens"`
+	AllJenisSpv bool   `json:"all_jenis_spv" validate:"omitempty,boolean"`
 }
 
 type GetAllUser struct {

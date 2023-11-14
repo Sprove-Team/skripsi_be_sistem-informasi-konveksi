@@ -11,6 +11,7 @@ import (
 
 type UserHandlerInit interface {
 	UserHandler() handler.UserHandler
+	// JenisSpv() handler.JenisSpvHandler
 }
 type userHandlerInit struct {
 	DB        *gorm.DB
@@ -26,7 +27,8 @@ func NewUserHandlerInit(DB *gorm.DB, validator helper.Validator, uuidGen helper.
 
 func (d *userHandlerInit) UserHandler() handler.UserHandler {
 	r := repo.NewUserRepo(d.DB)
-	uc := usecase.NewUserUsecase(r, d.uuidGen, d.paginate ,d.encryptor)
+	rJenisSpv := repo.NewJenisSpvRepo(d.DB)
+	uc := usecase.NewUserUsecase(r, rJenisSpv, d.uuidGen, d.paginate, d.encryptor)
 	h := handler.NewUserHandler(uc, d.validator)
 	return h
 }

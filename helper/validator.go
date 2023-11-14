@@ -45,7 +45,7 @@ func NewValidator() Validator {
 		return ut.Add("required_if", "{0} wajib diisi ketika {1}", true)
 	}, func(ut ut.Translator, fe validator.FieldError) string {
 		param := strings.Split(fe.Param(), " ")
-		t, _ := ut.T("required_if", fe.Field(), strings.ToLower(param[0])+" "+param[1])
+		t, _ := ut.T("required_if", fe.Field(), camelToSnake(param[0])+" "+strings.ToLower(param[1]))
 		return t
 	})
 

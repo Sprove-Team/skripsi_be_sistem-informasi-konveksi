@@ -16,7 +16,7 @@ import (
 
 type HargaDetailProdukUsecase interface {
 	Create(ctx context.Context, hargaDetailProduk req.CreateHargaDetailProduk) error
-	UpdateById(ctx context.Context, hargaDetailProduk req.UpdateHargaDetailProdukById) error
+	UpdateById(ctx context.Context, hargaDetailProduk req.UpdateHargaDetailProduk) error
 	Delete(ctx context.Context, id string) error
 	DeleteByProdukId(ctx context.Context, produkId string) error
 	GetByProdukId(ctx context.Context, get req.GetByProdukId) ([]entity.HargaDetailProduk, error)
@@ -73,7 +73,7 @@ func (u *hargaDetailProdukUsecase) Create(ctx context.Context, hargaDetailProduk
 	return nil
 }
 
-func (u *hargaDetailProdukUsecase) UpdateById(ctx context.Context, hargaDetailProduk req.UpdateHargaDetailProdukById) error {
+func (u *hargaDetailProdukUsecase) UpdateById(ctx context.Context, hargaDetailProduk req.UpdateHargaDetailProduk) error {
 	data := entity.HargaDetailProduk{
 		ID:    hargaDetailProduk.ID,
 		QTY:   hargaDetailProduk.QTY,

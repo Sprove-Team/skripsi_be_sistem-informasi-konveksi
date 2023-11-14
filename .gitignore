@@ -1,2 +1,3 @@
 .env
-db/backup/*
+db/mysql/backup/*
+db/redis/backup/*

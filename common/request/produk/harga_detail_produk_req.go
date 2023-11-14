@@ -10,7 +10,7 @@ type CreateHargaDetailProduk struct {
 	HargaDetail []hargaDetail `json:"harga_detail" validate:"gt=0,dive,required"`
 }
 
-type UpdateHargaDetailProdukById struct {
+type UpdateHargaDetailProduk struct {
 	ID string `params:"id" validate:"required,uuidv4_no_hyphens"`
 	// ProdukId string  `json:"produk_id" validate:"omitempty,uuidv4_no_hyphens"`
 	QTY   uint    `json:"qty" validate:"omitempty,number"`

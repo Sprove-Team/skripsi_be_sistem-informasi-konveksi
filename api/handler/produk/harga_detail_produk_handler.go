@@ -73,7 +73,6 @@ func (h *hargaDetailProdukHandler) Delete(c *fiber.Ctx) error {
 	}
 	ctx := c.UserContext()
 	err := h.uc.Delete(ctx, req.ID)
-	c.Accepts("application/json")
 	if ctx.Err() == context.DeadlineExceeded {
 		return c.Status(fiber.StatusRequestTimeout).JSON(resGlobal.ErrorResWithoutData(fiber.StatusRequestTimeout))
 	}
@@ -98,7 +97,6 @@ func (h *hargaDetailProdukHandler) DeleteByProdukId(c *fiber.Ctx) error {
 	}
 	ctx := c.UserContext()
 	err := h.uc.DeleteByProdukId(ctx, req.ProdukId)
-	c.Accepts("application/json")
 	if ctx.Err() == context.DeadlineExceeded {
 		return c.Status(fiber.StatusRequestTimeout).JSON(resGlobal.ErrorResWithoutData(fiber.StatusRequestTimeout))
 	}
@@ -112,13 +110,12 @@ func (h *hargaDetailProdukHandler) DeleteByProdukId(c *fiber.Ctx) error {
 }
 
 func (h *hargaDetailProdukHandler) Update(c *fiber.Ctx) error {
-	req := new(req.UpdateHargaDetailProdukById)
+	req := new(req.UpdateHargaDetailProduk)
 	if err := c.ParamsParser(req); err != nil {
 		log.Println(err)
 		return c.Status(fiber.StatusBadRequest).JSON(resGlobal.ErrorResWithoutData(fiber.StatusBadRequest))
 	}
 
-	c.Accepts("application/json")
 	if err := c.BodyParser(req); err != nil {
 		log.Println(err)
 		return c.Status(fiber.StatusBadRequest).JSON(resGlobal.ErrorResWithoutData(fiber.StatusBadRequest))

@@ -43,6 +43,7 @@ type SearchUser struct {
 
 func (r *userRepo) GetAll(ctx context.Context, param SearchUser) ([]entity.User, int64, error) {
 	datas := []entity.User{}
+
 	tx := r.DB.Model(&entity.User{})
 
 	if param.Role != "" {
@@ -69,13 +70,29 @@ func (r *userRepo) GetAll(ctx context.Context, param SearchUser) ([]entity.User,
 	}
 	var totalData int64
 
-	err := tx.Count(&totalData).Limit(param.Limit).Offset(param.Offset).Find(&datas).Error
-
+	err := tx.Count(&totalData).Limit(param.Limit).Offset(param.Offset).Find(&datas, "role != ?", "DIREKTUR").Error
 	return datas, totalData, err
 }
 
 func (r *userRepo) Update(ctx context.Context, user *entity.User) error {
-	return r.DB.WithContext(ctx).Updates(user).Error
+	tx := r.DB.Session(&gorm.Session{
+		Context: ctx,
+	})
+	err := tx.Transaction(func(tx *gorm.DB) error {
+		if user.Role != "" && user.Role != "SUPERVISOR" {
+			err := tx.Model(&entity.User{}).Where("id = ?", user.ID).Update("jenis_spv_id", nil).Error
+			if err != nil {
+				return err
+			}
+      user.JenisSpvID = ""
+		}
+		err := tx.Omit("id").Updates(user).Error
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+	return err
 }
 
 func (r *userRepo) Delete(ctx context.Context, id string) error {

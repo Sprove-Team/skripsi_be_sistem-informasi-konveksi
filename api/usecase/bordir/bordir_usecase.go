@@ -10,10 +10,10 @@ import (
 )
 
 type BordirUsecase interface {
-	Create(ctx context.Context, bordir req.CreateBordir) error
+	Create(ctx context.Context, reqBordir req.CreateBordir) error
 	Delete(ctx context.Context, id string) error
-	Update(ctx context.Context, bordir req.UpdateBordir) error
-	GetAll(ctx context.Context, get req.GetAllBordir) ([]entity.Bordir, int, int, error)
+	Update(ctx context.Context, reqBordir req.UpdateBordir) error
+	GetAll(ctx context.Context, reqBordir req.GetAllBordir) ([]entity.Bordir, int, int, error)
 	GetById(ctx context.Context, id string) (entity.Bordir, error)
 }
 
@@ -27,25 +27,25 @@ func NewBordirUsecase(repo repo.BordirRepo, uuidGen helper.UuidGenerator, pagina
 	return &bordirUsecase{repo, uuidGen, paginate}
 }
 
-func (u *bordirUsecase) Create(ctx context.Context, bordir req.CreateBordir) error {
+func (u *bordirUsecase) Create(ctx context.Context, reqBordir req.CreateBordir) error {
 	id, _ := u.uuidGen.GenerateUUID()
 	data := entity.Bordir{
 		ID:    id,
-		Nama:  bordir.Nama,
-		Harga: bordir.Harga,
+		Nama:  reqBordir.Nama,
+		Harga: reqBordir.Harga,
 	}
 	return u.repo.Create(ctx, &data)
 }
 
-func (u *bordirUsecase) Update(ctx context.Context, bordir req.UpdateBordir) error {
-	_, err := u.repo.GetById(ctx, bordir.ID)
+func (u *bordirUsecase) Update(ctx context.Context, reqBordir req.UpdateBordir) error {
+	_, err := u.repo.GetById(ctx, reqBordir.ID)
 	if err != nil {
 		return err
 	}
 	data := entity.Bordir{
-		ID:    bordir.ID,
-		Nama:  bordir.Nama,
-		Harga: bordir.Harga,
+		ID:    reqBordir.ID,
+		Nama:  reqBordir.Nama,
+		Harga: reqBordir.Harga,
 	}
 
 	return u.repo.Update(ctx, &data)
@@ -65,11 +65,11 @@ func (u *bordirUsecase) GetById(ctx context.Context, id string) (entity.Bordir, 
 	return data, err
 }
 
-func (u *bordirUsecase) GetAll(ctx context.Context, get req.GetAllBordir) ([]entity.Bordir, int, int, error) {
-	currentPage, offset, limit := u.paginate.GetPaginateData(get.Page, get.Limit)
+func (u *bordirUsecase) GetAll(ctx context.Context, reqBordir req.GetAllBordir) ([]entity.Bordir, int, int, error) {
+	currentPage, offset, limit := u.paginate.GetPaginateData(reqBordir.Page, reqBordir.Limit)
 
 	datas, totalData, err := u.repo.GetAll(ctx, repo.SearchBordir{
-		Nama:   get.Search.Nama,
+		Nama:   reqBordir.Search.Nama,
 		Limit:  limit,
 		Offset: offset,
 	})

@@ -12,9 +12,9 @@ var (
 // middleware auth
 
 var (
-	UnauthInvalidFormatToken = "format token jwt tidak valid"
-	UnauthTokenExpired       = "token telah kadaluarsa"
-	UnauthUserNotAllowed     = "pengguna tidak diizinkan untuk mengakses halaman ini"
+	UnauthInvalidToken   = "token tidak valid"
+	UnauthTokenExpired   = "token telah kadaluarsa"
+	UnauthUserNotAllowed = "pengguna tidak diizinkan untuk mengakses halaman ini"
 )
 
 // produk
