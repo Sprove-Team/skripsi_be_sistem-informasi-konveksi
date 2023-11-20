@@ -1,4 +1,4 @@
-package helper
+package pkg
 
 import (
 	"github.com/go-playground/locales/id"

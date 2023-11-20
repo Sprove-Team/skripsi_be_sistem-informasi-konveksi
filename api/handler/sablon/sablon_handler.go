@@ -10,7 +10,7 @@ import (
 	reqGlobal "github.com/be-sistem-informasi-konveksi/common/request/global"
 	req "github.com/be-sistem-informasi-konveksi/common/request/sablon"
 	resGlobal "github.com/be-sistem-informasi-konveksi/common/response/global"
-	helper "github.com/be-sistem-informasi-konveksi/helper"
+	"github.com/be-sistem-informasi-konveksi/pkg"
 )
 
 type SablonHandler interface {
@@ -23,10 +23,10 @@ type SablonHandler interface {
 
 type sablonHandler struct {
 	uc        usecase.SablonUsecase
-	validator helper.Validator
+	validator pkg.Validator
 }
 
-func NewSablonHandler(uc usecase.SablonUsecase, validator helper.Validator) SablonHandler {
+func NewSablonHandler(uc usecase.SablonUsecase, validator pkg.Validator) SablonHandler {
 	return &sablonHandler{uc, validator}
 }
 

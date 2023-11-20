@@ -6,11 +6,12 @@ import (
 	"github.com/gofiber/fiber/v2"
 	_ "github.com/joho/godotenv/autoload"
 
-	_timeoutMid "github.com/be-sistem-informasi-konveksi/api/middleware/timeout"
+	timeoutMid "github.com/be-sistem-informasi-konveksi/api/middleware/timeout"
 	"github.com/be-sistem-informasi-konveksi/app/config"
-	_handler_init "github.com/be-sistem-informasi-konveksi/app/handler_init"
+	"github.com/be-sistem-informasi-konveksi/app/handler_init"
 	"github.com/be-sistem-informasi-konveksi/app/route"
 	helper "github.com/be-sistem-informasi-konveksi/helper"
+	"github.com/be-sistem-informasi-konveksi/pkg"
 )
 
 func main() {
@@ -25,18 +26,21 @@ func main() {
 	dbGorm := dbGormConf.InitDBGormConf()
 	app := fiber.New()
 
+	// pkg
+	validator := pkg.NewValidator()
+	uuidGen := pkg.NewGoogleUUID()
+
 	// helper
-	validator := helper.NewValidator()
-	uuidGen := helper.NewGoogleUUID()
 	paginate := helper.NewPaginate()
 	encryptor := helper.NewEncryptor()
 	
 	// middleware
 	// userRepo := userRepo.NewUserRepo(dbGorm)
 	// authMid := _authMid.NewAuthMiddleware(userRepo)
-	timeoutMid := _timeoutMid.NewTimeoutMiddleware()
+	timeoutMid := timeoutMid.NewTimeoutMiddleware()
 
 	// domain
+
 	api := app.Group("/api")
 	v1 := api.Group("/v1")
 	{
@@ -44,7 +48,7 @@ func main() {
 		direktur := v1.Group("/direktur", timeoutMid.Timeout(nil))	
 		{
 			// produk
-			produkHandler := _handler_init.NewProdukHandlerInit(dbGorm, validator, uuidGen, paginate)
+			produkHandler := handler_init.NewProdukHandlerInit(dbGorm, validator, uuidGen, paginate)
 			produkRoute := route.NewProdukRoute(produkHandler)
 			produkGroup := direktur.Group("/produk")
 			{
@@ -54,7 +58,7 @@ func main() {
 			}
 	
 			// bordir
-			bordirHandler := _handler_init.NewBordirHandlerInit(dbGorm, validator, uuidGen, paginate)
+			bordirHandler := handler_init.NewBordirHandlerInit(dbGorm, validator, uuidGen, paginate)
 			bordirRoute := route.NewBordirRoute(bordirHandler)
 			bordirGroup := direktur.Group("/bordir")
 			{
@@ -62,7 +66,7 @@ func main() {
 			}
 	
 			// sablon
-			sablonHandler := _handler_init.NewSablonHandlerInit(dbGorm, validator, uuidGen, paginate)
+			sablonHandler := handler_init.NewSablonHandlerInit(dbGorm, validator, uuidGen, paginate)
 			sablonRoute := route.NewSablonRoute(sablonHandler)
 			sablonGroup := direktur.Group("/sablon")
 			{
@@ -70,7 +74,7 @@ func main() {
 			}
 	
 			//user
-			userHandler := _handler_init.NewUserHandlerInit(dbGorm, validator, uuidGen, paginate, encryptor)
+			userHandler := handler_init.NewUserHandlerInit(dbGorm, validator, uuidGen, paginate, encryptor)
 			userRoute := route.NewUserRoute(userHandler)
 			userGroup := direktur.Group("/user")
 			{

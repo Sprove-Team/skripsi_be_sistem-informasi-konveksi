@@ -8,6 +8,7 @@ import (
 	req "github.com/be-sistem-informasi-konveksi/common/request/user/jenis_spv"
 	"github.com/be-sistem-informasi-konveksi/entity"
 	"github.com/be-sistem-informasi-konveksi/helper"
+	"github.com/be-sistem-informasi-konveksi/pkg"
 )
 
 type JenisSpvUsecase interface {
@@ -19,11 +20,11 @@ type JenisSpvUsecase interface {
 
 type jenisSpvUsecase struct {
 	repo     repo.JenisSpvRepo
-	uuidGen  helper.UuidGenerator
+	uuidGen  pkg.UuidGenerator
 	paginate helper.Paginate
 }
 
-func NewJenisSpvUsecase(repo repo.JenisSpvRepo, uuidGen helper.UuidGenerator, paginate helper.Paginate) JenisSpvUsecase {
+func NewJenisSpvUsecase(repo repo.JenisSpvRepo, uuidGen pkg.UuidGenerator, paginate helper.Paginate) JenisSpvUsecase {
 	return &jenisSpvUsecase{repo, uuidGen, paginate}
 }
 

@@ -15,6 +15,7 @@ import (
 	hargaDetailUsecase "github.com/be-sistem-informasi-konveksi/api/usecase/produk/harga_detail"
 	kategoriUsecase "github.com/be-sistem-informasi-konveksi/api/usecase/produk/kategori"
 	"github.com/be-sistem-informasi-konveksi/helper"
+	"github.com/be-sistem-informasi-konveksi/pkg"
 )
 
 type ProdukHandlerInit interface {
@@ -24,12 +25,12 @@ type ProdukHandlerInit interface {
 }
 type produkHandlerInit struct {
 	DB        *gorm.DB
-	validator helper.Validator
-	uuidGen   helper.UuidGenerator
+	validator pkg.Validator
+	uuidGen   pkg.UuidGenerator
 	paginate  helper.Paginate
 }
 
-func NewProdukHandlerInit(DB *gorm.DB, validator helper.Validator, uuidGen helper.UuidGenerator, paginate helper.Paginate) ProdukHandlerInit {
+func NewProdukHandlerInit(DB *gorm.DB, validator pkg.Validator, uuidGen pkg.UuidGenerator, paginate helper.Paginate) ProdukHandlerInit {
 	return &produkHandlerInit{DB, validator, uuidGen, paginate}
 }
 

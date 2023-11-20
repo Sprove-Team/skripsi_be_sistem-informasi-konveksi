@@ -12,8 +12,8 @@ import (
 	mockUC "github.com/be-sistem-informasi-konveksi/api/usecase/produk/harga_detail/mock"
 	req "github.com/be-sistem-informasi-konveksi/common/request/produk/harga_detail"
 	resGlobal "github.com/be-sistem-informasi-konveksi/common/response/global"
+	"github.com/be-sistem-informasi-konveksi/pkg"
 
-	"github.com/be-sistem-informasi-konveksi/helper"
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
@@ -26,7 +26,7 @@ func TestCreate(t *testing.T) {
 	mockCtrl := gomock.NewController(t)
 	mockUC := mockUC.NewMockHargaDetailProdukUsecase(mockCtrl)
 	defer mockCtrl.Finish()
-	validator := helper.NewValidator()
+	validator := pkg.NewValidator()
 	h := handler.NewHargaDetailProdukHandler(mockUC, validator)
 	
 	tests := []struct {

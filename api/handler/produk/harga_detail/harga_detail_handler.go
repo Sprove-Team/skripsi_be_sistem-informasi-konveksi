@@ -11,7 +11,7 @@ import (
 	reqGlobal "github.com/be-sistem-informasi-konveksi/common/request/global"
 	req "github.com/be-sistem-informasi-konveksi/common/request/produk/harga_detail"
 	resGlobal "github.com/be-sistem-informasi-konveksi/common/response/global"
-	"github.com/be-sistem-informasi-konveksi/helper"
+	"github.com/be-sistem-informasi-konveksi/pkg"
 )
 
 type HargaDetailProdukHandler interface {
@@ -24,10 +24,10 @@ type HargaDetailProdukHandler interface {
 
 type hargaDetailProdukHandler struct {
 	uc        usecase.HargaDetailProdukUsecase
-	validator helper.Validator
+	validator pkg.Validator
 }
 
-func NewHargaDetailProdukHandler(uc usecase.HargaDetailProdukUsecase, validator helper.Validator) HargaDetailProdukHandler {
+func NewHargaDetailProdukHandler(uc usecase.HargaDetailProdukUsecase, validator pkg.Validator) HargaDetailProdukHandler {
 	return &hargaDetailProdukHandler{uc, validator}
 }
 

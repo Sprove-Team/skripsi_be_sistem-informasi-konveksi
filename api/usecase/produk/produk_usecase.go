@@ -12,6 +12,7 @@ import (
 	req "github.com/be-sistem-informasi-konveksi/common/request/produk"
 	"github.com/be-sistem-informasi-konveksi/entity"
 	"github.com/be-sistem-informasi-konveksi/helper"
+	"github.com/be-sistem-informasi-konveksi/pkg"
 )
 
 type ProdukUsecase interface {
@@ -25,14 +26,14 @@ type ProdukUsecase interface {
 type produkUsecase struct {
 	repo         repo.ProdukRepo
 	kategoriRepo kategoriRepo.KategoriProdukRepo
-	uuidGen      helper.UuidGenerator
+	uuidGen      pkg.UuidGenerator
 	paginate     helper.Paginate
 }
 
 func NewProdukUsecase(
 	repo repo.ProdukRepo,
 	kategoriRepo kategoriRepo.KategoriProdukRepo,
-	uuidGen helper.UuidGenerator,
+	uuidGen pkg.UuidGenerator,
 	paginate helper.Paginate,
 ) ProdukUsecase {
 	return &produkUsecase{repo, kategoriRepo, uuidGen, paginate}

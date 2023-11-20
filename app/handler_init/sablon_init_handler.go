@@ -7,6 +7,7 @@ import (
 	repo "github.com/be-sistem-informasi-konveksi/api/repository/sablon/mysql/gorm"
 	usecase "github.com/be-sistem-informasi-konveksi/api/usecase/sablon"
 	"github.com/be-sistem-informasi-konveksi/helper"
+	"github.com/be-sistem-informasi-konveksi/pkg"
 )
 
 type SablonHandlerInit interface {
@@ -14,12 +15,12 @@ type SablonHandlerInit interface {
 }
 type sablonHandlerInit struct {
 	DB        *gorm.DB
-	validator helper.Validator
-	uuidGen   helper.UuidGenerator
+	validator pkg.Validator
+	uuidGen   pkg.UuidGenerator
 	paginate  helper.Paginate
 }
 
-func NewSablonHandlerInit(DB *gorm.DB, validator helper.Validator, uuidGen helper.UuidGenerator, paginate helper.Paginate) SablonHandlerInit {
+func NewSablonHandlerInit(DB *gorm.DB, validator pkg.Validator, uuidGen pkg.UuidGenerator, paginate helper.Paginate) SablonHandlerInit {
 	return &sablonHandlerInit{DB, validator, uuidGen, paginate}
 }
 

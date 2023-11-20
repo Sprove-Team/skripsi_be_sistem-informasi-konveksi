@@ -11,7 +11,7 @@ import (
 	reqGlobal "github.com/be-sistem-informasi-konveksi/common/request/global"
 	req "github.com/be-sistem-informasi-konveksi/common/request/user/jenis_spv"
 	resGlobal "github.com/be-sistem-informasi-konveksi/common/response/global"
-	"github.com/be-sistem-informasi-konveksi/helper"
+	"github.com/be-sistem-informasi-konveksi/pkg"
 )
 
 type JenisSpvHandler interface {
@@ -23,10 +23,10 @@ type JenisSpvHandler interface {
 
 type jenisSpvHandler struct {
 	uc        usecase.JenisSpvUsecase
-	validator helper.Validator
+	validator pkg.Validator
 }
 
-func NewJenisSpvHandler(uc usecase.JenisSpvUsecase, validator helper.Validator) JenisSpvHandler {
+func NewJenisSpvHandler(uc usecase.JenisSpvUsecase, validator pkg.Validator) JenisSpvHandler {
 	return &jenisSpvHandler{uc, validator}
 }
 

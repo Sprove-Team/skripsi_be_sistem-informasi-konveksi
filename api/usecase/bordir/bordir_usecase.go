@@ -7,6 +7,7 @@ import (
 	req "github.com/be-sistem-informasi-konveksi/common/request/bordir"
 	"github.com/be-sistem-informasi-konveksi/entity"
 	"github.com/be-sistem-informasi-konveksi/helper"
+	"github.com/be-sistem-informasi-konveksi/pkg"
 )
 
 type BordirUsecase interface {
@@ -19,11 +20,11 @@ type BordirUsecase interface {
 
 type bordirUsecase struct {
 	repo     repo.BordirRepo
-	uuidGen  helper.UuidGenerator
+	uuidGen  pkg.UuidGenerator
 	paginate helper.Paginate
 }
 
-func NewBordirUsecase(repo repo.BordirRepo, uuidGen helper.UuidGenerator, paginate helper.Paginate) BordirUsecase {
+func NewBordirUsecase(repo repo.BordirRepo, uuidGen pkg.UuidGenerator, paginate helper.Paginate) BordirUsecase {
 	return &bordirUsecase{repo, uuidGen, paginate}
 }
 

@@ -11,7 +11,7 @@ import (
 	reqGlobal "github.com/be-sistem-informasi-konveksi/common/request/global"
 	req "github.com/be-sistem-informasi-konveksi/common/request/user"
 	resGlobal "github.com/be-sistem-informasi-konveksi/common/response/global"
-	"github.com/be-sistem-informasi-konveksi/helper"
+	"github.com/be-sistem-informasi-konveksi/pkg"
 )
 
 type UserHandler interface {
@@ -24,10 +24,10 @@ type UserHandler interface {
 
 type userHandler struct {
 	uc        usecase.UserUsecase
-	validator helper.Validator
+	validator pkg.Validator
 }
 
-func NewUserHandler(uc usecase.UserUsecase, validator helper.Validator) UserHandler {
+func NewUserHandler(uc usecase.UserUsecase, validator pkg.Validator) UserHandler {
 	return &userHandler{uc, validator}
 }
 

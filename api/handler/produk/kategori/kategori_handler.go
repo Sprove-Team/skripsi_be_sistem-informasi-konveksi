@@ -11,7 +11,7 @@ import (
 	reqGlobal "github.com/be-sistem-informasi-konveksi/common/request/global"
 	req "github.com/be-sistem-informasi-konveksi/common/request/produk/kategori"
 	resGlobal "github.com/be-sistem-informasi-konveksi/common/response/global"
-	"github.com/be-sistem-informasi-konveksi/helper"
+	"github.com/be-sistem-informasi-konveksi/pkg"
 )
 
 type KategoriProdukHandler interface {
@@ -24,10 +24,10 @@ type KategoriProdukHandler interface {
 
 type kategoriProdukHandler struct {
 	uc        usecase.KategoriProdukUsecase
-	validator helper.Validator
+	validator pkg.Validator
 }
 
-func NewKategoriProdukHandler(uc usecase.KategoriProdukUsecase, validator helper.Validator) KategoriProdukHandler {
+func NewKategoriProdukHandler(uc usecase.KategoriProdukUsecase, validator pkg.Validator) KategoriProdukHandler {
 	return &kategoriProdukHandler{uc, validator}
 }
 

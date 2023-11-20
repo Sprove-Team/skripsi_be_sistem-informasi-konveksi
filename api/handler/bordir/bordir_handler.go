@@ -10,7 +10,7 @@ import (
 	req "github.com/be-sistem-informasi-konveksi/common/request/bordir"
 	reqGlobal "github.com/be-sistem-informasi-konveksi/common/request/global"
 	resGlobal "github.com/be-sistem-informasi-konveksi/common/response/global"
-	helper "github.com/be-sistem-informasi-konveksi/helper"
+	"github.com/be-sistem-informasi-konveksi/pkg"
 )
 
 type BordirHandler interface {
@@ -23,10 +23,10 @@ type BordirHandler interface {
 
 type bordirHandler struct {
 	uc        usecase.BordirUsecase
-	validator helper.Validator
+	validator pkg.Validator
 }
 
-func NewBordirHandler(uc usecase.BordirUsecase, validator helper.Validator) BordirHandler {
+func NewBordirHandler(uc usecase.BordirUsecase, validator pkg.Validator) BordirHandler {
 	return &bordirHandler{uc, validator}
 }
 

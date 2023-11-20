@@ -7,6 +7,7 @@ import (
 	req "github.com/be-sistem-informasi-konveksi/common/request/sablon"
 	"github.com/be-sistem-informasi-konveksi/entity"
 	"github.com/be-sistem-informasi-konveksi/helper"
+	"github.com/be-sistem-informasi-konveksi/pkg"
 )
 
 type SablonUsecase interface {
@@ -19,11 +20,11 @@ type SablonUsecase interface {
 
 type sablonUsecase struct {
 	repo     repo.SablonRepo
-	uuidGen  helper.UuidGenerator
+	uuidGen  pkg.UuidGenerator
 	paginate helper.Paginate
 }
 
-func NewSablonUsecase(repo repo.SablonRepo, uuidGen helper.UuidGenerator, paginate helper.Paginate) SablonUsecase {
+func NewSablonUsecase(repo repo.SablonRepo, uuidGen pkg.UuidGenerator, paginate helper.Paginate) SablonUsecase {
 	return &sablonUsecase{repo, uuidGen, paginate}
 }
 

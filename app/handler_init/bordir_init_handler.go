@@ -1,12 +1,12 @@
 package handler_init
 
 import (
-	"gorm.io/gorm"
-
 	handler "github.com/be-sistem-informasi-konveksi/api/handler/bordir"
 	repo "github.com/be-sistem-informasi-konveksi/api/repository/bordir/mysql/gorm"
 	usecase "github.com/be-sistem-informasi-konveksi/api/usecase/bordir"
 	"github.com/be-sistem-informasi-konveksi/helper"
+	"github.com/be-sistem-informasi-konveksi/pkg"
+	"gorm.io/gorm"
 )
 
 type BordirHandlerInit interface {
@@ -14,12 +14,12 @@ type BordirHandlerInit interface {
 }
 type bordirHandlerInit struct {
 	DB        *gorm.DB
-	validator helper.Validator
-	uuidGen   helper.UuidGenerator
+	validator pkg.Validator
+	uuidGen   pkg.UuidGenerator
 	paginate  helper.Paginate
 }
 
-func NewBordirHandlerInit(DB *gorm.DB, validator helper.Validator, uuidGen helper.UuidGenerator, paginate helper.Paginate) BordirHandlerInit {
+func NewBordirHandlerInit(DB *gorm.DB, validator pkg.Validator, uuidGen pkg.UuidGenerator, paginate helper.Paginate) BordirHandlerInit {
 	return &bordirHandlerInit{DB, validator, uuidGen, paginate}
 }
 

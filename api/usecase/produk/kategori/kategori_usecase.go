@@ -7,6 +7,7 @@ import (
 	req "github.com/be-sistem-informasi-konveksi/common/request/produk/kategori"
 	"github.com/be-sistem-informasi-konveksi/entity"
 	"github.com/be-sistem-informasi-konveksi/helper"
+	"github.com/be-sistem-informasi-konveksi/pkg"
 )
 
 type KategoriProdukUsecase interface {
@@ -19,11 +20,11 @@ type KategoriProdukUsecase interface {
 
 type kategoriProdukUsecase struct {
 	repo     repo.KategoriProdukRepo
-	uuidGen  helper.UuidGenerator
+	uuidGen  pkg.UuidGenerator
 	paginate helper.Paginate
 }
 
-func NewKategoriProdukUsecase(repo repo.KategoriProdukRepo, uuidGen helper.UuidGenerator, paginate helper.Paginate) KategoriProdukUsecase {
+func NewKategoriProdukUsecase(repo repo.KategoriProdukRepo, uuidGen pkg.UuidGenerator, paginate helper.Paginate) KategoriProdukUsecase {
 	return &kategoriProdukUsecase{repo, uuidGen, paginate}
 }
 

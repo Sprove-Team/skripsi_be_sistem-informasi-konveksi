@@ -11,6 +11,7 @@ import (
 	res "github.com/be-sistem-informasi-konveksi/common/response/user"
 	"github.com/be-sistem-informasi-konveksi/entity"
 	"github.com/be-sistem-informasi-konveksi/helper"
+	"github.com/be-sistem-informasi-konveksi/pkg"
 )
 
 type UserUsecase interface {
@@ -23,7 +24,7 @@ type UserUsecase interface {
 type userUsecase struct {
 	repo         repo.UserRepo
 	jenisSpvRepo jenisSpvRepo.JenisSpvRepo
-	uuidGen      helper.UuidGenerator
+	uuidGen      pkg.UuidGenerator
 	paginate     helper.Paginate
 	encryptor    helper.Encryptor
 }
@@ -31,7 +32,7 @@ type userUsecase struct {
 func NewUserUsecase(
 	repo repo.UserRepo,
 	jenisSpvRepo jenisSpvRepo.JenisSpvRepo,
-	uuidGen helper.UuidGenerator,
+	uuidGen pkg.UuidGenerator,
 	paginate helper.Paginate,
 	encryptor helper.Encryptor,
 	) UserUsecase {

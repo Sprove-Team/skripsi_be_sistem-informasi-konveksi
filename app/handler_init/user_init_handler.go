@@ -10,6 +10,7 @@ import (
 	userUsecase "github.com/be-sistem-informasi-konveksi/api/usecase/user"
 	jenisSpvUsecase "github.com/be-sistem-informasi-konveksi/api/usecase/user/jenis_spv"
 	"github.com/be-sistem-informasi-konveksi/helper"
+	"github.com/be-sistem-informasi-konveksi/pkg"
 )
 
 type UserHandlerInit interface {
@@ -18,13 +19,13 @@ type UserHandlerInit interface {
 }
 type userHandlerInit struct {
 	DB        *gorm.DB
-	validator helper.Validator
-	uuidGen   helper.UuidGenerator
+	validator pkg.Validator
+	uuidGen   pkg.UuidGenerator
 	paginate  helper.Paginate
 	encryptor helper.Encryptor
 }
 
-func NewUserHandlerInit(DB *gorm.DB, validator helper.Validator, uuidGen helper.UuidGenerator, paginate helper.Paginate, encryptor helper.Encryptor) UserHandlerInit {
+func NewUserHandlerInit(DB *gorm.DB, validator pkg.Validator, uuidGen pkg.UuidGenerator, paginate helper.Paginate, encryptor helper.Encryptor) UserHandlerInit {
 	return &userHandlerInit{DB, validator, uuidGen, paginate, encryptor}
 }
 

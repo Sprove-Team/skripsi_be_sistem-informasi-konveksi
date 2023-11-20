@@ -12,7 +12,7 @@ import (
 	"github.com/be-sistem-informasi-konveksi/common/message"
 	req "github.com/be-sistem-informasi-konveksi/common/request/produk/harga_detail"
 	"github.com/be-sistem-informasi-konveksi/entity"
-	"github.com/be-sistem-informasi-konveksi/helper"
+	"github.com/be-sistem-informasi-konveksi/pkg"
 )
 
 type HargaDetailProdukUsecase interface {
@@ -26,10 +26,10 @@ type HargaDetailProdukUsecase interface {
 type hargaDetailProdukUsecase struct {
 	repo    repo.HargaDetailProdukRepo
 	produkR produkRepo.ProdukRepo
-	uuidGen helper.UuidGenerator
+	uuidGen pkg.UuidGenerator
 }
 
-func NewHargaDetailProdukUsecase(repo repo.HargaDetailProdukRepo, produkR produkRepo.ProdukRepo, uuidGen helper.UuidGenerator) HargaDetailProdukUsecase {
+func NewHargaDetailProdukUsecase(repo repo.HargaDetailProdukRepo, produkR produkRepo.ProdukRepo, uuidGen pkg.UuidGenerator) HargaDetailProdukUsecase {
 	return &hargaDetailProdukUsecase{repo, produkR, uuidGen}
 }
 
