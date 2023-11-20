@@ -11,7 +11,7 @@ type Claims struct {
 	Name  string `json:"name"`
 	Email string `json:"email"`
 	Role  string `json:"role"`
-	ID    uint   `json:"id"`
+	ID    string   `json:"id"`
 }
 
 type JwtC interface {

@@ -1,4 +1,4 @@
-package user
+package produk
 
 import (
 	"context"
@@ -7,42 +7,41 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 
-	usecase "github.com/be-sistem-informasi-konveksi/api/usecase/user"
+	usecase "github.com/be-sistem-informasi-konveksi/api/usecase/produk/kategori"
 	reqGlobal "github.com/be-sistem-informasi-konveksi/common/request/global"
-	req "github.com/be-sistem-informasi-konveksi/common/request/user"
+	req "github.com/be-sistem-informasi-konveksi/common/request/produk/kategori"
 	resGlobal "github.com/be-sistem-informasi-konveksi/common/response/global"
 	"github.com/be-sistem-informasi-konveksi/helper"
 )
 
-type UserHandler interface {
+type KategoriProdukHandler interface {
 	Create(c *fiber.Ctx) error
-	GetAll(c *fiber.Ctx) error
-  // GetById(c *fiber.Ctx) error
 	Update(c *fiber.Ctx) error
 	Delete(c *fiber.Ctx) error
+	GetAll(c *fiber.Ctx) error
+	GetById(c *fiber.Ctx) error
 }
 
-type userHandler struct {
-	uc        usecase.UserUsecase
+type kategoriProdukHandler struct {
+	uc        usecase.KategoriProdukUsecase
 	validator helper.Validator
 }
 
-func NewUserHandler(uc usecase.UserUsecase, validator helper.Validator) UserHandler {
-	return &userHandler{uc, validator}
+func NewKategoriProdukHandler(uc usecase.KategoriProdukUsecase, validator helper.Validator) KategoriProdukHandler {
+	return &kategoriProdukHandler{uc, validator}
 }
 
-func (h *userHandler) Create(c *fiber.Ctx) error {
-	req := new(req.CreateUser)
+func (h *kategoriProdukHandler) Create(c *fiber.Ctx) error {
+	c.Accepts("application/json")
+	req := new(req.Create)
 	if err := c.BodyParser(req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(resGlobal.ErrorResWithoutData(fiber.StatusBadRequest))
 	}
-	req.Role = strings.ToUpper(req.Role)
 	errValidate := h.validator.Validate(req)
-
 	if len(errValidate) > 0 {
 		return c.Status(fiber.StatusBadRequest).JSON(resGlobal.ErrorResWithData(errValidate, fiber.StatusBadRequest))
 	}
-
+	req.Nama = strings.ToLower(req.Nama)
 	ctx := c.UserContext()
 	err := h.uc.Create(ctx, *req)
 	if ctx.Err() == context.DeadlineExceeded {
@@ -59,40 +58,8 @@ func (h *userHandler) Create(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusCreated).JSON(resGlobal.SuccessResWithoutData("C"))
 }
 
-func (h *userHandler) GetAll(c *fiber.Ctx) error {
-	req := new(req.GetAllUser)
-	c.BodyParser(req)
-	c.QueryParser(req)
-
-	req.Search.Role = strings.ToUpper(req.Search.Role)
-	errValidate := h.validator.Validate(req)
-	if len(errValidate) > 0 {
-		return c.Status(fiber.StatusBadRequest).JSON(resGlobal.ErrorResWithData(errValidate, fiber.StatusBadRequest))
-	}
-	ctx := c.UserContext()
-	data, currentPage, totalPage, err := h.uc.GetAll(ctx, *req)
-
-	if ctx.Err() == context.DeadlineExceeded {
-		return c.Status(fiber.StatusRequestTimeout).JSON(resGlobal.ErrorResWithoutData(fiber.StatusRequestTimeout))
-	}
-	if err != nil {
-		if err.Error() == "record not found" {
-			return c.Status(fiber.StatusNotFound).JSON(resGlobal.ErrorResWithoutData(fiber.StatusNotFound))
-		}
-		log.Println(err)
-		return c.Status(fiber.StatusInternalServerError).JSON(resGlobal.ErrorResWithoutData(fiber.StatusInternalServerError))
-	}
-
-	dataRes := fiber.Map{
-		"user":         data,
-		"current_page": currentPage,
-		"total_page":   totalPage,
-	}
-	return c.Status(fiber.StatusOK).JSON(resGlobal.SuccessResWithData(dataRes, "R"))
-}
-
-func (h *userHandler) Update(c *fiber.Ctx) error {
-	req := new(req.UpdateUser)
+func (h *kategoriProdukHandler) Update(c *fiber.Ctx) error {
+	req := new(req.Update)
 	if err := c.ParamsParser(req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(resGlobal.ErrorResWithoutData(fiber.StatusBadRequest))
 	}
@@ -100,7 +67,7 @@ func (h *userHandler) Update(c *fiber.Ctx) error {
 	if err := c.BodyParser(req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(resGlobal.ErrorResWithoutData(fiber.StatusBadRequest))
 	}
-	req.Role = strings.ToUpper(req.Role)
+
 	errValidate := h.validator.Validate(req)
 
 	if len(errValidate) > 0 {
@@ -115,14 +82,12 @@ func (h *userHandler) Update(c *fiber.Ctx) error {
 		if err.Error() == "record not found" {
 			return c.Status(fiber.StatusNotFound).JSON(resGlobal.ErrorResWithoutData(fiber.StatusNotFound))
 		}
-		log.Println(err)
 		return c.Status(fiber.StatusInternalServerError).JSON(resGlobal.ErrorResWithoutData(fiber.StatusInternalServerError))
 	}
-
 	return c.Status(fiber.StatusOK).JSON(resGlobal.SuccessResWithoutData("U"))
 }
 
-func (h *userHandler) Delete(c *fiber.Ctx) error {
+func (h *kategoriProdukHandler) Delete(c *fiber.Ctx) error {
 	req := new(reqGlobal.ParamByID)
 	if err := c.ParamsParser(req); err != nil {
 		log.Println(err)
@@ -141,9 +106,61 @@ func (h *userHandler) Delete(c *fiber.Ctx) error {
 		if err.Error() == "record not found" {
 			return c.Status(fiber.StatusNotFound).JSON(resGlobal.ErrorResWithoutData(fiber.StatusNotFound))
 		}
+		return c.Status(fiber.StatusInternalServerError).JSON(resGlobal.ErrorResWithoutData(fiber.StatusInternalServerError))
+	}
+	return c.Status(fiber.StatusOK).JSON(resGlobal.SuccessResWithoutData("D"))
+}
+
+func (h *kategoriProdukHandler) GetAll(c *fiber.Ctx) error {
+	req := new(req.GetAll)
+	c.BodyParser(req)
+	c.QueryParser(req)
+
+	errValidate := h.validator.Validate(req)
+	if len(errValidate) > 0 {
+		return c.Status(fiber.StatusBadRequest).JSON(resGlobal.ErrorResWithData(errValidate, fiber.StatusBadRequest))
+	}
+
+	ctx := c.UserContext()
+	data, currentPage, totalPage, err := h.uc.GetAll(ctx, *req)
+	if ctx.Err() == context.DeadlineExceeded {
+		return c.Status(fiber.StatusRequestTimeout).JSON(resGlobal.ErrorResWithoutData(fiber.StatusRequestTimeout))
+	}
+	if err != nil {
+		if err.Error() == "record not found" {
+			return c.Status(fiber.StatusNotFound).JSON(resGlobal.ErrorResWithoutData(fiber.StatusNotFound))
+		}
 		log.Println(err)
 		return c.Status(fiber.StatusInternalServerError).JSON(resGlobal.ErrorResWithoutData(fiber.StatusInternalServerError))
 	}
+	dataRes := fiber.Map{
+		"kategori_produk": data,
+		"current_page":    currentPage,
+		"total_page":      totalPage,
+	}
+	return c.Status(fiber.StatusOK).JSON(resGlobal.SuccessResWithData(dataRes, "R"))
+}
 
-	return c.Status(fiber.StatusOK).JSON(resGlobal.SuccessResWithoutData("D"))
+func (h *kategoriProdukHandler) GetById(c *fiber.Ctx) error {
+	req := new(reqGlobal.ParamByID)
+	if err := c.ParamsParser(req); err != nil {
+		log.Println(err)
+		return c.Status(fiber.StatusBadRequest).JSON(resGlobal.ErrorResWithoutData(fiber.StatusBadRequest))
+	}
+	errValidate := h.validator.Validate(req)
+	if len(errValidate) > 0 {
+		return c.Status(fiber.StatusBadRequest).JSON(resGlobal.ErrorResWithData(errValidate, fiber.StatusBadRequest))
+	}
+	ctx := c.UserContext()
+	data, err := h.uc.GetById(ctx, req.ID)
+	if ctx.Err() == context.DeadlineExceeded {
+		return c.Status(fiber.StatusRequestTimeout).JSON(resGlobal.ErrorResWithoutData(fiber.StatusRequestTimeout))
+	}
+	if err != nil {
+		if err.Error() == "record not found" {
+			return c.Status(fiber.StatusNotFound).JSON(resGlobal.ErrorResWithoutData(fiber.StatusNotFound))
+		}
+		return c.Status(fiber.StatusInternalServerError).JSON(resGlobal.ErrorResWithoutData(fiber.StatusInternalServerError))
+	}
+	return c.Status(fiber.StatusOK).JSON(resGlobal.SuccessResWithData(data, "R"))
 }

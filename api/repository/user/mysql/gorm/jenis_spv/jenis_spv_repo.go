@@ -12,6 +12,8 @@ type JenisSpvRepo interface {
 	Create(ctx context.Context, jenisSpv *entity.JenisSpv) error
 	GetById(ctx context.Context, id string) (entity.JenisSpv, error)
 	GetAll(ctx context.Context) ([]entity.JenisSpv, error)
+	Update(ctx context.Context, jenisSpv *entity.JenisSpv) error
+    Delete(ctx context.Context, id string) error
 }
 
 type jenisSpvRepo struct {
@@ -26,9 +28,17 @@ func (r *jenisSpvRepo) Create(ctx context.Context, jenisSpv *entity.JenisSpv) er
 	return r.DB.WithContext(ctx).Create(jenisSpv).Error
 }
 
+func (r *jenisSpvRepo) Update(ctx context.Context, jenisSpv *entity.JenisSpv) error {
+	return r.DB.WithContext(ctx).Omit("id").Updates(jenisSpv).Error
+}
+
+func (r *jenisSpvRepo) Delete(ctx context.Context, id string) error {
+  return r.DB.WithContext(ctx).Delete(&entity.JenisSpv{}, "id = ?", id).Error
+}
+
 func (r *jenisSpvRepo) GetById(ctx context.Context, id string) (entity.JenisSpv, error) {
 	data := entity.JenisSpv{}
-	err := r.DB.WithContext(ctx).Find(&data, "id = ?", id).Error
+	err := r.DB.WithContext(ctx).First(&data, "id = ?", id).Error
 	return data, err
 }
 

@@ -6,6 +6,7 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	repo "github.com/be-sistem-informasi-konveksi/api/repository/user/mysql/gorm"
+	jenisSpvRepo "github.com/be-sistem-informasi-konveksi/api/repository/user/mysql/gorm/jenis_spv"
 	req "github.com/be-sistem-informasi-konveksi/common/request/user"
 	res "github.com/be-sistem-informasi-konveksi/common/response/user"
 	"github.com/be-sistem-informasi-konveksi/entity"
@@ -21,13 +22,19 @@ type UserUsecase interface {
 
 type userUsecase struct {
 	repo         repo.UserRepo
-	jenisSpvRepo repo.JenisSpvRepo
+	jenisSpvRepo jenisSpvRepo.JenisSpvRepo
 	uuidGen      helper.UuidGenerator
 	paginate     helper.Paginate
 	encryptor    helper.Encryptor
 }
 
-func NewUserUsecase(repo repo.UserRepo, jenisSpvRepo repo.JenisSpvRepo, uuidGen helper.UuidGenerator, paginate helper.Paginate, encryptor helper.Encryptor) UserUsecase {
+func NewUserUsecase(
+	repo repo.UserRepo,
+	jenisSpvRepo jenisSpvRepo.JenisSpvRepo,
+	uuidGen helper.UuidGenerator,
+	paginate helper.Paginate,
+	encryptor helper.Encryptor,
+	) UserUsecase {
 	return &userUsecase{repo, jenisSpvRepo, uuidGen, paginate, encryptor}
 }
 
@@ -86,7 +93,15 @@ func (u *userUsecase) Update(ctx context.Context, reqUser req.UpdateUser) error 
 }
 
 func (u *userUsecase) Delete(ctx context.Context, id string) error {
-	return u.repo.Delete(ctx, id)
+	_, err := u.repo.GetById(ctx, id)
+	if err != nil {
+		return err
+	}
+	err = u.repo.Delete(ctx, id)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (u *userUsecase) GetAll(ctx context.Context, reqUser req.GetAllUser) ([]res.DataGetAllUserRes, int, int, error) {
@@ -111,7 +126,7 @@ func (u *userUsecase) GetAll(ctx context.Context, reqUser req.GetAllUser) ([]res
 		d := d
 		g.Go(func() error {
 			jenisSpv, err := u.jenisSpvRepo.GetById(ctx, d.JenisSpvID)
-			if err != nil {
+			if err != nil && err.Error() != "record not found" {
 				return err
 			}
 

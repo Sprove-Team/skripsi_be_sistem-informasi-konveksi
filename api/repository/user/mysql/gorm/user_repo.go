@@ -15,6 +15,7 @@ type UserRepo interface {
 	GetAll(ctx context.Context, param SearchUser) ([]entity.User, int64, error)
 	GetByJenisSpvId(ctx context.Context, jenisSpvId string) (entity.User, error)
 	GetByUsername(ctx context.Context, username string) (entity.User, error)
+	GetById(ctx context.Context, id string) (entity.User, error)
 }
 
 type userRepo struct {
@@ -74,6 +75,12 @@ func (r *userRepo) GetAll(ctx context.Context, param SearchUser) ([]entity.User,
 	return datas, totalData, err
 }
 
+func (r *userRepo) GetById(ctx context.Context, id string) (entity.User, error) {
+	data := entity.User{}
+	err := r.DB.WithContext(ctx).Where("id = ?", id).First(&data).Error
+	return data, err
+}
+
 func (r *userRepo) Update(ctx context.Context, user *entity.User) error {
 	tx := r.DB.Session(&gorm.Session{
 		Context: ctx,
@@ -84,7 +91,7 @@ func (r *userRepo) Update(ctx context.Context, user *entity.User) error {
 			if err != nil {
 				return err
 			}
-      user.JenisSpvID = ""
+			user.JenisSpvID = ""
 		}
 		err := tx.Omit("id").Updates(user).Error
 		if err != nil {

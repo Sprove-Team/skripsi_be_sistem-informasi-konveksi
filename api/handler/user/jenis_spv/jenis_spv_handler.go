@@ -1,56 +1,55 @@
-package produk
+package user
 
 import (
 	"context"
 	"log"
+	"strings"
 
 	"github.com/gofiber/fiber/v2"
 
-	usecase "github.com/be-sistem-informasi-konveksi/api/usecase/produk"
-	"github.com/be-sistem-informasi-konveksi/common/message"
+	usecase "github.com/be-sistem-informasi-konveksi/api/usecase/user/jenis_spv"
 	reqGlobal "github.com/be-sistem-informasi-konveksi/common/request/global"
-	req "github.com/be-sistem-informasi-konveksi/common/request/produk"
+	req "github.com/be-sistem-informasi-konveksi/common/request/user/jenis_spv"
 	resGlobal "github.com/be-sistem-informasi-konveksi/common/response/global"
 	"github.com/be-sistem-informasi-konveksi/helper"
 )
 
-type HargaDetailProdukHandler interface {
+type JenisSpvHandler interface {
 	Create(c *fiber.Ctx) error
+	GetAll(c *fiber.Ctx) error
 	Update(c *fiber.Ctx) error
 	Delete(c *fiber.Ctx) error
-	DeleteByProdukId(c *fiber.Ctx) error
-	GetByProdukId(c *fiber.Ctx) error
 }
 
-type hargaDetailProdukHandler struct {
-	uc        usecase.HargaDetailProdukUsecase
+type jenisSpvHandler struct {
+	uc        usecase.JenisSpvUsecase
 	validator helper.Validator
 }
 
-func NewHargaDetailProdukHandler(uc usecase.HargaDetailProdukUsecase, validator helper.Validator) HargaDetailProdukHandler {
-	return &hargaDetailProdukHandler{uc, validator}
+func NewJenisSpvHandler(uc usecase.JenisSpvUsecase, validator helper.Validator) JenisSpvHandler {
+	return &jenisSpvHandler{uc, validator}
 }
 
-func (h *hargaDetailProdukHandler) Create(c *fiber.Ctx) error {
+func (h *jenisSpvHandler) Create(c *fiber.Ctx) error {
 	c.Accepts("application/json")
-	req := new(req.CreateHargaDetailProduk)
+	req := new(req.Create)
 	if err := c.BodyParser(req); err != nil {
-		log.Println(err)
 		return c.Status(fiber.StatusBadRequest).JSON(resGlobal.ErrorResWithoutData(fiber.StatusBadRequest))
 	}
+	req.Nama = strings.ToLower(req.Nama)
 	errValidate := h.validator.Validate(req)
 	if len(errValidate) > 0 {
 		return c.Status(fiber.StatusBadRequest).JSON(resGlobal.ErrorResWithData(errValidate, fiber.StatusBadRequest))
 	}
+
 	ctx := c.UserContext()
 	err := h.uc.Create(ctx, *req)
+
 	if ctx.Err() == context.DeadlineExceeded {
 		return c.Status(fiber.StatusRequestTimeout).JSON(resGlobal.ErrorResWithoutData(fiber.StatusRequestTimeout))
 	}
+
 	if err != nil {
-		if err.Error() == message.ProdukNotFound {
-			return c.Status(fiber.StatusBadRequest).JSON(resGlobal.CustomRes(fiber.StatusBadRequest, message.ProdukNotFound, nil))
-		}
 		if err.Error() == "duplicated key not allowed" {
 			return c.Status(fiber.StatusConflict).JSON(resGlobal.ErrorResWithoutData(fiber.StatusConflict))
 		}
@@ -61,7 +60,38 @@ func (h *hargaDetailProdukHandler) Create(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusCreated).JSON(resGlobal.SuccessResWithoutData("C"))
 }
 
-func (h *hargaDetailProdukHandler) Delete(c *fiber.Ctx) error {
+func (h *jenisSpvHandler) Update(c *fiber.Ctx) error {
+	req := new(req.Update)
+	if err := c.ParamsParser(req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(resGlobal.ErrorResWithoutData(fiber.StatusBadRequest))
+	}
+	c.Accepts("application/json")
+	if err := c.BodyParser(req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(resGlobal.ErrorResWithoutData(fiber.StatusBadRequest))
+	}
+	req.Nama = strings.ToLower(req.Nama)
+	errValidate := h.validator.Validate(req)
+
+	if len(errValidate) > 0 {
+		return c.Status(fiber.StatusBadRequest).JSON(resGlobal.ErrorResWithData(errValidate, fiber.StatusBadRequest))
+	}
+	ctx := c.UserContext()
+	err := h.uc.Update(ctx, *req)
+	if ctx.Err() == context.DeadlineExceeded {
+		return c.Status(fiber.StatusRequestTimeout).JSON(resGlobal.ErrorResWithoutData(fiber.StatusRequestTimeout))
+	}
+	if err != nil {
+		if err.Error() == "record not found" {
+			return c.Status(fiber.StatusNotFound).JSON(resGlobal.ErrorResWithoutData(fiber.StatusNotFound))
+		}
+		log.Println(err)
+		return c.Status(fiber.StatusInternalServerError).JSON(resGlobal.ErrorResWithoutData(fiber.StatusInternalServerError))
+	}
+
+	return c.Status(fiber.StatusOK).JSON(resGlobal.SuccessResWithoutData("U"))
+}
+
+func (h *jenisSpvHandler) Delete(c *fiber.Ctx) error {
 	req := new(reqGlobal.ParamByID)
 	if err := c.ParamsParser(req); err != nil {
 		log.Println(err)
@@ -80,83 +110,25 @@ func (h *hargaDetailProdukHandler) Delete(c *fiber.Ctx) error {
 		if err.Error() == "record not found" {
 			return c.Status(fiber.StatusNotFound).JSON(resGlobal.ErrorResWithoutData(fiber.StatusNotFound))
 		}
+		log.Println(err)
 		return c.Status(fiber.StatusInternalServerError).JSON(resGlobal.ErrorResWithoutData(fiber.StatusInternalServerError))
 	}
+
 	return c.Status(fiber.StatusOK).JSON(resGlobal.SuccessResWithoutData("D"))
 }
 
-func (h *hargaDetailProdukHandler) DeleteByProdukId(c *fiber.Ctx) error {
-	req := new(req.DeleteByProdukId)
-	if err := c.ParamsParser(req); err != nil {
-		log.Println(err)
-		return c.Status(fiber.StatusBadRequest).JSON(resGlobal.ErrorResWithoutData(fiber.StatusBadRequest))
-	}
-	errValidate := h.validator.Validate(req)
-	if len(errValidate) > 0 {
-		return c.Status(fiber.StatusBadRequest).JSON(resGlobal.ErrorResWithData(errValidate, fiber.StatusBadRequest))
-	}
+func (h *jenisSpvHandler) GetAll(c *fiber.Ctx) error {
 	ctx := c.UserContext()
-	err := h.uc.DeleteByProdukId(ctx, req.ProdukId)
+	datas, err := h.uc.GetAll(ctx)
 	if ctx.Err() == context.DeadlineExceeded {
 		return c.Status(fiber.StatusRequestTimeout).JSON(resGlobal.ErrorResWithoutData(fiber.StatusRequestTimeout))
 	}
 	if err != nil {
-		if err.Error() == "record not found" {
-			return c.Status(fiber.StatusNotFound).JSON(resGlobal.ErrorResWithoutData(fiber.StatusNotFound))
-		}
-		return c.Status(fiber.StatusInternalServerError).JSON(resGlobal.ErrorResWithoutData(fiber.StatusInternalServerError))
-	}
-	return c.Status(fiber.StatusOK).JSON(resGlobal.SuccessResWithoutData("D"))
-}
-
-func (h *hargaDetailProdukHandler) Update(c *fiber.Ctx) error {
-	req := new(req.UpdateHargaDetailProduk)
-	if err := c.ParamsParser(req); err != nil {
 		log.Println(err)
-		return c.Status(fiber.StatusBadRequest).JSON(resGlobal.ErrorResWithoutData(fiber.StatusBadRequest))
-	}
-
-	if err := c.BodyParser(req); err != nil {
-		log.Println(err)
-		return c.Status(fiber.StatusBadRequest).JSON(resGlobal.ErrorResWithoutData(fiber.StatusBadRequest))
-	}
-	errValidate := h.validator.Validate(req)
-	if len(errValidate) > 0 {
-		return c.Status(fiber.StatusBadRequest).JSON(resGlobal.ErrorResWithData(errValidate, fiber.StatusBadRequest))
-	}
-	ctx := c.UserContext()
-	err := h.uc.UpdateById(ctx, *req)
-	if ctx.Err() == context.DeadlineExceeded {
-		return c.Status(fiber.StatusRequestTimeout).JSON(resGlobal.ErrorResWithoutData(fiber.StatusRequestTimeout))
-	}
-	if err != nil {
-		if err.Error() == "duplicated key not allowed" {
-			return c.Status(fiber.StatusConflict).JSON(resGlobal.ErrorResWithoutData(fiber.StatusConflict))
-		}
 		return c.Status(fiber.StatusInternalServerError).JSON(resGlobal.ErrorResWithoutData(fiber.StatusInternalServerError))
 	}
-	return c.Status(fiber.StatusCreated).JSON(resGlobal.SuccessResWithoutData("U"))
-}
-
-func (h *hargaDetailProdukHandler) GetByProdukId(c *fiber.Ctx) error {
-	req := new(req.GetByProdukId)
-	if err := c.ParamsParser(req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(resGlobal.ErrorResWithoutData(fiber.StatusBadRequest))
-	}
-	errValidate := h.validator.Validate(req)
-	if len(errValidate) > 0 {
-		return c.Status(fiber.StatusBadRequest).JSON(resGlobal.ErrorResWithData(errValidate, fiber.StatusBadRequest))
-	}
-	ctx := c.UserContext()
-	data, err := h.uc.GetByProdukId(ctx, *req)
-	if ctx.Err() == context.DeadlineExceeded {
-		return c.Status(fiber.StatusRequestTimeout).JSON(resGlobal.ErrorResWithoutData(fiber.StatusRequestTimeout))
-	}
-	if err != nil {
-		if err.Error() == "record not found" {
-			return c.Status(fiber.StatusNotFound).JSON(resGlobal.ErrorResWithoutData(fiber.StatusNotFound))
-		}
-		return c.Status(fiber.StatusInternalServerError).JSON(resGlobal.ErrorResWithoutData(fiber.StatusInternalServerError))
-	}
-	return c.Status(fiber.StatusOK).JSON(resGlobal.SuccessResWithData(data, "R"))
+  dataRes := fiber.Map{
+    "jenis_spv": datas,
+  }
+	return c.Status(fiber.StatusOK).JSON(resGlobal.SuccessResWithData(dataRes, "R"))
 }

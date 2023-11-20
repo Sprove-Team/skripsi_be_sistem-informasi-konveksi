@@ -7,6 +7,7 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	repo "github.com/be-sistem-informasi-konveksi/api/repository/produk/mysql/gorm"
+	kategoriRepo "github.com/be-sistem-informasi-konveksi/api/repository/produk/mysql/gorm/kategori"
 	"github.com/be-sistem-informasi-konveksi/common/message"
 	req "github.com/be-sistem-informasi-konveksi/common/request/produk"
 	"github.com/be-sistem-informasi-konveksi/entity"
@@ -23,14 +24,14 @@ type ProdukUsecase interface {
 
 type produkUsecase struct {
 	repo         repo.ProdukRepo
-	kategoriRepo repo.KategoriProdukRepo
+	kategoriRepo kategoriRepo.KategoriProdukRepo
 	uuidGen      helper.UuidGenerator
 	paginate     helper.Paginate
 }
 
 func NewProdukUsecase(
 	repo repo.ProdukRepo,
-	kategoriRepo repo.KategoriProdukRepo,
+	kategoriRepo kategoriRepo.KategoriProdukRepo,
 	uuidGen helper.UuidGenerator,
 	paginate helper.Paginate,
 ) ProdukUsecase {

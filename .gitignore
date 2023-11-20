@@ -1,3 +1,4 @@
 .env
+app/backup_main.go.backup
 db/mysql/backup/*
 db/redis/backup/*
