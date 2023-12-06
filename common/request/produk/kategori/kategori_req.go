@@ -6,7 +6,7 @@ type Create struct {
 
 type Update struct {
 	Nama string `json:"nama" validate:"omitempty,printascii"`
-	ID   string `json:"id" validate:"required,uuidv4_no_hyphens"`
+	ID   string `json:"id" validate:"required,ulid"`
 }
 
 type SearchFilter struct {
@@ -15,6 +15,7 @@ type SearchFilter struct {
 
 type GetAll struct {
 	Search SearchFilter `json:"search" validate:"omitempty"`
-	Page   int          `query:"page" validate:"omitempty,number"`
-	Limit  int          `query:"limit" validate:"omitempty,number"`
+	// Page   int          `query:"page" validate:"omitempty,number"`
+	Next  string `query:"next" validate:"omitempty"`
+	Limit int    `query:"limit" validate:"omitempty,number"`
 }

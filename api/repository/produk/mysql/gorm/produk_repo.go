@@ -9,7 +9,7 @@ import (
 )
 
 type ProdukRepo interface {
-	GetAll(ctx context.Context, param SearchProduk) ([]entity.Produk, int64, error)
+	GetAll(ctx context.Context, param SearchProduk) ([]entity.Produk, error)
 	GetById(ctx context.Context, id string) (entity.Produk, error)
 	Create(ctx context.Context, produk *entity.Produk) error
 	Update(ctx context.Context, produk *entity.Produk) error
@@ -45,29 +45,35 @@ func (r *produkRepo) GetById(ctx context.Context, id string) (entity.Produk, err
 type SearchProduk struct {
 	Nama             string
 	KategoriProdukId string
-	HasHargaDetail  bool 
+	HasHargaDetail   bool
+	Next             string
 	Limit            int
-	Offset           int
+	// Offset           int
 }
 
-func (r *produkRepo) GetAll(ctx context.Context, param SearchProduk) ([]entity.Produk, int64, error) {
+func (r *produkRepo) GetAll(ctx context.Context, param SearchProduk) ([]entity.Produk, error) {
 	datas := []entity.Produk{}
-	var totalData int64
-	
-	tx := r.DB.WithContext(ctx).Model(&entity.Produk{})
+
+	tx := r.DB.WithContext(ctx).Model(&entity.Produk{}).Order("produk.id ASC")
+
+	if param.Next != "" {
+		tx = tx.Where("produk.id > ?", param.Next)
+	}
+
 	tx = tx.Where("nama LIKE ?", "%"+param.Nama+"%")
 
 	if param.KategoriProdukId != "" {
 		tx = tx.Where("kategori_produk_id = ?", param.KategoriProdukId)
 	}
 
-	if param.HasHargaDetail{
-		tx = tx.InnerJoins("HargaDetails").Preload("HargaDetails").Count(&totalData)
+	if param.HasHargaDetail {
+		tx = tx.InnerJoins("HargaDetails").Preload("HargaDetails")
 	} else {
-		tx = tx.Preload("HargaDetails").Joins("LEFT JOIN harga_detail_produk hd on hd.produk_id = produk.id").Where("hd.id IS NULL").Count(&totalData)
+		tx = tx.Preload("HargaDetails").Joins("LEFT JOIN harga_detail_produk hd on hd.produk_id = produk.id").Where("hd.id IS NULL")
 	}
 
-	err := tx.Limit(param.Limit).Offset(param.Offset).Find(&datas).Error
+	// err := tx.Limit(param.Limit).Offset(param.Offset).Find(&datas).Error
+	err := tx.Limit(param.Limit).Find(&datas).Error
 
-	return datas, totalData, err
+	return datas, err
 }

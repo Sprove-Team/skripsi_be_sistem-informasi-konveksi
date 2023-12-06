@@ -26,25 +26,26 @@ type ProdukHandlerInit interface {
 type produkHandlerInit struct {
 	DB        *gorm.DB
 	validator pkg.Validator
-	uuidGen   pkg.UuidGenerator
+	// uuidGen   pkg.UuidGenerator
+	ulid   pkg.UlidPkg
 	paginate  helper.Paginate
 }
 
-func NewProdukHandlerInit(DB *gorm.DB, validator pkg.Validator, uuidGen pkg.UuidGenerator, paginate helper.Paginate) ProdukHandlerInit {
-	return &produkHandlerInit{DB, validator, uuidGen, paginate}
+func NewProdukHandlerInit(DB *gorm.DB, validator pkg.Validator, ulid pkg.UlidPkg, paginate helper.Paginate) ProdukHandlerInit {
+	return &produkHandlerInit{DB, validator, ulid, paginate}
 }
 
 func (d *produkHandlerInit) ProdukHandler() produkHandler.ProdukHandler {
 	r := produkRepo.NewProdukRepo(d.DB)
 	kategoriR := kategoriRepo.NewKategoriProdukRepo(d.DB)
-	uc := produkUsecase.NewProdukUsecase(r, kategoriR, d.uuidGen, d.paginate)
+	uc := produkUsecase.NewProdukUsecase(r, kategoriR, d.ulid, d.paginate)
 	h := produkHandler.NewProdukHandler(uc, d.validator)
 	return h
 }
 
 func (d *produkHandlerInit) KategoriProdukHandler() kategoriHandler.KategoriProdukHandler {
 	r := kategoriRepo.NewKategoriProdukRepo(d.DB)
-	uc := kategoriUsecase.NewKategoriProdukUsecase(r, d.uuidGen, d.paginate)
+	uc := kategoriUsecase.NewKategoriProdukUsecase(r, d.ulid, d.paginate)
 	h := kategoriHandler.NewKategoriProdukHandler(uc, d.validator)
 	return h
 }
@@ -52,7 +53,7 @@ func (d *produkHandlerInit) KategoriProdukHandler() kategoriHandler.KategoriProd
 func (d *produkHandlerInit) HargaDetailProdukHandler() hargaDetailHandler.HargaDetailProdukHandler {
 	r := hargaDetailRepo.NewHargaDetailProdukRepo(d.DB)
 	produkR := produkRepo.NewProdukRepo(d.DB)
-	uc := hargaDetailUsecase.NewHargaDetailProdukUsecase(r, produkR, d.uuidGen)
+	uc := hargaDetailUsecase.NewHargaDetailProdukUsecase(r, produkR, d.ulid)
 	h := hargaDetailHandler.NewHargaDetailProdukHandler(uc, d.validator)
 	return h
 }

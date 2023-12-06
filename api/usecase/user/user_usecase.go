@@ -15,32 +15,34 @@ import (
 )
 
 type UserUsecase interface {
-	Create(ctx context.Context, reqUser req.CreateUser) error
-	Update(ctx context.Context, reqUser req.UpdateUser) error
+	Create(ctx context.Context, reqUser req.Create) error
+	Update(ctx context.Context, reqUser req.Update) error
 	Delete(ctx context.Context, id string) error
-	GetAll(ctx context.Context, reqUser req.GetAllUser) ([]res.DataGetAllUserRes, int, int, error)
+	GetAll(ctx context.Context, reqUser req.GetAll) ([]res.DataGetAllUserRes, error)
 }
 
 type userUsecase struct {
 	repo         repo.UserRepo
 	jenisSpvRepo jenisSpvRepo.JenisSpvRepo
-	uuidGen      pkg.UuidGenerator
-	paginate     helper.Paginate
-	encryptor    helper.Encryptor
+	// uuidGen      pkg.UuidGenerator
+	ulid      pkg.UlidPkg
+	paginate  helper.Paginate
+	encryptor helper.Encryptor
 }
 
 func NewUserUsecase(
 	repo repo.UserRepo,
 	jenisSpvRepo jenisSpvRepo.JenisSpvRepo,
-	uuidGen pkg.UuidGenerator,
+	// uuidGen pkg.UuidGenerator,
+	ulid pkg.UlidPkg,
 	paginate helper.Paginate,
 	encryptor helper.Encryptor,
-	) UserUsecase {
-	return &userUsecase{repo, jenisSpvRepo, uuidGen, paginate, encryptor}
+) UserUsecase {
+	return &userUsecase{repo, jenisSpvRepo, ulid, paginate, encryptor}
 }
 
-func (u *userUsecase) Create(ctx context.Context, reqUser req.CreateUser) error {
-	id, _ := u.uuidGen.GenerateUUID()
+func (u *userUsecase) Create(ctx context.Context, reqUser req.Create) error {
+	id := u.ulid.MakeUlid().String()
 	pass, err := u.encryptor.HashPassword(reqUser.Password)
 	if err != nil {
 		return err
@@ -64,7 +66,7 @@ func (u *userUsecase) Create(ctx context.Context, reqUser req.CreateUser) error 
 	return nil
 }
 
-func (u *userUsecase) Update(ctx context.Context, reqUser req.UpdateUser) error {
+func (u *userUsecase) Update(ctx context.Context, reqUser req.Update) error {
 	user := entity.User{
 		ID:       reqUser.ID,
 		Nama:     reqUser.Nama,
@@ -105,20 +107,21 @@ func (u *userUsecase) Delete(ctx context.Context, id string) error {
 	return nil
 }
 
-func (u *userUsecase) GetAll(ctx context.Context, reqUser req.GetAllUser) ([]res.DataGetAllUserRes, int, int, error) {
-	currentPage, offset, limit := u.paginate.GetPaginateData(reqUser.Page, reqUser.Limit)
-	datas, totalData, err := u.repo.GetAll(ctx, repo.SearchUser{
+func (u *userUsecase) GetAll(ctx context.Context, reqUser req.GetAll) ([]res.DataGetAllUserRes, error) {
+	// currentPage, offset, limit := u.paginate.GetPaginateData(reqUser.Page, reqUser.Limit)
+	datas, err := u.repo.GetAll(ctx, repo.SearchUser{
 		Nama:       reqUser.Search.Nama,
 		Alamat:     reqUser.Search.Alamat,
 		Username:   reqUser.Search.Username,
 		NoTelp:     reqUser.Search.NoTelp,
 		Role:       reqUser.Search.Role,
 		JenisSpvId: reqUser.Search.JenisSpvID,
-		Limit:      limit,
-		Offset:     offset,
+		Limit:      reqUser.Limit,
+		Next:       reqUser.Next,
+		// Offset:     offset,
 	})
 	if err != nil {
-		return nil, currentPage, 0, err
+		return nil, err
 	}
 	datasRes := make([]res.DataGetAllUserRes, len(datas))
 	g := &errgroup.Group{}
@@ -149,10 +152,10 @@ func (u *userUsecase) GetAll(ctx context.Context, reqUser req.GetAllUser) ([]res
 	}
 
 	if err := g.Wait(); err != nil {
-		return nil, currentPage, 0, err
+		return nil, err
 	}
 
-	totalPage := u.paginate.GetTotalPages(int(totalData), limit)
+	// totalPage := u.paginate.GetTotalPages(int(totalData), limit)
 
-	return datasRes, currentPage, totalPage, err
+	return datasRes, err
 }

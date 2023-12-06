@@ -12,7 +12,7 @@ type UserRepo interface {
 	Create(ctx context.Context, user *entity.User) error
 	Update(ctx context.Context, user *entity.User) error
 	Delete(ctx context.Context, id string) error
-	GetAll(ctx context.Context, param SearchUser) ([]entity.User, int64, error)
+	GetAll(ctx context.Context, param SearchUser) ([]entity.User, error)
 	GetByJenisSpvId(ctx context.Context, jenisSpvId string) (entity.User, error)
 	GetByUsername(ctx context.Context, username string) (entity.User, error)
 	GetById(ctx context.Context, id string) (entity.User, error)
@@ -39,13 +39,14 @@ type SearchUser struct {
 	Alamat     string
 	JenisSpvId string
 	Limit      int
-	Offset     int
+	Next       string
+	// Offset     int
 }
 
-func (r *userRepo) GetAll(ctx context.Context, param SearchUser) ([]entity.User, int64, error) {
+func (r *userRepo) GetAll(ctx context.Context, param SearchUser) ([]entity.User, error) {
 	datas := []entity.User{}
 
-	tx := r.DB.Model(&entity.User{})
+	tx := r.DB.Model(&entity.User{}).Order("id ASC")
 
 	if param.Role != "" {
 		tx = tx.Where("role = ?", param.Role)
@@ -69,10 +70,15 @@ func (r *userRepo) GetAll(ctx context.Context, param SearchUser) ([]entity.User,
 	if param.Alamat != "" {
 		tx = tx.Where("alamat LIKE ?", "%"+param.Alamat+"%")
 	}
-	var totalData int64
 
-	err := tx.Count(&totalData).Limit(param.Limit).Offset(param.Offset).Find(&datas, "role != ?", "DIREKTUR").Error
-	return datas, totalData, err
+	if param.Next != "" {
+		tx = tx.Where("id > ?", param.Next)
+	}
+
+	// err := tx.Count(&totalData).Limit(param.Limit).Offset(param.Offset).Find(&datas, "role != ?", "DIREKTUR").Error
+
+	err := tx.Limit(param.Limit).Find(&datas, "role != ?", "DIREKTUR").Error
+	return datas, err
 }
 
 func (r *userRepo) GetById(ctx context.Context, id string) (entity.User, error) {

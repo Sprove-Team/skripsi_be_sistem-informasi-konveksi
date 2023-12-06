@@ -5,6 +5,6 @@ type Create struct {
 }
 
 type Update struct {
-	ID   string `prams:"id" vaidate:"required,uuidv4_no_hyphens"`
+	ID   string `prams:"id" vaidate:"required,ulid"`
 	Nama string `json:"nama" validate:"omitempty,printascii"`
 }

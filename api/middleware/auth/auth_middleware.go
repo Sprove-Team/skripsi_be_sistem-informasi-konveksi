@@ -11,14 +11,14 @@ import (
 	"github.com/be-sistem-informasi-konveksi/common/message"
 	"github.com/be-sistem-informasi-konveksi/common/response/global"
 	resGlobal "github.com/be-sistem-informasi-konveksi/common/response/global"
-	"github.com/be-sistem-informasi-konveksi/helper"
+	"github.com/be-sistem-informasi-konveksi/pkg"
 )
 
 type AuthMidleware interface {
 	Authorization(key, role string) fiber.Handler
 }
 
-type authMidleware struct{
+type authMidleware struct {
 	userRepo userRepo.UserRepo
 }
 
@@ -28,12 +28,12 @@ func NewAuthMiddleware(userRepo userRepo.UserRepo) AuthMidleware {
 
 func (a *authMidleware) Authorization(keyToken, role string) fiber.Handler {
 	return jwtware.New(jwtware.Config{
-		Claims: new(helper.Claims),
+		Claims: new(pkg.Claims),
 		SigningKey: jwtware.SigningKey{
 			Key: []byte(keyToken),
 		},
 		SuccessHandler: func(c *fiber.Ctx) error {
-			user := c.Locals("user").(*jwt.Token).Claims.(*helper.Claims)
+			user := c.Locals("user").(*jwt.Token).Claims.(*pkg.Claims)
 			if !strings.EqualFold(user.Role, role) {
 				return c.Status(fiber.StatusUnauthorized).JSON(global.CustomRes(fiber.StatusUnauthorized, message.UnauthUserNotAllowed, nil))
 			}

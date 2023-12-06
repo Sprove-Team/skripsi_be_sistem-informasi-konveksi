@@ -17,7 +17,7 @@ import (
 type UserHandler interface {
 	Create(c *fiber.Ctx) error
 	GetAll(c *fiber.Ctx) error
-  // GetById(c *fiber.Ctx) error
+	// GetById(c *fiber.Ctx) error
 	Update(c *fiber.Ctx) error
 	Delete(c *fiber.Ctx) error
 }
@@ -32,7 +32,7 @@ func NewUserHandler(uc usecase.UserUsecase, validator pkg.Validator) UserHandler
 }
 
 func (h *userHandler) Create(c *fiber.Ctx) error {
-	req := new(req.CreateUser)
+	req := new(req.Create)
 	if err := c.BodyParser(req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(resGlobal.ErrorResWithoutData(fiber.StatusBadRequest))
 	}
@@ -60,7 +60,7 @@ func (h *userHandler) Create(c *fiber.Ctx) error {
 }
 
 func (h *userHandler) GetAll(c *fiber.Ctx) error {
-	req := new(req.GetAllUser)
+	req := new(req.GetAll)
 	c.BodyParser(req)
 	c.QueryParser(req)
 
@@ -70,7 +70,7 @@ func (h *userHandler) GetAll(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(resGlobal.ErrorResWithData(errValidate, fiber.StatusBadRequest))
 	}
 	ctx := c.UserContext()
-	data, currentPage, totalPage, err := h.uc.GetAll(ctx, *req)
+	data, err := h.uc.GetAll(ctx, *req)
 
 	if ctx.Err() == context.DeadlineExceeded {
 		return c.Status(fiber.StatusRequestTimeout).JSON(resGlobal.ErrorResWithoutData(fiber.StatusRequestTimeout))
@@ -84,15 +84,13 @@ func (h *userHandler) GetAll(c *fiber.Ctx) error {
 	}
 
 	dataRes := fiber.Map{
-		"user":         data,
-		"current_page": currentPage,
-		"total_page":   totalPage,
+		"user": data,
 	}
 	return c.Status(fiber.StatusOK).JSON(resGlobal.SuccessResWithData(dataRes, "R"))
 }
 
 func (h *userHandler) Update(c *fiber.Ctx) error {
-	req := new(req.UpdateUser)
+	req := new(req.Update)
 	if err := c.ParamsParser(req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(resGlobal.ErrorResWithoutData(fiber.StatusBadRequest))
 	}

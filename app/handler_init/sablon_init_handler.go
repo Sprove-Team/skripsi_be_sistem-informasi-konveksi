@@ -16,17 +16,18 @@ type SablonHandlerInit interface {
 type sablonHandlerInit struct {
 	DB        *gorm.DB
 	validator pkg.Validator
-	uuidGen   pkg.UuidGenerator
+	// uuidGen   pkg.UuidGenerator
+	ulid pkg.UlidPkg
 	paginate  helper.Paginate
 }
 
-func NewSablonHandlerInit(DB *gorm.DB, validator pkg.Validator, uuidGen pkg.UuidGenerator, paginate helper.Paginate) SablonHandlerInit {
-	return &sablonHandlerInit{DB, validator, uuidGen, paginate}
+func NewSablonHandlerInit(DB *gorm.DB, validator pkg.Validator, ulid pkg.UlidPkg, paginate helper.Paginate) SablonHandlerInit {
+	return &sablonHandlerInit{DB, validator, ulid, paginate}
 }
 
 func (d *sablonHandlerInit) SablonHandler() handler.SablonHandler {
 	r := repo.NewSablonRepo(d.DB)
-	uc := usecase.NewSablonUsecase(r, d.uuidGen, d.paginate)
+	uc := usecase.NewSablonUsecase(r, d.ulid, d.paginate)
 	h := handler.NewSablonHandler(uc, d.validator)
 	return h
 }

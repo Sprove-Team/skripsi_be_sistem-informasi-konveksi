@@ -13,7 +13,7 @@ type KategoriProdukRepo interface {
 	Update(ctx context.Context, kategori *entity.KategoriProduk) error
 	Delete(ctx context.Context, id string) error
 	GetById(ctx context.Context, id string) (entity.KategoriProduk, error)
-	GetAll(ctx context.Context, param SearchKategoriProduk) ([]entity.KategoriProduk, int64,error)
+	GetAll(ctx context.Context, param SearchKategoriProduk) ([]entity.KategoriProduk, error)
 }
 
 type kategoriRepo struct {
@@ -43,15 +43,20 @@ func (r *kategoriRepo) Delete(ctx context.Context, id string) error {
 }
 
 type SearchKategoriProduk struct {
-	Nama             string
-	Limit            int
-	Offset           int
+	Nama  string
+	Next  string
+	Limit int
 }
 
-func (r *kategoriRepo) GetAll(ctx context.Context, param SearchKategoriProduk) ([]entity.KategoriProduk, int64,error) {
+func (r *kategoriRepo) GetAll(ctx context.Context, param SearchKategoriProduk) ([]entity.KategoriProduk, error) {
 	datas := []entity.KategoriProduk{}
-	var totalData int64
-	tx := r.DB.WithContext(ctx).Model(&entity.KategoriProduk{}).Where("nama LIKE ?", "%"+param.Nama+"%")
-	err := tx.Count(&totalData).Limit(param.Limit).Offset(param.Offset).Find(&datas).Error
-	return datas, totalData, err
+	tx := r.DB.WithContext(ctx).Model(&entity.KategoriProduk{}).Order("id ASC").Where("nama LIKE ?", "%"+param.Nama+"%")
+
+	if param.Next != "" {
+		tx = tx.Where("id > ?", param.Next)
+	}
+
+	err := tx.Limit(param.Limit).Find(&datas).Error
+
+	return datas, err
 }

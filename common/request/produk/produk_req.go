@@ -1,24 +1,25 @@
 package produk
 
-type CreateProduk struct {
+type Create struct {
 	Nama       string `json:"nama" validate:"required,printascii"`
-	KategoriID string `json:"kategori_id" validate:"required,uuidv4_no_hyphens"`
+	KategoriID string `json:"kategori_id" validate:"required,ulid"`
 }
 
-type UpdateProduk struct {
-	ID         string `params:"id" validate:"required,uuidv4_no_hyphens"`
+type Update struct {
+	ID         string `params:"id" validate:"required,ulid"`
 	Nama       string `json:"nama" validate:"omitempty,printascii"`
-	KategoriID string `json:"kategori_id" validate:"omitempty,uuidv4_no_hyphens"`
+	KategoriID string `json:"kategori_id" validate:"omitempty,ulid"`
 }
 
-type SearchFilterProduk struct {
+type SearchFilter struct {
 	Nama        string `json:"nama" validate:"omitempty,printascii"`
-	KategoriID  string `json:"kategori_id" validate:"omitempty,uuidv4_no_hyphens"`
+	KategoriID  string `json:"kategori_id" validate:"omitempty,ulid"`
 	HargaDetail string `json:"harga_detail" validate:"omitempty,oneof=EMPTY NOT_EMPTY"`
 }
 
-type GetAllProduk struct {
-	Search SearchFilterProduk `json:"search" validate:"omitempty"`
-	Page   int                `query:"page" validate:"omitempty,number"`
-	Limit  int                `query:"limit" validate:"omitempty,number"`
+type GetAll struct {
+	Search SearchFilter `json:"search" validate:"omitempty"`
+	// Page   int                `query:"page" validate:"omitempty,number"`
+	Next  string `query:"next" validate:"omitempty"`
+	Limit int    `query:"limit" validate:"omitempty,number"`
 }

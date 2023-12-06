@@ -9,7 +9,7 @@ import (
 )
 
 type SablonRepo interface {
-	GetAll(ctx context.Context, param SearchSablon) ([]entity.Sablon, int64, error)
+	GetAll(ctx context.Context, param SearchSablon) ([]entity.Sablon, error)
 	GetById(ctx context.Context, id string) (entity.Sablon, error)
 	Create(ctx context.Context, sablon *entity.Sablon) error
 	Update(ctx context.Context, sablon *entity.Sablon) error
@@ -43,17 +43,22 @@ func (r *sablonRepo) GetById(ctx context.Context, id string) (entity.Sablon, err
 }
 
 type SearchSablon struct {
-	Nama   string
-	Limit  int
-	Offset int
+	Nama  string
+	Limit int
+	Next  string
 }
 
-func (r *sablonRepo) GetAll(ctx context.Context, param SearchSablon) ([]entity.Sablon, int64, error) {
+func (r *sablonRepo) GetAll(ctx context.Context, param SearchSablon) ([]entity.Sablon, error) {
 	datas := []entity.Sablon{}
-	var totalData int64
+	// var totalData int64
 
-	tx := r.DB.WithContext(ctx).Model(&entity.Sablon{})
+	tx := r.DB.WithContext(ctx).Model(&entity.Sablon{}).Order("id ASC")
+	if param.Next != "" {
+		tx = tx.Where("id > ?", param.Next)
+	}
 	tx = tx.Where("nama LIKE ?", "%"+param.Nama+"%")
-	err := tx.Count(&totalData).Limit(param.Limit).Offset(param.Offset).Find(&datas).Error
-	return datas, totalData, err
+
+	err := tx.Limit(param.Limit).Find(&datas).Error
+
+	return datas, err
 }

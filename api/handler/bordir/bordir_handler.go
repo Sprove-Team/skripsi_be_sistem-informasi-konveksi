@@ -42,7 +42,6 @@ func (h *bordirHandler) Create(c *fiber.Ctx) error {
 	}
 	ctx := c.UserContext()
 	err := h.uc.Create(ctx, *req)
-	
 
 	if ctx.Err() == context.DeadlineExceeded {
 		return c.Status(fiber.StatusRequestTimeout).JSON(resGlobal.ErrorResWithoutData(fiber.StatusRequestTimeout))
@@ -147,12 +146,13 @@ func (h *bordirHandler) GetAll(c *fiber.Ctx) error {
 	c.QueryParser(req)
 
 	ctx := c.UserContext()
-	data, currentPage, totalPage, err := h.uc.GetAll(ctx, *req)
+	data, err := h.uc.GetAll(ctx, *req)
 
 	if ctx.Err() == context.DeadlineExceeded {
 		return c.Status(fiber.StatusRequestTimeout).JSON(resGlobal.ErrorResWithoutData(fiber.StatusRequestTimeout))
 	}
 	if err != nil {
+
 		if err.Error() == "record not found" {
 			return c.Status(fiber.StatusNotFound).JSON(resGlobal.ErrorResWithoutData(fiber.StatusNotFound))
 		}
@@ -161,9 +161,7 @@ func (h *bordirHandler) GetAll(c *fiber.Ctx) error {
 	}
 
 	dataRes := fiber.Map{
-		"bordir":      data,
-		"current_page": currentPage,
-		"total_page":   totalPage,
+		"bordir": data,
 	}
 	return c.Status(fiber.StatusOK).JSON(resGlobal.SuccessResWithData(dataRes, "R"))
 }

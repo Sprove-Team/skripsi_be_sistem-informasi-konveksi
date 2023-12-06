@@ -34,7 +34,7 @@ func NewProdukHandler(uc usecase.ProdukUsecase, validator pkg.Validator) ProdukH
 
 func (h *produkHandler) Create(c *fiber.Ctx) error {
 	c.Accepts("application/json")
-	req := new(req.CreateProduk)
+	req := new(req.Create)
 	if err := c.BodyParser(req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(resGlobal.ErrorResWithoutData(fiber.StatusBadRequest))
 	}
@@ -65,7 +65,7 @@ func (h *produkHandler) Create(c *fiber.Ctx) error {
 }
 
 func (h *produkHandler) Update(c *fiber.Ctx) error {
-	req := new(req.UpdateProduk)
+	req := new(req.Update)
 	if err := c.ParamsParser(req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(resGlobal.ErrorResWithoutData(fiber.StatusBadRequest))
 	}
@@ -151,7 +151,7 @@ func (h *produkHandler) GetById(c *fiber.Ctx) error {
 }
 
 func (h *produkHandler) GetAll(c *fiber.Ctx) error {
-	reqU := new(req.GetAllProduk)
+	reqU := new(req.GetAll)
 	c.BodyParser(reqU)
 	c.QueryParser(reqU)
 
@@ -163,7 +163,7 @@ func (h *produkHandler) GetAll(c *fiber.Ctx) error {
 	}
 
 	ctx := c.UserContext()
-	data, currentPage, totalPage, err := h.uc.GetAll(ctx, *reqU)
+	data, err := h.uc.GetAll(ctx, *reqU)
 	if ctx.Err() == context.DeadlineExceeded {
 		return c.Status(fiber.StatusRequestTimeout).JSON(resGlobal.ErrorResWithoutData(fiber.StatusRequestTimeout))
 	}
@@ -175,9 +175,7 @@ func (h *produkHandler) GetAll(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(resGlobal.ErrorResWithoutData(fiber.StatusInternalServerError))
 	}
 	dataRes := fiber.Map{
-		"produk":       data,
-		"current_page": currentPage,
-		"total_page":   totalPage,
+		"produk": data,
 	}
 	return c.Status(fiber.StatusOK).JSON(resGlobal.SuccessResWithData(dataRes, "R"))
 }

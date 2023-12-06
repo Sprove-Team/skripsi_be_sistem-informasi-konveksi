@@ -15,17 +15,18 @@ type BordirHandlerInit interface {
 type bordirHandlerInit struct {
 	DB        *gorm.DB
 	validator pkg.Validator
-	uuidGen   pkg.UuidGenerator
+	// uuidGen   pkg.UuidGenerator
+	ulid pkg.UlidPkg
 	paginate  helper.Paginate
 }
 
-func NewBordirHandlerInit(DB *gorm.DB, validator pkg.Validator, uuidGen pkg.UuidGenerator, paginate helper.Paginate) BordirHandlerInit {
-	return &bordirHandlerInit{DB, validator, uuidGen, paginate}
+func NewBordirHandlerInit(DB *gorm.DB, validator pkg.Validator, ulid pkg.UlidPkg, paginate helper.Paginate) BordirHandlerInit {
+	return &bordirHandlerInit{DB, validator, ulid, paginate}
 }
 
 func (d *bordirHandlerInit) BordirHandler() handler.BordirHandler {
 	r := repo.NewProdukRepo(d.DB)
-	uc := usecase.NewBordirUsecase(r, d.uuidGen, d.paginate)
+	uc := usecase.NewBordirUsecase(r, d.ulid, d.paginate)
 	h := handler.NewBordirHandler(uc, d.validator)
 	return h
 }

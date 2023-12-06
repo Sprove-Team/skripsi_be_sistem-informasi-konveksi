@@ -6,7 +6,7 @@ type CreateSablon struct {
 }
 
 type UpdateSablon struct {
-	ID    string  `params:"id" validate:"required,uuidv4_no_hyphens"`
+	ID    string  `params:"id" validate:"required,ulid"`
 	Nama  string  `json:"nama" validate:"omitempty,printascii"`
 	Harga float64 `json:"harga" validate:"omitempty,number"`
 }
@@ -17,6 +17,7 @@ type SearchFilterSablon struct {
 
 type GetAllSablon struct {
 	Search SearchFilterSablon `json:"search" validate:"omitempty"`
-	Page   int                `query:"page" validate:"omitempty,number"`
-	Limit  int                `query:"limit" validate:"omitempty,number"`
+	// Page   int                `query:"page" validate:"omitempty,number"`
+	Next  string `query:"next" validate:"omitempty"`
+	Limit int    `query:"limit" validate:"omitempty,number"`
 }

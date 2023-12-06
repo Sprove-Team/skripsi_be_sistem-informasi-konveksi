@@ -20,16 +20,17 @@ type JenisSpvUsecase interface {
 
 type jenisSpvUsecase struct {
 	repo     repo.JenisSpvRepo
-	uuidGen  pkg.UuidGenerator
+	// uuidGen  pkg.UuidGenerator
+	ulid pkg.UlidPkg
 	paginate helper.Paginate
 }
 
-func NewJenisSpvUsecase(repo repo.JenisSpvRepo, uuidGen pkg.UuidGenerator, paginate helper.Paginate) JenisSpvUsecase {
-	return &jenisSpvUsecase{repo, uuidGen, paginate}
+func NewJenisSpvUsecase(repo repo.JenisSpvRepo, ulid pkg.UlidPkg, paginate helper.Paginate) JenisSpvUsecase {
+	return &jenisSpvUsecase{repo, ulid, paginate}
 }
 
 func (u *jenisSpvUsecase) Create(ctx context.Context, reqJenisSpv req.Create) error {
-	id, _ := u.uuidGen.GenerateUUID()
+	id := u.ulid.MakeUlid().String()
 	jenis_spv := entity.JenisSpv{
 		ID:   id,
 		Nama: reqJenisSpv.Nama,

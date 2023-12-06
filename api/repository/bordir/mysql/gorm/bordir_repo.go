@@ -9,7 +9,7 @@ import (
 )
 
 type BordirRepo interface {
-	GetAll(ctx context.Context, param SearchBordir) ([]entity.Bordir, int64, error)
+	GetAll(ctx context.Context, param SearchBordir) ([]entity.Bordir, error)
 	GetById(ctx context.Context, id string) (entity.Bordir, error)
 	Create(ctx context.Context, bordir *entity.Bordir) error
 	Update(ctx context.Context, bordir *entity.Bordir) error
@@ -43,17 +43,20 @@ func (r *bordirRepo) GetById(ctx context.Context, id string) (entity.Bordir, err
 }
 
 type SearchBordir struct {
-	Nama   string
-	Limit  int
-	Offset int
+	Nama  string
+	Limit int
+	Next  string
+	// Offset int
 }
 
-func (r *bordirRepo) GetAll(ctx context.Context, param SearchBordir) ([]entity.Bordir, int64, error) {
+func (r *bordirRepo) GetAll(ctx context.Context, param SearchBordir) ([]entity.Bordir, error) {
 	datas := []entity.Bordir{}
-	var totalData int64
 
-	tx := r.DB.WithContext(ctx).Model(&entity.Bordir{})
+	tx := r.DB.WithContext(ctx).Model(&entity.Bordir{}).Order("id ASC")
+	if param.Next != "" {
+		tx = tx.Where("id > ?", param.Next)
+	}
 	tx = tx.Where("nama LIKE ?", "%"+param.Nama+"%")
-	err := tx.Count(&totalData).Limit(param.Limit).Offset(param.Offset).Find(&datas).Error
-	return datas, totalData, err
+	err := tx.Limit(param.Limit).Find(&datas).Error
+	return datas, err
 }

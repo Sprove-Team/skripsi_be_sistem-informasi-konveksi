@@ -28,6 +28,8 @@ func NewValidator() Validator {
 	// custom validation
 	validate.RegisterValidation("uuidv4_no_hyphens", validateUUIDv4WithoutHyphens)
 
+	validate.RegisterValidation("ulid", validateULID)
+
 	// default translations
 	trans := (&translator{}).Translator()
 	id_translations.RegisterDefaultTranslations(validate, trans)
@@ -38,6 +40,13 @@ func NewValidator() Validator {
 		return ut.Add("uuidv4_no_hyphens", "{0} tidak berupa uuid versi 4", true)
 	}, func(ut ut.Translator, fe validator.FieldError) string {
 		t, _ := ut.T("uuidv4_no_hyphens", camelToSnake(fe.Field()))
+		return t
+	})
+
+	validate.RegisterTranslation("ulid", trans, func(ut ut.Translator) error {
+		return ut.Add("ulid", "{0} tidak berupa ulid yang valid", true)
+	}, func(ut ut.Translator, fe validator.FieldError) string {
+		t, _ := ut.T("ulid", camelToSnake(fe.Field()))
 		return t
 	})
 
@@ -64,6 +73,13 @@ func validateUUIDv4WithoutHyphens(fl validator.FieldLevel) bool {
 	uuid := fl.Field().String()
 	uuidGoogle := NewGoogleUUID()
 	return uuidGoogle.CheckValidUUID(uuid)
+}
+
+func validateULID(fl validator.FieldLevel) bool {
+	ulid := fl.Field().String()
+	ulidPkg := NewUlidPkg()
+	_, err := ulidPkg.ParseStrict(ulid)
+	return err == nil
 }
 
 func camelToSnake(s string) string {

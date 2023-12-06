@@ -14,22 +14,23 @@ type BordirUsecase interface {
 	Create(ctx context.Context, reqBordir req.CreateBordir) error
 	Delete(ctx context.Context, id string) error
 	Update(ctx context.Context, reqBordir req.UpdateBordir) error
-	GetAll(ctx context.Context, reqBordir req.GetAllBordir) ([]entity.Bordir, int, int, error)
+	GetAll(ctx context.Context, reqBordir req.GetAllBordir) ([]entity.Bordir, error)
 	GetById(ctx context.Context, id string) (entity.Bordir, error)
 }
 
 type bordirUsecase struct {
-	repo     repo.BordirRepo
-	uuidGen  pkg.UuidGenerator
+	repo repo.BordirRepo
+	// uuidGen  pkg.UuidGenerator
+	ulid     pkg.UlidPkg
 	paginate helper.Paginate
 }
 
-func NewBordirUsecase(repo repo.BordirRepo, uuidGen pkg.UuidGenerator, paginate helper.Paginate) BordirUsecase {
-	return &bordirUsecase{repo, uuidGen, paginate}
+func NewBordirUsecase(repo repo.BordirRepo, ulid pkg.UlidPkg, paginate helper.Paginate) BordirUsecase {
+	return &bordirUsecase{repo, ulid, paginate}
 }
 
 func (u *bordirUsecase) Create(ctx context.Context, reqBordir req.CreateBordir) error {
-	id, _ := u.uuidGen.GenerateUUID()
+	id := u.ulid.MakeUlid().String()
 	data := entity.Bordir{
 		ID:    id,
 		Nama:  reqBordir.Nama,
@@ -66,19 +67,20 @@ func (u *bordirUsecase) GetById(ctx context.Context, id string) (entity.Bordir, 
 	return data, err
 }
 
-func (u *bordirUsecase) GetAll(ctx context.Context, reqBordir req.GetAllBordir) ([]entity.Bordir, int, int, error) {
-	currentPage, offset, limit := u.paginate.GetPaginateData(reqBordir.Page, reqBordir.Limit)
+func (u *bordirUsecase) GetAll(ctx context.Context, reqBordir req.GetAllBordir) ([]entity.Bordir, error) {
+	// currentPage, offset, limit := u.paginate.GetPaginateData(reqBordir.Page, reqBordir.Limit)
 
-	datas, totalData, err := u.repo.GetAll(ctx, repo.SearchBordir{
-		Nama:   reqBordir.Search.Nama,
-		Limit:  limit,
-		Offset: offset,
+	datas, err := u.repo.GetAll(ctx, repo.SearchBordir{
+		Nama:  reqBordir.Search.Nama,
+		Limit: reqBordir.Limit,
+
+		// Offset: offset,
 	})
 	if err != nil {
-		return nil, currentPage, 0, err
+		return nil, err
 	}
 
-	totalPage := u.paginate.GetTotalPages(int(totalData), limit)
+	// totalPage := u.paginate.GetTotalPages(int(totalData), limit)
 
-	return datas, currentPage, totalPage, err
+	return datas, err
 }

@@ -26,11 +26,12 @@ type HargaDetailProdukUsecase interface {
 type hargaDetailProdukUsecase struct {
 	repo    repo.HargaDetailProdukRepo
 	produkR produkRepo.ProdukRepo
-	uuidGen pkg.UuidGenerator
+	// uuidGen pkg.UuidGenerator
+	ulid pkg.UlidPkg
 }
 
-func NewHargaDetailProdukUsecase(repo repo.HargaDetailProdukRepo, produkR produkRepo.ProdukRepo, uuidGen pkg.UuidGenerator) HargaDetailProdukUsecase {
-	return &hargaDetailProdukUsecase{repo, produkR, uuidGen}
+func NewHargaDetailProdukUsecase(repo repo.HargaDetailProdukRepo, produkR produkRepo.ProdukRepo, ulid pkg.UlidPkg) HargaDetailProdukUsecase {
+	return &hargaDetailProdukUsecase{repo, produkR, ulid}
 }
 
 func (u *hargaDetailProdukUsecase) Create(ctx context.Context, reqHargaDetailProduk req.Create) error {
@@ -52,7 +53,7 @@ func (u *hargaDetailProdukUsecase) Create(ctx context.Context, reqHargaDetailPro
 				if dat != emptyDat {
 					return errors.New("duplicated key not allowed")
 				}
-				id, _ := u.uuidGen.GenerateUUID()
+				id := u.ulid.MakeUlid().String()
 				data := entity.HargaDetailProduk{
 					ID:       id,
 					ProdukID: reqHargaDetailProduk.ProdukId,

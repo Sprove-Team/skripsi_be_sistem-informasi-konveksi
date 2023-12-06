@@ -28,7 +28,8 @@ func main() {
 
 	// pkg
 	validator := pkg.NewValidator()
-	uuidGen := pkg.NewGoogleUUID()
+	// uuidGen := pkg.NewGoogleUUID()
+	ulidPkg := pkg.NewUlidPkg()
 
 	// helper
 	paginate := helper.NewPaginate()
@@ -48,7 +49,7 @@ func main() {
 		direktur := v1.Group("/direktur", timeoutMid.Timeout(nil))	
 		{
 			// produk
-			produkHandler := handler_init.NewProdukHandlerInit(dbGorm, validator, uuidGen, paginate)
+			produkHandler := handler_init.NewProdukHandlerInit(dbGorm, validator, ulidPkg, paginate)
 			produkRoute := route.NewProdukRoute(produkHandler)
 			produkGroup := direktur.Group("/produk")
 			{
@@ -58,7 +59,7 @@ func main() {
 			}
 	
 			// bordir
-			bordirHandler := handler_init.NewBordirHandlerInit(dbGorm, validator, uuidGen, paginate)
+			bordirHandler := handler_init.NewBordirHandlerInit(dbGorm, validator, ulidPkg, paginate)
 			bordirRoute := route.NewBordirRoute(bordirHandler)
 			bordirGroup := direktur.Group("/bordir")
 			{
@@ -66,7 +67,7 @@ func main() {
 			}
 	
 			// sablon
-			sablonHandler := handler_init.NewSablonHandlerInit(dbGorm, validator, uuidGen, paginate)
+			sablonHandler := handler_init.NewSablonHandlerInit(dbGorm, validator, ulidPkg, paginate)
 			sablonRoute := route.NewSablonRoute(sablonHandler)
 			sablonGroup := direktur.Group("/sablon")
 			{
@@ -74,7 +75,7 @@ func main() {
 			}
 	
 			//user
-			userHandler := handler_init.NewUserHandlerInit(dbGorm, validator, uuidGen, paginate, encryptor)
+			userHandler := handler_init.NewUserHandlerInit(dbGorm, validator, ulidPkg, paginate, encryptor)
 			userRoute := route.NewUserRoute(userHandler)
 			userGroup := direktur.Group("/user")
 			{

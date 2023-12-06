@@ -122,7 +122,7 @@ func (h *kategoriProdukHandler) GetAll(c *fiber.Ctx) error {
 	}
 
 	ctx := c.UserContext()
-	data, currentPage, totalPage, err := h.uc.GetAll(ctx, *req)
+	data, err := h.uc.GetAll(ctx, *req)
 	if ctx.Err() == context.DeadlineExceeded {
 		return c.Status(fiber.StatusRequestTimeout).JSON(resGlobal.ErrorResWithoutData(fiber.StatusRequestTimeout))
 	}
@@ -135,8 +135,6 @@ func (h *kategoriProdukHandler) GetAll(c *fiber.Ctx) error {
 	}
 	dataRes := fiber.Map{
 		"kategori_produk": data,
-		"current_page":    currentPage,
-		"total_page":      totalPage,
 	}
 	return c.Status(fiber.StatusOK).JSON(resGlobal.SuccessResWithData(dataRes, "R"))
 }

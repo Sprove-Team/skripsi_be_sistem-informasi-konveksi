@@ -1,4 +1,4 @@
-version: "3.8"
+version: '3.8'
 
 services:
   phpmyadmin:
@@ -9,9 +9,9 @@ services:
       - 8080:80
     environment:
       PMA_HOST: db
-      PMA_PORT: ${DB_PORT} 
-      # PMA_USER: ${DB_USERNAME}
-      # PMA_PASSWORD: ${DB_PASSWORD}
+      PMA_PORT: ${DB_PORT}
+      PMA_USER: ${DB_USERNAME}
+      PMA_PASSWORD: ${DB_PASSWORD}
   db:
     image: mysql:8-debian
     container_name: db-mysql-si_konveksi
@@ -20,14 +20,14 @@ services:
     healthcheck:
       test:
         [
-          "CMD",
-          "mysqladmin",
-          "ping",
-          "-h",
-          "localhost",
-          "-u",
-          "$$MYSQL_USER",
-          "-p $$MYSQL_ROOT_PASSWORD",
+          'CMD',
+          'mysqladmin',
+          'ping',
+          '-h',
+          'localhost',
+          '-u',
+          '$$MYSQL_USER',
+          '-p $$MYSQL_ROOT_PASSWORD',
         ]
       timeout: 20s
       retries: 10
@@ -41,39 +41,38 @@ services:
     volumes:
       - ./db/mysql/backup:/var/lib/mysql
 
-  redis: 
+  redis:
     image: redis/redis-stack:6.2.6-v7
     restart: always
     environment:
       REDIS_ARGS: --save 20 1 --loglevel warning --requirepass ${REDIS_PASSWORD} --appendonly yes
       REDISTIMESERIES_ARGS: RETENTION_POLICY=20
     ports:
-      - "8001:8001"
+      - '8001:8001'
       - ${REDIS_PORT}:${REDIS_PORT}
     volumes:
       - ./db/redis/backup:/data
-
 # production
-  # redis:
-  #   image: redis:6.2-alpine
-  #   restart: always
-  #   ports:
-  #     - ${REDIS_PORT}:${REDIS_PORT}
-  #   command: redis-server --save 20 1 --loglevel warning --requirepass ${REDIS_PASSWORD}
-  #   volumes: 
-  #     - ./db/redis/backup:/data
+# redis:
+#   image: redis:6.2-alpine
+#   restart: always
+#   ports:
+#     - ${REDIS_PORT}:${REDIS_PORT}
+#   command: redis-server --save 20 1 --loglevel warning --requirepass ${REDIS_PASSWORD}
+#   volumes:
+#     - ./db/redis/backup:/data
 
-  # app: 
-  #   container_name: app-si_konveksi
-  #   build: .
-  #   env_file:
-  #     - .env
-  #   ports:
-  #     - ${APP_PORT}:${APP_PORT}
-  #   volumes:
-  #     - ./:/usr/src/app
-  #   restart: on-failure
-  #   depends_on:
-  #     db:
-  #       condition: service_healthy
+# app:
+#   container_name: app-si_konveksi
+#   build: .
+#   env_file:
+#     - .env
+#   ports:
+#     - ${APP_PORT}:${APP_PORT}
+#   volumes:
+#     - ./:/usr/src/app
+#   restart: on-failure
+#   depends_on:
+#     db:
+#       condition: service_healthy
 
