@@ -155,7 +155,7 @@ func (h *produkHandler) GetAll(c *fiber.Ctx) error {
 	c.BodyParser(reqU)
 	c.QueryParser(reqU)
 
-	reqU.Search.HargaDetail = strings.ToUpper(reqU.Search.HargaDetail)
+	reqU.HargaDetail = strings.ToUpper(reqU.HargaDetail)
 
 	errValidate := h.validator.Validate(reqU)
 	if len(errValidate) > 0 {

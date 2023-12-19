@@ -29,14 +29,21 @@ func (dbgc *DBGormConf) InitDBGormConf() *gorm.DB {
 		dbgc.DB_Host,
 		dbgc.DB_Port,
 		dbgc.DB_Name)
+
+	logLevel := logger.Silent
+
+	if os.Getenv("PRODUCTION") != "" {
+		logLevel = logger.Info
+	}
+
 	newLogger := logger.New(
 		log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer
 		logger.Config{
-			SlowThreshold:             time.Second,   // Slow SQL threshold
-			LogLevel:                  logger.Silent, // Log level
-			IgnoreRecordNotFoundError: true,          // Ignore ErrRecordNotFound error for logger
-			ParameterizedQueries:      true,          // Don't include params in the SQL log
-			Colorful:                  false,         // Disable color
+			SlowThreshold:             time.Second, // Slow SQL threshold
+			LogLevel:                  logLevel,    // Log level
+			IgnoreRecordNotFoundError: true,        // Ignore ErrRecordNotFound error for logger
+			ParameterizedQueries:      true,        // Don't include params in the SQL log
+			Colorful:                  false,       // Disable color
 		},
 	)
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
@@ -51,13 +58,16 @@ func (dbgc *DBGormConf) InitDBGormConf() *gorm.DB {
 		os.Exit(1)
 	}
 	// produk
-	autoMigrateEntities(db, &entity.Produk{}, &entity.HargaDetailProduk{}, &entity.KategoriProduk{})
+	autoMigrateEntities(db, &entity.KategoriProduk{}, &entity.Produk{}, &entity.HargaDetailProduk{})
 
 	// bordir
 	autoMigrateEntities(db, &entity.Bordir{}, &entity.Sablon{})
 
 	// user & jenis spv
 	autoMigrateEntities(db, &entity.JenisSpv{}, &entity.User{})
+
+	// akuntansi
+	autoMigrateEntities(db, &entity.KelompokAkun{}, &entity.GolonganAkun{}, &entity.Akun{}, &entity.Transaksi{}, &entity.AyatJurnal{})
 
 	return db
 }

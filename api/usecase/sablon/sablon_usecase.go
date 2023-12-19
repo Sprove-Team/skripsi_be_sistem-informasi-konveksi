@@ -11,10 +11,10 @@ import (
 )
 
 type SablonUsecase interface {
-	Create(ctx context.Context, reqSablon req.CreateSablon) error
+	Create(ctx context.Context, reqSablon req.Create) error
 	Delete(ctx context.Context, id string) error
-	Update(ctx context.Context, reqSablon req.UpdateSablon) error
-	GetAll(ctx context.Context, reqSablon req.GetAllSablon) ([]entity.Sablon, error)
+	Update(ctx context.Context, reqSablon req.Update) error
+	GetAll(ctx context.Context, reqSablon req.GetAll) ([]entity.Sablon, error)
 	GetById(ctx context.Context, id string) (entity.Sablon, error)
 }
 
@@ -29,7 +29,7 @@ func NewSablonUsecase(repo repo.SablonRepo, ulid pkg.UlidPkg, paginate helper.Pa
 	return &sablonUsecase{repo, ulid, paginate}
 }
 
-func (u *sablonUsecase) Create(ctx context.Context, sablon req.CreateSablon) error {
+func (u *sablonUsecase) Create(ctx context.Context, sablon req.Create) error {
 	id := u.ulid.MakeUlid().String()
 	data := entity.Sablon{
 		ID:    id,
@@ -39,7 +39,7 @@ func (u *sablonUsecase) Create(ctx context.Context, sablon req.CreateSablon) err
 	return u.repo.Create(ctx, &data)
 }
 
-func (u *sablonUsecase) Update(ctx context.Context, reqSablon req.UpdateSablon) error {
+func (u *sablonUsecase) Update(ctx context.Context, reqSablon req.Update) error {
 	_, err := u.repo.GetById(ctx, reqSablon.ID)
 	if err != nil {
 		return err
@@ -67,11 +67,14 @@ func (u *sablonUsecase) GetById(ctx context.Context, id string) (entity.Sablon, 
 	return data, err
 }
 
-func (u *sablonUsecase) GetAll(ctx context.Context, reqSablon req.GetAllSablon) ([]entity.Sablon, error) {
+func (u *sablonUsecase) GetAll(ctx context.Context, reqSablon req.GetAll) ([]entity.Sablon, error) {
 	// currentPage, offset, limit := u.paginate.GetPaginateData(reqSablon.Page, reqSablon.Limit)
+	if reqSablon.Limit <= 0 {
+		reqSablon.Limit = 10
+	}
 
 	datas, err := u.repo.GetAll(ctx, repo.SearchSablon{
-		Nama:  reqSablon.Search.Nama,
+		Nama:  reqSablon.Nama,
 		Limit: reqSablon.Limit,
 		Next:  reqSablon.Next,
 	})

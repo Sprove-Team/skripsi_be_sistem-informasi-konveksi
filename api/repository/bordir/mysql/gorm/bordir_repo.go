@@ -44,9 +44,8 @@ func (r *bordirRepo) GetById(ctx context.Context, id string) (entity.Bordir, err
 
 type SearchBordir struct {
 	Nama  string
-	Limit int
 	Next  string
-	// Offset int
+	Limit int
 }
 
 func (r *bordirRepo) GetAll(ctx context.Context, param SearchBordir) ([]entity.Bordir, error) {

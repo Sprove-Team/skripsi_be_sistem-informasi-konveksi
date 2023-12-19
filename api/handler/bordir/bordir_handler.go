@@ -32,7 +32,7 @@ func NewBordirHandler(uc usecase.BordirUsecase, validator pkg.Validator) BordirH
 
 func (h *bordirHandler) Create(c *fiber.Ctx) error {
 	c.Accepts("application/json")
-	req := new(req.CreateBordir)
+	req := new(req.Create)
 	if err := c.BodyParser(req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(resGlobal.ErrorResWithoutData(fiber.StatusBadRequest))
 	}
@@ -59,7 +59,7 @@ func (h *bordirHandler) Create(c *fiber.Ctx) error {
 }
 
 func (h *bordirHandler) Update(c *fiber.Ctx) error {
-	req := new(req.UpdateBordir)
+	req := new(req.Update)
 	if err := c.ParamsParser(req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(resGlobal.ErrorResWithoutData(fiber.StatusBadRequest))
 	}
@@ -141,8 +141,7 @@ func (h *bordirHandler) GetById(c *fiber.Ctx) error {
 }
 
 func (h *bordirHandler) GetAll(c *fiber.Ctx) error {
-	req := new(req.GetAllBordir)
-	c.BodyParser(req)
+	req := new(req.GetAll)
 	c.QueryParser(req)
 
 	ctx := c.UserContext()

@@ -67,9 +67,12 @@ func (u *kategoriProdukUsecase) GetById(ctx context.Context, id string) (entity.
 
 func (u *kategoriProdukUsecase) GetAll(ctx context.Context, reqKategoriProduk req.GetAll) ([]entity.KategoriProduk, error) {
 	// currentPage, offset, limit := u.paginate.GetPaginateData(reqKategoriProduk.Page, reqKategoriProduk.Limit)
+	if reqKategoriProduk.Limit <= 0 {
+		reqKategoriProduk.Limit = 10
+	}
 
 	datas, err := u.repo.GetAll(ctx, repo.SearchKategoriProduk{
-		Nama:  reqKategoriProduk.Search.Nama,
+		Nama:  reqKategoriProduk.Nama,
 		Limit: reqKategoriProduk.Limit,
 		Next:  reqKategoriProduk.Next,
 	})

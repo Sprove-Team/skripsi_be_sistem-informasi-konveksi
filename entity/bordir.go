@@ -5,3 +5,7 @@ type Bordir struct {
 	Nama  string  `gorm:"type:varchar(32);unique;not null" json:"nama"`
 	Harga float64 `gorm:"type:decimal(10,2);not null" json:"harga"`
 }
+
+func (Bordir) TableName() string {
+	return "bordir"
+}

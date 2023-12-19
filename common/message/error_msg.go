@@ -18,6 +18,9 @@ var (
 	UnauthUserNotFound   = "pengguna telah dihapus atau hubungi direktur"
 )
 
+// misc
+var InvalidImageFormat = "format gambar tidak valid"
+
 // produk
 var (
 	// data
@@ -41,4 +44,12 @@ var (
 // user
 var (
 	PasswordIsNotStrong = "password setidaknya harus berisi angka dan huruf besar"
+)
+
+// akuntansi
+var (
+	CreditDebitNotSame = "total debit dan kredit harus sama"
+	AkunCannotBeSame   = "akun tidak boleh sama"
+	// akun
+	AkunIdNotFound = "akun_id tidak valid atau tidak ditemukan"
 )

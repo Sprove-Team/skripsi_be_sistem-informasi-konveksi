@@ -5,3 +5,7 @@ type Sablon struct {
 	Nama  string  `gorm:"type:varchar(150);unique;not null" json:"nama"`
 	Harga float64 `gorm:"type:decimal(10,2);not null" harga:"harga"`
 }
+
+func (Sablon) TableName() string {
+	return "sablon"
+}

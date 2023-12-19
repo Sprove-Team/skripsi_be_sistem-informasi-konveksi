@@ -15,7 +15,6 @@ import (
 )
 
 func main() {
-
 	dbGormConf := config.DBGormConf{
 		DB_Username: os.Getenv("DB_USERNAME"),
 		DB_Password: os.Getenv("DB_PASSWORD"),
@@ -34,7 +33,7 @@ func main() {
 	// helper
 	paginate := helper.NewPaginate()
 	encryptor := helper.NewEncryptor()
-	
+
 	// middleware
 	// userRepo := userRepo.NewUserRepo(dbGorm)
 	// authMid := _authMid.NewAuthMiddleware(userRepo)
@@ -46,7 +45,7 @@ func main() {
 	v1 := api.Group("/v1")
 	{
 		// domain direktur
-		direktur := v1.Group("/direktur", timeoutMid.Timeout(nil))	
+		direktur := v1.Group("/direktur", timeoutMid.Timeout(nil))
 		{
 			// produk
 			produkHandler := handler_init.NewProdukHandlerInit(dbGorm, validator, ulidPkg, paginate)
@@ -57,7 +56,7 @@ func main() {
 				produkGroup.Route("/kategori", produkRoute.KategoriProduk)
 				produkGroup.Route("/", produkRoute.Produk)
 			}
-	
+
 			// bordir
 			bordirHandler := handler_init.NewBordirHandlerInit(dbGorm, validator, ulidPkg, paginate)
 			bordirRoute := route.NewBordirRoute(bordirHandler)
@@ -65,7 +64,7 @@ func main() {
 			{
 				bordirGroup.Route("/", bordirRoute.Bordir)
 			}
-	
+
 			// sablon
 			sablonHandler := handler_init.NewSablonHandlerInit(dbGorm, validator, ulidPkg, paginate)
 			sablonRoute := route.NewSablonRoute(sablonHandler)
@@ -73,8 +72,8 @@ func main() {
 			{
 				sablonGroup.Route("/", sablonRoute.Sablon)
 			}
-	
-			//user
+
+			// user
 			userHandler := handler_init.NewUserHandlerInit(dbGorm, validator, ulidPkg, paginate, encryptor)
 			userRoute := route.NewUserRoute(userHandler)
 			userGroup := direktur.Group("/user")
@@ -82,9 +81,19 @@ func main() {
 				userGroup.Route("/jenis_spv", userRoute.JenisSpv)
 				userGroup.Route("/", userRoute.User)
 			}
+
+			// akuntansi
+			akuntansiHandler := handler_init.NewAkuntansiHandlerInit(dbGorm, validator, ulidPkg)
+			akuntansiRoute := route.NewAkuntansiRoute(akuntansiHandler)
+			akuntansiGroup := direktur.Group("/akuntansi")
+			{
+				akuntansiGroup.Route("/akun", akuntansiRoute.Akun)
+				akuntansiGroup.Route("/golongan_akun", akuntansiRoute.GolonganAkun)
+				akuntansiGroup.Route("/kelompok_akun", akuntansiRoute.KelompokAkun)
+				akuntansiGroup.Route("/transaksi", akuntansiRoute.Transaksi)
+			}
 		}
 	}
-
 
 	app.Listen(":8000")
 }

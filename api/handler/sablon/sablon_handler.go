@@ -32,7 +32,7 @@ func NewSablonHandler(uc usecase.SablonUsecase, validator pkg.Validator) SablonH
 
 func (h *sablonHandler) Create(c *fiber.Ctx) error {
 	c.Accepts("application/json")
-	req := new(req.CreateSablon)
+	req := new(req.Create)
 	if err := c.BodyParser(req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(resGlobal.ErrorResWithoutData(fiber.StatusBadRequest))
 	}
@@ -59,7 +59,7 @@ func (h *sablonHandler) Create(c *fiber.Ctx) error {
 }
 
 func (h *sablonHandler) Update(c *fiber.Ctx) error {
-	req := new(req.UpdateSablon)
+	req := new(req.Update)
 	if err := c.ParamsParser(req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(resGlobal.ErrorResWithoutData(fiber.StatusBadRequest))
 	}
@@ -141,7 +141,7 @@ func (h *sablonHandler) GetById(c *fiber.Ctx) error {
 }
 
 func (h *sablonHandler) GetAll(c *fiber.Ctx) error {
-	req := new(req.GetAllSablon)
+	req := new(req.GetAll)
 	c.BodyParser(req)
 	c.QueryParser(req)
 

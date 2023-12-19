@@ -11,10 +11,10 @@ import (
 )
 
 type BordirUsecase interface {
-	Create(ctx context.Context, reqBordir req.CreateBordir) error
+	Create(ctx context.Context, reqBordir req.Create) error
 	Delete(ctx context.Context, id string) error
-	Update(ctx context.Context, reqBordir req.UpdateBordir) error
-	GetAll(ctx context.Context, reqBordir req.GetAllBordir) ([]entity.Bordir, error)
+	Update(ctx context.Context, reqBordir req.Update) error
+	GetAll(ctx context.Context, reqBordir req.GetAll) ([]entity.Bordir, error)
 	GetById(ctx context.Context, id string) (entity.Bordir, error)
 }
 
@@ -29,7 +29,7 @@ func NewBordirUsecase(repo repo.BordirRepo, ulid pkg.UlidPkg, paginate helper.Pa
 	return &bordirUsecase{repo, ulid, paginate}
 }
 
-func (u *bordirUsecase) Create(ctx context.Context, reqBordir req.CreateBordir) error {
+func (u *bordirUsecase) Create(ctx context.Context, reqBordir req.Create) error {
 	id := u.ulid.MakeUlid().String()
 	data := entity.Bordir{
 		ID:    id,
@@ -39,7 +39,7 @@ func (u *bordirUsecase) Create(ctx context.Context, reqBordir req.CreateBordir) 
 	return u.repo.Create(ctx, &data)
 }
 
-func (u *bordirUsecase) Update(ctx context.Context, reqBordir req.UpdateBordir) error {
+func (u *bordirUsecase) Update(ctx context.Context, reqBordir req.Update) error {
 	_, err := u.repo.GetById(ctx, reqBordir.ID)
 	if err != nil {
 		return err
@@ -67,11 +67,15 @@ func (u *bordirUsecase) GetById(ctx context.Context, id string) (entity.Bordir, 
 	return data, err
 }
 
-func (u *bordirUsecase) GetAll(ctx context.Context, reqBordir req.GetAllBordir) ([]entity.Bordir, error) {
+func (u *bordirUsecase) GetAll(ctx context.Context, reqBordir req.GetAll) ([]entity.Bordir, error) {
 	// currentPage, offset, limit := u.paginate.GetPaginateData(reqBordir.Page, reqBordir.Limit)
 
+	if reqBordir.Limit <= 0 {
+		reqBordir.Limit = 10
+	}
+
 	datas, err := u.repo.GetAll(ctx, repo.SearchBordir{
-		Nama:  reqBordir.Search.Nama,
+		Nama:  reqBordir.Nama,
 		Limit: reqBordir.Limit,
 
 		// Offset: offset,

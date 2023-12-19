@@ -2,6 +2,7 @@ package pkg
 
 import (
 	"bytes"
+	"net/url"
 	"strings"
 	"unicode"
 
@@ -25,10 +26,11 @@ type Validator interface {
 
 func NewValidator() Validator {
 	validate := validator.New()
+
 	// custom validation
-	validate.RegisterValidation("uuidv4_no_hyphens", validateUUIDv4WithoutHyphens)
 
 	validate.RegisterValidation("ulid", validateULID)
+	validate.RegisterValidation("url_cloud_storage", validateGoogleStorageURL)
 
 	// default translations
 	trans := (&translator{}).Translator()
@@ -36,17 +38,17 @@ func NewValidator() Validator {
 
 	// custom translations
 
-	validate.RegisterTranslation("uuidv4_no_hyphens", trans, func(ut ut.Translator) error {
-		return ut.Add("uuidv4_no_hyphens", "{0} tidak berupa uuid versi 4", true)
-	}, func(ut ut.Translator, fe validator.FieldError) string {
-		t, _ := ut.T("uuidv4_no_hyphens", camelToSnake(fe.Field()))
-		return t
-	})
-
 	validate.RegisterTranslation("ulid", trans, func(ut ut.Translator) error {
 		return ut.Add("ulid", "{0} tidak berupa ulid yang valid", true)
 	}, func(ut ut.Translator, fe validator.FieldError) string {
 		t, _ := ut.T("ulid", camelToSnake(fe.Field()))
+		return t
+	})
+
+	validate.RegisterTranslation("url_cloud_storage", trans, func(ut ut.Translator) error {
+		return ut.Add("url_cloud_storage", "{0} tidak berupa url cloud storage yang valid", true)
+	}, func(ut ut.Translator, fe validator.FieldError) string {
+		t, _ := ut.T("url_cloud_storage", camelToSnake(fe.Field()))
 		return t
 	})
 
@@ -69,10 +71,24 @@ func NewValidator() Validator {
 }
 
 // custom validation
-func validateUUIDv4WithoutHyphens(fl validator.FieldLevel) bool {
-	uuid := fl.Field().String()
-	uuidGoogle := NewGoogleUUID()
-	return uuidGoogle.CheckValidUUID(uuid)
+
+func validateGoogleStorageURL(fl validator.FieldLevel) bool {
+	// Parse the URL
+
+	inputUrl := fl.Field().String()
+	u, err := url.Parse(inputUrl)
+	if err != nil {
+		return false
+	}
+
+	if u.Scheme != "https" {
+		return false
+	}
+
+	if u.Hostname() != "storage.googleapis.com" {
+		return false
+	}
+	return true
 }
 
 func validateULID(fl validator.FieldLevel) bool {
