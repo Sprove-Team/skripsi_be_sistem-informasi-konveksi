@@ -1,0 +1,165 @@
+package akuntansi
+
+import (
+	"context"
+	"time"
+
+	"github.com/be-sistem-informasi-konveksi/entity"
+	"github.com/be-sistem-informasi-konveksi/helper"
+	"gorm.io/gorm"
+)
+
+type ResultDataJU struct {
+	AyatJurnalID string
+	TransaksiID  string
+	AkunID       string
+	NamaAkun     string
+	KodeAkun     string
+	Tanggal      string
+	Keterangan   string
+	Debit        float64
+	Kredit       float64
+}
+
+type ResultDataBB struct {
+	TransaksiID string
+	AkunID      string
+	NamaAkun    string
+	KodeAkun    string
+	SaldoNormal string
+	Tanggal     string
+	Keterangan  string
+	Debit       float64
+	Kredit      float64
+	Saldo       float64
+}
+
+type ResultSaldoAwalDataBB struct {
+	AkunID      string
+	KodeAkun    string
+	SaldoNormal string
+	NamaAkun    string
+	Saldo       float64
+}
+
+type ResultDataNc struct {
+	KodeAkun    string
+	NamaAkun    string
+	SaldoDebit  float64
+	SaldoKredit float64
+}
+
+type AkuntansiRepo interface {
+	GetDataJU(ctx context.Context, startDate, endDate time.Time) ([]ResultDataJU, error)
+	GetDataBB(ctx context.Context, akunID string, startDate, endDate time.Time) ([]ResultDataBB, []ResultSaldoAwalDataBB, error)
+	GetDataNC(ctx context.Context, date time.Time) ([]ResultDataNc, error)
+}
+
+type akuntansiRepo struct {
+	DB *gorm.DB
+}
+
+func NewAkuntansiRepo(DB *gorm.DB) AkuntansiRepo {
+	return &akuntansiRepo{DB}
+}
+
+func (r *akuntansiRepo) GetDataJU(ctx context.Context, startDate, endDate time.Time) ([]ResultDataJU, error) {
+	resultDatasJU := []ResultDataJU{}
+
+	subQuery := r.DB.Model(&entity.Transaksi{}).
+		Select("id").
+		Where("DATE(tanggal) >= ? AND DATE(tanggal) <= ?", startDate, endDate)
+
+	err := r.DB.WithContext(ctx).Model(&entity.Akun{}).
+		Joins("JOIN ayat_jurnal ON akun.id = ayat_jurnal.akun_id").
+		Joins("JOIN transaksi ON ayat_jurnal.transaksi_id = transaksi.id").
+		Select("ayat_jurnal.id as AyatJurnalID,transaksi.id as TransaksiID,akun.id as AkunID, akun.kode as KodeAkun ,akun.nama as NamaAkun, ayat_jurnal.debit as Debit, ayat_jurnal.kredit as Kredit, transaksi.Tanggal as Tanggal, transaksi.keterangan as Keterangan").
+		Where("transaksi.id IN (?)", subQuery).
+		Group("ayat_jurnal.id").
+		Find(&resultDatasJU).Error
+	if err != nil {
+		helper.LogsError(err)
+		return []ResultDataJU{}, err
+	}
+	return resultDatasJU, nil
+}
+
+func (r *akuntansiRepo) GetDataBB(ctx context.Context, akunID string, startDate, endDate time.Time) ([]ResultDataBB, []ResultSaldoAwalDataBB, error) {
+	resultDatasBB := []ResultDataBB{}
+	resultSaldoAwalDatasBB := []ResultSaldoAwalDataBB{}
+
+	isAkunIdExist := akunID == ""
+	err := r.DB.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		subQuery := tx.Model(&entity.Transaksi{}).
+			Select("id").
+			Where("DATE(tanggal) >= ? AND DATE(tanggal) <= ?", startDate, endDate)
+
+		tx2 := tx.Model(&entity.Akun{})
+
+		tx2 = tx2.Joins("JOIN ayat_jurnal ON akun.id = ayat_jurnal.akun_id").
+			Joins("JOIN transaksi ON ayat_jurnal.transaksi_id = transaksi.id").
+			Select("transaksi.id as TransaksiID,akun.id as AkunID, akun.kode as KodeAkun, akun.nama as NamaAkun, akun.saldo_normal as SaldoNormal, ayat_jurnal.debit as Debit, ayat_jurnal.kredit as Kredit, transaksi.Tanggal as Tanggal, transaksi.keterangan as Keterangan, ayat_jurnal.saldo as Saldo")
+
+		if !isAkunIdExist {
+			tx2 = tx2.Where("akun.id = ?", akunID)
+		}
+
+		err2 := tx2.Where("transaksi.id IN (?)", subQuery).
+			Group("ayat_jurnal.id").
+			Find(&resultDatasBB).Error
+
+		if err2 != nil {
+			return err2
+		}
+
+		// saldo awal
+		subQuery2 := tx.Model(&entity.Transaksi{}).Select("id").Where("DATE(tanggal) < ?", startDate)
+
+		tx3 := tx.Model(&entity.Akun{}).
+			Joins("JOIN ayat_jurnal ON akun.id = ayat_jurnal.akun_id").
+			Select("akun.id as AkunID,akun.Kode as KodeAkun, akun.nama as NamaAkun, akun.saldo_normal as SaldoNormal, SUM(ayat_jurnal.saldo) as Saldo")
+
+		if !isAkunIdExist {
+			tx3 = tx3.Where("akun.id = ?", akunID)
+		}
+
+		err3 := tx3.Where("ayat_jurnal.transaksi_id IN (?)", subQuery2).Group("akun.id").
+			Find(&resultSaldoAwalDatasBB).Error
+
+		if err3 != nil {
+			return err3
+		}
+
+		return nil
+	})
+	if err != nil {
+		helper.LogsError(err)
+		return []ResultDataBB{}, []ResultSaldoAwalDataBB{}, err
+	}
+
+	return resultDatasBB, resultSaldoAwalDatasBB, nil
+}
+
+func (r *akuntansiRepo) GetDataNC(ctx context.Context, date time.Time) ([]ResultDataNc, error) {
+	resultDatasNc := []ResultDataNc{}
+	err := r.DB.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		subQueryTr := tx.Model(&entity.Transaksi{}).Select("id").Where("MONTH(tanggal) = ? AND YEAR(tanggal) = ?", date.Month(), date.Year())
+		err2 := tx.Model(&entity.Akun{}).
+			Joins("JOIN ayat_jurnal ON ayat_jurnal.akun_id = akun.id").
+			Joins("JOIN transaksi ON transaksi.id = ayat_jurnal.transaksi_id").
+			Select("akun.kode as KodeAkun, akun.nama as NamaAkun, SUM(ayat_jurnal.debit) as SaldoDebit, SUM(ayat_jurnal.kredit) as SaldoKredit").
+			Where("transaksi.id IN (?)", subQueryTr).
+			Group("akun.id").
+			Find(&resultDatasNc).Error
+		if err2 != nil {
+			return err2
+		}
+		return nil
+	})
+	if err != nil {
+		helper.LogsError(err)
+		return []ResultDataNc{}, err
+	}
+
+	return resultDatasNc, nil
+}

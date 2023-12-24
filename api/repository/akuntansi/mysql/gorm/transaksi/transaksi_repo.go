@@ -16,12 +16,8 @@ type CreateParam struct {
 }
 
 type SearchTransaksi struct {
-	Nama      string
 	StartDate time.Time
 	EndDate   time.Time
-	Next      string
-	Limit     int
-	// Offset           int
 }
 
 type TransaksiRepo interface {
@@ -72,15 +68,9 @@ func (r *transaksiRepo) GetAll(ctx context.Context, param SearchTransaksi) ([]en
 	datas := []entity.Transaksi{}
 	tx := r.DB.WithContext(ctx).Model(&datas).Order("transaksi.id ASC")
 
-	if param.Next != "" {
-		tx = tx.Where("transaksi.id > ?", param.Next)
-	}
+	tx = tx.Where("DATE(tanggal) >= ? AND DATE(tanggal) <= ?", param.StartDate, param.EndDate)
 
-	tx = tx.Where("created_at >= ? AND created_at < ?", param.StartDate, param.EndDate)
-
-	tx = tx.InnerJoins("AyatJurnals").Preload("AyatJurnals")
-
-	err := tx.Limit(param.Limit).Find(&datas).Error
+	err := tx.Preload("AyatJurnals").Find(&datas).Error
 	if err != nil {
 		helper.LogsError(err)
 		return datas, err

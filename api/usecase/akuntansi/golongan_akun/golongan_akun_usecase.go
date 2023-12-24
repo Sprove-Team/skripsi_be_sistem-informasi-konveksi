@@ -2,12 +2,14 @@ package akuntansi
 
 import (
 	"context"
-	"log"
+	"errors"
 
 	repo "github.com/be-sistem-informasi-konveksi/api/repository/akuntansi/mysql/gorm/golongan_akun"
 	repoKelompokAkun "github.com/be-sistem-informasi-konveksi/api/repository/akuntansi/mysql/gorm/kelompok_akun"
+	"github.com/be-sistem-informasi-konveksi/common/message"
 	req "github.com/be-sistem-informasi-konveksi/common/request/akuntansi/golongan_akun"
 	"github.com/be-sistem-informasi-konveksi/entity"
+	"github.com/be-sistem-informasi-konveksi/helper"
 	"github.com/be-sistem-informasi-konveksi/pkg"
 )
 
@@ -30,7 +32,10 @@ func (u *golonganAkunUsecase) Create(ctx context.Context, reqGolonganAkun req.Cr
 
 	kelompokAkun, err := u.repoKelompokAkun.GetById(ctx, reqGolonganAkun.KelompokAkunID)
 	if err != nil {
-		log.Println("golongan_akun_usecase Create -> ", err)
+		if err.Error() == "record not found" {
+			return errors.New(message.KelompokAkunIdNotFound)
+		}
+		helper.LogsError(err)
 		return err
 	}
 

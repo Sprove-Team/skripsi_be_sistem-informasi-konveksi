@@ -23,7 +23,7 @@ type DBGormConf struct {
 }
 
 func (dbgc *DBGormConf) InitDBGormConf() *gorm.DB {
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8&parseTime=True&loc=Local",
 		dbgc.DB_Username,
 		dbgc.DB_Password,
 		dbgc.DB_Host,

@@ -11,6 +11,7 @@ type AkuntansiRoute interface {
 	GolonganAkun(router fiber.Router)
 	KelompokAkun(router fiber.Router)
 	Transaksi(router fiber.Router)
+	Akuntansi(router fiber.Router)
 }
 
 type akuntansiRoute struct {
@@ -37,5 +38,12 @@ func (ro *akuntansiRoute) KelompokAkun(router fiber.Router) {
 }
 
 func (ro *akuntansiRoute) Transaksi(router fiber.Router) {
+	router.Get("", ro.h.Transaksi().GetAll)
 	router.Post("", ro.h.Transaksi().Create)
+}
+
+func (ro *akuntansiRoute) Akuntansi(router fiber.Router) {
+	router.Get("/jurnal_umum", ro.h.Akuntansi().GetAllJU)
+	router.Get("/buku_besar", ro.h.Akuntansi().GetAllBB)
+	router.Get("/neraca_saldo", ro.h.Akuntansi().GetAllNC)
 }

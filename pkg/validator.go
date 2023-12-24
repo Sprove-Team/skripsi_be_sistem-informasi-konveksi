@@ -67,6 +67,13 @@ func NewValidator() Validator {
 		return t
 	})
 
+	validate.RegisterTranslation("datetime", trans, func(ut ut.Translator) error {
+		return ut.Add("datetime", "{0} harus berformat {1}", true)
+	}, func(ut ut.Translator, fe validator.FieldError) string {
+		t, _ := ut.T("datetime", camelToSnake(fe.Field()), fe.Param())
+		return t
+	})
+
 	return &xValidator{validate, trans}
 }
 

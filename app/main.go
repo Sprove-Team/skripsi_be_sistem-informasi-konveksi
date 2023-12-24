@@ -29,6 +29,7 @@ func main() {
 	validator := pkg.NewValidator()
 	// uuidGen := pkg.NewGoogleUUID()
 	ulidPkg := pkg.NewUlidPkg()
+	ac := pkg.NewAccounting()
 
 	// helper
 	paginate := helper.NewPaginate()
@@ -83,10 +84,11 @@ func main() {
 			}
 
 			// akuntansi
-			akuntansiHandler := handler_init.NewAkuntansiHandlerInit(dbGorm, validator, ulidPkg)
+			akuntansiHandler := handler_init.NewAkuntansiHandlerInit(dbGorm, validator, ulidPkg, ac)
 			akuntansiRoute := route.NewAkuntansiRoute(akuntansiHandler)
 			akuntansiGroup := direktur.Group("/akuntansi")
 			{
+				akuntansiGroup.Route("", akuntansiRoute.Akuntansi) // pelaporan akuntansi
 				akuntansiGroup.Route("/akun", akuntansiRoute.Akun)
 				akuntansiGroup.Route("/golongan_akun", akuntansiRoute.GolonganAkun)
 				akuntansiGroup.Route("/kelompok_akun", akuntansiRoute.KelompokAkun)

@@ -10,6 +10,7 @@ import (
 	repo "github.com/be-sistem-informasi-konveksi/api/repository/akuntansi/mysql/gorm/transaksi"
 	"github.com/be-sistem-informasi-konveksi/common/message"
 	req "github.com/be-sistem-informasi-konveksi/common/request/akuntansi/transaksi"
+	res "github.com/be-sistem-informasi-konveksi/common/response/akuntansi/transaksi"
 	"github.com/be-sistem-informasi-konveksi/entity"
 	"github.com/be-sistem-informasi-konveksi/helper"
 	"github.com/be-sistem-informasi-konveksi/pkg"
@@ -18,6 +19,7 @@ import (
 
 type TransaksiUsecase interface {
 	Create(ctx context.Context, reqTransaksi req.Create) error
+	GetAll(ctx context.Context, reqTransaksi req.GetAll) ([]res.DataGetAllTransaksi, error)
 }
 
 type transaksiUsecase struct {
@@ -40,7 +42,7 @@ func updateSaldo(saldoAkhir *float64, saldo *float64, amount float64, isDebit bo
 	}
 }
 
-func isKreditEqualToDebit(ayatJurnals []req.ReqAyatJurnal, wg *sync.WaitGroup, m *sync.Mutex) error {
+func isKreditEqualToDebit(ayatJurnals []req.ReqAyatJurnal, totalTransaksi *float64, wg *sync.WaitGroup, m *sync.Mutex) error {
 	var totalKredit, totalDebit float64
 	for _, v := range ayatJurnals {
 		wg.Add(1)
@@ -63,6 +65,8 @@ func isKreditEqualToDebit(ayatJurnals []req.ReqAyatJurnal, wg *sync.WaitGroup, m
 	if totalDebit != totalKredit {
 		return errors.New(message.CreditDebitNotSame)
 	}
+
+	*totalTransaksi = totalDebit
 	return nil
 }
 
@@ -92,17 +96,12 @@ func isDuplicateAkun(ayatJurnals []req.ReqAyatJurnal) error {
 }
 
 func (u *transaksiUsecase) Create(ctx context.Context, reqTransaksi req.Create) error {
-	parsedTime, err := time.Parse(time.DateOnly, reqTransaksi.Tanggal)
-	if err != nil {
-		helper.LogsError(err)
-		return err
-	}
-
 	// validate kredit and debit
 	wg := &sync.WaitGroup{}
 	m := &sync.Mutex{}
 
-	if err := isKreditEqualToDebit(reqTransaksi.AyatJurnals, wg, m); err != nil {
+	var totalTransaksi float64
+	if err := isKreditEqualToDebit(reqTransaksi.AyatJurnals, &totalTransaksi, wg, m); err != nil {
 		return err
 	}
 	if err := isDuplicateAkun(reqTransaksi.AyatJurnals); err != nil {
@@ -183,11 +182,19 @@ func (u *transaksiUsecase) Create(ctx context.Context, reqTransaksi req.Create) 
 		return err
 	}
 
+	parsedTime, err := time.Parse(time.RFC3339, reqTransaksi.Tanggal)
+	// log.Println(parsedTime)
+	if err != nil {
+		helper.LogsError(err)
+		return err
+	}
+
 	dataTransaksi := entity.Transaksi{
 		ID:              transaksiID,
 		Tanggal:         parsedTime,
 		Keterangan:      reqTransaksi.Keterangan,
 		BuktiPembayaran: reqTransaksi.BuktiPembayaran,
+		Total:           totalTransaksi,
 	}
 
 	err = u.repo.Create(ctx, repo.CreateParam{
@@ -202,4 +209,60 @@ func (u *transaksiUsecase) Create(ctx context.Context, reqTransaksi req.Create) 
 	}
 
 	return nil
+}
+
+func (u *transaksiUsecase) GetAll(ctx context.Context, reqTransaksi req.GetAll) ([]res.DataGetAllTransaksi, error) {
+	endDate, err := time.Parse(time.DateOnly, reqTransaksi.EndDate)
+	if err != nil {
+		helper.LogsError(err)
+		return []res.DataGetAllTransaksi{}, err
+	}
+	startDate, err := time.Parse(time.DateOnly, reqTransaksi.StartDate)
+	if err != nil {
+		helper.LogsError(err)
+		return []res.DataGetAllTransaksi{}, err
+	}
+
+	searchFilter := repo.SearchTransaksi{
+		EndDate:   endDate,
+		StartDate: startDate,
+	}
+
+	dataTransaksi, err := u.repo.GetAll(ctx, searchFilter)
+	if err != nil {
+		helper.LogsError(err)
+		return []res.DataGetAllTransaksi{}, err
+	}
+
+	datasRes := make([]res.DataGetAllTransaksi, len(dataTransaksi))
+
+	wg := &sync.WaitGroup{}
+	for i, tr := range dataTransaksi {
+		dataAyatJurnals := make([]res.DataAyatJurnalTR, len(tr.AyatJurnals))
+		dataTransaksi := res.DataGetAllTransaksi{}
+		wg.Add(1)
+		go func(ays []entity.AyatJurnal) {
+			defer wg.Done()
+			for j, ay := range ays {
+				dataAyatJurnals[j] = res.DataAyatJurnalTR{
+					AkunID:       ay.AkunID,
+					AyatJurnalID: ay.ID,
+					Kredit:       ay.Kredit,
+					Debit:        ay.Debit,
+					Saldo:        ay.Saldo,
+				}
+			}
+		}(tr.AyatJurnals)
+		wg.Wait()
+		dataTransaksi.ID = tr.ID
+		dataTransaksi.Tanggal = tr.Tanggal.Format(time.DateTime)
+		dataTransaksi.Keterangan = tr.Keterangan
+		dataTransaksi.BuktiPembayaran = tr.BuktiPembayaran
+		dataTransaksi.TotalDebit = tr.Total
+		dataTransaksi.TotalKredit = tr.Total
+		dataTransaksi.AyatJurnals = dataAyatJurnals
+		datasRes[i] = dataTransaksi
+	}
+
+	return datasRes, nil
 }

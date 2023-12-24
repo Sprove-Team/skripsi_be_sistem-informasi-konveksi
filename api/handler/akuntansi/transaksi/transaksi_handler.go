@@ -15,6 +15,7 @@ import (
 
 type TransaksiHandler interface {
 	Create(c *fiber.Ctx) error
+	GetAll(c *fiber.Ctx) error
 }
 
 type transaksiHandler struct {
@@ -98,4 +99,26 @@ func (h *transaksiHandler) Create(c *fiber.Ctx) error {
 
 	// Respond with success status
 	return c.Status(fiber.StatusCreated).JSON(resGlobal.SuccessResWithoutData("C"))
+}
+
+func (h *transaksiHandler) GetAll(c *fiber.Ctx) error {
+	reqU := new(req.GetAll)
+	c.QueryParser(reqU)
+
+	errValidate := h.validator.Validate(reqU)
+	if len(errValidate) > 0 {
+		return c.Status(fiber.StatusBadRequest).JSON(resGlobal.ErrorResWithData(errValidate, fiber.StatusBadRequest))
+	}
+
+	ctx := c.UserContext()
+
+	transaksi, err := h.uc.GetAll(ctx, *reqU)
+	if err != nil {
+		helper.LogsError(err)
+		return c.Status(fiber.StatusInternalServerError).JSON(resGlobal.ErrorResWithoutData(fiber.StatusInternalServerError))
+	}
+	data := fiber.Map{
+		"transaksi": transaksi,
+	}
+	return c.Status(fiber.StatusOK).JSON(resGlobal.SuccessResWithData(data, "R"))
 }

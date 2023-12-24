@@ -4,7 +4,9 @@ import (
 	"context"
 	"log"
 
+	"github.com/be-sistem-informasi-konveksi/common/message"
 	req "github.com/be-sistem-informasi-konveksi/common/request/akuntansi/akun"
+	"github.com/be-sistem-informasi-konveksi/common/response"
 	resGlobal "github.com/be-sistem-informasi-konveksi/common/response/global"
 
 	usecase "github.com/be-sistem-informasi-konveksi/api/usecase/akuntansi/akun"
@@ -55,6 +57,16 @@ func (h *akunHandler) Create(c *fiber.Ctx) error {
 
 	// Handle errors
 	if err != nil {
+
+		if err.Error() == message.GolonganAkunIdNotFound {
+			return c.Status(fiber.StatusBadRequest).JSON(resGlobal.ErrorResWithData([]response.BaseFormatError{
+				{
+					FieldName: "kelompok_akun_id",
+					Message:   err.Error(),
+				},
+			}, fiber.StatusBadRequest))
+		}
+
 		if err.Error() == "duplicated key not allowed" {
 			return c.Status(fiber.StatusConflict).JSON(resGlobal.ErrorResWithoutData(fiber.StatusConflict))
 		}
