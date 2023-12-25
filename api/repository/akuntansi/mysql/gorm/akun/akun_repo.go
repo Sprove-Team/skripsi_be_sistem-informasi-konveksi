@@ -9,12 +9,24 @@ import (
 	"gorm.io/gorm"
 )
 
+type AkunTransactionDetails struct {
+	ID           string
+	SaldoNormal  string
+	Saldo        float64
+	TotalSaldoTr float64
+	GolID        string
+	Nama         string
+	Kode         string
+}
+
 type AkunRepo interface {
 	Create(ctx context.Context, akun *entity.Akun) error
 	Update(ctx context.Context, akun *entity.Akun) error
 	GetAll(ctx context.Context, search SearchAkun) ([]entity.Akun, error)
 	GetById(ctx context.Context, id string) (entity.Akun, error)
 	GetByIds(ctx context.Context, ids []string) ([]entity.Akun, error)
+	GetAkunDetailsByTransactionID(ctx context.Context, id string) ([]AkunTransactionDetails, error)
+	// GetAllWithouFilterPreload(ctx context.Context) ([]entity.Akun, error)
 }
 
 type akunRepo struct {
@@ -46,6 +58,21 @@ func (r *akunRepo) GetByIds(ctx context.Context, ids []string) ([]entity.Akun, e
 	return datas, nil
 }
 
+func (r *akunRepo) GetAkunDetailsByTransactionID(ctx context.Context, id string) ([]AkunTransactionDetails, error) {
+	var datas []AkunTransactionDetails
+	err := r.DB.WithContext(ctx).Model(&entity.Akun{}).
+		Joins("JOIN ayat_jurnal ON ayat_jurnal.akun_id = akun.id").
+		Where("ayat_jurnal.transaksi_id", id).
+		Select("akun.id as ID, akun.saldo_normal as SaldoNormal, SUM(ayat_jurnal.saldo) as TotalSaldoTr, akun.saldo as Saldo, akun.golongan_akun_id as GolID, akun.nama as Nama, akun.kode as Kode").
+		Group("akun.id").
+		Find(&datas).Error
+	if err != nil {
+		helper.LogsError(err)
+		return nil, err
+	}
+	return datas, nil
+}
+
 func (r *akunRepo) Create(ctx context.Context, akun *entity.Akun) error {
 	err := r.DB.WithContext(ctx).Create(akun).Error
 	if err != nil {
@@ -57,6 +84,15 @@ func (r *akunRepo) Create(ctx context.Context, akun *entity.Akun) error {
 
 func (r *akunRepo) Update(ctx context.Context, akun *entity.Akun) error {
 	err := r.DB.WithContext(ctx).Omit("id, created_at, updated_at, deleted_at").Updates(akun).Error
+	if err != nil {
+		helper.LogsError(err)
+		return err
+	}
+	return nil
+}
+
+func (r *akunRepo) DeleteById(ctx context.Context, id string) error {
+	err := r.DB.WithContext(ctx).Delete(&entity.Akun{}, "id = ?", id).Error
 	if err != nil {
 		helper.LogsError(err)
 		return err
@@ -95,3 +131,9 @@ func (r *akunRepo) GetAll(ctx context.Context, searchAkun SearchAkun) ([]entity.
 	}
 	return datas, nil
 }
+
+// func (r *akunRepo) GetAllWithouFilterPreload(ctx context.Context) ([]entity.Akun, error) {
+//   datas := []entity.Akun{}
+//
+//   r.DB.WithContext(ctx).Preload("", args ...interface{})
+// }

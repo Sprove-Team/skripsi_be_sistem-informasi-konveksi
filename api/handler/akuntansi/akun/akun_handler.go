@@ -17,6 +17,7 @@ import (
 type AkunHandler interface {
 	Create(c *fiber.Ctx) error
 	GetAll(c *fiber.Ctx) error
+	// GetAll(c *fiber.Ctx) error
 	// Add other methods as needed
 }
 

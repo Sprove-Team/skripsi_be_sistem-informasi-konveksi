@@ -40,6 +40,7 @@ func (ro *akuntansiRoute) KelompokAkun(router fiber.Router) {
 func (ro *akuntansiRoute) Transaksi(router fiber.Router) {
 	router.Get("", ro.h.Transaksi().GetAll)
 	router.Post("", ro.h.Transaksi().Create)
+	router.Delete("/:id", ro.h.Transaksi().Delete)
 }
 
 func (ro *akuntansiRoute) Akuntansi(router fiber.Router) {

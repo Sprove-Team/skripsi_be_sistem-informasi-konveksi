@@ -6,6 +6,7 @@ import (
 	usecase "github.com/be-sistem-informasi-konveksi/api/usecase/akuntansi/transaksi"
 	"github.com/be-sistem-informasi-konveksi/common/message"
 	req "github.com/be-sistem-informasi-konveksi/common/request/akuntansi/transaksi"
+	reqGlobal "github.com/be-sistem-informasi-konveksi/common/request/global"
 	"github.com/be-sistem-informasi-konveksi/common/response"
 	resGlobal "github.com/be-sistem-informasi-konveksi/common/response/global"
 	"github.com/be-sistem-informasi-konveksi/helper"
@@ -16,6 +17,7 @@ import (
 type TransaksiHandler interface {
 	Create(c *fiber.Ctx) error
 	GetAll(c *fiber.Ctx) error
+	Delete(c *fiber.Ctx) error
 }
 
 type transaksiHandler struct {
@@ -99,6 +101,24 @@ func (h *transaksiHandler) Create(c *fiber.Ctx) error {
 
 	// Respond with success status
 	return c.Status(fiber.StatusCreated).JSON(resGlobal.SuccessResWithoutData("C"))
+}
+
+func (h *transaksiHandler) Delete(c *fiber.Ctx) error {
+	reqU := new(reqGlobal.ParamByID)
+	c.ParamsParser(reqU)
+
+	errValidate := h.validator.Validate(reqU)
+	if len(errValidate) > 0 {
+		return c.Status(fiber.StatusBadRequest).JSON(resGlobal.ErrorResWithData(errValidate, fiber.StatusBadRequest))
+	}
+
+	ctx := c.UserContext()
+
+	err := h.uc.Delete(ctx, reqU.ID)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(resGlobal.ErrorResWithoutData(fiber.StatusInternalServerError))
+	}
+	return c.Status(fiber.StatusOK).JSON(resGlobal.SuccessResWithoutData("D"))
 }
 
 func (h *transaksiHandler) GetAll(c *fiber.Ctx) error {

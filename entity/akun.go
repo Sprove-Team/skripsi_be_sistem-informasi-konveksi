@@ -17,7 +17,8 @@ type Akun struct {
 	Nama           string          `gorm:"type:varchar(150);not null" json:"nama"`
 	Kode           string          `gorm:"type:varchar(10);uniqueIndex;not null" json:"kode"`
 	SaldoNormal    string          `gorm:"type:enum('DEBIT','KREDIT');default:'DEBIT';not null" json:"saldo_normal"`
-	SaldoAkhir     float64         `gorm:"type:decimal(10,2);default:0" json:"saldo_akhir"`
+	Saldo          float64         `gorm:"type:decimal(10,2);default:0" json:"saldo"`
+	AyatJurnals    []AyatJurnal    `gorm:"foreignKey:AkunID;references:ID" json:"ayat_jurnal"`
 	CreatedAt      time.Time       `json:"created_at"`
 	UpdatedAt      time.Time       `json:"updated_at"`
 	DeletedAt      *gorm.DeletedAt `gorm:"index" json:"deleted_at"`

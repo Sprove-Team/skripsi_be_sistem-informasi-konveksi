@@ -2,6 +2,8 @@ package akuntansi
 
 import (
 	"context"
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/be-sistem-informasi-konveksi/entity"
@@ -20,9 +22,15 @@ type SearchTransaksi struct {
 	EndDate   time.Time
 }
 
+type DeleteTransaksi struct {
+	ID              string
+	SaldoAkunValues []string
+}
+
 type TransaksiRepo interface {
 	Create(ctx context.Context, param CreateParam) error
 	GetAll(ctx context.Context, param SearchTransaksi) ([]entity.Transaksi, error)
+	Delete(ctx context.Context, param DeleteTransaksi) error
 	// Add more methods as needed for your repository operations
 }
 
@@ -51,9 +59,28 @@ func (r *transaksiRepo) Create(ctx context.Context, param CreateParam) error {
 			return err
 		}
 		for _, akun := range param.UpdateAkuns {
-			if err := tx.Model(&entity.Akun{}).Where("id = ?", akun.ID).Update("saldo_akhir", akun.SaldoAkhir).Error; err != nil {
+			if err := tx.Model(&entity.Akun{}).Where("id = ?", akun.ID).Update("saldo", akun.Saldo).Error; err != nil {
 				return err
 			}
+		}
+		return nil
+	})
+	if err != nil {
+		helper.LogsError(err)
+		return err
+	}
+	return nil
+}
+
+func (r *transaksiRepo) Delete(ctx context.Context, param DeleteTransaksi) error {
+	err := r.DB.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if err := tx.Delete(&entity.Transaksi{}, "id = ?", param.ID).Error; err != nil {
+			return err
+		}
+		newValueAkun := strings.Join(param.SaldoAkunValues, ",")
+		query := fmt.Sprintf("INSERT INTO akun (id, saldo, golongan_akun_id, nama, kode) VALUES %s ON DUPLICATE KEY UPDATE saldo = VALUES(saldo)", newValueAkun)
+		if err := tx.Exec(query).Error; err != nil {
+			return err
 		}
 		return nil
 	})

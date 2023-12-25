@@ -3,6 +3,7 @@ package akuntansi
 import (
 	"context"
 	"errors"
+	"fmt"
 	"sync"
 	"time"
 
@@ -20,6 +21,7 @@ import (
 type TransaksiUsecase interface {
 	Create(ctx context.Context, reqTransaksi req.Create) error
 	GetAll(ctx context.Context, reqTransaksi req.GetAll) ([]res.DataGetAllTransaksi, error)
+	Delete(ctx context.Context, id string) error
 }
 
 type transaksiUsecase struct {
@@ -32,12 +34,12 @@ func NewTransaksiUsecase(repo repo.TransaksiRepo, repoAkun repoAkun.AkunRepo, ul
 	return &transaksiUsecase{repo, repoAkun, ulid}
 }
 
-func updateSaldo(saldoAkhir *float64, saldo *float64, amount float64, isDebit bool) {
+func updateSaldo(saldoAkun *float64, saldo *float64, amount float64, isDebit bool) {
 	if isDebit {
-		*saldoAkhir -= amount
+		*saldoAkun -= amount
 		*saldo -= amount
 	} else {
-		*saldoAkhir += amount
+		*saldoAkun += amount
 		*saldo += amount
 	}
 }
@@ -95,6 +97,34 @@ func isDuplicateAkun(ayatJurnals []req.ReqAyatJurnal) error {
 	return nil
 }
 
+func (u *transaksiUsecase) Delete(ctx context.Context, id string) error {
+	detailTr, err := u.repoAkun.GetAkunDetailsByTransactionID(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	saldoAkunValues := make([]string, len(detailTr))
+
+	for i, v := range detailTr {
+		newUp := entity.Akun{
+			ID:             v.ID,
+			GolonganAkunID: v.GolID,
+			Saldo:          v.Saldo,
+			Nama:           v.Nama,
+			Kode:           v.Kode,
+		}
+
+		newUp.Saldo -= v.TotalSaldoTr
+
+		saldoAkunValues[i] = fmt.Sprintf("('%s', %.2f, '%s', '%s', '%s')", newUp.ID, newUp.Saldo, newUp.GolonganAkunID, newUp.Nama, newUp.Kode)
+	}
+
+	return u.repo.Delete(ctx, repo.DeleteTransaksi{
+		ID:              id,
+		SaldoAkunValues: saldoAkunValues,
+	})
+}
+
 func (u *transaksiUsecase) Create(ctx context.Context, reqTransaksi req.Create) error {
 	// validate kredit and debit
 	wg := &sync.WaitGroup{}
@@ -129,16 +159,17 @@ func (u *transaksiUsecase) Create(ctx context.Context, reqTransaksi req.Create) 
 	mapAkuns := make(map[string]entity.Akun, len(akuns))
 
 	for _, akun := range akuns {
-		akun := akun
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			m.Lock()
-			mapAkuns[akun.ID] = akun
-			m.Unlock()
-		}()
+		mapAkuns[akun.ID] = akun
+		// akun := akun
+		// wg.Add(1)
+		// go func() {
+		// 	defer wg.Done()
+		// 	m.Lock()
+		// 	mapAkuns[akun.ID] = akun
+		// 	m.Unlock()
+		// }()
 	}
-	wg.Wait()
+	// wg.Wait()
 
 	dataAyatJurnals := make([]*entity.AyatJurnal, len(reqTransaksi.AyatJurnals))
 	transaksiID := u.ulid.MakeUlid().String()
@@ -156,10 +187,10 @@ func (u *transaksiUsecase) Create(ctx context.Context, reqTransaksi req.Create) 
 			}
 			var saldo float64
 			if v.Kredit != 0 {
-				updateSaldo(&akun.SaldoAkhir, &saldo, v.Kredit, akun.SaldoNormal == "DEBIT")
+				updateSaldo(&akun.Saldo, &saldo, v.Kredit, akun.SaldoNormal == "DEBIT")
 			}
 			if v.Debit != 0 {
-				updateSaldo(&akun.SaldoAkhir, &saldo, v.Debit, akun.SaldoNormal == "KREDIT")
+				updateSaldo(&akun.Saldo, &saldo, v.Debit, akun.SaldoNormal == "KREDIT")
 			}
 			// mapAkuns[v.AkunID] = repoAkun
 			updateAkuns = append(updateAkuns, &akun)
