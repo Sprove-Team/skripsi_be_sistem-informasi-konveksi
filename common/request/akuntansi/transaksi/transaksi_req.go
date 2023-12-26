@@ -11,7 +11,14 @@ type Create struct {
 	Tanggal         string          `json:"tanggal" validate:"required,datetime=2006-01-02T15:04:05Z07:00"`
 	Keterangan      string          `json:"keterangan" validate:"required"`
 	AyatJurnals     []ReqAyatJurnal `json:"ayat_jurnal" validate:"required,min=2"`
-	// BuktiPembayaran string `json:"bukti_pembayaran"`
+}
+
+type Update struct {
+	ID              string          `param:"id" validate:"required,ulid"`
+	BuktiPembayaran string          `json:"bukti_pembayaran" validate:"omitempty,url_cloud_storage"`
+	Tanggal         string          `json:"tanggal" validate:"omitempty,datetime=2006-01-02T15:04:05Z07:00"`
+	Keterangan      string          `json:"keterangan" validate:"omitempty"`
+	AyatJurnals     []ReqAyatJurnal `json:"ayat_jurnal" validate:"omitempty,min=2"`
 }
 
 type GetAll struct {

@@ -18,10 +18,10 @@ type Akun struct {
 	Kode           string          `gorm:"type:varchar(10);uniqueIndex;not null" json:"kode"`
 	SaldoNormal    string          `gorm:"type:enum('DEBIT','KREDIT');default:'DEBIT';not null" json:"saldo_normal"`
 	Saldo          float64         `gorm:"type:decimal(10,2);default:0" json:"saldo"`
-	AyatJurnals    []AyatJurnal    `gorm:"foreignKey:AkunID;references:ID" json:"ayat_jurnal"`
-	CreatedAt      time.Time       `json:"created_at"`
-	UpdatedAt      time.Time       `json:"updated_at"`
-	DeletedAt      *gorm.DeletedAt `gorm:"index" json:"deleted_at"`
+	AyatJurnals    []AyatJurnal    `gorm:"foreignKey:AkunID;references:ID" json:"ayat_jurnal,omitempty"`
+	CreatedAt      *time.Time      `json:"created_at,omitempty"`
+	UpdatedAt      *time.Time      `json:"updated_at,omitempty"`
+	DeletedAt      *gorm.DeletedAt `gorm:"index" json:"deleted_at,omitempty"`
 }
 
 func (Akun) TableName() string {

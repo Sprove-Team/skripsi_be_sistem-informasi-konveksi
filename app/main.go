@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/monitor"
 	_ "github.com/joho/godotenv/autoload"
 
 	timeoutMid "github.com/be-sistem-informasi-konveksi/api/middleware/timeout"
@@ -96,6 +97,9 @@ func main() {
 			}
 		}
 	}
+
+	// special metrics
+	app.Get("/metrics", monitor.New(monitor.Config{Title: "MyService Metrics Page"}))
 
 	app.Listen(":8000")
 }
