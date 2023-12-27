@@ -20,6 +20,7 @@ type TransaksiHandler interface {
 	Update(c *fiber.Ctx) error
 	GetAll(c *fiber.Ctx) error
 	GetById(c *fiber.Ctx) error
+	// GetAllHistory(c *fiber.Ctx) error
 }
 
 type transaksiHandler struct {
@@ -154,7 +155,7 @@ func (h *transaksiHandler) Update(c *fiber.Ctx) error {
 	}
 
 	// Respond with success status
-	return c.Status(fiber.StatusCreated).JSON(resGlobal.SuccessResWithoutData("C"))
+	return c.Status(fiber.StatusCreated).JSON(resGlobal.SuccessResWithoutData("U"))
 }
 
 func (h *transaksiHandler) Delete(c *fiber.Ctx) error {

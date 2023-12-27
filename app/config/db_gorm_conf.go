@@ -32,7 +32,7 @@ func (dbgc *DBGormConf) InitDBGormConf() *gorm.DB {
 
 	logLevel := logger.Silent
 
-	if os.Getenv("PRODUCTION") != "" {
+	if os.Getenv("PRODUCTION") == "" {
 		logLevel = logger.Info
 	}
 

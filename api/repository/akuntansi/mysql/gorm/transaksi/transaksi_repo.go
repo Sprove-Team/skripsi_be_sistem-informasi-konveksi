@@ -146,7 +146,9 @@ func (r *transaksiRepo) GetAll(ctx context.Context, param SearchTransaksi) ([]en
 
 	tx = tx.Where("DATE(tanggal) >= ? AND DATE(tanggal) <= ?", param.StartDate, param.EndDate)
 
-	err := tx.Preload("AyatJurnals").
+	err := tx.Preload("AyatJurnals", func(db *gorm.DB) *gorm.DB {
+		return db.Omit("created_at", "deleted_at", "updated_at")
+	}).
 		Preload("AyatJurnals.Akun", func(db *gorm.DB) *gorm.DB {
 			return db.Omit("created_at", "deleted_at", "updated_at").
 				Select("nama", "id", "saldo_normal", "saldo", "kode", "golongan_akun_id")

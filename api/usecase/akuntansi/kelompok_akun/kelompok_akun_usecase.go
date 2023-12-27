@@ -2,6 +2,7 @@ package akuntansi
 
 import (
 	"context"
+	"strings"
 
 	repo "github.com/be-sistem-informasi-konveksi/api/repository/akuntansi/mysql/gorm/kelompok_akun"
 	req "github.com/be-sistem-informasi-konveksi/common/request/akuntansi/kelompok_akun"
@@ -25,7 +26,7 @@ func NewKelompokAkunUsecase(repo repo.KelompokAkunRepo, ulid pkg.UlidPkg) Kelomp
 func (u *kelompokAkunUsecase) Create(ctx context.Context, reqKelompokAKun req.Create) error {
 	data := entity.KelompokAkun{
 		ID:   u.ulid.MakeUlid().String(),
-		Nama: reqKelompokAKun.Nama,
+		Nama: strings.ToLower(reqKelompokAKun.Nama),
 		Kode: reqKelompokAKun.Kode,
 	}
 

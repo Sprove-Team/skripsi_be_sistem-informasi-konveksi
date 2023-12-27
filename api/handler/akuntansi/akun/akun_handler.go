@@ -6,6 +6,7 @@ import (
 
 	"github.com/be-sistem-informasi-konveksi/common/message"
 	req "github.com/be-sistem-informasi-konveksi/common/request/akuntansi/akun"
+	"github.com/be-sistem-informasi-konveksi/common/request/global"
 	"github.com/be-sistem-informasi-konveksi/common/response"
 	resGlobal "github.com/be-sistem-informasi-konveksi/common/response/global"
 
@@ -17,7 +18,9 @@ import (
 type AkunHandler interface {
 	Create(c *fiber.Ctx) error
 	GetAll(c *fiber.Ctx) error
-	// GetAll(c *fiber.Ctx) error
+	Update(c *fiber.Ctx) error
+	Delete(c *fiber.Ctx) error
+	// GetById(c *fiber.Ctx) error
 	// Add other methods as needed
 }
 
@@ -80,6 +83,83 @@ func (h *akunHandler) Create(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusCreated).JSON(resGlobal.SuccessResWithoutData("C"))
 }
 
+func (h *akunHandler) Update(c *fiber.Ctx) error {
+	c.Accepts("application/json")
+
+	// Parse request body
+	req := new(req.Update)
+	if err := c.ParamsParser(req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(resGlobal.ErrorResWithoutData(fiber.StatusBadRequest))
+	}
+	c.BodyParser(req)
+
+	// Validate request
+	errValidate := h.validator.Validate(req)
+	if len(errValidate) > 0 {
+		return c.Status(fiber.StatusBadRequest).JSON(resGlobal.ErrorResWithData(errValidate, fiber.StatusBadRequest))
+	}
+
+	// Create context
+	ctx := c.UserContext()
+
+	// Call usecase to create Akun
+	err := h.uc.Update(ctx, *req)
+
+	// Handle context timeout
+	if ctx.Err() == context.DeadlineExceeded {
+		return c.Status(fiber.StatusRequestTimeout).JSON(resGlobal.ErrorResWithoutData(fiber.StatusRequestTimeout))
+	}
+
+	if err != nil {
+
+		if err.Error() == "record not found" {
+			return c.Status(fiber.StatusNotFound).JSON(resGlobal.ErrorResWithoutData(fiber.StatusNotFound))
+		}
+
+		return c.Status(fiber.StatusInternalServerError).JSON(resGlobal.ErrorResWithoutData(fiber.StatusInternalServerError))
+	}
+
+	return c.Status(fiber.StatusCreated).JSON(resGlobal.SuccessResWithoutData("U"))
+}
+
+func (h *akunHandler) Delete(c *fiber.Ctx) error {
+	c.Accepts("application/json")
+
+	// Parse request body
+	req := new(global.ParamByID)
+	if err := c.ParamsParser(req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(resGlobal.ErrorResWithoutData(fiber.StatusBadRequest))
+	}
+
+	// Validate request
+	errValidate := h.validator.Validate(req)
+	if len(errValidate) > 0 {
+		return c.Status(fiber.StatusBadRequest).JSON(resGlobal.ErrorResWithData(errValidate, fiber.StatusBadRequest))
+	}
+
+	// Create context
+	ctx := c.UserContext()
+
+	// Call usecase to create Akun
+	err := h.uc.Delete(ctx, req.ID)
+
+	// Handle context timeout
+	if ctx.Err() == context.DeadlineExceeded {
+		return c.Status(fiber.StatusRequestTimeout).JSON(resGlobal.ErrorResWithoutData(fiber.StatusRequestTimeout))
+	}
+
+	if err != nil {
+
+		if err.Error() == "record not found" {
+			return c.Status(fiber.StatusNotFound).JSON(resGlobal.ErrorResWithoutData(fiber.StatusNotFound))
+		}
+
+		return c.Status(fiber.StatusInternalServerError).JSON(resGlobal.ErrorResWithoutData(fiber.StatusInternalServerError))
+	}
+
+	return c.Status(fiber.StatusCreated).JSON(resGlobal.SuccessResWithoutData("D"))
+}
+
 func (h *akunHandler) GetAll(c *fiber.Ctx) error {
 	req := new(req.GetAll)
 	c.QueryParser(req)
@@ -96,7 +176,7 @@ func (h *akunHandler) GetAll(c *fiber.Ctx) error {
 		if err.Error() == "record not found" {
 			return c.Status(fiber.StatusNotFound).JSON(resGlobal.ErrorResWithoutData(fiber.StatusNotFound))
 		}
-		log.Println(err)
+
 		return c.Status(fiber.StatusInternalServerError).JSON(resGlobal.ErrorResWithoutData(fiber.StatusInternalServerError))
 	}
 

@@ -3,6 +3,7 @@ package akuntansi
 import (
 	"context"
 	"errors"
+	"strings"
 
 	repo "github.com/be-sistem-informasi-konveksi/api/repository/akuntansi/mysql/gorm/golongan_akun"
 	repoKelompokAkun "github.com/be-sistem-informasi-konveksi/api/repository/akuntansi/mysql/gorm/kelompok_akun"
@@ -43,7 +44,7 @@ func (u *golonganAkunUsecase) Create(ctx context.Context, reqGolonganAkun req.Cr
 
 	data := entity.GolonganAkun{
 		ID:             u.ulid.MakeUlid().String(),
-		Nama:           reqGolonganAkun.Nama,
+		Nama:           strings.ToLower(reqGolonganAkun.Nama),
 		Kode:           kode,
 		KelompokAkunID: reqGolonganAkun.KelompokAkunID,
 	}

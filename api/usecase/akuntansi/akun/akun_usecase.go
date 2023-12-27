@@ -3,7 +3,7 @@ package akuntansi
 import (
 	"context"
 	"errors"
-	"log"
+	"strings"
 
 	repo "github.com/be-sistem-informasi-konveksi/api/repository/akuntansi/mysql/gorm/akun"
 	repoGolonganAkun "github.com/be-sistem-informasi-konveksi/api/repository/akuntansi/mysql/gorm/golongan_akun"
@@ -16,6 +16,8 @@ import (
 
 type AkunUsecase interface {
 	Create(ctx context.Context, reqAkun req.Create) error
+	Delete(ctx context.Context, id string) error
+	Update(ctx context.Context, reqAkun req.Update) error
 	GetAll(ctx context.Context, reqAkun req.GetAll) ([]entity.Akun, error)
 }
 
@@ -51,18 +53,30 @@ func (u *akunUsecase) Create(ctx context.Context, reqAkun req.Create) error {
 	return u.repo.Create(ctx, &data)
 }
 
+func (u *akunUsecase) Update(ctx context.Context, reqAkun req.Update) error {
+	return u.repo.Update(ctx, &entity.Akun{
+		ID:             reqAkun.ID,
+		GolonganAkunID: reqAkun.GolonganAkunID,
+		Nama:           reqAkun.Nama,
+		SaldoNormal:    reqAkun.SaldoNormal,
+	})
+}
+
+func (u *akunUsecase) Delete(ctx context.Context, id string) error {
+	return u.repo.Delete(ctx, id)
+}
+
 func (u *akunUsecase) GetAll(ctx context.Context, reqAkun req.GetAll) ([]entity.Akun, error) {
 	if reqAkun.Limit <= 0 {
 		reqAkun.Limit = 10
 	}
 	datas, err := u.repo.GetAll(ctx, repo.SearchAkun{
-		Nama:  reqAkun.Nama,
+		Nama:  strings.ToLower(reqAkun.Nama),
 		Kode:  reqAkun.Kode,
 		Limit: reqAkun.Limit,
 		Next:  reqAkun.Next,
 	})
 	if err != nil {
-		log.Println("akun_usecase GetAll -> ", err)
 		return nil, err
 	}
 	return datas, err

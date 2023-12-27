@@ -22,6 +22,7 @@ type AkunTransactionDetails struct {
 type AkunRepo interface {
 	Create(ctx context.Context, akun *entity.Akun) error
 	Update(ctx context.Context, akun *entity.Akun) error
+	Delete(ctx context.Context, id string) error
 	GetAll(ctx context.Context, search SearchAkun) ([]entity.Akun, error)
 	GetById(ctx context.Context, id string) (entity.Akun, error)
 	GetByIds(ctx context.Context, ids []string) ([]entity.Akun, error)
@@ -91,6 +92,15 @@ func (r *akunRepo) Update(ctx context.Context, akun *entity.Akun) error {
 	return nil
 }
 
+func (r *akunRepo) Delete(ctx context.Context, id string) error {
+	err := r.DB.WithContext(ctx).Where("id = ?", id).Delete(&entity.Akun{}).Error
+	if err != nil {
+		helper.LogsError(err)
+		return err
+	}
+	return nil
+}
+
 func (r *akunRepo) DeleteById(ctx context.Context, id string) error {
 	err := r.DB.WithContext(ctx).Delete(&entity.Akun{}, "id = ?", id).Error
 	if err != nil {
@@ -110,7 +120,7 @@ type SearchAkun struct {
 func (r *akunRepo) GetAll(ctx context.Context, searchAkun SearchAkun) ([]entity.Akun, error) {
 	datas := []entity.Akun{}
 
-	tx := r.DB.WithContext(ctx).Model(&entity.Akun{}).Order("id ASC")
+	tx := r.DB.WithContext(ctx).Model(&entity.Akun{}).Order("id ASC").Omit("created_at", "deleted_at", "updated_at")
 
 	conditions := map[string]interface{}{
 		"id > ?":      searchAkun.Next,
@@ -124,16 +134,12 @@ func (r *akunRepo) GetAll(ctx context.Context, searchAkun SearchAkun) ([]entity.
 		}
 	}
 
-	err := tx.Limit(searchAkun.Limit).Find(&datas).Error
+	err := tx.Limit(searchAkun.Limit).Preload("GolonganAkun", func(db *gorm.DB) *gorm.DB {
+		return db.Select("id", "nama", "kode")
+	}).Find(&datas).Error
 	if err != nil {
 		helper.LogsError(err)
 		return datas, err
 	}
 	return datas, nil
 }
-
-// func (r *akunRepo) GetAllWithouFilterPreload(ctx context.Context) ([]entity.Akun, error) {
-//   datas := []entity.Akun{}
-//
-//   r.DB.WithContext(ctx).Preload("", args ...interface{})
-// }

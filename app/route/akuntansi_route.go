@@ -25,6 +25,8 @@ func NewAkuntansiRoute(h handler_init.AkuntansiHandlerInit) AkuntansiRoute {
 func (ro *akuntansiRoute) Akun(router fiber.Router) {
 	router.Get("", ro.h.AkunHandler().GetAll)
 	router.Post("", ro.h.AkunHandler().Create)
+	router.Put("/:id", ro.h.AkunHandler().Update)
+	router.Delete("/:id", ro.h.AkunHandler().Delete)
 }
 
 func (ro *akuntansiRoute) GolonganAkun(router fiber.Router) {
@@ -33,6 +35,7 @@ func (ro *akuntansiRoute) GolonganAkun(router fiber.Router) {
 }
 
 func (ro *akuntansiRoute) KelompokAkun(router fiber.Router) {
+	// router.Get("")
 	router.Post("", ro.h.KelompokAkunHandler().Create)
 	// Add other routes specific to Kelompok Akun as needed
 }

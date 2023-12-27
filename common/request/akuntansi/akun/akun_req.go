@@ -8,6 +8,15 @@ type Create struct {
 	SaldoNormal    string `json:"saldo_normal" validate:"required,oneof=DEBIT KREDIT"`
 }
 
+type Update struct {
+	ID             string `param:"id" validate:"required,ulid"`
+	GolonganAkunID string `json:"golongan_akun_id" validate:"omitempty,ulid"`
+	Nama           string `json:"nama" validate:"omitempty,printascii"`
+	Kode           string `json:"kode" validate:"omitempty"`
+	Deskripsi      string `json:"deskripsi" validate:"omitempty"`
+	SaldoNormal    string `json:"saldo_normal" validate:"omitempty,oneof=DEBIT KREDIT"`
+}
+
 type GetAll struct {
 	Nama  string `query:"nama" validate:"omitempty,printascii"`
 	Kode  string `query:"kode" validate:"omitempty"`

@@ -4,9 +4,9 @@ import (
 	"os"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/monitor"
 	_ "github.com/joho/godotenv/autoload"
 
+	"github.com/ansrivas/fiberprometheus/v2"
 	timeoutMid "github.com/be-sistem-informasi-konveksi/api/middleware/timeout"
 	"github.com/be-sistem-informasi-konveksi/app/config"
 	"github.com/be-sistem-informasi-konveksi/app/handler_init"
@@ -45,6 +45,11 @@ func main() {
 
 	api := app.Group("/api")
 	v1 := api.Group("/v1")
+	// special metrics
+	prometheus := fiberprometheus.New("matrics-konveksi")
+	prometheus.RegisterAt(app, "/metrics")
+	app.Use(prometheus.Middleware)
+	// v1.Get("/metrics", monitor.New(monitor.Config{Title: "MyService Metrics Page"}))
 	{
 		// domain direktur
 		direktur := v1.Group("/direktur", timeoutMid.Timeout(nil))
@@ -97,9 +102,6 @@ func main() {
 			}
 		}
 	}
-
-	// special metrics
-	app.Get("/metrics", monitor.New(monitor.Config{Title: "MyService Metrics Page"}))
 
 	app.Listen(":8000")
 }
