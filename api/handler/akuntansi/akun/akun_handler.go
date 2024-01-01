@@ -62,7 +62,7 @@ func (h *akunHandler) Create(c *fiber.Ctx) error {
 	// Handle errors
 	if err != nil {
 
-		if err.Error() == message.GolonganAkunIdNotFound {
+		if err.Error() == message.KelompokAkunIdNotFound {
 			return c.Status(fiber.StatusBadRequest).JSON(resGlobal.ErrorResWithData([]response.BaseFormatError{
 				{
 					FieldName: "kelompok_akun_id",

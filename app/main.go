@@ -16,21 +16,21 @@ import (
 )
 
 func main() {
-	dbGormConf := config.DBGormConf{
+	// pkg
+	validator := pkg.NewValidator()
+	ulidPkg := pkg.NewUlidPkg()
+	ac := pkg.NewAccounting()
+
+	dbGormConf := config.DBGorm{
 		DB_Username: os.Getenv("DB_USERNAME"),
 		DB_Password: os.Getenv("DB_PASSWORD"),
 		DB_Name:     os.Getenv("DB_NAME"),
 		DB_Port:     os.Getenv("DB_PORT"),
 		DB_Host:     os.Getenv("DB_HOST"),
 	}
-	dbGorm := dbGormConf.InitDBGormConf()
-	app := fiber.New()
 
-	// pkg
-	validator := pkg.NewValidator()
-	// uuidGen := pkg.NewGoogleUUID()
-	ulidPkg := pkg.NewUlidPkg()
-	ac := pkg.NewAccounting()
+	dbGorm := dbGormConf.InitDBGorm(ulidPkg)
+	app := fiber.New()
 
 	// helper
 	paginate := helper.NewPaginate()
@@ -42,7 +42,6 @@ func main() {
 	timeoutMid := timeoutMid.NewTimeoutMiddleware()
 
 	// domain
-
 	api := app.Group("/api")
 	v1 := api.Group("/v1")
 	// special metrics
@@ -96,7 +95,7 @@ func main() {
 			{
 				akuntansiGroup.Route("", akuntansiRoute.Akuntansi) // pelaporan akuntansi
 				akuntansiGroup.Route("/akun", akuntansiRoute.Akun)
-				akuntansiGroup.Route("/golongan_akun", akuntansiRoute.GolonganAkun)
+				// akuntansiGroup.Route("/golongan_akun", akuntansiRoute.GolonganAkun)
 				akuntansiGroup.Route("/kelompok_akun", akuntansiRoute.KelompokAkun)
 				akuntansiGroup.Route("/transaksi", akuntansiRoute.Transaksi)
 			}

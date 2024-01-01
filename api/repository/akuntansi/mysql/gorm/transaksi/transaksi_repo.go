@@ -107,7 +107,7 @@ func (r *transaksiRepo) Update(ctx context.Context, param UpdateParam) error {
 		// the SQL query uses INSERT INTO ... ON DUPLICATE KEY UPDATE to efficiently handle duplicates.
 
 		newValueAkun := strings.Join(param.NewSaldoAkunValues, ",")
-		query2 := fmt.Sprintf("INSERT INTO akun (id, saldo, golongan_akun_id, nama, kode) VALUES %s ON DUPLICATE KEY UPDATE saldo = VALUES(saldo)", newValueAkun)
+		query2 := fmt.Sprintf("INSERT INTO akun (id, saldo, kelompok_akun_id, nama, kode) VALUES %s ON DUPLICATE KEY UPDATE saldo = VALUES(saldo)", newValueAkun)
 		if err := tx.Exec(query2).Error; err != nil {
 			return err
 		}
@@ -126,7 +126,7 @@ func (r *transaksiRepo) Delete(ctx context.Context, param DeleteParam) error {
 			return err
 		}
 		newValueAkun := strings.Join(param.SaldoAkunValues, ",")
-		query := fmt.Sprintf("INSERT INTO akun (id, saldo, golongan_akun_id, nama, kode) VALUES %s ON DUPLICATE KEY UPDATE saldo = VALUES(saldo)", newValueAkun)
+		query := fmt.Sprintf("INSERT INTO akun (id, saldo, kelompok_akun_id, nama, kode) VALUES %s ON DUPLICATE KEY UPDATE saldo = VALUES(saldo)", newValueAkun)
 		if err := tx.Exec(query).Error; err != nil {
 			return err
 		}
@@ -151,7 +151,7 @@ func (r *transaksiRepo) GetAll(ctx context.Context, param SearchTransaksi) ([]en
 	}).
 		Preload("AyatJurnals.Akun", func(db *gorm.DB) *gorm.DB {
 			return db.Omit("created_at", "deleted_at", "updated_at").
-				Select("nama", "id", "saldo_normal", "saldo", "kode", "golongan_akun_id")
+				Select("nama", "id", "saldo_normal", "saldo", "kode", "kelompok_akun_id")
 		}).
 		Find(&datas).Error
 	if err != nil {
@@ -165,7 +165,7 @@ func (r *transaksiRepo) GetById(ctx context.Context, id string) (entity.Transaks
 	data := entity.Transaksi{}
 	err := r.DB.WithContext(ctx).Model(&entity.Transaksi{}).Omit("created_at", "deleted_at", "updated_at").Where("id = ?", id).Preload("AyatJurnals", func(db *gorm.DB) *gorm.DB {
 		return db.Omit("created_at", "deleted_at", "updated_at").Preload("Akun", func(db2 *gorm.DB) *gorm.DB {
-			return db2.Select("nama", "id", "saldo_normal", "saldo", "kode", "golongan_akun_id")
+			return db2.Select("nama", "id", "saldo_normal", "saldo", "kode", "kelompok_akun_id")
 		})
 	}).First(&data).Error
 	if err != nil {

@@ -14,7 +14,7 @@ type AkunTransactionDetails struct {
 	SaldoNormal  string
 	Saldo        float64
 	TotalSaldoTr float64
-	GolID        string
+	KelID        string
 	Nama         string
 	Kode         string
 }
@@ -64,7 +64,7 @@ func (r *akunRepo) GetAkunDetailsByTransactionID(ctx context.Context, id string)
 	err := r.DB.WithContext(ctx).Model(&entity.Akun{}).
 		Joins("JOIN ayat_jurnal ON ayat_jurnal.akun_id = akun.id").
 		Where("ayat_jurnal.transaksi_id", id).
-		Select("akun.id as ID, akun.saldo_normal as SaldoNormal, SUM(ayat_jurnal.saldo) as TotalSaldoTr, akun.saldo as Saldo, akun.golongan_akun_id as GolID, akun.nama as Nama, akun.kode as Kode").
+		Select("akun.id as ID, akun.saldo_normal as SaldoNormal, SUM(ayat_jurnal.saldo) as TotalSaldoTr, akun.saldo as Saldo, akun.kelompok_akun_id as KelID, akun.nama as Nama, akun.kode as Kode").
 		Group("akun.id").
 		Find(&datas).Error
 	if err != nil {
@@ -134,7 +134,7 @@ func (r *akunRepo) GetAll(ctx context.Context, searchAkun SearchAkun) ([]entity.
 		}
 	}
 
-	err := tx.Limit(searchAkun.Limit).Preload("GolonganAkun", func(db *gorm.DB) *gorm.DB {
+	err := tx.Limit(searchAkun.Limit).Preload("KelompokAkun", func(db *gorm.DB) *gorm.DB {
 		return db.Select("id", "nama", "kode")
 	}).Find(&datas).Error
 	if err != nil {

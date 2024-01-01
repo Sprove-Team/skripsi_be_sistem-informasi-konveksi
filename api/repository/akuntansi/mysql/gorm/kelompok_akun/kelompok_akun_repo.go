@@ -11,6 +11,7 @@ import (
 type KelompokAkunRepo interface {
 	Create(ctx context.Context, akun *entity.KelompokAkun) error
 	GetById(ctx context.Context, id string) (entity.KelompokAkun, error)
+	// GetPreloadedAssByJenisAkun(ctx context.Context, jenisAkun string) ([]entity.KelompokAkun, error)
 }
 
 type kelompokAkunRepo struct {
@@ -34,3 +35,13 @@ func (r *kelompokAkunRepo) GetById(ctx context.Context, id string) (entity.Kelom
 	}
 	return data, nil
 }
+
+// func (r *kelompokAkunRepo) GetPreloadedAssByJenisAkun(ctx context.Context, jenisAkun string) ([]entity.KelompokAkun, error){
+//   datas := []entity.KelompokAkun{}
+//   err := r.DB.WithContext(ctx).Model(&entity.KelompokAkun{}).
+//     Where("jenis_akun = ?", jenisAkun).
+//     Preload("GolonganAkuns").
+//     Preload("GolonganAkuns.Akuns").
+//     Preload("GolonganAkuns.Akuns.AyatJurnals", "transaksi ")
+//
+// }

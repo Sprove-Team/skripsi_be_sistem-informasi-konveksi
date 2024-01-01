@@ -11,10 +11,13 @@ import (
 	"gorm.io/gorm/logger"
 	"gorm.io/gorm/schema"
 
+	"github.com/be-sistem-informasi-konveksi/app/static_data"
 	"github.com/be-sistem-informasi-konveksi/entity"
+	"github.com/be-sistem-informasi-konveksi/helper"
+	"github.com/be-sistem-informasi-konveksi/pkg"
 )
 
-type DBGormConf struct {
+type DBGorm struct {
 	DB_Username string
 	DB_Password string
 	DB_Port     string
@@ -22,7 +25,7 @@ type DBGormConf struct {
 	DB_Name     string
 }
 
-func (dbgc *DBGormConf) InitDBGormConf() *gorm.DB {
+func (dbgc *DBGorm) InitDBGorm(ulid pkg.UlidPkg) *gorm.DB {
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8&parseTime=True&loc=Local",
 		dbgc.DB_Username,
 		dbgc.DB_Password,
@@ -54,7 +57,7 @@ func (dbgc *DBGormConf) InitDBGormConf() *gorm.DB {
 		},
 	})
 	if err != nil {
-		log.Fatal(err)
+		helper.LogsError(err)
 		os.Exit(1)
 	}
 	// produk
@@ -66,8 +69,22 @@ func (dbgc *DBGormConf) InitDBGormConf() *gorm.DB {
 	// user & jenis spv
 	autoMigrateEntities(db, &entity.JenisSpv{}, &entity.User{})
 
+	// &entity.GolonganAkun{}
 	// akuntansi
-	autoMigrateEntities(db, &entity.KelompokAkun{}, &entity.GolonganAkun{}, &entity.Akun{}, &entity.Transaksi{}, &entity.AyatJurnal{})
+	autoMigrateEntities(db, &entity.KelompokAkun{}, &entity.Akun{}, &entity.Transaksi{}, &entity.AyatJurnal{})
+
+	klmpkData := static_data.KelompokAkuns(ulid)
+	// golData := static_data.GolonganAkun(klmpkData, ulid)
+	akun := static_data.Akuns(klmpkData, ulid)
+
+	err = addDefultValues(db, klmpkData, akun)
+
+	if err != nil {
+		if err.Error() != "duplicated key not allowed" {
+			helper.LogsError(err)
+			os.Exit(1)
+		}
+	}
 
 	return db
 }
@@ -78,4 +95,21 @@ func autoMigrateEntities(db *gorm.DB, entities ...interface{}) {
 			panic(err)
 		}
 	}
+}
+
+func addDefultValues(db *gorm.DB, values ...interface{}) error {
+	// fmt.Println(golAkun)
+	err := db.Transaction(func(tx *gorm.DB) error {
+		for _, v := range values {
+			if err := tx.Create(v).Error; err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		helper.LogsError(err)
+		return err
+	}
+	return nil
 }

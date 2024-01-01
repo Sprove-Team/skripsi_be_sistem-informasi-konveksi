@@ -46,15 +46,16 @@ func (u *transaksiUsecase) Delete(ctx context.Context, id string) error {
 	for i, v := range detailAkuns {
 		newUp := entity.Akun{
 			ID:             v.ID,
-			GolonganAkunID: v.GolID,
-			Saldo:          v.Saldo,
-			Nama:           v.Nama,
-			Kode:           v.Kode,
+			KelompokAkunID: v.KelID,
+			// GolonganAkunID: v.GolID,
+			Saldo: v.Saldo,
+			Nama:  v.Nama,
+			Kode:  v.Kode,
 		}
 
 		newUp.Saldo -= v.TotalSaldoTr
 
-		saldoAkunValues[i] = fmt.Sprintf("('%s', %.2f, '%s', '%s', '%s')", newUp.ID, newUp.Saldo, newUp.GolonganAkunID, newUp.Nama, newUp.Kode)
+		saldoAkunValues[i] = fmt.Sprintf("('%s', %.2f, '%s', '%s', '%s')", newUp.ID, newUp.Saldo, newUp.KelompokAkunID, newUp.Nama, newUp.Kode)
 	}
 
 	return u.repo.Delete(ctx, repo.DeleteParam{
@@ -113,17 +114,7 @@ func (u *transaksiUsecase) Update(ctx context.Context, reqTransaksi req.Update) 
 			akunsMap[v.ID] = v
 		}
 
-		// data oldData map
-		// oldSaldoAkunMap := map[string]entity.Akun{}
-		//
-		// for _, v := range oldTr.AyatJurnals {
-		// 	oldSaldoAkunMap[v.AkunID] = v.Akun
-		// }
-
 		for _, v := range oldTr.AyatJurnals {
-			// upOldSaldoAkunMap := oldSaldoAkunMap[v.AkunID]
-			// upOldSaldoAkunMap.Saldo -= v.Saldo
-			// oldSaldoAkunMap[v.AkunID] = upOldSaldoAkunMap
 			// update if there a same id with the old one
 			akun, ok := akunsMap[v.AkunID]
 			if !ok {
@@ -132,7 +123,8 @@ func (u *transaksiUsecase) Update(ctx context.Context, reqTransaksi req.Update) 
 					Saldo:          v.Akun.Saldo,
 					Nama:           v.Akun.Nama,
 					Kode:           v.Akun.Kode,
-					GolonganAkunID: v.Akun.GolonganAkunID,
+					KelompokAkunID: v.Akun.KelompokAkunID,
+					// GolonganAkunID: v.Akun.GolonganAkunID,
 				}
 			}
 
@@ -188,11 +180,12 @@ func (u *transaksiUsecase) Update(ctx context.Context, reqTransaksi req.Update) 
 		}
 		wg.Wait()
 
+		// create new values for saldo akun
 		newSaldoAkun := make([]string, len(akunsMap))
 
 		i := 0
 		for _, v := range akunsMap {
-			newSaldoAkun[i] = fmt.Sprintf("('%s', %.2f, '%s', '%s', '%s')", v.ID, v.Saldo, v.GolonganAkunID, v.Nama, v.Kode)
+			newSaldoAkun[i] = fmt.Sprintf("('%s', %.2f, '%s', '%s', '%s')", v.ID, v.Saldo, v.KelompokAkunID, v.Nama, v.Kode)
 			i++
 		}
 

@@ -1,7 +1,9 @@
 package akuntansi
 
 type Create struct {
-	GolonganAkunID string `json:"golongan_akun_id" validate:"required,ulid"`
+	// GolonganAkunID string `json:"golongan_akun_id" validate:"required,ulid"`
+	KelompokAkunID string `json:"kelompok_akun_id" validate:"required,ulid"`
+	KategoriAkun   string `json:"kategori_akun" validate:"required,oneof=ASET KEWAJIBAN MODAL PENDAPATAN BEBAN"`
 	Nama           string `json:"nama" validate:"required,printascii"`
 	Kode           string `json:"kode" validate:"required"`
 	Deskripsi      string `json:"deskripsi" validate:"omitempty"`
@@ -10,7 +12,7 @@ type Create struct {
 
 type Update struct {
 	ID             string `param:"id" validate:"required,ulid"`
-	GolonganAkunID string `json:"golongan_akun_id" validate:"omitempty,ulid"`
+	KelompokAkunID string `json:"kelompok_akun_id" validate:"omitempty,ulid"`
 	Nama           string `json:"nama" validate:"omitempty,printascii"`
 	Kode           string `json:"kode" validate:"omitempty"`
 	Deskripsi      string `json:"deskripsi" validate:"omitempty"`

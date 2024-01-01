@@ -15,6 +15,7 @@ type AkuntansiUsecase interface {
 	GetAllJU(ctx context.Context, reqGetAllJU req.GetAllJU) (res.JurnalUmumRes, error)
 	GetAllBB(ctx context.Context, reqGetAllBB req.GetAllBB) ([]res.BukuBesarRes, error)
 	GetAllNC(ctx context.Context, reqGetAllNC req.GetAllNC) (res.NeracaSaldoRes, error)
+	// GetAllLBR(ctx context.Context) ([]res.LabaRugiRes, error)
 }
 
 type akuntansiUsecase struct {
@@ -228,3 +229,6 @@ func (u *akuntansiUsecase) GetAllNC(ctx context.Context, reqGetAllNC req.GetAllN
 
 	return nsRes, nil
 }
+
+// func (u *akuntansiUsecase) GetAllLBR(ctx context.Context) ([]res.LabaRugiRes, error) {
+// }

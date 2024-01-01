@@ -52,8 +52,8 @@ var (
 	AkunCannotBeSame   = "akun tidak boleh sama"
 	// kelompok akun
 	KelompokAkunIdNotFound = "kelompok_akun_id tidak valid atau tidak ditemukan"
-	// golongan akun
-	GolonganAkunIdNotFound = "golongan_akun_id tidak valid atau tidak ditemukan"
+	// // golongan akun
+	// GolonganAkunIdNotFound = "golongan_akun_id tidak valid atau tidak ditemukan"
 	// akun
 	AkunIdNotFound = "akun_id tidak valid atau tidak ditemukan"
 )

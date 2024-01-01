@@ -49,10 +49,19 @@ type ResultDataNc struct {
 	SaldoKredit float64
 }
 
+// type ResultDataLBR struct {
+// 	NamaKelompok string
+// 	NamaGolongan string
+// 	NamaAkun     string
+// 	Total        float64
+// }
+
 type AkuntansiRepo interface {
 	GetDataJU(ctx context.Context, startDate, endDate time.Time) ([]ResultDataJU, error)
 	GetDataBB(ctx context.Context, akunID string, startDate, endDate time.Time) ([]ResultDataBB, []ResultSaldoAwalDataBB, error)
 	GetDataNC(ctx context.Context, date time.Time) ([]ResultDataNc, error)
+	GetDataLBR(ctx context.Context) ([]entity.KelompokAkun, error)
+	// GetNeraca(ctx context.Context)
 }
 
 type akuntansiRepo struct {
@@ -163,3 +172,32 @@ func (r *akuntansiRepo) GetDataNC(ctx context.Context, date time.Time) ([]Result
 
 	return resultDatasNc, nil
 }
+
+func (r *akuntansiRepo) GetDataLBR(ctx context.Context) ([]entity.KelompokAkun, error) {
+	datas := []entity.KelompokAkun{}
+	// subQuery := r.DB.Model(&entity.Transaksi{}).
+	// 	Select("id").
+	// 	Where("DATE(tanggal) >= ? AND DATE(tanggal) <= ?", startDate, endDate)
+	err := r.DB.WithContext(ctx).Model(&entity.KelompokAkun{}).
+		Where("jenis_akun = ?", "NOMINAL").
+		Preload("Akuns").
+		Find(&datas).Error
+	if err != nil {
+		return nil, err
+	}
+	return datas, nil
+}
+
+// func (r *akuntansiRepo) GetDataLBR(ctx context.Context, startDate, endDate time.Time) ([]entity.KelompokAkun, error) {
+// 	allPreload := []entity.KelompokAkun{}
+// 	err := r.DB.WithContext(ctx).Model(&entity.Akun{}).
+// 		Joins("JOIN golongan_akun g ON g.id = akun.golongan_akun_id").
+// 		Joins("JOIN kelompok_akun k ON k.id = g.kelompok_akun_id").
+// 		Where("k.jenis_akun = ?", "NOMINAL").
+// 		Select("SUM(akun.saldo) as Total, k.nama as NamaKelompok, g.nama as NamaGolongan, akun.nama as NamaAkun").
+// 		Group("akun.id").Find(&resultDataLBR).Error
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	return resultDataLBR, nil
+// }

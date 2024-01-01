@@ -9,10 +9,6 @@ import (
 	transaksiRepo "github.com/be-sistem-informasi-konveksi/api/repository/akuntansi/mysql/gorm/transaksi"
 	transaksiUsecase "github.com/be-sistem-informasi-konveksi/api/usecase/akuntansi/transaksi"
 
-	golonganAkunHandler "github.com/be-sistem-informasi-konveksi/api/handler/akuntansi/golongan_akun"
-	golonganAkunRepo "github.com/be-sistem-informasi-konveksi/api/repository/akuntansi/mysql/gorm/golongan_akun"
-	golonganAkunUsecase "github.com/be-sistem-informasi-konveksi/api/usecase/akuntansi/golongan_akun"
-
 	kelompokAkunHandler "github.com/be-sistem-informasi-konveksi/api/handler/akuntansi/kelompok_akun"
 	kelompokAkunRepo "github.com/be-sistem-informasi-konveksi/api/repository/akuntansi/mysql/gorm/kelompok_akun"
 	kelompokAkunUsecase "github.com/be-sistem-informasi-konveksi/api/usecase/akuntansi/kelompok_akun"
@@ -27,7 +23,7 @@ import (
 
 type AkuntansiHandlerInit interface {
 	AkunHandler() akunHandler.AkunHandler
-	GolonganAkunHandler() golonganAkunHandler.GolonganAkunHandler
+	// GolonganAkunHandler() golonganAkunHandler.GolonganAkunHandler
 	KelompokAkunHandler() kelompokAkunHandler.KelompokAkunHandler
 	Transaksi() transaksiHandler.TransaksiHandler
 	Akuntansi() akuntansiHandler.AkuntansiHandler
@@ -46,20 +42,21 @@ func NewAkuntansiHandlerInit(DB *gorm.DB, validator pkg.Validator, ulid pkg.Ulid
 
 func (d *akuntansiHandlerInit) AkunHandler() akunHandler.AkunHandler {
 	r := akunRepo.NewAkunRepo(d.DB)
-	rg := golonganAkunRepo.NewGolonganAkunRepo(d.DB)
+	// rg := golonganAkunRepo.NewGolonganAkunRepo(d.DB)
+	rk := kelompokAkunRepo.NewKelompokAkunRepo(d.DB)
 
-	uc := akunUsecase.NewAkunUsecase(r, d.ulid, rg)
+	uc := akunUsecase.NewAkunUsecase(r, d.ulid, rk)
 	h := akunHandler.NewAkunHandler(uc, d.validator)
 	return h
 }
 
-func (d *akuntansiHandlerInit) GolonganAkunHandler() golonganAkunHandler.GolonganAkunHandler {
-	r := golonganAkunRepo.NewGolonganAkunRepo(d.DB)
-	rk := kelompokAkunRepo.NewKelompokAkunRepo(d.DB)
-	uc := golonganAkunUsecase.NewGolonganAkunUsecase(r, rk, d.ulid)
-	h := golonganAkunHandler.NewGolonganAkunHandler(uc, d.validator)
-	return h
-}
+// func (d *akuntansiHandlerInit) GolonganAkunHandler() golonganAkunHandler.GolonganAkunHandler {
+// 	r := golonganAkunRepo.NewGolonganAkunRepo(d.DB)
+// 	rk := kelompokAkunRepo.NewKelompokAkunRepo(d.DB)
+// 	uc := golonganAkunUsecase.NewGolonganAkunUsecase(r, rk, d.ulid)
+// 	h := golonganAkunHandler.NewGolonganAkunHandler(uc, d.validator)
+// 	return h
+// }
 
 func (d *akuntansiHandlerInit) KelompokAkunHandler() kelompokAkunHandler.KelompokAkunHandler {
 	r := kelompokAkunRepo.NewKelompokAkunRepo(d.DB)

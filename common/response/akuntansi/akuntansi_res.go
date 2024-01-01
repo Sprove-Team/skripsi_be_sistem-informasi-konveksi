@@ -56,3 +56,26 @@ type (
 		DataSaldoAkuns []DataSaldoAkun `json:"saldo_akun"`
 	}
 )
+
+type (
+	// DataSaldoAkunLBR struct {
+	//   NamaAkun string
+	//   KodeAkun string
+	//   SaldoDebit  float64 `json:"saldo_debit"`
+	//   SaldoKredit float64 `json:"saldo_kredit"`
+	// }
+	// DataAkunLBR struct {
+	// 	NamaAkun string
+	// 	Saldo    float64
+	// }
+	DataSaldoLBR struct {
+		NamaKelompokAkun string          `json:"nama_kelompok_akun"`
+		Total            float64         `json:"total"`
+		DataSaldoAkuns   []DataSaldoAkun `json:"saldo_akun"`
+	}
+	LabaRugiRes struct {
+		SaldoLabaRugi []DataSaldoLBR `json:"saldo_laba_rugi"`
+		Laba          float64
+		Rugi          float64
+	}
+)
