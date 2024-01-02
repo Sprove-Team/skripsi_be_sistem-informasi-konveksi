@@ -51,8 +51,8 @@ type (
 		SaldoKredit float64 `json:"saldo_kredit"`
 	}
 	NeracaSaldoRes struct {
-		TotalKredit    float64         `total_kredit`
-		TotalDebit     float64         `total_debit`
+		TotalKredit    float64         `json:"total_kredit"`
+		TotalDebit     float64         `json:"total_debit"`
 		DataSaldoAkuns []DataSaldoAkun `json:"saldo_akun"`
 	}
 )

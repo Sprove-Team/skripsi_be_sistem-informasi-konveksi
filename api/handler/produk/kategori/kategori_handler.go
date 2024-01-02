@@ -2,15 +2,15 @@ package produk
 
 import (
 	"context"
-	"log"
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
 
 	usecase "github.com/be-sistem-informasi-konveksi/api/usecase/produk/kategori"
+	"github.com/be-sistem-informasi-konveksi/common/message"
 	reqGlobal "github.com/be-sistem-informasi-konveksi/common/request/global"
 	req "github.com/be-sistem-informasi-konveksi/common/request/produk/kategori"
-	resGlobal "github.com/be-sistem-informasi-konveksi/common/response/global"
+	"github.com/be-sistem-informasi-konveksi/common/response"
 	"github.com/be-sistem-informasi-konveksi/pkg"
 )
 
@@ -32,83 +32,75 @@ func NewKategoriProdukHandler(uc usecase.KategoriProdukUsecase, validator pkg.Va
 }
 
 func (h *kategoriProdukHandler) Create(c *fiber.Ctx) error {
-	c.Accepts("application/json")
 	req := new(req.Create)
-	if err := c.BodyParser(req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(resGlobal.ErrorResWithoutData(fiber.StatusBadRequest))
-	}
+	c.BodyParser(req)
+
 	errValidate := h.validator.Validate(req)
-	if len(errValidate) > 0 {
-		return c.Status(fiber.StatusBadRequest).JSON(resGlobal.ErrorResWithData(errValidate, fiber.StatusBadRequest))
+	if errValidate != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(errValidate)
 	}
+
 	req.Nama = strings.ToLower(req.Nama)
 	ctx := c.UserContext()
 	err := h.uc.Create(ctx, *req)
 	if ctx.Err() == context.DeadlineExceeded {
-		return c.Status(fiber.StatusRequestTimeout).JSON(resGlobal.ErrorResWithoutData(fiber.StatusRequestTimeout))
+		return c.Status(fiber.StatusRequestTimeout).JSON(response.ErrorRes(fiber.ErrRequestTimeout.Code, fiber.ErrRequestTimeout.Message, nil))
 	}
 	if err != nil {
 		if err.Error() == "duplicated key not allowed" {
-			return c.Status(fiber.StatusConflict).JSON(resGlobal.ErrorResWithoutData(fiber.StatusConflict))
+			return c.Status(fiber.StatusConflict).JSON(response.ErrorRes(fiber.ErrConflict.Code, fiber.ErrConflict.Message, nil))
 		}
-		log.Println(err)
-		return c.Status(fiber.StatusInternalServerError).JSON(resGlobal.ErrorResWithoutData(fiber.StatusInternalServerError))
+		return c.Status(fiber.StatusInternalServerError).JSON(response.ErrorRes(fiber.ErrInternalServerError.Code, fiber.ErrInternalServerError.Message, nil))
 	}
 
-	return c.Status(fiber.StatusCreated).JSON(resGlobal.SuccessResWithoutData("C"))
+	return c.Status(fiber.StatusCreated).JSON(response.SuccessRes(fiber.StatusCreated, message.Created, nil))
 }
 
 func (h *kategoriProdukHandler) Update(c *fiber.Ctx) error {
 	req := new(req.Update)
-	if err := c.ParamsParser(req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(resGlobal.ErrorResWithoutData(fiber.StatusBadRequest))
-	}
-	c.Accepts("application/json")
-	if err := c.BodyParser(req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(resGlobal.ErrorResWithoutData(fiber.StatusBadRequest))
-	}
-
+	c.BodyParser(req)
 	errValidate := h.validator.Validate(req)
 
-	if len(errValidate) > 0 {
-		return c.Status(fiber.StatusBadRequest).JSON(resGlobal.ErrorResWithData(errValidate, fiber.StatusBadRequest))
+	if errValidate != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(errValidate)
 	}
 	ctx := c.UserContext()
 	err := h.uc.Update(ctx, *req)
 	if ctx.Err() == context.DeadlineExceeded {
-		return c.Status(fiber.StatusRequestTimeout).JSON(resGlobal.ErrorResWithoutData(fiber.StatusRequestTimeout))
+		return c.Status(fiber.StatusRequestTimeout).JSON(response.ErrorRes(fiber.ErrRequestTimeout.Code, fiber.ErrRequestTimeout.Message, nil))
 	}
 	if err != nil {
 		if err.Error() == "record not found" {
-			return c.Status(fiber.StatusNotFound).JSON(resGlobal.ErrorResWithoutData(fiber.StatusNotFound))
+			return c.Status(fiber.StatusNotFound).JSON(response.ErrorRes(fiber.ErrNotFound.Code, fiber.ErrNotFound.Message, map[string][]string{
+				"id": {message.KategoriNotFound},
+			}))
 		}
-		return c.Status(fiber.StatusInternalServerError).JSON(resGlobal.ErrorResWithoutData(fiber.StatusInternalServerError))
+		return c.Status(fiber.StatusInternalServerError).JSON(response.ErrorRes(fiber.ErrInternalServerError.Code, fiber.ErrInternalServerError.Message, nil))
 	}
-	return c.Status(fiber.StatusOK).JSON(resGlobal.SuccessResWithoutData("U"))
+	return c.Status(fiber.StatusOK).JSON(response.SuccessRes(fiber.StatusOK, message.OK, nil))
 }
 
 func (h *kategoriProdukHandler) Delete(c *fiber.Ctx) error {
 	req := new(reqGlobal.ParamByID)
-	if err := c.ParamsParser(req); err != nil {
-		log.Println(err)
-		return c.Status(fiber.StatusBadRequest).JSON(resGlobal.ErrorResWithoutData(fiber.StatusBadRequest))
-	}
+	c.ParamsParser(req)
 	errValidate := h.validator.Validate(req)
-	if len(errValidate) > 0 {
-		return c.Status(fiber.StatusBadRequest).JSON(resGlobal.ErrorResWithData(errValidate, fiber.StatusBadRequest))
+	if errValidate != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(errValidate)
 	}
 	ctx := c.UserContext()
 	err := h.uc.Delete(ctx, req.ID)
 	if ctx.Err() == context.DeadlineExceeded {
-		return c.Status(fiber.StatusRequestTimeout).JSON(resGlobal.ErrorResWithoutData(fiber.StatusRequestTimeout))
+		return c.Status(fiber.StatusRequestTimeout).JSON(response.ErrorRes(fiber.ErrRequestTimeout.Code, fiber.ErrRequestTimeout.Message, nil))
 	}
 	if err != nil {
 		if err.Error() == "record not found" {
-			return c.Status(fiber.StatusNotFound).JSON(resGlobal.ErrorResWithoutData(fiber.StatusNotFound))
+			return c.Status(fiber.StatusNotFound).JSON(response.ErrorRes(fiber.ErrNotFound.Code, fiber.ErrNotFound.Message, map[string][]string{
+				"id": {message.KategoriNotFound},
+			}))
 		}
-		return c.Status(fiber.StatusInternalServerError).JSON(resGlobal.ErrorResWithoutData(fiber.StatusInternalServerError))
+		return c.Status(fiber.StatusInternalServerError).JSON(response.ErrorRes(fiber.ErrInternalServerError.Code, fiber.ErrInternalServerError.Message, nil))
 	}
-	return c.Status(fiber.StatusOK).JSON(resGlobal.SuccessResWithoutData("D"))
+	return c.Status(fiber.StatusOK).JSON(response.SuccessRes(fiber.StatusOK, message.OK, nil))
 }
 
 func (h *kategoriProdukHandler) GetAll(c *fiber.Ctx) error {
@@ -117,48 +109,44 @@ func (h *kategoriProdukHandler) GetAll(c *fiber.Ctx) error {
 	c.QueryParser(req)
 
 	errValidate := h.validator.Validate(req)
-	if len(errValidate) > 0 {
-		return c.Status(fiber.StatusBadRequest).JSON(resGlobal.ErrorResWithData(errValidate, fiber.StatusBadRequest))
+	if errValidate != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(errValidate)
 	}
 
 	ctx := c.UserContext()
 	data, err := h.uc.GetAll(ctx, *req)
 	if ctx.Err() == context.DeadlineExceeded {
-		return c.Status(fiber.StatusRequestTimeout).JSON(resGlobal.ErrorResWithoutData(fiber.StatusRequestTimeout))
+		return c.Status(fiber.StatusRequestTimeout).JSON(response.ErrorRes(fiber.ErrRequestTimeout.Code, fiber.ErrRequestTimeout.Message, nil))
 	}
 	if err != nil {
 		if err.Error() == "record not found" {
-			return c.Status(fiber.StatusNotFound).JSON(resGlobal.ErrorResWithoutData(fiber.StatusNotFound))
+			return c.Status(fiber.StatusNotFound).JSON(response.ErrorRes(fiber.ErrNotFound.Code, fiber.ErrNotFound.Message, nil))
 		}
-		log.Println(err)
-		return c.Status(fiber.StatusInternalServerError).JSON(resGlobal.ErrorResWithoutData(fiber.StatusInternalServerError))
+		return c.Status(fiber.StatusInternalServerError).JSON(response.ErrorRes(fiber.ErrInternalServerError.Code, fiber.ErrInternalServerError.Message, nil))
 	}
-	dataRes := fiber.Map{
-		"kategori_produk": data,
-	}
-	return c.Status(fiber.StatusOK).JSON(resGlobal.SuccessResWithData(dataRes, "R"))
+	return c.Status(fiber.StatusOK).JSON(response.SuccessRes(fiber.StatusOK, message.OK, data))
 }
 
 func (h *kategoriProdukHandler) GetById(c *fiber.Ctx) error {
 	req := new(reqGlobal.ParamByID)
-	if err := c.ParamsParser(req); err != nil {
-		log.Println(err)
-		return c.Status(fiber.StatusBadRequest).JSON(resGlobal.ErrorResWithoutData(fiber.StatusBadRequest))
-	}
+	c.ParamsParser(req)
 	errValidate := h.validator.Validate(req)
-	if len(errValidate) > 0 {
-		return c.Status(fiber.StatusBadRequest).JSON(resGlobal.ErrorResWithData(errValidate, fiber.StatusBadRequest))
+	if errValidate != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(errValidate)
 	}
+
 	ctx := c.UserContext()
 	data, err := h.uc.GetById(ctx, req.ID)
 	if ctx.Err() == context.DeadlineExceeded {
-		return c.Status(fiber.StatusRequestTimeout).JSON(resGlobal.ErrorResWithoutData(fiber.StatusRequestTimeout))
+		return c.Status(fiber.StatusRequestTimeout).JSON(response.ErrorRes(fiber.ErrRequestTimeout.Code, fiber.ErrRequestTimeout.Message, nil))
 	}
 	if err != nil {
 		if err.Error() == "record not found" {
-			return c.Status(fiber.StatusNotFound).JSON(resGlobal.ErrorResWithoutData(fiber.StatusNotFound))
+			return c.Status(fiber.StatusNotFound).JSON(response.ErrorRes(fiber.ErrNotFound.Code, fiber.ErrNotFound.Message, map[string][]string{
+				"id": {message.KategoriNotFound},
+			}))
 		}
-		return c.Status(fiber.StatusInternalServerError).JSON(resGlobal.ErrorResWithoutData(fiber.StatusInternalServerError))
+		return c.Status(fiber.StatusInternalServerError).JSON(response.ErrorRes(fiber.ErrInternalServerError.Code, fiber.ErrInternalServerError.Message, nil))
 	}
-	return c.Status(fiber.StatusOK).JSON(resGlobal.SuccessResWithData(data, "R"))
+	return c.Status(fiber.StatusOK).JSON(response.SuccessRes(fiber.StatusOK, message.OK, data))
 }

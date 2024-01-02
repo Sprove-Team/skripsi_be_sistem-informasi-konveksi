@@ -21,7 +21,7 @@ type (
 )
 
 type Validator interface {
-	Validate(d interface{}) []response.BaseFormatError
+	Validate(d interface{}) *response.BaseFormatError
 }
 
 func NewValidator() Validator {
@@ -128,19 +128,42 @@ func camelToSnake(s string) string {
 	return buf.String()
 }
 
-func (x *xValidator) Validate(d interface{}) []response.BaseFormatError {
-	validatorErrors := []response.BaseFormatError{}
+func (x *xValidator) Validate(d interface{}) *response.BaseFormatError {
+	validatorErrors := map[string][]string{} // Use a map for validation errors
 
 	errs := x.validator.Struct(d)
 
 	if errs != nil {
 		for _, err := range errs.(validator.ValidationErrors) {
-			var elem response.BaseFormatError
 			field := camelToSnake(err.Field())
-			elem.FieldName = field
-			elem.Message = strings.ReplaceAll(err.Translate(x.trans), err.Field(), field)
-			validatorErrors = append(validatorErrors, elem)
+			message := strings.ReplaceAll(err.Translate(x.trans), err.Field(), field)
+			validatorErrors[field] = append(validatorErrors[field], message)
 		}
 	}
-	return validatorErrors
+
+	if len(validatorErrors) > 0 {
+		// You can customize the error code and status based on your requirements
+		return response.ErrorRes(400, "Bad Request", validatorErrors)
+	}
+
+	return nil // No validation errors
 }
+
+// func (x *xValidator) Validate(d interface{}) response.BaseFormatError {
+// 	validatorErrors := response.BaseFormatError{}
+//
+// 	errs := x.validator.Struct(d)
+//
+// 	if errs != nil {
+// 		// elem.Errors
+//     errors := map[string][]string{}
+// 		for _, err := range errs.(validator.ValidationErrors) {
+// 			var elem response.BaseFormatError
+// 			field := camelToSnake(err.Field())
+// 			// elem.FieldName = field
+// 			// elem.Message = strings.ReplaceAll(err.Translate(x.trans), err.Field(), field)
+// 			validatorErrors = append(validatorErrors, elem)
+// 		}
+// 	}
+// 	return validatorErrors
+// }

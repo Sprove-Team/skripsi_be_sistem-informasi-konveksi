@@ -8,8 +8,6 @@ import (
 	req "github.com/be-sistem-informasi-konveksi/common/request/akuntansi/transaksi"
 	reqGlobal "github.com/be-sistem-informasi-konveksi/common/request/global"
 	"github.com/be-sistem-informasi-konveksi/common/response"
-	resGlobal "github.com/be-sistem-informasi-konveksi/common/response/global"
-	"github.com/be-sistem-informasi-konveksi/helper"
 	"github.com/be-sistem-informasi-konveksi/pkg"
 	"github.com/gofiber/fiber/v2"
 )
@@ -32,82 +30,72 @@ func NewTransaksiHandler(uc usecase.TransaksiUsecase, validator pkg.Validator) T
 	return &transaksiHandler{uc, validator}
 }
 
+func errResponse(c *fiber.Ctx, err error) error {
+	if err.Error() == "record not found" {
+		return c.Status(fiber.StatusNotFound).JSON(response.ErrorRes(fiber.ErrNotFound.Code, fiber.ErrNotFound.Message, nil))
+	}
+
+	if err.Error() == "duplicated key not allowed" {
+		return c.Status(fiber.StatusConflict).JSON(response.ErrorRes(fiber.ErrConflict.Code, fiber.ErrConflict.Message, nil))
+	}
+
+	badRequest := map[string][]string{}
+
+	if err.Error() == message.AkunCannotBeSame {
+		badRequest["ayat_jurnal"] = []string{message.AkunCannotBeSame}
+	}
+
+	if err.Error() == message.CreditDebitNotSame {
+		badRequest["debit dan kredit"] = []string{message.CreditDebitNotSame}
+	}
+
+	if err.Error() == message.AkunIdNotFound {
+		badRequest["akun_id"] = []string{message.AkunIdNotFound}
+	}
+
+	if len(badRequest) > 0 {
+		return c.Status(fiber.StatusBadRequest).JSON(response.ErrorRes(fiber.ErrBadRequest.Code, fiber.ErrBadRequest.Message, badRequest))
+	}
+	return c.Status(fiber.StatusInternalServerError).JSON(response.ErrorRes(fiber.ErrInternalServerError.Code, fiber.ErrInternalServerError.Message, nil))
+}
+
 func (h *transaksiHandler) Create(c *fiber.Ctx) error {
 	req := new(req.Create)
 
-	if err := c.BodyParser(req); err != nil {
-		helper.LogsError(err)
-		return c.Status(fiber.StatusBadRequest).JSON(resGlobal.ErrorResWithoutData(fiber.StatusBadRequest))
-	}
+	c.BodyParser(req)
 
 	errValidate := h.validator.Validate(req)
-	if len(errValidate) > 0 {
-		return c.Status(fiber.StatusBadRequest).JSON(resGlobal.ErrorResWithData(errValidate, fiber.StatusBadRequest))
+	if errValidate != nil {
+		return c.Status(fiber.StatusRequestTimeout).JSON(errValidate)
 	}
 
 	ctx := c.UserContext()
-
 	// Call usecase to create KelompokAkun
 	err := h.uc.Create(ctx, *req)
 
 	// Handle context timeout
 	if ctx.Err() == context.DeadlineExceeded {
-		return c.Status(fiber.StatusRequestTimeout).JSON(resGlobal.ErrorResWithoutData(fiber.StatusRequestTimeout))
+		return c.Status(fiber.StatusRequestTimeout).JSON(response.ErrorRes(fiber.ErrRequestTimeout.Code, fiber.ErrRequestTimeout.Message, nil))
 	}
 
 	// Handle errors
 	if err != nil {
-		if err.Error() == "duplicated key not allowed" {
-			return c.Status(fiber.StatusConflict).JSON(resGlobal.ErrorResWithoutData(fiber.StatusConflict))
-		}
-
-		if err.Error() == message.AkunCannotBeSame {
-			return c.Status(fiber.StatusBadRequest).JSON(resGlobal.ErrorResWithData([]response.BaseFormatError{
-				{
-					FieldName: "ayat_jurnal",
-					Message:   err.Error(),
-				},
-			}, fiber.StatusBadRequest))
-		}
-		if err.Error() == message.CreditDebitNotSame {
-			return c.Status(fiber.StatusBadRequest).JSON(resGlobal.ErrorResWithData([]response.BaseFormatError{
-				{
-					FieldName: "debit dan kredit",
-					Message:   err.Error(),
-				},
-			}, fiber.StatusBadRequest))
-		}
-		if err.Error() == message.AkunIdNotFound {
-			return c.Status(fiber.StatusBadRequest).JSON(resGlobal.ErrorResWithData([]response.BaseFormatError{
-				{
-					FieldName: "akun_id",
-					Message:   err.Error(),
-				},
-			}, fiber.StatusBadRequest))
-		}
-		helper.LogsError(err)
-		return c.Status(fiber.StatusInternalServerError).JSON(resGlobal.ErrorResWithoutData(fiber.StatusInternalServerError))
+		return errResponse(c, err)
 	}
 
 	// Respond with success status
-	return c.Status(fiber.StatusCreated).JSON(resGlobal.SuccessResWithoutData("C"))
+	return c.Status(fiber.StatusCreated).JSON(response.SuccessRes(fiber.StatusCreated, message.Created, nil))
 }
 
 func (h *transaksiHandler) Update(c *fiber.Ctx) error {
 	req := new(req.Update)
 
-	if err := c.ParamsParser(req); err != nil {
-		helper.LogsError(err)
-		return c.Status(fiber.StatusBadRequest).JSON(resGlobal.ErrorResWithoutData(fiber.StatusBadRequest))
-	}
-	if err := c.BodyParser(req); err != nil {
-		helper.LogsError(err)
-		return c.Status(fiber.StatusBadRequest).JSON(resGlobal.ErrorResWithoutData(fiber.StatusBadRequest))
-	}
+	c.ParamsParser(req)
+	c.BodyParser(req)
 
 	errValidate := h.validator.Validate(req)
-	if len(errValidate) > 0 {
-		return c.Status(fiber.StatusBadRequest).JSON(resGlobal.ErrorResWithData(errValidate, fiber.StatusBadRequest))
+	if errValidate != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(errValidate)
 	}
 
 	ctx := c.UserContext()
@@ -117,45 +105,16 @@ func (h *transaksiHandler) Update(c *fiber.Ctx) error {
 
 	// Handle context timeout
 	if ctx.Err() == context.DeadlineExceeded {
-		return c.Status(fiber.StatusRequestTimeout).JSON(resGlobal.ErrorResWithoutData(fiber.StatusRequestTimeout))
+		return c.Status(fiber.StatusRequestTimeout).JSON(response.ErrorRes(fiber.ErrRequestTimeout.Code, fiber.ErrRequestTimeout.Message, nil))
 	}
 
 	// Handle errors
 	if err != nil {
-		if err.Error() == "duplicated key not allowed" {
-			return c.Status(fiber.StatusConflict).JSON(resGlobal.ErrorResWithoutData(fiber.StatusConflict))
-		}
-
-		if err.Error() == message.AkunCannotBeSame {
-			return c.Status(fiber.StatusBadRequest).JSON(resGlobal.ErrorResWithData([]response.BaseFormatError{
-				{
-					FieldName: "ayat_jurnal",
-					Message:   err.Error(),
-				},
-			}, fiber.StatusBadRequest))
-		}
-		if err.Error() == message.CreditDebitNotSame {
-			return c.Status(fiber.StatusBadRequest).JSON(resGlobal.ErrorResWithData([]response.BaseFormatError{
-				{
-					FieldName: "debit dan kredit",
-					Message:   err.Error(),
-				},
-			}, fiber.StatusBadRequest))
-		}
-		if err.Error() == message.AkunIdNotFound {
-			return c.Status(fiber.StatusBadRequest).JSON(resGlobal.ErrorResWithData([]response.BaseFormatError{
-				{
-					FieldName: "akun_id",
-					Message:   err.Error(),
-				},
-			}, fiber.StatusBadRequest))
-		}
-		helper.LogsError(err)
-		return c.Status(fiber.StatusInternalServerError).JSON(resGlobal.ErrorResWithoutData(fiber.StatusInternalServerError))
+		return errResponse(c, err)
 	}
 
 	// Respond with success status
-	return c.Status(fiber.StatusCreated).JSON(resGlobal.SuccessResWithoutData("U"))
+	return c.Status(fiber.StatusOK).JSON(response.SuccessRes(fiber.StatusOK, message.OK, nil))
 }
 
 func (h *transaksiHandler) Delete(c *fiber.Ctx) error {
@@ -163,20 +122,17 @@ func (h *transaksiHandler) Delete(c *fiber.Ctx) error {
 	c.ParamsParser(reqU)
 
 	errValidate := h.validator.Validate(reqU)
-	if len(errValidate) > 0 {
-		return c.Status(fiber.StatusBadRequest).JSON(resGlobal.ErrorResWithData(errValidate, fiber.StatusBadRequest))
+	if errValidate != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(errValidate)
 	}
 
 	ctx := c.UserContext()
 
 	err := h.uc.Delete(ctx, reqU.ID)
 	if err != nil {
-		if err.Error() == "record not found" {
-			return c.Status(fiber.StatusNotFound).JSON(resGlobal.ErrorResWithoutData(fiber.StatusNotFound))
-		}
-		return c.Status(fiber.StatusInternalServerError).JSON(resGlobal.ErrorResWithoutData(fiber.StatusInternalServerError))
+		return errResponse(c, err)
 	}
-	return c.Status(fiber.StatusOK).JSON(resGlobal.SuccessResWithoutData("D"))
+	return c.Status(fiber.StatusOK).JSON(response.SuccessRes(fiber.StatusOK, message.OK, nil))
 }
 
 func (h *transaksiHandler) GetById(c *fiber.Ctx) error {
@@ -184,21 +140,18 @@ func (h *transaksiHandler) GetById(c *fiber.Ctx) error {
 	c.ParamsParser(reqU)
 
 	errValidate := h.validator.Validate(reqU)
-	if len(errValidate) > 0 {
-		return c.Status(fiber.StatusBadRequest).JSON(resGlobal.ErrorResWithData(errValidate, fiber.StatusBadRequest))
+	if errValidate != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(errValidate)
 	}
 
 	ctx := c.UserContext()
 
-	tr, err := h.uc.GetById(ctx, reqU.ID)
+	data, err := h.uc.GetById(ctx, reqU.ID)
 	if err != nil {
-		if err.Error() == "record not found" {
-			return c.Status(fiber.StatusNotFound).JSON(resGlobal.ErrorResWithoutData(fiber.StatusNotFound))
-		}
-		return c.Status(fiber.StatusInternalServerError).JSON(resGlobal.ErrorResWithoutData(fiber.StatusInternalServerError))
+		return errResponse(c, err)
 	}
 
-	return c.Status(fiber.StatusOK).JSON(resGlobal.SuccessResWithData(tr, "R"))
+	return c.Status(fiber.StatusOK).JSON(response.SuccessRes(fiber.StatusOK, message.OK, data))
 }
 
 func (h *transaksiHandler) GetAll(c *fiber.Ctx) error {
@@ -206,18 +159,20 @@ func (h *transaksiHandler) GetAll(c *fiber.Ctx) error {
 	c.QueryParser(reqU)
 
 	errValidate := h.validator.Validate(reqU)
-	if len(errValidate) > 0 {
-		return c.Status(fiber.StatusBadRequest).JSON(resGlobal.ErrorResWithData(errValidate, fiber.StatusBadRequest))
+	if errValidate != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(errValidate)
 	}
 
 	ctx := c.UserContext()
 
-	transaksi, err := h.uc.GetAll(ctx, *reqU)
+	datas, err := h.uc.GetAll(ctx, *reqU)
+
+	if ctx.Err() == context.DeadlineExceeded {
+		return c.Status(fiber.StatusRequestTimeout).JSON(response.ErrorRes(fiber.ErrRequestTimeout.Code, fiber.ErrRequestTimeout.Message, nil))
+	}
+
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(resGlobal.ErrorResWithoutData(fiber.StatusInternalServerError))
+		return c.Status(fiber.StatusInternalServerError).JSON(response.ErrorRes(fiber.ErrInternalServerError.Code, fiber.ErrInternalServerError.Message, nil))
 	}
-	data := fiber.Map{
-		"transaksi": transaksi,
-	}
-	return c.Status(fiber.StatusOK).JSON(resGlobal.SuccessResWithData(data, "R"))
+	return c.Status(fiber.StatusOK).JSON(response.SuccessRes(fiber.StatusOK, message.OK, datas))
 }

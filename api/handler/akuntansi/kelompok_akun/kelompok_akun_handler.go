@@ -2,10 +2,10 @@ package akuntansi
 
 import (
 	"context"
-	"log"
 
+	"github.com/be-sistem-informasi-konveksi/common/message"
 	req "github.com/be-sistem-informasi-konveksi/common/request/akuntansi/kelompok_akun"
-	resGlobal "github.com/be-sistem-informasi-konveksi/common/response/global"
+	"github.com/be-sistem-informasi-konveksi/common/response"
 
 	usecase "github.com/be-sistem-informasi-konveksi/api/usecase/akuntansi/kelompok_akun"
 	"github.com/be-sistem-informasi-konveksi/pkg"
@@ -26,18 +26,14 @@ func NewKelompokAkunHandler(uc usecase.KelompokAkunUsecase, validator pkg.Valida
 }
 
 func (h *kelompokAkunHandler) Create(c *fiber.Ctx) error {
-	c.Accepts("application/json")
-
 	// Parse request body
 	req := new(req.Create)
-	if err := c.BodyParser(req); err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(resGlobal.ErrorResWithoutData(fiber.StatusBadRequest))
-	}
+	c.BodyParser(req)
 
 	// Validate request
 	errValidate := h.validator.Validate(req)
-	if len(errValidate) > 0 {
-		return c.Status(fiber.StatusBadRequest).JSON(resGlobal.ErrorResWithData(errValidate, fiber.StatusBadRequest))
+	if errValidate != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(errValidate)
 	}
 
 	// Create context
@@ -48,19 +44,18 @@ func (h *kelompokAkunHandler) Create(c *fiber.Ctx) error {
 
 	// Handle context timeout
 	if ctx.Err() == context.DeadlineExceeded {
-		return c.Status(fiber.StatusRequestTimeout).JSON(resGlobal.ErrorResWithoutData(fiber.StatusRequestTimeout))
+		return c.Status(fiber.StatusRequestTimeout).JSON(response.ErrorRes(fiber.ErrRequestTimeout.Code, fiber.ErrRequestTimeout.Message, nil))
 	}
 
 	// Handle errors
 	if err != nil {
 		if err.Error() == "duplicated key not allowed" {
-			return c.Status(fiber.StatusConflict).JSON(resGlobal.ErrorResWithoutData(fiber.StatusConflict))
+			return c.Status(fiber.StatusConflict).JSON(response.ErrorRes(fiber.ErrConflict.Code, fiber.ErrConflict.Message, nil))
 		}
 
-		log.Println(err)
-		return c.Status(fiber.StatusInternalServerError).JSON(resGlobal.ErrorResWithoutData(fiber.StatusInternalServerError))
+		return c.Status(fiber.StatusInternalServerError).JSON(response.ErrorRes(fiber.ErrInternalServerError.Code, fiber.ErrInternalServerError.Message, nil))
 	}
 
 	// Respond with success status
-	return c.Status(fiber.StatusCreated).JSON(resGlobal.SuccessResWithoutData("C"))
+	return c.Status(fiber.StatusCreated).JSON(response.SuccessRes(fiber.StatusCreated, message.Created, nil))
 }

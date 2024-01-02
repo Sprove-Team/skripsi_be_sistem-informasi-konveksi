@@ -61,7 +61,6 @@ func (u *produkUsecase) Create(ctx context.Context, produk req.Create) error {
 }
 
 func (u *produkUsecase) GetAll(ctx context.Context, reqProduk req.GetAll) ([]entity.Produk, error) {
-	// currentPage, offset, limit := u.paginate.GetPaginateData(reqProduk.Page, reqProduk.Limit)
 	hargaDetailFilter := reqProduk.HargaDetail != "EMPTY"
 	if reqProduk.Limit <= 0 {
 		reqProduk.Limit = 10
@@ -72,13 +71,10 @@ func (u *produkUsecase) GetAll(ctx context.Context, reqProduk req.GetAll) ([]ent
 		HasHargaDetail:   hargaDetailFilter,
 		Next:             reqProduk.Next,
 		Limit:            reqProduk.Limit,
-		// Offset:           offset,
 	})
 	if err != nil {
 		return nil, err
 	}
-	// totalPage := u.paginate.GetTotalPages(int(totalData), limit)
-	// return datas, currentPage, totalPage, err
 	return datas, err
 }
 

@@ -48,7 +48,6 @@ type SearchProduk struct {
 	HasHargaDetail   bool
 	Next             string
 	Limit            int
-	// Offset           int
 }
 
 func (r *produkRepo) GetAll(ctx context.Context, param SearchProduk) ([]entity.Produk, error) {
@@ -72,7 +71,6 @@ func (r *produkRepo) GetAll(ctx context.Context, param SearchProduk) ([]entity.P
 		tx = tx.Preload("HargaDetails").Joins("LEFT JOIN harga_detail_produk hd on hd.produk_id = produk.id").Where("hd.id IS NULL")
 	}
 
-	// err := tx.Limit(param.Limit).Offset(param.Offset).Find(&datas).Error
 	err := tx.Limit(param.Limit).Find(&datas).Error
 
 	return datas, err

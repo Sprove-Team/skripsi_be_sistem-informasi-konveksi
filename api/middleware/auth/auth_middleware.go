@@ -8,9 +8,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 
 	userRepo "github.com/be-sistem-informasi-konveksi/api/repository/user/mysql/gorm"
-	"github.com/be-sistem-informasi-konveksi/common/message"
-	"github.com/be-sistem-informasi-konveksi/common/response/global"
-	resGlobal "github.com/be-sistem-informasi-konveksi/common/response/global"
+	"github.com/be-sistem-informasi-konveksi/common/response"
 	"github.com/be-sistem-informasi-konveksi/pkg"
 )
 
@@ -35,29 +33,22 @@ func (a *authMidleware) Authorization(keyToken, role string) fiber.Handler {
 		SuccessHandler: func(c *fiber.Ctx) error {
 			user := c.Locals("user").(*jwt.Token).Claims.(*pkg.Claims)
 			if !strings.EqualFold(user.Role, role) {
-				return c.Status(fiber.StatusUnauthorized).JSON(global.CustomRes(fiber.StatusUnauthorized, message.UnauthUserNotAllowed, nil))
+				return c.Status(fiber.StatusUnauthorized).JSON(response.ErrorRes(fiber.ErrUnauthorized.Code, fiber.ErrUnauthorized.Message, nil))
 			}
 			ctx := c.UserContext()
 			_, err := a.userRepo.GetById(ctx, user.ID)
 			if err != nil {
 				if err.Error() == "record not found" {
-					return c.Status(fiber.StatusUnauthorized).JSON(global.CustomRes(fiber.StatusUnauthorized, message.UnauthUserNotFound, nil))
+					return c.Status(fiber.StatusUnauthorized).JSON(response.ErrorRes(fiber.ErrUnauthorized.Code, fiber.ErrUnauthorized.Message, nil))
 				}
-				return c.Status(fiber.StatusInternalServerError).JSON(resGlobal.ErrorResWithoutData(fiber.StatusInternalServerError))
+				return c.Status(fiber.StatusInternalServerError).JSON(response.ErrorRes(fiber.ErrInternalServerError.Code, fiber.ErrInternalServerError.Message, nil))
 			}
 
 			c.Locals("user", user)
 			return c.Next()
 		},
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
-			c.Set("Content-Type", "application/json")
-			msgRes := message.UnauthInvalidToken
-			if strings.Contains(err.Error(), "expired") {
-				msgRes = message.UnauthTokenExpired
-			}
-
-			res := global.CustomRes(fiber.StatusUnauthorized, msgRes, nil)
-			return c.Status(fiber.StatusUnauthorized).JSON(res)
+			return c.Status(fiber.StatusUnauthorized).JSON(response.ErrorRes(fiber.ErrUnauthorized.Code, fiber.ErrUnauthorized.Message, nil))
 		},
 	})
 }
