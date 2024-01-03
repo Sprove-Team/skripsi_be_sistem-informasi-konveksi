@@ -14,3 +14,8 @@ type GetAllBB struct {
 type GetAllNC struct {
 	Date string `query:"date" validate:"required,datetime=2006-01"`
 }
+
+type GetAllLBR struct {
+	StartDate string `query:"start_date" validate:"required,datetime=2006-01-02"`
+	EndDate   string `query:"end_date" validate:"required,datetime=2006-01-02"`
+}

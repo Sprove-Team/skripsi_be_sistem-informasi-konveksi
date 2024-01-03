@@ -15,7 +15,7 @@ type AkuntansiUsecase interface {
 	GetAllJU(ctx context.Context, reqGetAllJU req.GetAllJU) (res.JurnalUmumRes, error)
 	GetAllBB(ctx context.Context, reqGetAllBB req.GetAllBB) ([]res.BukuBesarRes, error)
 	GetAllNC(ctx context.Context, reqGetAllNC req.GetAllNC) (res.NeracaSaldoRes, error)
-	// GetAllLBR(ctx context.Context) ([]res.LabaRugiRes, error)
+	GetAllLBR(ctx context.Context, reqGetAllLBR req.GetAllLBR) ([]res.LabaRugiRes, error)
 }
 
 type akuntansiUsecase struct {
@@ -230,5 +230,52 @@ func (u *akuntansiUsecase) GetAllNC(ctx context.Context, reqGetAllNC req.GetAllN
 	return nsRes, nil
 }
 
-// func (u *akuntansiUsecase) GetAllLBR(ctx context.Context) ([]res.LabaRugiRes, error) {
-// }
+func (u *akuntansiUsecase) GetAllLBR(ctx context.Context, reqGetAllLBR req.GetAllLBR) ([]res.LabaRugiRes, error) {
+	startDate, err := time.Parse(time.DateOnly, reqGetAllLBR.StartDate)
+	if err != nil {
+		helper.LogsError(err)
+		return nil, err
+	}
+
+	endDate, err := time.Parse(time.DateOnly, reqGetAllLBR.EndDate)
+	if err != nil {
+		helper.LogsError(err)
+		return nil, err
+	}
+
+	lbrRes, err := u.repo.GetDataLBR(ctx, startDate, endDate)
+	if err != nil {
+		return nil, err
+	}
+
+	labaRugiMap := map[string]res.LabaRugiRes{}
+
+	for _, v := range lbrRes {
+		labaRugi, ok := labaRugiMap[v.KategoriAkun]
+		if !ok {
+			labaRugi = res.LabaRugiRes{
+				NamaKategori: v.KategoriAkun,
+			}
+		}
+		labaRugi.Total += v.Saldo
+		labaRugi.DataAkunLBR = append(labaRugi.DataAkunLBR, res.DataAkunLBR{
+			KodeAkun:    v.KodeAkun,
+			NamaAkun:    v.NamaAkun,
+			SaldoKredit: v.SaldoKredit,
+			SaldoDebit:  v.SaldoKredit,
+			Saldo:       v.Saldo,
+		})
+
+		labaRugiMap[v.KategoriAkun] = labaRugi
+	}
+
+	labaRugiRes := make([]res.LabaRugiRes, len(labaRugiMap))
+
+	i := 0
+	for _, v := range labaRugiMap {
+		labaRugiRes[i] = v
+		i++
+	}
+
+	return labaRugiRes, nil
+}

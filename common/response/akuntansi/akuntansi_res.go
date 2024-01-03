@@ -58,24 +58,16 @@ type (
 )
 
 type (
-	// DataSaldoAkunLBR struct {
-	//   NamaAkun string
-	//   KodeAkun string
-	//   SaldoDebit  float64 `json:"saldo_debit"`
-	//   SaldoKredit float64 `json:"saldo_kredit"`
-	// }
-	// DataAkunLBR struct {
-	// 	NamaAkun string
-	// 	Saldo    float64
-	// }
-	DataSaldoLBR struct {
-		NamaKelompokAkun string          `json:"nama_kelompok_akun"`
-		Total            float64         `json:"total"`
-		DataSaldoAkuns   []DataSaldoAkun `json:"saldo_akun"`
+	DataAkunLBR struct {
+		NamaAkun    string  `json:"nama_akun"`
+		KodeAkun    string  `json:"kode_akun"`
+		SaldoKredit float64 `json:"saldo_kredit"`
+		SaldoDebit  float64 `json:"saldo_debit"`
+		Saldo       float64 `json:"saldo"`
 	}
 	LabaRugiRes struct {
-		SaldoLabaRugi []DataSaldoLBR `json:"saldo_laba_rugi"`
-		Laba          float64
-		Rugi          float64
+		NamaKategori string        `json:"kategori_akun"`
+		DataAkunLBR  []DataAkunLBR `json:"akun"`
+		Total        float64       `json:"total"`
 	}
 )

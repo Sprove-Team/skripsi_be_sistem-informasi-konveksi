@@ -6,12 +6,10 @@ import (
 	"strings"
 
 	repo "github.com/be-sistem-informasi-konveksi/api/repository/akuntansi/mysql/gorm/akun"
-	// repoGolonganAkun "github.com/be-sistem-informasi-konveksi/api/repository/akuntansi/mysql/gorm/golongan_akun"
 	repoKelompokAkun "github.com/be-sistem-informasi-konveksi/api/repository/akuntansi/mysql/gorm/kelompok_akun"
 	"github.com/be-sistem-informasi-konveksi/common/message"
 	req "github.com/be-sistem-informasi-konveksi/common/request/akuntansi/akun"
 	"github.com/be-sistem-informasi-konveksi/entity"
-	"github.com/be-sistem-informasi-konveksi/helper"
 	"github.com/be-sistem-informasi-konveksi/pkg"
 )
 
@@ -20,11 +18,11 @@ type AkunUsecase interface {
 	Delete(ctx context.Context, id string) error
 	Update(ctx context.Context, reqAkun req.Update) error
 	GetAll(ctx context.Context, reqAkun req.GetAll) ([]entity.Akun, error)
+	GetById(ctx context.Context, id string) (entity.Akun, error)
 }
 
 type akunUsecase struct {
-	repo repo.AkunRepo
-	// repoGolonganAkun repoGolonganAkun.GolonganAkunRepo
+	repo             repo.AkunRepo
 	repoKelompokAkun repoKelompokAkun.KelompokAkunRepo
 	ulid             pkg.UlidPkg
 }
@@ -39,11 +37,10 @@ func (u *akunUsecase) Create(ctx context.Context, reqAkun req.Create) error {
 		if err.Error() == "record not found" {
 			return errors.New(message.KelompokAkunIdNotFound)
 		}
-		helper.LogsError(err)
 		return err
 	}
 
-	kode := entity.KategoriAkun[kelompokAkun.KategoriAkun] + kelompokAkun.Kode + reqAkun.Kode
+	kode := kelompokAkun.Kode + reqAkun.Kode
 
 	data := entity.Akun{
 		ID:             u.ulid.MakeUlid().String(),
@@ -55,23 +52,52 @@ func (u *akunUsecase) Create(ctx context.Context, reqAkun req.Create) error {
 	return u.repo.Create(ctx, &data)
 }
 
+func (u *akunUsecase) GetById(ctx context.Context, id string) (entity.Akun, error) {
+	return u.repo.GetById(ctx, id)
+}
+
 func (u *akunUsecase) Update(ctx context.Context, reqAkun req.Update) error {
+	akun, err := u.repo.GetById(ctx, reqAkun.ID)
+	if err != nil {
+		return err
+	}
+
+	newKode := ""
+
+	// kelompok akun code
+	if reqAkun.KelompokAkunID != "" {
+		klmpAkun, err := u.repoKelompokAkun.GetById(ctx, reqAkun.KelompokAkunID)
+		if err != nil {
+			if err.Error() == "record not found" {
+				return errors.New(message.KelompokAkunIdNotFound)
+			}
+		}
+		newKode += klmpAkun.Kode
+	} else {
+		newKode += akun.KelompokAkun.Kode
+	}
+
+	// akun code
+	if reqAkun.Kode != "" {
+		newKode += reqAkun.Kode
+	} else {
+		// remove kelompok akun kode in akun kode
+		newKode += strings.Replace(akun.Kode, newKode, "", len(newKode))
+	}
+
+	// make empty if `newKode` is the same as the old code
+	if newKode == akun.Kode {
+		newKode = ""
+	}
+
 	return u.repo.Update(ctx, &entity.Akun{
 		ID:             reqAkun.ID,
 		KelompokAkunID: reqAkun.KelompokAkunID,
 		Nama:           reqAkun.Nama,
+		Kode:           newKode,
 		SaldoNormal:    reqAkun.SaldoNormal,
 	})
 }
-
-// func (u *akunUsecase) Update(ctx context.Context, reqAkun req.Update) error {
-// 	return u.repo.Update(ctx, &entity.Akun{
-// 		ID:             reqAkun.ID,
-// 		GolonganAkunID: reqAkun.GolonganAkunID,
-// 		Nama:           reqAkun.Nama,
-// 		SaldoNormal:    reqAkun.SaldoNormal,
-// 	})
-// }
 
 func (u *akunUsecase) Delete(ctx context.Context, id string) error {
 	return u.repo.Delete(ctx, id)

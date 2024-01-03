@@ -16,6 +16,7 @@ type AkuntansiHandler interface {
 	GetAllJU(c *fiber.Ctx) error
 	GetAllBB(c *fiber.Ctx) error
 	GetAllNC(c *fiber.Ctx) error
+	GetAllLBR(c *fiber.Ctx) error
 }
 
 type akuntansiHandler struct {
@@ -96,4 +97,27 @@ func (h *akuntansiHandler) GetAllNC(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(response.ErrorRes(fiber.ErrInternalServerError.Code, fiber.ErrInternalServerError.Message, nil))
 	}
 	return c.Status(fiber.StatusOK).JSON(response.SuccessRes(fiber.StatusOK, message.OK, datasNC))
+}
+
+func (h *akuntansiHandler) GetAllLBR(c *fiber.Ctx) error {
+	reqU := new(req.GetAllLBR)
+	c.QueryParser(reqU)
+
+	errValidate := h.validator.Validate(reqU)
+	if errValidate != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(errValidate)
+	}
+
+	ctx := c.UserContext()
+
+	datasJU, err := h.uc.GetAllLBR(ctx, *reqU)
+
+	if ctx.Err() == context.DeadlineExceeded {
+		return c.Status(fiber.StatusRequestTimeout).JSON(response.ErrorRes(fiber.ErrRequestTimeout.Code, fiber.ErrRequestTimeout.Message, nil))
+	}
+
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(response.ErrorRes(fiber.ErrInternalServerError.Code, fiber.ErrInternalServerError.Message, nil))
+	}
+	return c.Status(fiber.StatusOK).JSON(response.SuccessRes(fiber.StatusOK, message.OK, datasJU))
 }

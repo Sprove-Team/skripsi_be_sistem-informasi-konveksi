@@ -9,42 +9,6 @@ import (
 
 // akuntansi
 var (
-	// KelompokAkun = func(ulid pkg.UlidPkg) (datas []entity.KelompokAkun) {
-	// 	datas = []entity.KelompokAkun{
-	// 		{
-	// 			ID:           ulid.MakeUlid().String(),
-	// 			Nama:         "aset",
-	// 			Kode:         "1",
-	// 			KategoriAkun: "ASET",
-	// 			{
-	// 				ID:           ulid.MakeUlid().String(),
-	// 				Nama:         "kewajiban",
-	// 				Kode:         "2",
-	// 				KategoriAkun: "KEWAJIBAN",
-	// 			},
-	// 			{
-	// 				ID:           ulid.MakeUlid().String(),
-	// 				Nama:         "modal (ekuitas)",
-	// 				Kode:         "3",
-	// 				KategoriAkun: "MODAL",
-	// 			},
-	//
-	// 			{
-	// 				ID:           ulid.MakeUlid().String(),
-	// 				Nama:         "pendapatan",
-	// 				Kode:         "4",
-	// 				KategoriAkun: "PENDAPATAN",
-	// 			},
-	// 			{
-	// 				ID:           ulid.MakeUlid().String(),
-	// 				Nama:         "beban",
-	// 				Kode:         "5",
-	// 				KategoriAkun: "BEBAN",
-	// 			},
-	// 		},
-	// 	}
-	// return datas
-	// }
 	KelompokAkuns = func(ulid pkg.UlidPkg) (datas []entity.KelompokAkun) {
 		dataKelompokAkun := []entity.KelompokAkun{
 			// Aset
@@ -77,15 +41,6 @@ var (
 	}
 
 	Akuns = func(kelompokAkuns []entity.KelompokAkun, ulid pkg.UlidPkg) (datas []entity.Akun) {
-		// dataAkun := []entity.Akun{
-		//  {
-		//     ID: ulid.MakeUlid().String(),
-		//     GolonganAkunID: golonganAkuns[0].ID,
-		//     Kode: "111",
-		//     Nama: "kas",
-		//     Deskripsi: "kas usaha",
-		//  },
-		// }
 		dataAkun := [][]entity.Akun{
 			// Aset Lancar
 			{
@@ -114,46 +69,36 @@ var (
 			// Modal
 			{
 				{Nama: "modal pribadi", SaldoNormal: "KREDIT", Deskripsi: "Modal yang ditanamkan oleh pemilik secara pribadi"},
+				{Nama: "modal saham", SaldoNormal: "KREDIT", Deskripsi: "Modal yang didapat dari pendapatan usaha"},
 				{Nama: "prive", SaldoNormal: "DEBIT", Deskripsi: "Pengambilan uang oleh pemilik untuk keperluan pribadi"},
 			},
 			// Pendapatan Usaha
 			{
-				{Nama: "penjualan", SaldoNormal: "KREDIT", Deskripsi: "Pendapatan dari penjualan barang atau jasa kepada pelanggan"},
-				{Nama: "return penjualan", SaldoNormal: "DEBIT", Deskripsi: "Pengurangan pendapatan karena retur penjualan"},
-				{Nama: "potongan penjualan", SaldoNormal: "DEBIT", Deskripsi: "Pengurangan pendapatan karena potongan penjualan"},
+				{Nama: "pendapatan jasa", SaldoNormal: "KREDIT", Deskripsi: "Pendapatan dari jasa yang diberikan"},
 			},
 			// Pendapatan Diluar Usaha
 			{
 				{Nama: "pendapatan bunga", SaldoNormal: "KREDIT", Deskripsi: "Pendapatan dari bunga yang diterima"},
-				{Nama: "laba penjualan aset tetap", SaldoNormal: "KREDIT", Deskripsi: "Laba dari penjualan aset tetap"},
-				{Nama: "laba penjualan surat berharga", SaldoNormal: "KREDIT", Deskripsi: "Laba dari penjualan surat berharga"},
-				{Nama: "pendapatan lainnya", SaldoNormal: "KREDIT", Deskripsi: "Pendapatan lainnya diluar usaha utama"},
 			},
 			// Beban Usaha
 			{
 				{Nama: "beban gaji", SaldoNormal: "DEBIT", Deskripsi: "Beban untuk membayar gaji karyawan"},
 				{Nama: "beban sewa", SaldoNormal: "DEBIT", Deskripsi: "Beban untuk sewa tempat atau fasilitas"},
 				{Nama: "beban asuransi", SaldoNormal: "DEBIT", Deskripsi: "Beban asuransi yang dibayarkan"},
-				{Nama: "beban penyusutan aset tetap", SaldoNormal: "DEBIT", Deskripsi: "Beban penyusutan untuk aset tetap"},
 				{Nama: "beban air, listrik dan telepon", SaldoNormal: "DEBIT", Deskripsi: "Beban untuk utilitas"},
 				{Nama: "beban perlengkapan", SaldoNormal: "DEBIT", Deskripsi: "Beban untuk membeli perlengkapan"},
+				{Nama: "beban penyusutan bangunan", SaldoNormal: "DEBIT", Deskripsi: "Beban penyusutan bangunan"},
+				{Nama: "beban penyusutan kendaraan", SaldoNormal: "DEBIT", Deskripsi: "Beban penyusutan kendaraan"},
+				{Nama: "beban penyusutan peralatan", SaldoNormal: "DEBIT", Deskripsi: "Beban penyusutan peralatan"},
 				{Nama: "beban administrasi lainnya", SaldoNormal: "DEBIT", Deskripsi: "Beban administrasi lainnya"},
 				{Nama: "beban iklan", SaldoNormal: "DEBIT", Deskripsi: "Beban untuk biaya iklan"},
-				{Nama: "kerugian piutang", SaldoNormal: "DEBIT", Deskripsi: "Kerugian dari piutang yang tidak tertagih"},
-				{Nama: "beban pemasaran lainnya", SaldoNormal: "DEBIT", Deskripsi: "Beban pemasaran lainnya"},
 			},
 			// Beban Diluar Usaha
 			{
 				{Nama: "beban bunga", SaldoNormal: "DEBIT", Deskripsi: "Beban bunga yang harus dibayar"},
-				{Nama: "rugi penjualan aset tetap", SaldoNormal: "DEBIT", Deskripsi: "Rugi dari penjualan aset tetap"},
-				{Nama: "rugi penjualan surat berharga", SaldoNormal: "DEBIT", Deskripsi: "Rugi dari penjualan surat berharga"},
+				{Nama: "pajak penghasilan", SaldoNormal: "DEBIT", Deskripsi: "Beban pajak penghasilan yang harus dibayar"},
 			},
 		}
-		// dataSaldoNormalAkun := [][]string{
-		//   {"DEBIT", "DEBIT", "DEBIT", "DEBIT"},
-		//   {"DEBIT", ""}
-		// }
-		//
 
 		datas = make([]entity.Akun, 0, 34)
 

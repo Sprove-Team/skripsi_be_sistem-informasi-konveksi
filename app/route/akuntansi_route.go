@@ -8,7 +8,6 @@ import (
 
 type AkuntansiRoute interface {
 	Akun(router fiber.Router)
-	// GolonganAkun(router fiber.Router)
 	KelompokAkun(router fiber.Router)
 	Transaksi(router fiber.Router)
 	Akuntansi(router fiber.Router)
@@ -24,20 +23,14 @@ func NewAkuntansiRoute(h handler_init.AkuntansiHandlerInit) AkuntansiRoute {
 
 func (ro *akuntansiRoute) Akun(router fiber.Router) {
 	router.Get("", ro.h.AkunHandler().GetAll)
+	router.Get("/:id", ro.h.AkunHandler().GetById)
 	router.Post("", ro.h.AkunHandler().Create)
 	router.Put("/:id", ro.h.AkunHandler().Update)
 	router.Delete("/:id", ro.h.AkunHandler().Delete)
 }
 
-// func (ro *akuntansiRoute) GolonganAkun(router fiber.Router) {
-// 	router.Post("", ro.h.GolonganAkunHandler().Create)
-// 	// Add other routes specific to Golongan Akun as needed
-// }
-
 func (ro *akuntansiRoute) KelompokAkun(router fiber.Router) {
-	// router.Get("")
 	router.Post("", ro.h.KelompokAkunHandler().Create)
-	// Add other routes specific to Kelompok Akun as needed
 }
 
 func (ro *akuntansiRoute) Transaksi(router fiber.Router) {
@@ -52,4 +45,5 @@ func (ro *akuntansiRoute) Akuntansi(router fiber.Router) {
 	router.Get("/jurnal_umum", ro.h.Akuntansi().GetAllJU)
 	router.Get("/buku_besar", ro.h.Akuntansi().GetAllBB)
 	router.Get("/neraca_saldo", ro.h.Akuntansi().GetAllNC)
+	router.Get("/laba_rugi", ro.h.Akuntansi().GetAllLBR)
 }

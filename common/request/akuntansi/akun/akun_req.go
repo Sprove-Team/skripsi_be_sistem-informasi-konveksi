@@ -1,9 +1,7 @@
 package akuntansi
 
 type Create struct {
-	// GolonganAkunID string `json:"golongan_akun_id" validate:"required,ulid"`
 	KelompokAkunID string `json:"kelompok_akun_id" validate:"required,ulid"`
-	KategoriAkun   string `json:"kategori_akun" validate:"required,oneof=ASET KEWAJIBAN MODAL PENDAPATAN BEBAN"`
 	Nama           string `json:"nama" validate:"required,printascii"`
 	Kode           string `json:"kode" validate:"required"`
 	Deskripsi      string `json:"deskripsi" validate:"omitempty"`

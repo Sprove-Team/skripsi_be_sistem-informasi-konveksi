@@ -12,9 +12,7 @@ import (
 // }
 
 type Akun struct {
-	ID string `gorm:"type:varchar(26);primaryKey;index:idx_akun_id;not null" json:"id"`
-	// GolonganAkunID string          `gorm:"type:varchar(26);index:idx_golongan_akun_id;not null" json:"-"`
-	// GolonganAkun   *GolonganAkun   `json:"golongan_akun,omitempty"`
+	ID             string          `gorm:"type:varchar(26);primaryKey;index:idx_akun_id;not null" json:"id"`
 	KelompokAkunID string          `gorm:"type:varchar(26);index:idx_kelompok_akun_id;not null" json:"-"`
 	KelompokAkun   *KelompokAkun   `json:"kelompok_akun,omitempty"`
 	Nama           string          `gorm:"type:varchar(150);uniqueIndex;not null" json:"nama"`

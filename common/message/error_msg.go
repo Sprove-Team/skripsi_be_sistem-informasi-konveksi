@@ -50,10 +50,10 @@ var (
 var (
 	CreditDebitNotSame = "total debit dan kredit harus sama"
 	AkunCannotBeSame   = "akun tidak boleh sama"
+	// kategori akun
+	KategoriAkunNotFound = "kategori akun tidak ditemukan"
 	// kelompok akun
 	KelompokAkunIdNotFound = "kelompok_akun_id tidak valid atau tidak ditemukan"
-	// // golongan akun
-	// GolonganAkunIdNotFound = "golongan_akun_id tidak valid atau tidak ditemukan"
 	// akun
 	AkunIdNotFound = "akun_id tidak valid atau tidak ditemukan"
 )
