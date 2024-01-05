@@ -2,6 +2,7 @@ package akuntansi
 
 import (
 	"context"
+	"errors"
 	"log"
 
 	"github.com/be-sistem-informasi-konveksi/entity"
@@ -27,11 +28,21 @@ func NewKelompokAkunRepo(DB *gorm.DB) KelompokAkunRepo {
 }
 
 func (r *kelompokAkunRepo) Create(ctx context.Context, kelompokAkun *entity.KelompokAkun) error {
-	return r.DB.WithContext(ctx).Create(kelompokAkun).Error
+	err := r.DB.WithContext(ctx).Create(kelompokAkun).Error
+	if err != nil {
+		helper.LogsError(err)
+		return errors.New(err.Error())
+	}
+	return err
 }
 
 func (r *kelompokAkunRepo) Update(ctx context.Context, kelompokAkun *entity.KelompokAkun) error {
-	return r.DB.WithContext(ctx).Omit("id").Updates(kelompokAkun).Error
+	err := r.DB.WithContext(ctx).Omit("id").Updates(kelompokAkun).Error
+	if err != nil {
+		helper.LogsError(err)
+		return err
+	}
+	return nil
 }
 
 func (r *kelompokAkunRepo) Delete(ctx context.Context, id string) error {
@@ -39,10 +50,11 @@ func (r *kelompokAkunRepo) Delete(ctx context.Context, id string) error {
 }
 
 type SearchKelompokAkun struct {
-	Nama  string
-	Kode  string
-	Next  string
-	Limit int
+	Nama         string
+	KategoriAkun string
+	Kode         string
+	Next         string
+	Limit        int
 }
 
 func (r *kelompokAkunRepo) GetAll(ctx context.Context, searchKelompokAkun SearchKelompokAkun) ([]entity.KelompokAkun, error) {
@@ -51,9 +63,10 @@ func (r *kelompokAkunRepo) GetAll(ctx context.Context, searchKelompokAkun Search
 	tx := r.DB.WithContext(ctx).Model(&entity.KelompokAkun{}).Order("id ASC").Omit("created_at", "deleted_at", "updated_at")
 
 	conditions := map[string]interface{}{
-		"id > ?":      searchKelompokAkun.Next,
-		"nama LIKE ?": "%" + searchKelompokAkun.Nama + "%",
-		"kode = ?":    searchKelompokAkun.Kode,
+		"id > ?":            searchKelompokAkun.Next,
+		"kategori_akun = ?": searchKelompokAkun.KategoriAkun,
+		"nama LIKE ?":       "%" + searchKelompokAkun.Nama + "%",
+		"kode = ?":          searchKelompokAkun.Kode,
 	}
 
 	for condition, value := range conditions {

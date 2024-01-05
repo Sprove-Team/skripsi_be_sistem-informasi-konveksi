@@ -2,13 +2,12 @@ package akuntansi
 
 import (
 	"context"
-	"fmt"
-	"strings"
 	"time"
 
 	"github.com/be-sistem-informasi-konveksi/entity"
 	"github.com/be-sistem-informasi-konveksi/helper"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type CreateParam struct {
@@ -18,14 +17,16 @@ type CreateParam struct {
 }
 
 type DeleteParam struct {
-	ID              string
-	SaldoAkunValues []string
+	ID          string
+	UpdateAkuns []entity.Akun
+	// SaldoAkunValues []string
 }
 
 type UpdateParam struct {
-	UpdateTr           *entity.Transaksi
-	NewAyatJurnals     []*entity.AyatJurnal
-	NewSaldoAkunValues []string
+	UpdateTr       *entity.Transaksi
+	NewAyatJurnals []*entity.AyatJurnal
+	UpdateAkuns    []entity.Akun
+	// NewSaldoAkunValues []string
 }
 
 type SearchTransaksi struct {
@@ -66,11 +67,21 @@ func (r *transaksiRepo) Create(ctx context.Context, param CreateParam) error {
 			helper.LogsError(err)
 			return err
 		}
-		for _, akun := range param.UpdateAkuns {
-			if err := tx.Model(&entity.Akun{}).Where("id = ?", akun.ID).Update("saldo", akun.Saldo).Error; err != nil {
-				return err
-			}
+
+		clause := clause.OnConflict{
+			Columns:   []clause.Column{{Name: "id"}, {Name: "kode"}},
+			DoUpdates: clause.AssignmentColumns([]string{"saldo"}),
 		}
+
+		if err := tx.Clauses(clause).Create(param.UpdateAkuns).Error; err != nil {
+			return err
+		}
+
+		// for _, akun := range param.UpdateAkuns {
+		// 	if err := tx.Model(&entity.Akun{}).Where("id = ?", akun.ID).Update("saldo", akun.Saldo).Error; err != nil {
+		// 		return err
+		// 	}
+		// }
 		return nil
 	})
 	if err != nil {
@@ -82,12 +93,6 @@ func (r *transaksiRepo) Create(ctx context.Context, param CreateParam) error {
 
 func (r *transaksiRepo) Update(ctx context.Context, param UpdateParam) error {
 	err := r.DB.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		// if err := tx.Session(&gorm.Session{
-		// 	FullSaveAssociations: true,
-		// }).Updates(param.UpdateTr).Error; err != nil {
-		// 	return err
-		// }
-
 		if err := tx.Where("id =? ", param.UpdateTr.ID).Updates(param.UpdateTr).Error; err != nil {
 			helper.LogsError(err)
 			return err
@@ -103,14 +108,23 @@ func (r *transaksiRepo) Update(ctx context.Context, param UpdateParam) error {
 			}
 		}
 
+		clause := clause.OnConflict{
+			Columns:   []clause.Column{{Name: "kode"}, {Name: "id"}},
+			DoUpdates: clause.AssignmentColumns([]string{"saldo"}),
+		}
+
+		if err := tx.Clauses(clause).Create(&param.UpdateAkuns).Error; err != nil {
+			return err
+		}
+
 		// update multiple lines with duplicate IDs in the 'akun' table.
 		// the SQL query uses INSERT INTO ... ON DUPLICATE KEY UPDATE to efficiently handle duplicates.
 
-		newValueAkun := strings.Join(param.NewSaldoAkunValues, ",")
-		query2 := fmt.Sprintf("INSERT INTO akun (id, saldo, kelompok_akun_id, nama, kode) VALUES %s ON DUPLICATE KEY UPDATE saldo = VALUES(saldo)", newValueAkun)
-		if err := tx.Exec(query2).Error; err != nil {
-			return err
-		}
+		// newValueAkun := strings.Join(param.NewSaldoAkunValues, ",")
+		// query2 := fmt.Sprintf("INSERT INTO akun (id, saldo, kelompok_akun_id, nama, kode) VALUES %s ON DUPLICATE KEY UPDATE saldo = VALUES(saldo)", newValueAkun)
+		// if err := tx.Exec(query2).Error; err != nil {
+		// 	return err
+		// }
 		return nil
 	})
 	if err != nil {
@@ -125,11 +139,17 @@ func (r *transaksiRepo) Delete(ctx context.Context, param DeleteParam) error {
 		if err := tx.Delete(&entity.Transaksi{}, "id = ?", param.ID).Error; err != nil {
 			return err
 		}
-		newValueAkun := strings.Join(param.SaldoAkunValues, ",")
-		query := fmt.Sprintf("INSERT INTO akun (id, saldo, kelompok_akun_id, nama, kode) VALUES %s ON DUPLICATE KEY UPDATE saldo = VALUES(saldo)", newValueAkun)
-		if err := tx.Exec(query).Error; err != nil {
+
+		clause := clause.OnConflict{
+			Columns:   []clause.Column{{Name: "kode"}, {Name: "id"}},
+			DoUpdates: clause.AssignmentColumns([]string{"saldo"}),
+		}
+
+		// update multiple lines with duplicate IDs in the 'akun' table. based on "kode"
+		if err := tx.Clauses(clause).Create(&param.UpdateAkuns).Error; err != nil {
 			return err
 		}
+
 		return nil
 	})
 	if err != nil {

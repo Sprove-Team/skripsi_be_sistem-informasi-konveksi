@@ -1,10 +1,11 @@
 package akuntansi
 
 type GetAll struct {
-	Nama  string `query:"nama" validate:"omitempty,printascii"`
-	Kode  string `query:"kode" validate:"omitempty"`
-	Next  string `query:"Next" validate:"omitempty,ulid"`
-	Limit int    `query:"limit" validate:"omitempty,number"`
+	Nama         string `query:"nama" validate:"omitempty,printascii"`
+	KategoriAkun string `query:"kategori_akun" validate:"omitempty,oneof=ASET KEWAJIBAN MODAL PENDAPATAN BEBAN"`
+	Kode         string `query:"kode" validate:"omitempty"`
+	Next         string `query:"next" validate:"omitempty,ulid"`
+	Limit        int    `query:"limit" validate:"omitempty,number"`
 }
 
 type Create struct {

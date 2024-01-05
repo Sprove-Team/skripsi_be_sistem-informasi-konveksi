@@ -2,7 +2,6 @@ package akuntansi
 
 import (
 	"errors"
-	"sync"
 
 	"github.com/be-sistem-informasi-konveksi/common/message"
 	req "github.com/be-sistem-informasi-konveksi/common/request/akuntansi/transaksi"
@@ -30,25 +29,16 @@ func isSameReqAyJurnals(a, b []req.ReqAyatJurnal) bool {
 	return true
 }
 
-func isKreditEqualToDebit(ayatJurnals []req.ReqAyatJurnal, totalTransaksi *float64, wg *sync.WaitGroup, m *sync.Mutex) error {
+func isKreditEqualToDebit(ayatJurnals []req.ReqAyatJurnal, totalTransaksi *float64) error {
 	var totalKredit, totalDebit float64
 	for _, v := range ayatJurnals {
-		wg.Add(1)
-		go func(v req.ReqAyatJurnal) {
-			defer wg.Done()
-			if v.Debit != 0 {
-				m.Lock()
-				totalDebit += v.Debit
-				m.Unlock()
-			}
-			if v.Kredit != 0 {
-				m.Lock()
-				totalKredit += v.Kredit
-				m.Unlock()
-			}
-		}(v)
+		if v.Debit != 0 {
+			totalDebit += v.Debit
+		}
+		if v.Kredit != 0 {
+			totalKredit += v.Kredit
+		}
 	}
-	wg.Wait()
 
 	if totalDebit != totalKredit {
 		return errors.New(message.CreditDebitNotSame)

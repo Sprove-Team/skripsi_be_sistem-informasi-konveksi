@@ -9,6 +9,7 @@ import (
 	"github.com/be-sistem-informasi-konveksi/common/message"
 	req "github.com/be-sistem-informasi-konveksi/common/request/akuntansi/kelompok_akun"
 	"github.com/be-sistem-informasi-konveksi/entity"
+	"github.com/be-sistem-informasi-konveksi/helper"
 	"github.com/be-sistem-informasi-konveksi/pkg"
 )
 
@@ -32,15 +33,21 @@ func NewKelompokAkunUsecase(repo repo.KelompokAkunRepo, ulid pkg.UlidPkg) Kelomp
 func (u *kelompokAkunUsecase) Create(ctx context.Context, reqKelompokAkun req.Create) error {
 	kodeKategori, ok := entity.KategoriAkun[reqKelompokAkun.KategoriAkun]
 	if !ok {
+		helper.LogsError(errors.New("kategori akun not found"))
 		return errors.New(message.KategoriAkunNotFound)
 	}
 	data := entity.KelompokAkun{
-		ID:   u.ulid.MakeUlid().String(),
-		Nama: strings.ToLower(reqKelompokAkun.Nama),
-		Kode: kodeKategori + reqKelompokAkun.Kode,
+		ID:           u.ulid.MakeUlid().String(),
+		Nama:         strings.ToLower(reqKelompokAkun.Nama),
+		Kode:         kodeKategori + reqKelompokAkun.Kode,
+		KategoriAkun: reqKelompokAkun.KategoriAkun,
 	}
 
-	return u.repo.Create(ctx, &data)
+	err := u.repo.Create(ctx, &data)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (u *kelompokAkunUsecase) Update(ctx context.Context, reqKelompokAkun req.Update) error {
@@ -92,10 +99,11 @@ func (u *kelompokAkunUsecase) GetAll(ctx context.Context, reqKelompokAkun req.Ge
 		reqKelompokAkun.Limit = 10
 	}
 	datas, err := u.repo.GetAll(ctx, repo.SearchKelompokAkun{
-		Nama:  strings.ToLower(reqKelompokAkun.Nama),
-		Kode:  reqKelompokAkun.Kode,
-		Limit: reqKelompokAkun.Limit,
-		Next:  reqKelompokAkun.Next,
+		Nama:         strings.ToLower(reqKelompokAkun.Nama),
+		KategoriAkun: reqKelompokAkun.KategoriAkun,
+		Kode:         reqKelompokAkun.Kode,
+		Limit:        reqKelompokAkun.Limit,
+		Next:         reqKelompokAkun.Next,
 	})
 	if err != nil {
 		return nil, err
