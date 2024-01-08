@@ -47,6 +47,7 @@ func (u *akunUsecase) Create(ctx context.Context, reqAkun req.Create) error {
 		Nama:           reqAkun.Nama,
 		Kode:           kode,
 		KelompokAkunID: reqAkun.KelompokAkunID,
+		Deskripsi:      reqAkun.Deskripsi,
 	}
 
 	return u.repo.Create(ctx, &data)

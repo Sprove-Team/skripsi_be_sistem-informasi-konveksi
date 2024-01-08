@@ -43,6 +43,10 @@ func errResponse(c *fiber.Ctx, err error) error {
 		return c.Status(fiber.StatusConflict).JSON(response.ErrorRes(fiber.ErrConflict.Code, fiber.ErrConflict.Message, nil))
 	}
 
+	if err.Error() == message.KelompokAkunCannotDeleted {
+		return c.Status(fiber.StatusInternalServerError).JSON(response.ErrorInterWithMessageRes(fiber.ErrInternalServerError.Code, fiber.ErrInternalServerError.Message, err.Error()))
+	}
+
 	helper.LogsError(err)
 	return c.Status(fiber.StatusInternalServerError).JSON(response.ErrorRes(fiber.ErrInternalServerError.Code, fiber.ErrInternalServerError.Message, nil))
 }

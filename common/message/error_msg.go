@@ -54,7 +54,8 @@ var (
 	// kategori akun
 	KategoriAkunNotFound = "kategori akun tidak ditemukan"
 	// kelompok akun
-	KelompokAkunIdNotFound = "kelompok_akun_id tidak valid atau tidak ditemukan"
+	KelompokAkunIdNotFound    = "kelompok_akun_id tidak valid atau tidak ditemukan"
+	KelompokAkunCannotDeleted = "akun dengan kelompok akun yang akan dihapus masih ada pada ayat jurnal"
 	// akun
 	AkunIdNotFound = "akun_id tidak valid atau tidak ditemukan"
 )
