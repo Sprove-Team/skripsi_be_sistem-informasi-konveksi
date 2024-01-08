@@ -15,7 +15,7 @@ type Transaksi struct {
 	CreatedAt       *time.Time      `json:"created_at,omitempty"`
 	UpdatedAt       *time.Time      `json:"updated_at,omitempty"`
 	DeletedAt       *gorm.DeletedAt `gorm:"index" json:"-"`
-	AyatJurnals     []AyatJurnal    `gorm:"foreignKey:TransaksiID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"ayat_jurnal"`
+	AyatJurnals     []AyatJurnal    `gorm:"foreignKey:TransaksiID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"ayat_jurnal,omitempty"`
 }
 
 func (Transaksi) TableName() string {

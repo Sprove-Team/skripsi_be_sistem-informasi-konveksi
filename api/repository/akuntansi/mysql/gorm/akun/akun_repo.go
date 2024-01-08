@@ -2,9 +2,12 @@ package akuntansi
 
 import (
 	"context"
+	"errors"
 
+	"github.com/be-sistem-informasi-konveksi/common/message"
 	"github.com/be-sistem-informasi-konveksi/entity"
 	"github.com/be-sistem-informasi-konveksi/helper"
+	"github.com/go-sql-driver/mysql"
 	"gorm.io/gorm"
 )
 
@@ -96,6 +99,14 @@ func (r *akunRepo) Update(ctx context.Context, akun *entity.Akun) error {
 func (r *akunRepo) Delete(ctx context.Context, id string) error {
 	err := r.DB.WithContext(ctx).Where("id = ?", id).Delete(&entity.Akun{}).Error
 	if err != nil {
+		if mysqlErr, ok := err.(*mysql.MySQLError); ok {
+			switch mysqlErr.Number {
+			case 1451: // MySQL code for duplicate entry
+				return errors.New(message.AkunCannotDeleted)
+			default:
+				return err
+			}
+		}
 		helper.LogsError(err)
 		return err
 	}

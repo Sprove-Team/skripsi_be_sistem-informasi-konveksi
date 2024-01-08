@@ -18,7 +18,7 @@ type TransaksiHandler interface {
 	Update(c *fiber.Ctx) error
 	GetAll(c *fiber.Ctx) error
 	GetById(c *fiber.Ctx) error
-	// GetAllHistory(c *fiber.Ctx) error
+	GetHistory(c *fiber.Ctx) error
 }
 
 type transaksiHandler struct {
@@ -31,6 +31,10 @@ func NewTransaksiHandler(uc usecase.TransaksiUsecase, validator pkg.Validator) T
 }
 
 func errResponse(c *fiber.Ctx, err error) error {
+	if err == context.DeadlineExceeded {
+		return c.Status(fiber.StatusRequestTimeout).JSON(response.ErrorRes(fiber.ErrRequestTimeout.Code, fiber.ErrRequestTimeout.Message, nil))
+	}
+
 	if err.Error() == "record not found" {
 		return c.Status(fiber.StatusNotFound).JSON(response.ErrorRes(fiber.ErrNotFound.Code, fiber.ErrNotFound.Message, nil))
 	}
@@ -72,12 +76,6 @@ func (h *transaksiHandler) Create(c *fiber.Ctx) error {
 	ctx := c.UserContext()
 	// Call usecase to create KelompokAkun
 	err := h.uc.Create(ctx, *req)
-
-	// Handle context timeout
-	if ctx.Err() == context.DeadlineExceeded {
-		return c.Status(fiber.StatusRequestTimeout).JSON(response.ErrorRes(fiber.ErrRequestTimeout.Code, fiber.ErrRequestTimeout.Message, nil))
-	}
-
 	// Handle errors
 	if err != nil {
 		return errResponse(c, err)
@@ -102,12 +100,6 @@ func (h *transaksiHandler) Update(c *fiber.Ctx) error {
 
 	// Call usecase to create KelompokAkun
 	err := h.uc.Update(ctx, *req)
-
-	// Handle context timeout
-	if ctx.Err() == context.DeadlineExceeded {
-		return c.Status(fiber.StatusRequestTimeout).JSON(response.ErrorRes(fiber.ErrRequestTimeout.Code, fiber.ErrRequestTimeout.Message, nil))
-	}
-
 	// Handle errors
 	if err != nil {
 		return errResponse(c, err)
@@ -166,13 +158,26 @@ func (h *transaksiHandler) GetAll(c *fiber.Ctx) error {
 	ctx := c.UserContext()
 
 	datas, err := h.uc.GetAll(ctx, *reqU)
+	if err != nil {
+		return errResponse(c, err)
+	}
+	return c.Status(fiber.StatusOK).JSON(response.SuccessRes(fiber.StatusOK, message.OK, datas))
+}
 
-	if ctx.Err() == context.DeadlineExceeded {
-		return c.Status(fiber.StatusRequestTimeout).JSON(response.ErrorRes(fiber.ErrRequestTimeout.Code, fiber.ErrRequestTimeout.Message, nil))
+func (h *transaksiHandler) GetHistory(c *fiber.Ctx) error {
+	reqU := new(req.GetHistory)
+	c.QueryParser(reqU)
+
+	errValidate := h.validator.Validate(reqU)
+	if errValidate != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(errValidate)
 	}
 
+	ctx := c.UserContext()
+
+	datas, err := h.uc.GetHistory(ctx, *reqU)
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(response.ErrorRes(fiber.ErrInternalServerError.Code, fiber.ErrInternalServerError.Message, nil))
+		return errResponse(c, err)
 	}
 	return c.Status(fiber.StatusOK).JSON(response.SuccessRes(fiber.StatusOK, message.OK, datas))
 }

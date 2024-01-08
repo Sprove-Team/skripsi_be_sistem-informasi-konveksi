@@ -2,8 +2,6 @@ package entity
 
 import (
 	"time"
-
-	"gorm.io/gorm"
 )
 
 // var SaldoNormal = map[string]bool{
@@ -12,18 +10,18 @@ import (
 // }
 
 type Akun struct {
-	ID             string          `gorm:"type:varchar(26);primaryKey;index:idx_akun_id;not null" json:"id"`
-	KelompokAkunID string          `gorm:"type:varchar(26);index:idx_kelompok_akun_id;not null" json:"-"`
-	KelompokAkun   *KelompokAkun   `json:"kelompok_akun,omitempty"`
-	Nama           string          `gorm:"type:varchar(150);uniqueIndex;not null" json:"nama"`
-	Kode           string          `gorm:"type:varchar(10);uniqueIndex;not null" json:"kode"`
-	SaldoNormal    string          `gorm:"type:enum('DEBIT','KREDIT');default:'DEBIT';not null" json:"saldo_normal"`
-	Saldo          float64         `gorm:"type:decimal(10,2);default:0" json:"saldo"`
-	Deskripsi      string          `gorm:"type:TEXT;default:null" json:"deskripsi,omitempty"`
-	AyatJurnals    []AyatJurnal    `gorm:"foreignKey:AkunID;references:ID" json:"ayat_jurnal,omitempty"`
-	CreatedAt      *time.Time      `json:"created_at,omitempty"`
-	UpdatedAt      *time.Time      `json:"updated_at,omitempty"`
-	DeletedAt      *gorm.DeletedAt `gorm:"index" json:"deleted_at,omitempty"`
+	ID             string        `gorm:"type:varchar(26);primaryKey;index:idx_akun_id;not null" json:"id"`
+	KelompokAkunID string        `gorm:"type:varchar(26);index:idx_kelompok_akun_id;not null" json:"-"`
+	KelompokAkun   *KelompokAkun `json:"kelompok_akun,omitempty"`
+	Nama           string        `gorm:"type:varchar(150);uniqueIndex;not null" json:"nama"`
+	Kode           string        `gorm:"type:varchar(10);uniqueIndex;not null" json:"kode"`
+	SaldoNormal    string        `gorm:"type:enum('DEBIT','KREDIT');default:'DEBIT';not null" json:"saldo_normal"`
+	Saldo          float64       `gorm:"type:decimal(10,2);default:0" json:"saldo"`
+	Deskripsi      string        `gorm:"type:TEXT;default:null" json:"deskripsi,omitempty"`
+	AyatJurnals    []AyatJurnal  `gorm:"foreignKey:AkunID;references:ID" json:"ayat_jurnal,omitempty"`
+	CreatedAt      *time.Time    `json:"created_at,omitempty"`
+	UpdatedAt      *time.Time    `json:"updated_at,omitempty"`
+	// DeletedAt      *gorm.DeletedAt `gorm:"index" json:"deleted_at,omitempty"`
 }
 
 func (Akun) TableName() string {

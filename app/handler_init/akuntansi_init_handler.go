@@ -50,14 +50,6 @@ func (d *akuntansiHandlerInit) AkunHandler() akunHandler.AkunHandler {
 	return h
 }
 
-// func (d *akuntansiHandlerInit) GolonganAkunHandler() golonganAkunHandler.GolonganAkunHandler {
-// 	r := golonganAkunRepo.NewGolonganAkunRepo(d.DB)
-// 	rk := kelompokAkunRepo.NewKelompokAkunRepo(d.DB)
-// 	uc := golonganAkunUsecase.NewGolonganAkunUsecase(r, rk, d.ulid)
-// 	h := golonganAkunHandler.NewGolonganAkunHandler(uc, d.validator)
-// 	return h
-// }
-
 func (d *akuntansiHandlerInit) KelompokAkunHandler() kelompokAkunHandler.KelompokAkunHandler {
 	r := kelompokAkunRepo.NewKelompokAkunRepo(d.DB)
 	uc := kelompokAkunUsecase.NewKelompokAkunUsecase(r, d.ulid)

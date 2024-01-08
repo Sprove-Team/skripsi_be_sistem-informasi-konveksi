@@ -50,6 +50,7 @@ var (
 var (
 	CreditDebitNotSame = "total debit dan kredit harus sama"
 	AkunCannotBeSame   = "akun tidak boleh sama"
+	AkunCannotDeleted  = "tidak bisa menghapus akun karena akun masih digunakan pada ayat jurnal"
 	// kategori akun
 	KategoriAkunNotFound = "kategori akun tidak ditemukan"
 	// kelompok akun

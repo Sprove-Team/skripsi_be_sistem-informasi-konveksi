@@ -38,6 +38,7 @@ type TransaksiRepo interface {
 	Create(ctx context.Context, param CreateParam) error
 	Update(ctx context.Context, param UpdateParam) error
 	GetAll(ctx context.Context, param SearchTransaksi) ([]entity.Transaksi, error)
+	GetHistory(ctx context.Context, param SearchTransaksi) ([]entity.Transaksi, error)
 	Delete(ctx context.Context, param DeleteParam) error
 	GetById(ctx context.Context, id string) (entity.Transaksi, error)
 	// Add more methods as needed for your repository operations
@@ -98,6 +99,7 @@ func (r *transaksiRepo) Update(ctx context.Context, param UpdateParam) error {
 			return err
 		}
 		if param.NewAyatJurnals != nil {
+			// tx.Unscoped()
 			if err := tx.Unscoped().Where("transaksi_id IN (?)", param.UpdateTr.ID).Delete(&entity.AyatJurnal{}).Error; err != nil {
 				helper.LogsError(err)
 				return err
@@ -140,6 +142,10 @@ func (r *transaksiRepo) Delete(ctx context.Context, param DeleteParam) error {
 			return err
 		}
 
+		if err := tx.Unscoped().Where("transaksi_id = ?", param.ID).Delete(&entity.AyatJurnal{}).Error; err != nil {
+			return err
+		}
+
 		clause := clause.OnConflict{
 			Columns:   []clause.Column{{Name: "kode"}, {Name: "id"}},
 			DoUpdates: clause.AssignmentColumns([]string{"saldo"}),
@@ -162,7 +168,29 @@ func (r *transaksiRepo) Delete(ctx context.Context, param DeleteParam) error {
 func (r *transaksiRepo) GetAll(ctx context.Context, param SearchTransaksi) ([]entity.Transaksi, error) {
 	datas := []entity.Transaksi{}
 
-	tx := r.DB.WithContext(ctx).Model(&datas).Order("tanggal ASC").Omit("created_at", "deleted_at", "updated_at")
+	tx := r.DB.WithContext(ctx).Model(&datas).Order("tanggal DESC").Omit("created_at", "deleted_at", "updated_at")
+
+	tx = tx.Where("DATE(tanggal) >= ? AND DATE(tanggal) <= ?", param.StartDate, param.EndDate)
+
+	err := tx.Preload("AyatJurnals", func(db *gorm.DB) *gorm.DB {
+		return db.Omit("created_at", "deleted_at", "updated_at")
+	}).
+		Preload("AyatJurnals.Akun", func(db *gorm.DB) *gorm.DB {
+			return db.Omit("created_at", "deleted_at", "updated_at").
+				Select("nama", "id", "saldo_normal", "saldo", "kode", "kelompok_akun_id")
+		}).
+		Find(&datas).Error
+	if err != nil {
+		helper.LogsError(err)
+		return datas, err
+	}
+	return datas, nil
+}
+
+func (r *transaksiRepo) GetHistory(ctx context.Context, param SearchTransaksi) ([]entity.Transaksi, error) {
+	datas := []entity.Transaksi{}
+
+	tx := r.DB.WithContext(ctx).Model(&datas).Unscoped().Order("tanggal DESC").Omit("created_at", "deleted_at", "updated_at")
 
 	tx = tx.Where("DATE(tanggal) >= ? AND DATE(tanggal) <= ?", param.StartDate, param.EndDate)
 

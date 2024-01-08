@@ -17,6 +17,11 @@ type BaseFormatError struct {
 	Errors map[string][]string `json:"errors,omitempty"`
 }
 
+type BaseFormatInterErr struct {
+	BaseFormat
+	Message string `json:"message"`
+}
+
 // func BaseSuccessRes
 
 func BaseRes(code int, status string) *BaseFormat {
@@ -33,6 +38,16 @@ func ErrorRes(code int, status string, errors map[string][]string) *BaseFormatEr
 			Status: status,
 		},
 		Errors: errors,
+	}
+}
+
+func ErrorInterWithMessageRes(code int, status, message string) *BaseFormatInterErr {
+	return &BaseFormatInterErr{
+		BaseFormat: BaseFormat{
+			Code:   code,
+			Status: status,
+		},
+		Message: message,
 	}
 }
 

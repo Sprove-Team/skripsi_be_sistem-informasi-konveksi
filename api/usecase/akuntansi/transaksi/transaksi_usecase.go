@@ -21,6 +21,7 @@ type TransaksiUsecase interface {
 	Delete(ctx context.Context, id string) error
 	Update(ctx context.Context, reqTransaksi req.Update) error
 	GetAll(ctx context.Context, reqTransaksi req.GetAll) ([]entity.Transaksi, error)
+	GetHistory(ctx context.Context, reqTransaksi req.GetHistory) ([]entity.Transaksi, error)
 	GetById(ctx context.Context, id string) (entity.Transaksi, error)
 }
 
@@ -307,11 +308,11 @@ func (u *transaksiUsecase) Create(ctx context.Context, reqTransaksi req.Create) 
 }
 
 func (u *transaksiUsecase) GetById(ctx context.Context, id string) (entity.Transaksi, error) {
-	detailTr, err := u.repo.GetById(ctx, id)
+	data, err := u.repo.GetById(ctx, id)
 	if err != nil {
 		return entity.Transaksi{}, err
 	}
-	return detailTr, nil
+	return data, nil
 }
 
 func (u *transaksiUsecase) GetAll(ctx context.Context, reqTransaksi req.GetAll) ([]entity.Transaksi, error) {
@@ -338,4 +339,30 @@ func (u *transaksiUsecase) GetAll(ctx context.Context, reqTransaksi req.GetAll) 
 	}
 
 	return dataTransaksi, nil
+}
+
+func (u *transaksiUsecase) GetHistory(ctx context.Context, reqTransaksi req.GetHistory) ([]entity.Transaksi, error) {
+	endDate, err := time.Parse(time.DateOnly, reqTransaksi.EndDate)
+	if err != nil {
+		helper.LogsError(err)
+		return nil, err
+	}
+	startDate, err := time.Parse(time.DateOnly, reqTransaksi.StartDate)
+	if err != nil {
+		helper.LogsError(err)
+		return nil, err
+	}
+
+	searchFilter := repo.SearchTransaksi{
+		EndDate:   endDate,
+		StartDate: startDate,
+	}
+
+	dataHistory, err := u.repo.GetHistory(ctx, searchFilter)
+	if err != nil {
+		helper.LogsError(err)
+		return nil, err
+	}
+
+	return dataHistory, nil
 }
