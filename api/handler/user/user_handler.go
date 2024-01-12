@@ -51,7 +51,7 @@ func (h *userHandler) Create(c *fiber.Ctx) error {
 	}
 	if err != nil {
 		if err.Error() == "duplicated key not allowed" {
-			return c.Status(fiber.StatusRequestTimeout).JSON(response.ErrorRes(fiber.ErrRequestTimeout.Code, fiber.ErrRequestTimeout.Message, nil))
+			return c.Status(fiber.StatusConflict).JSON(response.ErrorRes(fiber.ErrConflict.Code, fiber.ErrConflict.Message, nil))
 		}
 		return c.Status(fiber.StatusInternalServerError).JSON(response.ErrorRes(fiber.ErrInternalServerError.Code, fiber.ErrInternalServerError.Message, nil))
 	}
@@ -122,7 +122,7 @@ func (h *userHandler) Delete(c *fiber.Ctx) error {
 	// }
 	errValidate := h.validator.Validate(req)
 	if errValidate != nil {
-		return c.Status(fiber.StatusRequestTimeout).JSON(response.ErrorRes(fiber.ErrRequestTimeout.Code, fiber.ErrRequestTimeout.Message, nil))
+		return c.Status(fiber.StatusBadRequest).JSON(response.ErrorRes(fiber.ErrBadRequest.Code, fiber.ErrBadRequest.Message, nil))
 	}
 	ctx := c.UserContext()
 	err := h.uc.Delete(ctx, req.ID)

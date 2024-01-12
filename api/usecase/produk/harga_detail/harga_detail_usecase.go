@@ -26,8 +26,7 @@ type HargaDetailProdukUsecase interface {
 type hargaDetailProdukUsecase struct {
 	repo    repo.HargaDetailProdukRepo
 	produkR produkRepo.ProdukRepo
-	// uuidGen pkg.UuidGenerator
-	ulid pkg.UlidPkg
+	ulid    pkg.UlidPkg
 }
 
 func NewHargaDetailProdukUsecase(repo repo.HargaDetailProdukRepo, produkR produkRepo.ProdukRepo, ulid pkg.UlidPkg) HargaDetailProdukUsecase {
@@ -35,9 +34,12 @@ func NewHargaDetailProdukUsecase(repo repo.HargaDetailProdukRepo, produkR produk
 }
 
 func (u *hargaDetailProdukUsecase) Create(ctx context.Context, reqHargaDetailProduk req.Create) error {
-	datas, _ := u.repo.GetByProdukId(ctx, reqHargaDetailProduk.ProdukId)
-	if len(datas) <= 0 {
-		return errors.New(message.ProdukNotFound)
+	_, err := u.produkR.GetById(ctx, reqHargaDetailProduk.ProdukId)
+	if err != nil {
+		if err.Error() == "record not found" {
+			return errors.New(message.ProdukNotFound)
+		}
+		return err
 	}
 	g := errgroup.Group{}
 
@@ -55,7 +57,9 @@ func (u *hargaDetailProdukUsecase) Create(ctx context.Context, reqHargaDetailPro
 				}
 				id := u.ulid.MakeUlid().String()
 				data := entity.HargaDetailProduk{
-					ID:       id,
+					Base: entity.Base{
+						ID: id,
+					},
 					ProdukID: reqHargaDetailProduk.ProdukId,
 					QTY:      reqHargaDetailProduk.HargaDetail[i].QTY,
 					Harga:    reqHargaDetailProduk.HargaDetail[i].Harga,
@@ -77,7 +81,9 @@ func (u *hargaDetailProdukUsecase) Create(ctx context.Context, reqHargaDetailPro
 
 func (u *hargaDetailProdukUsecase) UpdateById(ctx context.Context, reqHargaDetailProduk req.Update) error {
 	data := entity.HargaDetailProduk{
-		ID:    reqHargaDetailProduk.ID,
+		Base: entity.Base{
+			ID: reqHargaDetailProduk.ID,
+		},
 		QTY:   reqHargaDetailProduk.QTY,
 		Harga: float64(reqHargaDetailProduk.Harga),
 		// ProdukID: hargaDetailProduk.ProdukId,

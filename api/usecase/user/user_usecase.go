@@ -2,11 +2,13 @@ package user
 
 import (
 	"context"
+	"errors"
 
 	"golang.org/x/sync/errgroup"
 
 	repo "github.com/be-sistem-informasi-konveksi/api/repository/user/mysql/gorm"
 	jenisSpvRepo "github.com/be-sistem-informasi-konveksi/api/repository/user/mysql/gorm/jenis_spv"
+	"github.com/be-sistem-informasi-konveksi/common/message"
 	req "github.com/be-sistem-informasi-konveksi/common/request/user"
 	res "github.com/be-sistem-informasi-konveksi/common/response/user"
 	"github.com/be-sistem-informasi-konveksi/entity"
@@ -24,16 +26,14 @@ type UserUsecase interface {
 type userUsecase struct {
 	repo         repo.UserRepo
 	jenisSpvRepo jenisSpvRepo.JenisSpvRepo
-	// uuidGen      pkg.UuidGenerator
-	ulid      pkg.UlidPkg
-	paginate  helper.Paginate
-	encryptor helper.Encryptor
+	ulid         pkg.UlidPkg
+	paginate     helper.Paginate
+	encryptor    helper.Encryptor
 }
 
 func NewUserUsecase(
 	repo repo.UserRepo,
 	jenisSpvRepo jenisSpvRepo.JenisSpvRepo,
-	// uuidGen pkg.UuidGenerator,
 	ulid pkg.UlidPkg,
 	paginate helper.Paginate,
 	encryptor helper.Encryptor,
@@ -48,7 +48,9 @@ func (u *userUsecase) Create(ctx context.Context, reqUser req.Create) error {
 		return err
 	}
 	user := entity.User{
-		ID:       id,
+		Base: entity.Base{
+			ID: id,
+		},
 		Nama:     reqUser.Nama,
 		Role:     reqUser.Role,
 		NoTelp:   reqUser.NoTelp,
@@ -67,8 +69,18 @@ func (u *userUsecase) Create(ctx context.Context, reqUser req.Create) error {
 }
 
 func (u *userUsecase) Update(ctx context.Context, reqUser req.Update) error {
+	_, err := u.repo.GetById(ctx, reqUser.ID)
+	if err != nil {
+		if err.Error() == "record not found" {
+			return errors.New(message.UserNotFound)
+		}
+		return err
+	}
+
 	user := entity.User{
-		ID:       reqUser.ID,
+		Base: entity.Base{
+			ID: reqUser.ID,
+		},
 		Nama:     reqUser.Nama,
 		Role:     reqUser.Role,
 		NoTelp:   reqUser.NoTelp,
@@ -88,7 +100,7 @@ func (u *userUsecase) Update(ctx context.Context, reqUser req.Update) error {
 		user.JenisSpvID = reqUser.JenisSpvID
 	}
 
-	err := u.repo.Update(ctx, &user)
+	err = u.repo.Update(ctx, &user)
 	if err != nil {
 		return err
 	}

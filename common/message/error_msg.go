@@ -44,6 +44,7 @@ var (
 // user
 var (
 	PasswordIsNotStrong = "password setidaknya harus berisi angka dan huruf besar"
+	UserNotFound        = "user tidak ditemukan"
 )
 
 // akuntansi

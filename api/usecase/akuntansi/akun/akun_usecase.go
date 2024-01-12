@@ -43,7 +43,9 @@ func (u *akunUsecase) Create(ctx context.Context, reqAkun req.Create) error {
 	kode := kelompokAkun.Kode + reqAkun.Kode
 
 	data := entity.Akun{
-		ID:             u.ulid.MakeUlid().String(),
+		Base: entity.Base{
+			ID: u.ulid.MakeUlid().String(),
+		},
 		Nama:           reqAkun.Nama,
 		Kode:           kode,
 		KelompokAkunID: reqAkun.KelompokAkunID,
@@ -92,7 +94,9 @@ func (u *akunUsecase) Update(ctx context.Context, reqAkun req.Update) error {
 	}
 
 	return u.repo.Update(ctx, &entity.Akun{
-		ID:             reqAkun.ID,
+		Base: entity.Base{
+			ID: reqAkun.ID,
+		},
 		KelompokAkunID: reqAkun.KelompokAkunID,
 		Nama:           reqAkun.Nama,
 		Kode:           newKode,

@@ -1,16 +1,12 @@
 package entity
 
-import (
-	"time"
-)
-
 // var SaldoNormal = map[string]bool{
 // 	"DEBIT":  true,
 // 	"KREDIT": true,
 // }
 
 type Akun struct {
-	ID             string        `gorm:"type:varchar(26);primaryKey;index:idx_akun_id;not null" json:"id"`
+	Base
 	KelompokAkunID string        `gorm:"type:varchar(26);index:idx_kelompok_akun_id;not null" json:"-"`
 	KelompokAkun   *KelompokAkun `json:"kelompok_akun,omitempty"`
 	Nama           string        `gorm:"type:varchar(150);uniqueIndex;not null" json:"nama"`
@@ -19,9 +15,6 @@ type Akun struct {
 	Saldo          float64       `gorm:"type:decimal(10,2);default:0" json:"saldo"`
 	Deskripsi      string        `gorm:"type:TEXT;default:null" json:"deskripsi,omitempty"`
 	AyatJurnals    []AyatJurnal  `gorm:"foreignKey:AkunID;references:ID" json:"ayat_jurnal,omitempty"`
-	CreatedAt      *time.Time    `json:"created_at,omitempty"`
-	UpdatedAt      *time.Time    `json:"updated_at,omitempty"`
-	// DeletedAt      *gorm.DeletedAt `gorm:"index" json:"deleted_at,omitempty"`
 }
 
 func (Akun) TableName() string {

@@ -45,7 +45,9 @@ func (u *transaksiUsecase) Delete(ctx context.Context, id string) error {
 
 	for i, v := range detailAkuns {
 		newAkuns[i] = entity.Akun{
-			ID:             v.ID,
+			Base: entity.Base{
+				ID: v.ID,
+			},
 			KelompokAkunID: v.KelID,
 			Saldo:          v.Saldo - v.TotalSaldoTr,
 			Nama:           v.Nama,
@@ -73,7 +75,9 @@ func (u *transaksiUsecase) Update(ctx context.Context, reqTransaksi req.Update) 
 	updateTrParam := repo.UpdateParam{}
 
 	newTr := entity.Transaksi{
-		ID:              reqTransaksi.ID,
+		Base: entity.Base{
+			ID: reqTransaksi.ID,
+		},
 		Keterangan:      reqTransaksi.Keterangan,
 		BuktiPembayaran: reqTransaksi.BuktiPembayaran,
 	}
@@ -115,7 +119,9 @@ func (u *transaksiUsecase) Update(ctx context.Context, reqTransaksi req.Update) 
 			akun, ok := akunsMap[v.AkunID]
 			if !ok {
 				akun = entity.Akun{
-					ID:             v.Akun.ID,
+					Base: entity.Base{
+						ID: v.Akun.ID,
+					},
 					Saldo:          v.Akun.Saldo,
 					Nama:           v.Akun.Nama,
 					Kode:           v.Akun.Kode,
@@ -165,7 +171,9 @@ func (u *transaksiUsecase) Update(ctx context.Context, reqTransaksi req.Update) 
 				}
 
 				ayatJurnal := entity.AyatJurnal{
-					ID:          u.ulid.MakeUlid().String(),
+					Base: entity.Base{
+						ID: u.ulid.MakeUlid().String(),
+					},
 					TransaksiID: reqTransaksi.ID,
 					AkunID:      ay.AkunID,
 					Kredit:      ay.Kredit,
@@ -261,7 +269,9 @@ func (u *transaksiUsecase) Create(ctx context.Context, reqTransaksi req.Create) 
 			// mapAkuns[v.AkunID] = repoAkun
 			updateAkuns = append(updateAkuns, &akun)
 			ayatJurnal := entity.AyatJurnal{
-				ID:          u.ulid.MakeUlid().String(),
+				Base: entity.Base{
+					ID: u.ulid.MakeUlid().String(),
+				},
 				TransaksiID: transaksiID,
 				AkunID:      v.AkunID,
 				Kredit:      v.Kredit,
@@ -286,7 +296,9 @@ func (u *transaksiUsecase) Create(ctx context.Context, reqTransaksi req.Create) 
 	}
 
 	dataTransaksi := entity.Transaksi{
-		ID:              transaksiID,
+		Base: entity.Base{
+			ID: transaksiID,
+		},
 		Tanggal:         parsedTime,
 		Keterangan:      reqTransaksi.Keterangan,
 		BuktiPembayaran: reqTransaksi.BuktiPembayaran,

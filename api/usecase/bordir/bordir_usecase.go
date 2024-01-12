@@ -6,7 +6,6 @@ import (
 	repo "github.com/be-sistem-informasi-konveksi/api/repository/bordir/mysql/gorm"
 	req "github.com/be-sistem-informasi-konveksi/common/request/bordir"
 	"github.com/be-sistem-informasi-konveksi/entity"
-	"github.com/be-sistem-informasi-konveksi/helper"
 	"github.com/be-sistem-informasi-konveksi/pkg"
 )
 
@@ -21,18 +20,19 @@ type BordirUsecase interface {
 type bordirUsecase struct {
 	repo repo.BordirRepo
 	// uuidGen  pkg.UuidGenerator
-	ulid     pkg.UlidPkg
-	paginate helper.Paginate
+	ulid pkg.UlidPkg
 }
 
-func NewBordirUsecase(repo repo.BordirRepo, ulid pkg.UlidPkg, paginate helper.Paginate) BordirUsecase {
-	return &bordirUsecase{repo, ulid, paginate}
+func NewBordirUsecase(repo repo.BordirRepo, ulid pkg.UlidPkg) BordirUsecase {
+	return &bordirUsecase{repo, ulid}
 }
 
 func (u *bordirUsecase) Create(ctx context.Context, reqBordir req.Create) error {
 	id := u.ulid.MakeUlid().String()
 	data := entity.Bordir{
-		ID:    id,
+		Base: entity.Base{
+			ID: id,
+		},
 		Nama:  reqBordir.Nama,
 		Harga: reqBordir.Harga,
 	}
@@ -45,7 +45,9 @@ func (u *bordirUsecase) Update(ctx context.Context, reqBordir req.Update) error 
 		return err
 	}
 	data := entity.Bordir{
-		ID:    reqBordir.ID,
+		Base: entity.Base{
+			ID: reqBordir.ID,
+		},
 		Nama:  reqBordir.Nama,
 		Harga: reqBordir.Harga,
 	}

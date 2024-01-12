@@ -33,11 +33,10 @@ type akuntansiHandlerInit struct {
 	DB        *gorm.DB
 	validator pkg.Validator
 	ulid      pkg.UlidPkg
-	ac        pkg.AccountingPkg
 }
 
-func NewAkuntansiHandlerInit(DB *gorm.DB, validator pkg.Validator, ulid pkg.UlidPkg, ac pkg.AccountingPkg) AkuntansiHandlerInit {
-	return &akuntansiHandlerInit{DB, validator, ulid, ac}
+func NewAkuntansiHandlerInit(DB *gorm.DB, validator pkg.Validator, ulid pkg.UlidPkg) AkuntansiHandlerInit {
+	return &akuntansiHandlerInit{DB, validator, ulid}
 }
 
 func (d *akuntansiHandlerInit) AkunHandler() akunHandler.AkunHandler {

@@ -26,9 +26,8 @@ type ProdukUsecase interface {
 type produkUsecase struct {
 	repo         repo.ProdukRepo
 	kategoriRepo kategoriRepo.KategoriProdukRepo
-	// uuidGen      pkg.UuidGenerator
-	ulid     pkg.UlidPkg
-	paginate helper.Paginate
+	ulid         pkg.UlidPkg
+	paginate     helper.Paginate
 }
 
 func NewProdukUsecase(
@@ -47,7 +46,9 @@ func (u *produkUsecase) Create(ctx context.Context, produk req.Create) error {
 	}
 	id := u.ulid.MakeUlid().String()
 	data := entity.Produk{
-		ID:               id,
+		Base: entity.Base{
+			ID: id,
+		},
 		Nama:             produk.Nama,
 		KategoriProdukID: produk.KategoriID,
 	}
@@ -121,7 +122,9 @@ func (u *produkUsecase) Update(ctx context.Context, reqProduk req.Update) error 
 	}
 
 	data := entity.Produk{
-		ID:               reqProduk.ID,
+		Base: entity.Base{
+			ID: reqProduk.ID,
+		},
 		Nama:             reqProduk.Nama,
 		KategoriProdukID: reqProduk.KategoriID,
 	}

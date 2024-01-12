@@ -32,6 +32,7 @@ func NewBordirHandler(uc usecase.BordirUsecase, validator pkg.Validator) BordirH
 
 func (h *bordirHandler) Create(c *fiber.Ctx) error {
 	req := new(req.Create)
+	c.BodyParser(req)
 	errValidate := h.validator.Validate(req)
 	if errValidate != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(errValidate)

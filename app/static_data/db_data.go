@@ -31,7 +31,9 @@ var (
 
 		for i, kelompokAkun := range dataKelompokAkun {
 			datas = append(datas, entity.KelompokAkun{
-				ID:           ulid.MakeUlid().String(),
+				Base: entity.Base{
+					ID: ulid.MakeUlid().String(),
+				},
 				Nama:         kelompokAkun.Nama,
 				Kode:         fmt.Sprintf("%s%d", entity.KategoriAkun[kelompokAkun.KategoriAkun], i+1),
 				KategoriAkun: kelompokAkun.KategoriAkun,
@@ -105,7 +107,9 @@ var (
 		for i, kelompokAkun := range kelompokAkuns {
 			for j, akun := range dataAkun[i] {
 				datas = append(datas, entity.Akun{
-					ID:             ulid.MakeUlid().String(),
+					Base: entity.Base{
+						ID: ulid.MakeUlid().String(),
+					},
 					KelompokAkunID: kelompokAkun.ID,
 					Nama:           akun.Nama,
 					Deskripsi:      akun.Deskripsi,

@@ -69,12 +69,10 @@ func (dbgc *DBGorm) InitDBGorm(ulid pkg.UlidPkg) *gorm.DB {
 	// user & jenis spv
 	autoMigrateEntities(db, &entity.JenisSpv{}, &entity.User{})
 
-	// &entity.GolonganAkun{}
 	// akuntansi
 	autoMigrateEntities(db, &entity.KelompokAkun{}, &entity.Akun{}, &entity.Transaksi{}, &entity.AyatJurnal{})
-
+	// default value for akuntansi
 	klmpkData := static_data.KelompokAkuns(ulid)
-	// golData := static_data.GolonganAkun(klmpkData, ulid)
 	akun := static_data.Akuns(klmpkData, ulid)
 
 	err = addDefultValues(db, klmpkData, akun)
@@ -85,6 +83,9 @@ func (dbgc *DBGorm) InitDBGorm(ulid pkg.UlidPkg) *gorm.DB {
 			os.Exit(1)
 		}
 	}
+
+	// invoice
+	autoMigrateEntities(db, &entity.StatusProduksi{}, &entity.Invoice{}, &entity.DetailInvoice{})
 
 	return db
 }

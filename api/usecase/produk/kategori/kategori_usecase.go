@@ -32,7 +32,9 @@ func NewKategoriProdukUsecase(repo repo.KategoriProdukRepo, ulid pkg.UlidPkg, pa
 func (u *kategoriProdukUsecase) Create(ctx context.Context, reqKategoriProduk req.Create) error {
 	id := u.ulid.MakeUlid().String()
 	data := entity.KategoriProduk{
-		ID:   id,
+		Base: entity.Base{
+			ID: id,
+		},
 		Nama: reqKategoriProduk.Nama,
 	}
 	return u.repo.Create(ctx, &data)
@@ -44,7 +46,9 @@ func (u *kategoriProdukUsecase) Update(ctx context.Context, reqKategoriProduk re
 		return err
 	}
 	data := entity.KategoriProduk{
-		ID:   reqKategoriProduk.ID,
+		Base: entity.Base{
+			ID: reqKategoriProduk.ID,
+		},
 		Nama: reqKategoriProduk.Nama,
 	}
 

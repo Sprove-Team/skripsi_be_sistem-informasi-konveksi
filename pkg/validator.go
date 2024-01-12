@@ -2,8 +2,10 @@ package pkg
 
 import (
 	"bytes"
+	"fmt"
 	"net/url"
 	"strings"
+	"sync"
 	"unicode"
 
 	ut "github.com/go-playground/universal-translator"
@@ -128,16 +130,44 @@ func camelToSnake(s string) string {
 	return buf.String()
 }
 
+type str struct {
+	value string
+}
+
+var strPool = sync.Pool{
+	New: func() any {
+		return new(str)
+	},
+}
+
 func (x *xValidator) Validate(d interface{}) *response.BaseFormatError {
 	validatorErrors := map[string][]string{} // Use a map for validation errors
 
 	errs := x.validator.Struct(d)
 
+	field := strPool.Get().(*str)
+	fullField := strPool.Get().(*str)
+	message := strPool.Get().(*str)
+	namespace := make([]string, 0, 2)
 	if errs != nil {
 		for _, err := range errs.(validator.ValidationErrors) {
-			field := camelToSnake(err.Field())
-			message := strings.ReplaceAll(err.Translate(x.trans), err.Field(), field)
-			validatorErrors[field] = append(validatorErrors[field], message)
+			// strings.Split(err.StructField())
+			field.value = camelToSnake(err.Field())
+			namespace = strings.Split(err.Namespace(), ".")
+			if len(namespace) > 2 {
+				// Add prefix "detail_invoice." for nested fields
+				fullField.value = fmt.Sprintf("%s.%s", camelToSnake(namespace[1]), field.value)
+				message.value = strings.ReplaceAll(err.Translate(x.trans), err.Field(), fullField.value)
+				validatorErrors[fullField.value] = append(validatorErrors[fullField.value], message.value)
+			} else {
+				message.value = strings.ReplaceAll(err.Translate(x.trans), err.Field(), field.value)
+				validatorErrors[field.value] = append(validatorErrors[field.value], message.value)
+			}
+			// Reset and put the objects back to the pool
+			namespace = namespace[:0] // Reset slice without allocating new memory
+			strPool.Put(field)
+			strPool.Put(fullField)
+			strPool.Put(message)
 		}
 	}
 
@@ -148,22 +178,3 @@ func (x *xValidator) Validate(d interface{}) *response.BaseFormatError {
 
 	return nil // No validation errors
 }
-
-// func (x *xValidator) Validate(d interface{}) response.BaseFormatError {
-// 	validatorErrors := response.BaseFormatError{}
-//
-// 	errs := x.validator.Struct(d)
-//
-// 	if errs != nil {
-// 		// elem.Errors
-//     errors := map[string][]string{}
-// 		for _, err := range errs.(validator.ValidationErrors) {
-// 			var elem response.BaseFormatError
-// 			field := camelToSnake(err.Field())
-// 			// elem.FieldName = field
-// 			// elem.Message = strings.ReplaceAll(err.Translate(x.trans), err.Field(), field)
-// 			validatorErrors = append(validatorErrors, elem)
-// 		}
-// 	}
-// 	return validatorErrors
-// }

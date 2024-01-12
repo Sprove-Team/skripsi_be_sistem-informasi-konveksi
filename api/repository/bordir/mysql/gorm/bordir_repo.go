@@ -6,6 +6,7 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/be-sistem-informasi-konveksi/entity"
+	"github.com/be-sistem-informasi-konveksi/helper"
 )
 
 type BordirRepo interface {
@@ -20,7 +21,7 @@ type bordirRepo struct {
 	DB *gorm.DB
 }
 
-func NewProdukRepo(DB *gorm.DB) BordirRepo {
+func NewBordirRepo(DB *gorm.DB) BordirRepo {
 	return &bordirRepo{DB}
 }
 
@@ -39,6 +40,10 @@ func (r *bordirRepo) Update(ctx context.Context, bordir *entity.Bordir) error {
 func (r *bordirRepo) GetById(ctx context.Context, id string) (entity.Bordir, error) {
 	data := entity.Bordir{}
 	err := r.DB.WithContext(ctx).Where("id = ?", id).First(&data).Error
+	if err != nil {
+		helper.LogsError(err)
+		return entity.Bordir{}, err
+	}
 	return data, err
 }
 

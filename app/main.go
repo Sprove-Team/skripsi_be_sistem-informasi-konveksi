@@ -19,7 +19,6 @@ func main() {
 	// pkg
 	validator := pkg.NewValidator()
 	ulidPkg := pkg.NewUlidPkg()
-	ac := pkg.NewAccounting()
 
 	dbGormConf := config.DBGorm{
 		DB_Username: os.Getenv("DB_USERNAME"),
@@ -64,7 +63,7 @@ func main() {
 			}
 
 			// bordir
-			bordirHandler := handler_init.NewBordirHandlerInit(dbGorm, validator, ulidPkg, paginate)
+			bordirHandler := handler_init.NewBordirHandlerInit(dbGorm, validator, ulidPkg)
 			bordirRoute := route.NewBordirRoute(bordirHandler)
 			bordirGroup := direktur.Group("/bordir")
 			{
@@ -89,16 +88,23 @@ func main() {
 			}
 
 			// akuntansi
-			akuntansiHandler := handler_init.NewAkuntansiHandlerInit(dbGorm, validator, ulidPkg, ac)
+			akuntansiHandler := handler_init.NewAkuntansiHandlerInit(dbGorm, validator, ulidPkg)
 			akuntansiRoute := route.NewAkuntansiRoute(akuntansiHandler)
 			akuntansiGroup := direktur.Group("/akuntansi")
 			{
 				akuntansiGroup.Route("", akuntansiRoute.Akuntansi) // pelaporan akuntansi
 				akuntansiGroup.Route("/akun", akuntansiRoute.Akun)
-				// akuntansiGroup.Route("/golongan_akun", akuntansiRoute.GolonganAkun)
 				akuntansiGroup.Route("/kelompok_akun", akuntansiRoute.KelompokAkun)
 				akuntansiGroup.Route("/transaksi", akuntansiRoute.Transaksi)
 			}
+			// invoice
+			invoiceHandler := handler_init.NewInvoiceHandlerInit(dbGorm, validator, ulidPkg)
+			invoiceRoute := route.NewInvoiceRoute(invoiceHandler)
+			invoiceGroup := direktur.Group("/invoice")
+			{
+				invoiceGroup.Route("", invoiceRoute.Invoice)
+			}
+
 		}
 	}
 

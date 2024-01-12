@@ -19,9 +19,9 @@ type JenisSpvUsecase interface {
 }
 
 type jenisSpvUsecase struct {
-	repo     repo.JenisSpvRepo
+	repo repo.JenisSpvRepo
 	// uuidGen  pkg.UuidGenerator
-	ulid pkg.UlidPkg
+	ulid     pkg.UlidPkg
 	paginate helper.Paginate
 }
 
@@ -32,7 +32,9 @@ func NewJenisSpvUsecase(repo repo.JenisSpvRepo, ulid pkg.UlidPkg, paginate helpe
 func (u *jenisSpvUsecase) Create(ctx context.Context, reqJenisSpv req.Create) error {
 	id := u.ulid.MakeUlid().String()
 	jenis_spv := entity.JenisSpv{
-		ID:   id,
+		Base: entity.Base{
+			ID: id,
+		},
 		Nama: reqJenisSpv.Nama,
 	}
 	return u.repo.Create(ctx, &jenis_spv)
@@ -57,7 +59,9 @@ func (u *jenisSpvUsecase) GetAll(ctx context.Context) ([]entity.JenisSpv, error)
 
 func (u *jenisSpvUsecase) Update(ctx context.Context, reqJenisSpv req.Update) error {
 	jenisSpv := entity.JenisSpv{
-		ID:   reqJenisSpv.ID,
+		Base: entity.Base{
+			ID: reqJenisSpv.ID,
+		},
 		Nama: reqJenisSpv.Nama,
 	}
 	return u.repo.Update(ctx, &jenisSpv)

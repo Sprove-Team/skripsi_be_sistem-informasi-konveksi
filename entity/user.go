@@ -9,7 +9,7 @@ var Roles = map[string]bool{
 }
 
 type User struct {
-	ID         string `gorm:"type:varchar(26);primaryKey;uniqueIndex;not null" json:"id"`
+	Base
 	Nama       string `gorm:"type:varchar(150);not null" json:"nama"`
 	Role       string `gorm:"type:enum('DIREKTUR','BENDAHARA','ADMIN','MANAJER_PRODUKSI','SUPERVISOR')" json:"role"`
 	Username   string `gorm:"type:varchar(150);uniqueIndex;not null" json:"username"`

@@ -37,7 +37,7 @@ func (h *hargaDetailProdukHandler) Create(c *fiber.Ctx) error {
 
 	errValidate := h.validator.Validate(req)
 	if errValidate != nil {
-		return c.Status(fiber.StatusRequestTimeout).JSON(errValidate)
+		return c.Status(fiber.StatusBadRequest).JSON(errValidate)
 	}
 	ctx := c.UserContext()
 	err := h.uc.Create(ctx, *req)

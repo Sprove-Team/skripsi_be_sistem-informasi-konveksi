@@ -37,7 +37,9 @@ func (u *kelompokAkunUsecase) Create(ctx context.Context, reqKelompokAkun req.Cr
 		return errors.New(message.KategoriAkunNotFound)
 	}
 	data := entity.KelompokAkun{
-		ID:           u.ulid.MakeUlid().String(),
+		Base: entity.Base{
+			ID: u.ulid.MakeUlid().String(),
+		},
 		Nama:         strings.ToLower(reqKelompokAkun.Nama),
 		Kode:         kodeKategori + reqKelompokAkun.Kode,
 		KategoriAkun: reqKelompokAkun.KategoriAkun,
@@ -82,7 +84,9 @@ func (u *kelompokAkunUsecase) Update(ctx context.Context, reqKelompokAkun req.Up
 	}
 
 	dataUp := entity.KelompokAkun{
-		ID:           reqKelompokAkun.ID,
+		Base: entity.Base{
+			ID: reqKelompokAkun.ID,
+		},
 		Nama:         strings.ToLower(reqKelompokAkun.Nama),
 		KategoriAkun: reqKelompokAkun.KategoriAkun,
 		Kode:         newKode,
