@@ -33,7 +33,6 @@ type SearchFilter struct {
 
 type GetAll struct {
 	Search SearchFilter `json:"search" validate:"omitempty"`
-	// Page   int          `query:"page" validate:"omitempty,number"`
-	Next  string `query:"page" validate:"omitempty"`
-	Limit int    `query:"limit" validate:"omitempty,number"`
+	Next   string       `query:"page" validate:"omitempty"`
+	Limit  int          `query:"limit" validate:"omitempty,number"`
 }

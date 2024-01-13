@@ -76,6 +76,20 @@ func NewValidator() Validator {
 		return t
 	})
 
+	validate.RegisterTranslation("required_without", trans, func(ut ut.Translator) error {
+		return ut.Add("required_without", "{0} wajib diisi jika {1} tidak diisi", true)
+	}, func(ut ut.Translator, fe validator.FieldError) string {
+		t, _ := ut.T("required_without", camelToSnake(fe.Field()), camelToSnake(fe.Param()))
+		return t
+	})
+
+	validate.RegisterTranslation("excluded_with", trans, func(ut ut.Translator) error {
+		return ut.Add("excluded_with", "jika {0} diisi maka {1} harus kosong", true)
+	}, func(ut ut.Translator, fe validator.FieldError) string {
+		t, _ := ut.T("excluded_with", camelToSnake(fe.Field()), camelToSnake(fe.Param()))
+		return t
+	})
+
 	return &xValidator{validate, trans}
 }
 
@@ -154,6 +168,7 @@ func (x *xValidator) Validate(d interface{}) *response.BaseFormatError {
 			// strings.Split(err.StructField())
 			field.value = camelToSnake(err.Field())
 			namespace = strings.Split(err.Namespace(), ".")
+
 			if len(namespace) > 2 {
 				// Add prefix "detail_invoice." for nested fields
 				fullField.value = fmt.Sprintf("%s.%s", camelToSnake(namespace[1]), field.value)

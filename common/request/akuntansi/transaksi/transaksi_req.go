@@ -2,15 +2,15 @@ package akuntansi
 
 type ReqAyatJurnal struct {
 	AkunID string  `json:"akun_id" validate:"required,ulid"`
-	Kredit float64 `json:"kredit" validate:"required_unless=Debit "`
-	Debit  float64 `json:"debit" validate:"required_unless=Kredit "`
+	Kredit float64 `json:"kredit" validate:"number,required_without=Debit,excluded_with=Debit"`
+	Debit  float64 `json:"debit" validate:"number,required_without=Kredit,excluded_with=Kredit"`
 }
 
 type Create struct {
 	BuktiPembayaran string          `json:"bukti_pembayaran" validate:"omitempty,url_cloud_storage"`
 	Tanggal         string          `json:"tanggal" validate:"required,datetime=2006-01-02T15:04:05Z07:00"`
 	Keterangan      string          `json:"keterangan" validate:"required"`
-	AyatJurnals     []ReqAyatJurnal `json:"ayat_jurnal" validate:"required,min=2"`
+	AyatJurnal      []ReqAyatJurnal `json:"ayat_jurnal" validate:"required,min=2,dive"`
 }
 
 type Update struct {
@@ -18,7 +18,7 @@ type Update struct {
 	BuktiPembayaran string          `json:"bukti_pembayaran" validate:"omitempty,url_cloud_storage"`
 	Tanggal         string          `json:"tanggal" validate:"omitempty,datetime=2006-01-02T15:04:05Z07:00"`
 	Keterangan      string          `json:"keterangan" validate:"omitempty"`
-	AyatJurnals     []ReqAyatJurnal `json:"ayat_jurnal" validate:"omitempty,min=2"`
+	AyatJurnal      []ReqAyatJurnal `json:"ayat_jurnal" validate:"omitempty,min=2,dive"`
 }
 
 type GetAll struct {

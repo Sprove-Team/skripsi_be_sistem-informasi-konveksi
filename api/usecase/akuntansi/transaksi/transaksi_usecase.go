@@ -67,7 +67,7 @@ func (u *transaksiUsecase) Update(ctx context.Context, reqTransaksi req.Update) 
 		return err
 	}
 
-	lengthReqAyatJurnals := len(reqTransaksi.AyatJurnals)
+	lengthReqAyatJurnals := len(reqTransaksi.AyatJurnal)
 	lengthOldAyatJurnals := len(oldTr.AyatJurnals)
 
 	// isReqAyatJurnalsEmpty := lengthReqAyatJurnals == 0
@@ -96,10 +96,10 @@ func (u *transaksiUsecase) Update(ctx context.Context, reqTransaksi req.Update) 
 	}
 
 	// change the saldo akun if the ayat jurnals is difference
-	if !isSameReqAyJurnals(oldAy, reqTransaksi.AyatJurnals) {
+	if !isSameReqAyJurnals(oldAy, reqTransaksi.AyatJurnal) {
 
 		akunIDs := make([]string, lengthReqAyatJurnals)
-		for i, ay := range reqTransaksi.AyatJurnals {
+		for i, ay := range reqTransaksi.AyatJurnal {
 			akunIDs[i] = ay.AkunID
 		}
 
@@ -139,20 +139,20 @@ func (u *transaksiUsecase) Update(ctx context.Context, reqTransaksi req.Update) 
 		// validate kredit, debit and get totalTransaksi
 		var totalTransaksi float64
 
-		if err := isKreditEqualToDebit(reqTransaksi.AyatJurnals, &totalTransaksi); err != nil {
+		if err := isKreditEqualToDebit(reqTransaksi.AyatJurnal, &totalTransaksi); err != nil {
 			return err
 		}
-		if err := isDuplicateAkun(reqTransaksi.AyatJurnals); err != nil {
+		if err := isDuplicateAkun(reqTransaksi.AyatJurnal); err != nil {
 			return err
 		}
 
 		newTr.Total = totalTransaksi
 
 		// add newAyatJurnals
-		newAyatJurnals := make([]*entity.AyatJurnal, len(reqTransaksi.AyatJurnals))
+		newAyatJurnals := make([]*entity.AyatJurnal, len(reqTransaksi.AyatJurnal))
 
 		maxConcurent := make(chan struct{}, 10)
-		for i, ay := range reqTransaksi.AyatJurnals {
+		for i, ay := range reqTransaksi.AyatJurnal {
 			wg.Add(1)
 			maxConcurent <- struct{}{}
 			go func(i int, ay req.ReqAyatJurnal) {
@@ -217,17 +217,17 @@ func (u *transaksiUsecase) Create(ctx context.Context, reqTransaksi req.Create) 
 	// wg := &sync.WaitGroup{}
 
 	var totalTransaksi float64
-	if err := isKreditEqualToDebit(reqTransaksi.AyatJurnals, &totalTransaksi); err != nil {
+	if err := isKreditEqualToDebit(reqTransaksi.AyatJurnal, &totalTransaksi); err != nil {
 		return err
 	}
-	if err := isDuplicateAkun(reqTransaksi.AyatJurnals); err != nil {
+	if err := isDuplicateAkun(reqTransaksi.AyatJurnal); err != nil {
 		return err
 	}
 	// akun, err := u.repoAkun.GetById(ctx, )
 
-	akunIds := make([]string, len(reqTransaksi.AyatJurnals))
+	akunIds := make([]string, len(reqTransaksi.AyatJurnal))
 
-	for i, v := range reqTransaksi.AyatJurnals {
+	for i, v := range reqTransaksi.AyatJurnal {
 		akunIds[i] = v.AkunID
 	}
 
@@ -243,14 +243,14 @@ func (u *transaksiUsecase) Create(ctx context.Context, reqTransaksi req.Create) 
 		mapAkuns[akun.ID] = akun
 	}
 
-	dataAyatJurnals := make([]*entity.AyatJurnal, len(reqTransaksi.AyatJurnals))
+	dataAyatJurnals := make([]*entity.AyatJurnal, len(reqTransaksi.AyatJurnal))
 	transaksiID := u.ulid.MakeUlid().String()
 
 	updateAkuns := []*entity.Akun{}
 	m := &sync.Mutex{}
 	g := errgroup.Group{}
 
-	for i, v := range reqTransaksi.AyatJurnals {
+	for i, v := range reqTransaksi.AyatJurnal {
 		i := i
 		v := v
 		g.Go(func() error {

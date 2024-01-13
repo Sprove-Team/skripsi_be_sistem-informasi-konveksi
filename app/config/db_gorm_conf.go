@@ -6,6 +6,7 @@ import (
 	"os"
 	"time"
 
+	"golang.org/x/sync/errgroup"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -60,32 +61,60 @@ func (dbgc *DBGorm) InitDBGorm(ulid pkg.UlidPkg) *gorm.DB {
 		helper.LogsError(err)
 		os.Exit(1)
 	}
+	// defaultValueChan := make(chan struct{}, 2)
+
+	g := &errgroup.Group{}
+	g.SetLimit(10)
 	// produk
-	autoMigrateEntities(db, &entity.KategoriProduk{}, &entity.Produk{}, &entity.HargaDetailProduk{})
+	g.Go(func() error {
+		autoMigrateEntities(db, &entity.KategoriProduk{}, &entity.Produk{}, &entity.HargaDetailProduk{})
+		return nil
+	})
 
 	// bordir
-	autoMigrateEntities(db, &entity.Bordir{}, &entity.Sablon{})
+	g.Go(func() error {
+		autoMigrateEntities(db, &entity.Bordir{}, &entity.Sablon{})
+		return nil
+	})
 
 	// user & jenis spv
-	autoMigrateEntities(db, &entity.JenisSpv{}, &entity.User{})
+	g.Go(func() error {
+		autoMigrateEntities(db, &entity.JenisSpv{}, &entity.User{})
+		return nil
+	})
 
 	// akuntansi
-	autoMigrateEntities(db, &entity.KelompokAkun{}, &entity.Akun{}, &entity.Transaksi{}, &entity.AyatJurnal{})
+	g.Go(func() error {
+		autoMigrateEntities(db, &entity.KelompokAkun{}, &entity.Akun{}, &entity.Transaksi{}, &entity.AyatJurnal{})
+		return nil
+	})
+
+	// invoice
+	g.Go(func() error {
+		autoMigrateEntities(db, &entity.StatusProduksi{}, &entity.Invoice{}, &entity.DetailInvoice{})
+		return nil
+	})
+
+	// add default value
 	// default value for akuntansi
-	klmpkData := static_data.KelompokAkuns(ulid)
-	akun := static_data.Akuns(klmpkData, ulid)
+	g.Go(func() error {
+		klmpkData := static_data.KelompokAkuns(ulid)
+		akun := static_data.Akuns(klmpkData, ulid)
 
-	err = addDefultValues(db, klmpkData, akun)
+		err = addDefultValues(db, klmpkData, akun)
 
-	if err != nil {
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+
+	if err := g.Wait(); err != nil {
 		if err.Error() != "duplicated key not allowed" {
 			helper.LogsError(err)
 			os.Exit(1)
 		}
 	}
-
-	// invoice
-	autoMigrateEntities(db, &entity.StatusProduksi{}, &entity.Invoice{}, &entity.DetailInvoice{})
 
 	return db
 }

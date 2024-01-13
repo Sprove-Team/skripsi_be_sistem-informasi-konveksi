@@ -62,16 +62,16 @@ services:
   #   volumes:
   #     - ./db/redis/backup:/data
 
-  app:
-    container_name: app-si_konveksi
-    build: .
-    env_file:
-      - .env
-    ports:
-      - ${APP_PORT}:${APP_PORT}
-    volumes:
-      - ./:/usr/src/app
-    restart: on-failure
-    depends_on:
-      db:
-        condition: service_healthy
+  # app:
+  #   container_name: app-si_konveksi
+  #   build: .
+  #   env_file:
+  #     - .env
+  #   ports:
+  #     - ${APP_PORT}:${APP_PORT}
+  #   volumes:
+  #     - ./:/usr/src/app
+  #   restart: on-failure
+  #   depends_on:
+  #     db:
+  #       condition: service_healthy

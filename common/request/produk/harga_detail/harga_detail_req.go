@@ -11,8 +11,7 @@ type Create struct {
 }
 
 type Update struct {
-	ID string `params:"id" validate:"required,ulid"`
-	// ProdukId string  `json:"produk_id" validate:"omitempty,ulid"`
+	ID    string  `params:"id" validate:"required,ulid"`
 	QTY   uint    `json:"qty" validate:"omitempty,number"`
 	Harga float64 `json:"harga" validate:"omitempty,number"`
 }
