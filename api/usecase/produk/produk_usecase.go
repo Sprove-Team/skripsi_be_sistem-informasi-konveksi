@@ -42,6 +42,9 @@ func NewProdukUsecase(
 func (u *produkUsecase) Create(ctx context.Context, produk req.Create) error {
 	_, err := u.kategoriRepo.GetById(ctx, produk.KategoriID)
 	if err != nil {
+		if err.Error() == "record not found" {
+			return errors.New(message.KategoriProdukNotFound)
+		}
 		return err
 	}
 	id := u.ulid.MakeUlid().String()
@@ -110,7 +113,7 @@ func (u *produkUsecase) Update(ctx context.Context, reqProduk req.Update) error 
 		_, err := u.kategoriRepo.GetById(ctx, reqProduk.KategoriID)
 		if err != nil {
 			if err.Error() == "record not found" {
-				return errors.New(message.KategoriNotFound)
+				return errors.New(message.KategoriProdukNotFound)
 			}
 			return err
 		}

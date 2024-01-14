@@ -26,9 +26,9 @@ var (
 	// data
 	ProdukNotFound = "produk tidak ditemukan"
 	// kategori
-	KategoriNotFound = "kategori produk tidak ditemukan"
+	KategoriProdukNotFound = "kategori produk tidak ditemukan"
 	// harga detail
-	HargaDetailNotFound = "harga detail produk tidak ditemukan"
+	HargaDetailProdukNotFound = "harga detail produk tidak ditemukan"
 )
 
 // bordir

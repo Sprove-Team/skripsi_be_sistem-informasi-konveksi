@@ -153,7 +153,7 @@ func (u *invoiceUsecase) Create(ctx context.Context, reqInvoice req.Create) erro
 					return err
 				}
 				if harga_produk == 0 {
-					return errors.New(message.HargaDetailNotFound)
+					return errors.New(message.HargaDetailProdukNotFound)
 				}
 				total_harga += harga_produk
 				detailInvoices[i] = entity.DetailInvoice{

@@ -3,6 +3,7 @@ package route
 import (
 	"github.com/gofiber/fiber/v2"
 
+	"github.com/be-sistem-informasi-konveksi/api/middleware/auth"
 	"github.com/be-sistem-informasi-konveksi/app/handler_init"
 )
 
@@ -12,11 +13,12 @@ type UserRoute interface {
 }
 
 type userRoute struct {
-	h handler_init.UserHandlerInit
+	h    handler_init.UserHandlerInit
+	auth auth.AuthMidleware
 }
 
-func NewUserRoute(h handler_init.UserHandlerInit) UserRoute {
-	return &userRoute{h}
+func NewUserRoute(h handler_init.UserHandlerInit, auth auth.AuthMidleware) UserRoute {
+	return &userRoute{h,auth}
 }
 
 func (ro *userRoute) User(router fiber.Router) {

@@ -72,7 +72,7 @@ func (h *kategoriProdukHandler) Update(c *fiber.Ctx) error {
 	if err != nil {
 		if err.Error() == "record not found" {
 			return c.Status(fiber.StatusNotFound).JSON(response.ErrorRes(fiber.ErrNotFound.Code, fiber.ErrNotFound.Message, map[string][]string{
-				"id": {message.KategoriNotFound},
+				"id": {message.KategoriProdukNotFound},
 			}))
 		}
 		return c.Status(fiber.StatusInternalServerError).JSON(response.ErrorRes(fiber.ErrInternalServerError.Code, fiber.ErrInternalServerError.Message, nil))
@@ -95,7 +95,7 @@ func (h *kategoriProdukHandler) Delete(c *fiber.Ctx) error {
 	if err != nil {
 		if err.Error() == "record not found" {
 			return c.Status(fiber.StatusNotFound).JSON(response.ErrorRes(fiber.ErrNotFound.Code, fiber.ErrNotFound.Message, map[string][]string{
-				"id": {message.KategoriNotFound},
+				"id": {message.KategoriProdukNotFound},
 			}))
 		}
 		return c.Status(fiber.StatusInternalServerError).JSON(response.ErrorRes(fiber.ErrInternalServerError.Code, fiber.ErrInternalServerError.Message, nil))
@@ -143,7 +143,7 @@ func (h *kategoriProdukHandler) GetById(c *fiber.Ctx) error {
 	if err != nil {
 		if err.Error() == "record not found" {
 			return c.Status(fiber.StatusNotFound).JSON(response.ErrorRes(fiber.ErrNotFound.Code, fiber.ErrNotFound.Message, map[string][]string{
-				"id": {message.KategoriNotFound},
+				"id": {message.KategoriProdukNotFound},
 			}))
 		}
 		return c.Status(fiber.StatusInternalServerError).JSON(response.ErrorRes(fiber.ErrInternalServerError.Code, fiber.ErrInternalServerError.Message, nil))

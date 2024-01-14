@@ -3,6 +3,7 @@ package route
 import (
 	"github.com/gofiber/fiber/v2"
 
+	"github.com/be-sistem-informasi-konveksi/api/middleware/auth"
 	"github.com/be-sistem-informasi-konveksi/app/handler_init"
 )
 
@@ -11,11 +12,12 @@ type SablonRoute interface {
 }
 
 type sablonRoute struct {
-	h handler_init.SablonHandlerInit
+	h    handler_init.SablonHandlerInit
+	auth auth.AuthMidleware
 }
 
-func NewSablonRoute(h handler_init.SablonHandlerInit) SablonRoute {
-	return &sablonRoute{h}
+func NewSablonRoute(h handler_init.SablonHandlerInit, auth auth.AuthMidleware) SablonRoute {
+	return &sablonRoute{h, auth}
 }
 
 func (ro *sablonRoute) Sablon(router fiber.Router) {

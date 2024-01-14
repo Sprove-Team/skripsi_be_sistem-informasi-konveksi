@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"os"
 	"strings"
 
 	jwtware "github.com/gofiber/contrib/jwt"
@@ -13,7 +14,7 @@ import (
 )
 
 type AuthMidleware interface {
-	Authorization(key, role string) fiber.Handler
+	Authorization(roles []string) fiber.Handler
 }
 
 type authMidleware struct {
@@ -24,15 +25,25 @@ func NewAuthMiddleware(userRepo userRepo.UserRepo) AuthMidleware {
 	return &authMidleware{userRepo}
 }
 
-func (a *authMidleware) Authorization(keyToken, role string) fiber.Handler {
+func (a *authMidleware) Authorization(roles []string) fiber.Handler {
+	if len(roles) <= 0 {
+		roles = []string{"DIREKTUR", "BENDAHARA", "ADMIN", "MANAJER_PRODUKSI", "SUPERVISOR"}
+	}
 	return jwtware.New(jwtware.Config{
 		Claims: new(pkg.Claims),
 		SigningKey: jwtware.SigningKey{
-			Key: []byte(keyToken),
+			Key: []byte(os.Getenv("TOKEN")),
 		},
 		SuccessHandler: func(c *fiber.Ctx) error {
 			user := c.Locals("user").(*jwt.Token).Claims.(*pkg.Claims)
-			if !strings.EqualFold(user.Role, role) {
+			var pass bool
+			for _, role := range roles {
+				if strings.EqualFold(user.Role, role) {
+					pass = true
+					break
+				}
+			}
+			if !pass {
 				return c.Status(fiber.StatusUnauthorized).JSON(response.ErrorRes(fiber.ErrUnauthorized.Code, fiber.ErrUnauthorized.Message, nil))
 			}
 			ctx := c.UserContext()
