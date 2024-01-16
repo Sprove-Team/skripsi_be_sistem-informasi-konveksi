@@ -9,11 +9,11 @@ import (
 )
 
 type ProdukRepo interface {
-	GetAll(ctx context.Context, param SearchProduk) ([]entity.Produk, error)
-	GetById(ctx context.Context, id string) (entity.Produk, error)
 	Create(ctx context.Context, produk *entity.Produk) error
-	Update(ctx context.Context, produk *entity.Produk) error
 	Delete(ctx context.Context, id string) error
+	Update(ctx context.Context, produk *entity.Produk) error
+	GetById(ctx context.Context, id string) (entity.Produk, error)
+	GetAll(ctx context.Context, param SearchProduk) ([]entity.Produk, error)
 }
 
 type produkRepo struct {

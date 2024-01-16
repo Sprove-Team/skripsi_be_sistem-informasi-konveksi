@@ -6,27 +6,24 @@ import (
 	repo "github.com/be-sistem-informasi-konveksi/api/repository/produk/mysql/gorm/kategori"
 	req "github.com/be-sistem-informasi-konveksi/common/request/produk/kategori"
 	"github.com/be-sistem-informasi-konveksi/entity"
-	"github.com/be-sistem-informasi-konveksi/helper"
 	"github.com/be-sistem-informasi-konveksi/pkg"
 )
 
 type KategoriProdukUsecase interface {
 	Create(ctx context.Context, reqKategoriProduk req.Create) error
-	Delete(ctx context.Context, id string) error
 	Update(ctx context.Context, reqKategoriProduk req.Update) error
-	GetAll(ctx context.Context, reqKategoriProduk req.GetAll) ([]entity.KategoriProduk, error)
+	Delete(ctx context.Context, id string) error
 	GetById(ctx context.Context, id string) (entity.KategoriProduk, error)
+	GetAll(ctx context.Context, reqKategoriProduk req.GetAll) ([]entity.KategoriProduk, error)
 }
 
 type kategoriProdukUsecase struct {
 	repo repo.KategoriProdukRepo
-	// uuidGen  pkg.UuidGenerator
-	ulid     pkg.UlidPkg
-	paginate helper.Paginate
+	ulid pkg.UlidPkg
 }
 
-func NewKategoriProdukUsecase(repo repo.KategoriProdukRepo, ulid pkg.UlidPkg, paginate helper.Paginate) KategoriProdukUsecase {
-	return &kategoriProdukUsecase{repo, ulid, paginate}
+func NewKategoriProdukUsecase(repo repo.KategoriProdukRepo, ulid pkg.UlidPkg) KategoriProdukUsecase {
+	return &kategoriProdukUsecase{repo, ulid}
 }
 
 func (u *kategoriProdukUsecase) Create(ctx context.Context, reqKategoriProduk req.Create) error {
@@ -83,7 +80,6 @@ func (u *kategoriProdukUsecase) GetAll(ctx context.Context, reqKategoriProduk re
 	if err != nil {
 		return nil, err
 	}
-	// totalPage := u.paginate.GetTotalPages(int(totalData), limit)
 
 	return datas, err
 }

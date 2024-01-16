@@ -5,15 +5,20 @@ type HargaDetail struct {
 	Harga float64 `json:"harga" validate:"required,number"`
 }
 
-type Create struct {
-	ProdukId    string        `json:"produk_id" validate:"required,ulid"`
+type CreateByProdukId struct {
+	ProdukId    string        `params:"produk_id" validate:"required,ulid"`
 	HargaDetail []HargaDetail `json:"harga_detail" validate:"gt=0,dive,required"`
 }
 
-type Update struct {
-	ID    string  `params:"id" validate:"required,ulid"`
-	QTY   uint    `json:"qty" validate:"omitempty,number"`
-	Harga float64 `json:"harga" validate:"omitempty,number"`
+type HargaDetailWithId struct {
+	ID    string  `json:"id" validate:"required,ulid"`
+	QTY   uint    `json:"qty" validate:"required,number"`
+	Harga float64 `json:"harga" validate:"required,number"`
+}
+
+type UpdateByProdukId struct {
+	ProdukId    string              `params:"produk_id" validate:"required,ulid"`
+	HargaDetail []HargaDetailWithId `json:"harga_detail" validate:"gt=0,dive,required"`
 }
 
 type DeleteByProdukId struct {

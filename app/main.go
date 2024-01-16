@@ -21,19 +21,30 @@ func main() {
 	validator := pkg.NewValidator()
 	ulidPkg := pkg.NewUlidPkg()
 
-	dbGormConf := config.DBGorm{
-		DB_Username: os.Getenv("DB_USERNAME"),
-		DB_Password: os.Getenv("DB_PASSWORD"),
-		DB_Name:     os.Getenv("DB_NAME"),
-		DB_Port:     os.Getenv("DB_PORT"),
-		DB_Host:     os.Getenv("DB_HOST"),
+	status_app := os.Getenv("APP_STATUS")
+	var dbGormConf config.DBGorm
+	if status_app == "PRODUCTION" {
+		dbGormConf = config.DBGorm{
+			DB_Username: os.Getenv("DB_USERNAME_PRODUCTION"),
+			DB_Password: os.Getenv("DB_PASSWORD_PRODUCTION"),
+			DB_Name:     os.Getenv("DB_NAME_PRODUCTION"),
+			DB_Port:     os.Getenv("DB_PORT_PRODUCTION"),
+			DB_Host:     os.Getenv("DB_HOST_PRODUCTION"),
+		}
+	} else {
+		dbGormConf = config.DBGorm{
+			DB_Username: os.Getenv("DB_USERNAME"),
+			DB_Password: os.Getenv("DB_PASSWORD"),
+			DB_Name:     os.Getenv("DB_NAME"),
+			DB_Port:     os.Getenv("DB_PORT"),
+			DB_Host:     os.Getenv("DB_HOST"),
+		}
 	}
 
 	dbGorm := dbGormConf.InitDBGorm(ulidPkg)
 	app := fiber.New()
 
 	// helper
-	paginate := helper.NewPaginate()
 	encryptor := helper.NewEncryptor()
 
 	// middleware
@@ -52,7 +63,7 @@ func main() {
 
 	{
 		// produk
-		produkHandler := handler_init.NewProdukHandlerInit(dbGorm, validator, ulidPkg, paginate)
+		produkHandler := handler_init.NewProdukHandlerInit(dbGorm, validator, ulidPkg)
 		produkRoute := route.NewProdukRoute(produkHandler, authMid)
 		produkGroup := v1.Group("/produk")
 		{
@@ -70,7 +81,7 @@ func main() {
 		}
 
 		// sablon
-		sablonHandler := handler_init.NewSablonHandlerInit(dbGorm, validator, ulidPkg, paginate)
+		sablonHandler := handler_init.NewSablonHandlerInit(dbGorm, validator, ulidPkg)
 		sablonRoute := route.NewSablonRoute(sablonHandler, authMid)
 		sablonGroup := v1.Group("/sablon")
 		{
@@ -78,7 +89,7 @@ func main() {
 		}
 
 		// user
-		userHandler := handler_init.NewUserHandlerInit(dbGorm, validator, ulidPkg, paginate, encryptor)
+		userHandler := handler_init.NewUserHandlerInit(dbGorm, validator, ulidPkg, encryptor)
 		userRoute := route.NewUserRoute(userHandler, authMid)
 		userGroup := v1.Group("/user")
 		{
@@ -106,6 +117,9 @@ func main() {
 		}
 
 	}
-
-	app.Listen(":8000")
+	if os.Getenv("APP_STATUS") == "PRODUCTION" {
+		app.Listen(os.Getenv("APP_PORT_PRODUCTION"))
+	} else {
+		app.Listen(os.Getenv("APP_PORT"))
+	}
 }

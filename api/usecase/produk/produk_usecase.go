@@ -11,7 +11,6 @@ import (
 	"github.com/be-sistem-informasi-konveksi/common/message"
 	req "github.com/be-sistem-informasi-konveksi/common/request/produk"
 	"github.com/be-sistem-informasi-konveksi/entity"
-	"github.com/be-sistem-informasi-konveksi/helper"
 	"github.com/be-sistem-informasi-konveksi/pkg"
 )
 
@@ -27,16 +26,14 @@ type produkUsecase struct {
 	repo         repo.ProdukRepo
 	kategoriRepo kategoriRepo.KategoriProdukRepo
 	ulid         pkg.UlidPkg
-	paginate     helper.Paginate
 }
 
 func NewProdukUsecase(
 	repo repo.ProdukRepo,
 	kategoriRepo kategoriRepo.KategoriProdukRepo,
 	ulid pkg.UlidPkg,
-	paginate helper.Paginate,
 ) ProdukUsecase {
-	return &produkUsecase{repo, kategoriRepo, ulid, paginate}
+	return &produkUsecase{repo, kategoriRepo, ulid}
 }
 
 func (u *produkUsecase) Create(ctx context.Context, produk req.Create) error {

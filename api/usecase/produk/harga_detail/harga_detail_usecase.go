@@ -3,23 +3,19 @@ package produk
 import (
 	"context"
 	"errors"
-	"log"
-
-	"golang.org/x/sync/errgroup"
 
 	produkRepo "github.com/be-sistem-informasi-konveksi/api/repository/produk/mysql/gorm"
 	repo "github.com/be-sistem-informasi-konveksi/api/repository/produk/mysql/gorm/harga_detail"
-	"github.com/be-sistem-informasi-konveksi/common/message"
 	req "github.com/be-sistem-informasi-konveksi/common/request/produk/harga_detail"
 	"github.com/be-sistem-informasi-konveksi/entity"
 	"github.com/be-sistem-informasi-konveksi/pkg"
 )
 
 type HargaDetailProdukUsecase interface {
-	Create(ctx context.Context, reqHargaDetailProduk req.Create) error
-	UpdateById(ctx context.Context, reqHargaDetailProduk req.Update) error
-	Delete(ctx context.Context, id string) error
+	CreateByProdukId(ctx context.Context, reqHargaDetailProduk req.CreateByProdukId) error
+	UpdateByProdukId(ctx context.Context, reqHargaDetailProduk req.UpdateByProdukId) error
 	DeleteByProdukId(ctx context.Context, produkId string) error
+	Delete(ctx context.Context, id string) error
 	GetByProdukId(ctx context.Context, reqHargaDetailProduk req.GetByProdukId) ([]entity.HargaDetailProduk, error)
 }
 
@@ -33,83 +29,96 @@ func NewHargaDetailProdukUsecase(repo repo.HargaDetailProdukRepo, produkR produk
 	return &hargaDetailProdukUsecase{repo, produkR, ulid}
 }
 
-func (u *hargaDetailProdukUsecase) Create(ctx context.Context, reqHargaDetailProduk req.Create) error {
+func (u *hargaDetailProdukUsecase) CreateByProdukId(ctx context.Context, reqHargaDetailProduk req.CreateByProdukId) error {
 	_, err := u.produkR.GetById(ctx, reqHargaDetailProduk.ProdukId)
 	if err != nil {
-		if err.Error() == "record not found" {
-			return errors.New(message.ProdukNotFound)
-		}
 		return err
 	}
-	g := errgroup.Group{}
 
-	if len(reqHargaDetailProduk.HargaDetail) > 0 {
-		for i := 0; i < len(reqHargaDetailProduk.HargaDetail); i++ {
-			i := i
-			g.Go(func() error {
-				dat, err := u.repo.GetByQtyProdukId(ctx, reqHargaDetailProduk.HargaDetail[i].QTY, reqHargaDetailProduk.ProdukId)
-				if err != nil {
-					return err
-				}
-				emptyDat := entity.HargaDetailProduk{}
-				if dat != emptyDat {
-					return errors.New("duplicated key not allowed")
-				}
-				id := u.ulid.MakeUlid().String()
-				data := entity.HargaDetailProduk{
-					Base: entity.Base{
-						ID: id,
-					},
-					ProdukID: reqHargaDetailProduk.ProdukId,
-					QTY:      reqHargaDetailProduk.HargaDetail[i].QTY,
-					Harga:    reqHargaDetailProduk.HargaDetail[i].Harga,
-				}
-				err = u.repo.Create(ctx, &data)
-				if err != nil {
-					return err
-				}
-				return nil
-			})
+	newData := make([]*entity.HargaDetailProduk, len(reqHargaDetailProduk.HargaDetail))
+	qty := make([]uint, len(reqHargaDetailProduk.HargaDetail))
+
+	for i, hargaDetail := range reqHargaDetailProduk.HargaDetail {
+		newData[i] = &entity.HargaDetailProduk{
+			Base: entity.Base{
+				ID: u.ulid.MakeUlid().String(),
+			},
+			ProdukID: reqHargaDetailProduk.ProdukId,
+			QTY:      hargaDetail.QTY,
+			Harga:    hargaDetail.Harga,
 		}
+		qty[i] = hargaDetail.QTY
 	}
-	if err := g.Wait(); err != nil {
-		log.Print(err)
+
+	datas, err := u.repo.GetByInQtyProdukId(ctx, qty, reqHargaDetailProduk.ProdukId)
+
+	if err != nil {
+		return err
+	}
+
+	if len(datas) > 0 {
+		return errors.New("duplicated key not allowed")
+	}
+
+	if err := u.repo.Create(ctx, newData); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (u *hargaDetailProdukUsecase) UpdateById(ctx context.Context, reqHargaDetailProduk req.Update) error {
-	data := entity.HargaDetailProduk{
-		Base: entity.Base{
-			ID: reqHargaDetailProduk.ID,
-		},
-		QTY:   reqHargaDetailProduk.QTY,
-		Harga: float64(reqHargaDetailProduk.Harga),
-		// ProdukID: hargaDetailProduk.ProdukId,
+func (u *hargaDetailProdukUsecase) UpdateByProdukId(ctx context.Context, reqHargaDetailProduk req.UpdateByProdukId) error {
+	_, err := u.produkR.GetById(ctx, reqHargaDetailProduk.ProdukId)
+	if err != nil {
+		return err
 	}
-	return u.repo.UpdateById(ctx, &data)
+
+	hargaDetails := make([]entity.HargaDetailProduk, len(reqHargaDetailProduk.HargaDetail))
+	for i, hargaDetail := range reqHargaDetailProduk.HargaDetail {
+		hargaDetails[i] = entity.HargaDetailProduk{
+			Base: entity.Base{
+				ID: hargaDetail.ID,
+			},
+			ProdukID: reqHargaDetailProduk.ProdukId,
+			QTY:      hargaDetail.QTY,
+			Harga:    hargaDetail.Harga,
+		}
+	}
+
+	err = u.repo.UpdateByProdukId(ctx, reqHargaDetailProduk.ProdukId, hargaDetails)
+
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
+func (u *hargaDetailProdukUsecase) DeleteByProdukId(ctx context.Context, produkId string) error {
+	_, err := u.produkR.GetById(ctx, produkId)
+	if err != nil {
+		return err
+	}
+	err = u.repo.DeleteByProdukId(ctx, produkId)
+	if err != nil {
+		return err
+	}
+	return nil
+}
 func (u *hargaDetailProdukUsecase) Delete(ctx context.Context, id string) error {
 	_, err := u.repo.GetById(ctx, id)
 	if err != nil {
 		return err
 	}
 	err = u.repo.Delete(ctx, id)
-	return err
-}
-
-func (u *hargaDetailProdukUsecase) DeleteByProdukId(ctx context.Context, produkId string) error {
-	_, err := u.repo.GetByProdukId(ctx, produkId)
 	if err != nil {
 		return err
 	}
-	err = u.repo.DeleteByProdukId(ctx, produkId)
-	return err
+	return nil
 }
 
 func (u *hargaDetailProdukUsecase) GetByProdukId(ctx context.Context, reqHargaDetailProduk req.GetByProdukId) ([]entity.HargaDetailProduk, error) {
 	datas, err := u.repo.GetByProdukId(ctx, reqHargaDetailProduk.ProdukId)
-	return datas, err
+	if len(datas) == 0 {
+		return nil, err
+	}
+	return datas, nil
 }

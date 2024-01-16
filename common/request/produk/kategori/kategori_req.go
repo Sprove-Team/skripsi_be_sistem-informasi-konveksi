@@ -1,16 +1,16 @@
 package produk
 
 type Create struct {
-	Nama string `json:"nama" validate:"required,printascii"`
+	Nama string `json:"nama" validate:"required"`
 }
 
 type Update struct {
-	Nama string `json:"nama" validate:"omitempty,printascii"`
-	ID   string `json:"id" validate:"required,ulid"`
+	ID   string `param:"id" validate:"required,ulid"`
+	Nama string `json:"nama" validate:"omitempty"`
 }
 
 type GetAll struct {
-	Nama  string `query:"nama" validate:"omitempty,printascii"`
+	Nama  string `query:"nama" validate:"omitempty"`
 	Next  string `query:"next" validate:"omitempty"`
 	Limit int    `query:"limit" validate:"omitempty,number"`
 }

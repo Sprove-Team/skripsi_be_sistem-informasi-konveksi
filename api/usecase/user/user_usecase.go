@@ -27,7 +27,6 @@ type userUsecase struct {
 	repo         repo.UserRepo
 	jenisSpvRepo jenisSpvRepo.JenisSpvRepo
 	ulid         pkg.UlidPkg
-	paginate     helper.Paginate
 	encryptor    helper.Encryptor
 }
 
@@ -35,10 +34,9 @@ func NewUserUsecase(
 	repo repo.UserRepo,
 	jenisSpvRepo jenisSpvRepo.JenisSpvRepo,
 	ulid pkg.UlidPkg,
-	paginate helper.Paginate,
 	encryptor helper.Encryptor,
 ) UserUsecase {
-	return &userUsecase{repo, jenisSpvRepo, ulid, paginate, encryptor}
+	return &userUsecase{repo, jenisSpvRepo, ulid, encryptor}
 }
 
 func (u *userUsecase) Create(ctx context.Context, reqUser req.Create) error {

@@ -6,27 +6,24 @@ import (
 	repo "github.com/be-sistem-informasi-konveksi/api/repository/sablon/mysql/gorm"
 	req "github.com/be-sistem-informasi-konveksi/common/request/sablon"
 	"github.com/be-sistem-informasi-konveksi/entity"
-	"github.com/be-sistem-informasi-konveksi/helper"
 	"github.com/be-sistem-informasi-konveksi/pkg"
 )
 
 type SablonUsecase interface {
 	Create(ctx context.Context, reqSablon req.Create) error
-	Delete(ctx context.Context, id string) error
 	Update(ctx context.Context, reqSablon req.Update) error
-	GetAll(ctx context.Context, reqSablon req.GetAll) ([]entity.Sablon, error)
+	Delete(ctx context.Context, id string) error
 	GetById(ctx context.Context, id string) (entity.Sablon, error)
+	GetAll(ctx context.Context, reqSablon req.GetAll) ([]entity.Sablon, error)
 }
 
 type sablonUsecase struct {
 	repo repo.SablonRepo
-	// uuidGen  pkg.UuidGenerator
-	ulid     pkg.UlidPkg
-	paginate helper.Paginate
+	ulid pkg.UlidPkg
 }
 
-func NewSablonUsecase(repo repo.SablonRepo, ulid pkg.UlidPkg, paginate helper.Paginate) SablonUsecase {
-	return &sablonUsecase{repo, ulid, paginate}
+func NewSablonUsecase(repo repo.SablonRepo, ulid pkg.UlidPkg) SablonUsecase {
+	return &sablonUsecase{repo, ulid}
 }
 
 func (u *sablonUsecase) Create(ctx context.Context, sablon req.Create) error {
@@ -68,7 +65,7 @@ func (u *sablonUsecase) GetById(ctx context.Context, id string) (entity.Sablon, 
 }
 
 func (u *sablonUsecase) GetAll(ctx context.Context, reqSablon req.GetAll) ([]entity.Sablon, error) {
-	// currentPage, offset, limit := u.paginate.GetPaginateData(reqSablon.Page, reqSablon.Limit)
+
 	if reqSablon.Limit <= 0 {
 		reqSablon.Limit = 10
 	}

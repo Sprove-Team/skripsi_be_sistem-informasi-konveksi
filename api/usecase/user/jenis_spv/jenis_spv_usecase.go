@@ -7,7 +7,6 @@ import (
 	repo "github.com/be-sistem-informasi-konveksi/api/repository/user/mysql/gorm/jenis_spv"
 	req "github.com/be-sistem-informasi-konveksi/common/request/user/jenis_spv"
 	"github.com/be-sistem-informasi-konveksi/entity"
-	"github.com/be-sistem-informasi-konveksi/helper"
 	"github.com/be-sistem-informasi-konveksi/pkg"
 )
 
@@ -20,13 +19,11 @@ type JenisSpvUsecase interface {
 
 type jenisSpvUsecase struct {
 	repo repo.JenisSpvRepo
-	// uuidGen  pkg.UuidGenerator
-	ulid     pkg.UlidPkg
-	paginate helper.Paginate
+	ulid pkg.UlidPkg
 }
 
-func NewJenisSpvUsecase(repo repo.JenisSpvRepo, ulid pkg.UlidPkg, paginate helper.Paginate) JenisSpvUsecase {
-	return &jenisSpvUsecase{repo, ulid, paginate}
+func NewJenisSpvUsecase(repo repo.JenisSpvRepo, ulid pkg.UlidPkg) JenisSpvUsecase {
+	return &jenisSpvUsecase{repo, ulid}
 }
 
 func (u *jenisSpvUsecase) Create(ctx context.Context, reqJenisSpv req.Create) error {

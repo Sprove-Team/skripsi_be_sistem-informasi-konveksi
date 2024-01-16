@@ -14,7 +14,6 @@ import (
 	produkUsecase "github.com/be-sistem-informasi-konveksi/api/usecase/produk"
 	hargaDetailUsecase "github.com/be-sistem-informasi-konveksi/api/usecase/produk/harga_detail"
 	kategoriUsecase "github.com/be-sistem-informasi-konveksi/api/usecase/produk/kategori"
-	"github.com/be-sistem-informasi-konveksi/helper"
 	"github.com/be-sistem-informasi-konveksi/pkg"
 )
 
@@ -26,26 +25,24 @@ type ProdukHandlerInit interface {
 type produkHandlerInit struct {
 	DB        *gorm.DB
 	validator pkg.Validator
-	// uuidGen   pkg.UuidGenerator
-	ulid   pkg.UlidPkg
-	paginate  helper.Paginate
+	ulid      pkg.UlidPkg
 }
 
-func NewProdukHandlerInit(DB *gorm.DB, validator pkg.Validator, ulid pkg.UlidPkg, paginate helper.Paginate) ProdukHandlerInit {
-	return &produkHandlerInit{DB, validator, ulid, paginate}
+func NewProdukHandlerInit(DB *gorm.DB, validator pkg.Validator, ulid pkg.UlidPkg) ProdukHandlerInit {
+	return &produkHandlerInit{DB, validator, ulid}
 }
 
 func (d *produkHandlerInit) ProdukHandler() produkHandler.ProdukHandler {
 	r := produkRepo.NewProdukRepo(d.DB)
 	kategoriR := kategoriRepo.NewKategoriProdukRepo(d.DB)
-	uc := produkUsecase.NewProdukUsecase(r, kategoriR, d.ulid, d.paginate)
+	uc := produkUsecase.NewProdukUsecase(r, kategoriR, d.ulid)
 	h := produkHandler.NewProdukHandler(uc, d.validator)
 	return h
 }
 
 func (d *produkHandlerInit) KategoriProdukHandler() kategoriHandler.KategoriProdukHandler {
 	r := kategoriRepo.NewKategoriProdukRepo(d.DB)
-	uc := kategoriUsecase.NewKategoriProdukUsecase(r, d.ulid, d.paginate)
+	uc := kategoriUsecase.NewKategoriProdukUsecase(r, d.ulid)
 	h := kategoriHandler.NewKategoriProdukHandler(uc, d.validator)
 	return h
 }
