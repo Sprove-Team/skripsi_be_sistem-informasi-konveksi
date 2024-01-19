@@ -21,24 +21,12 @@ func main() {
 	validator := pkg.NewValidator()
 	ulidPkg := pkg.NewUlidPkg()
 
-	status_app := os.Getenv("APP_STATUS")
-	var dbGormConf config.DBGorm
-	if status_app == "PRODUCTION" {
-		dbGormConf = config.DBGorm{
-			DB_Username: os.Getenv("DB_USERNAME_PRODUCTION"),
-			DB_Password: os.Getenv("DB_PASSWORD_PRODUCTION"),
-			DB_Name:     os.Getenv("DB_NAME_PRODUCTION"),
-			DB_Port:     os.Getenv("DB_PORT_PRODUCTION"),
-			DB_Host:     os.Getenv("DB_HOST_PRODUCTION"),
-		}
-	} else {
-		dbGormConf = config.DBGorm{
-			DB_Username: os.Getenv("DB_USERNAME"),
-			DB_Password: os.Getenv("DB_PASSWORD"),
-			DB_Name:     os.Getenv("DB_NAME"),
-			DB_Port:     os.Getenv("DB_PORT"),
-			DB_Host:     os.Getenv("DB_HOST"),
-		}
+	dbGormConf := config.DBGorm{
+		DB_Username: os.Getenv("DB_USERNAME"),
+		DB_Password: os.Getenv("DB_PASSWORD"),
+		DB_Name:     os.Getenv("DB_NAME"),
+		DB_Port:     os.Getenv("DB_PORT"),
+		DB_Host:     os.Getenv("DB_HOST"),
 	}
 
 	dbGorm := dbGormConf.InitDBGorm(ulidPkg)
@@ -117,9 +105,7 @@ func main() {
 		}
 
 	}
-	if os.Getenv("APP_STATUS") == "PRODUCTION" {
-		app.Listen(os.Getenv("APP_PORT_PRODUCTION"))
-	} else {
-		app.Listen(os.Getenv("APP_PORT"))
-	}
+
+	app.Listen(":" + os.Getenv("APP_PORT"))
+
 }
