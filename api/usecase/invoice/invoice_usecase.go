@@ -201,20 +201,20 @@ func (u *invoiceUsecase) Create(ctx context.Context, reqInvoice req.Create) erro
 		Base: entity.Base{
 			ID: invoice_id,
 		},
-		TotalQty:         int(total_qty),
-		TotalHarga:       total_harga_invoice,
-		StatusProduksiID: reqInvoice.StatusProduksiID,
-		BuktiPembayaran:  reqInvoice.BuktiPembayaran,
-		UserID:           reqInvoice.UserID,
-		Keterangan:       reqInvoice.Keterangan,
-		TanggalDeadline:  &tanggalDeadline,
-		TanggalKirim:     &tanggalKirim,
-		NomorReferensi:   ref,
-		Kepada:           reqInvoice.Kepada,
-		NoTelp:           reqInvoice.NoTelp,
-		Alamat:           reqInvoice.Alamat,
-		StatusBayar:      status_bayar,
-		SisaTagihan:      math.Abs(sisa_tagihan),
+		TotalQty:        int(total_qty),
+		TotalHarga:      total_harga_invoice,
+		StatusProduksi:  reqInvoice.StatusProduksi,
+		BuktiPembayaran: reqInvoice.BuktiPembayaran,
+		UserID:          reqInvoice.UserID,
+		Keterangan:      reqInvoice.Keterangan,
+		TanggalDeadline: &tanggalDeadline,
+		TanggalKirim:    &tanggalKirim,
+		NomorReferensi:  ref,
+		Kepada:          reqInvoice.Kepada,
+		NoTelp:          reqInvoice.NoTelp,
+		Alamat:          reqInvoice.Alamat,
+		StatusBayar:     status_bayar,
+		SisaTagihan:     math.Abs(sisa_tagihan),
 	}
 
 	if err := u.repo.Create(ctx, paramRepo); err != nil {
@@ -222,3 +222,5 @@ func (u *invoiceUsecase) Create(ctx context.Context, reqInvoice req.Create) erro
 	}
 	return nil
 }
+
+// func (u *invoiceUsecase) GetAll(ctx context.Context, reqFilter req.)

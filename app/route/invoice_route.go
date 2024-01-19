@@ -23,3 +23,7 @@ func NewInvoiceRoute(h handler_init.InvoiceHandlerInit, auth auth.AuthMidleware)
 func (ro *invoiceRoute) Invoice(router fiber.Router) {
 	router.Post("", ro.h.InvoiceHandler().Create)
 }
+
+// func (ro *invoiceRoute) StatusProduksi(router fiber.Router) {
+
+// }

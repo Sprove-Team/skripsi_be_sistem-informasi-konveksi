@@ -90,8 +90,9 @@ func (dbgc *DBGorm) InitDBGorm(ulid pkg.UlidPkg) *gorm.DB {
 	})
 
 	// invoice
+	//  &entity.StatusProduksi{},
 	g.Go(func() error {
-		autoMigrateEntities(db, &entity.StatusProduksi{}, &entity.Invoice{}, &entity.DetailInvoice{})
+		autoMigrateEntities(db, &entity.Invoice{}, &entity.DetailInvoice{})
 		return nil
 	})
 	g.Wait()
