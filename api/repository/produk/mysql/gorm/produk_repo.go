@@ -6,6 +6,7 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/be-sistem-informasi-konveksi/entity"
+	"github.com/be-sistem-informasi-konveksi/helper"
 )
 
 type ProdukRepo interface {
@@ -51,7 +52,7 @@ type SearchProduk struct {
 }
 
 func (r *produkRepo) GetAll(ctx context.Context, param SearchProduk) ([]entity.Produk, error) {
-	datas := []entity.Produk{}
+	datas := make([]entity.Produk, param.Limit)
 
 	tx := r.DB.WithContext(ctx).Model(&entity.Produk{}).Order("produk.id ASC")
 
@@ -59,19 +60,24 @@ func (r *produkRepo) GetAll(ctx context.Context, param SearchProduk) ([]entity.P
 		tx = tx.Where("produk.id > ?", param.Next)
 	}
 
-	tx = tx.Where("nama LIKE ?", "%"+param.Nama+"%")
+	tx = tx.Where("produk.nama LIKE ?", "%"+param.Nama+"%")
 
 	if param.KategoriProdukId != "" {
 		tx = tx.Where("kategori_produk_id = ?", param.KategoriProdukId)
 	}
 
 	if param.HasHargaDetail {
-		tx = tx.InnerJoins("HargaDetails").Preload("HargaDetails")
+		tx = tx.Preload("HargaDetails").Joins("JOIN harga_detail_produk hd on hd.produk_id = produk.id")
 	} else {
-		tx = tx.Preload("HargaDetails").Joins("LEFT JOIN harga_detail_produk hd on hd.produk_id = produk.id").Where("hd.id IS NULL")
+		tx = tx.Joins("LEFT JOIN harga_detail_produk hd on hd.produk_id = produk.id").Where("hd.id IS NULL")
 	}
 
-	err := tx.Limit(param.Limit).Find(&datas).Error
+	tx = tx.Group("produk.id")
 
+	err := tx.Limit(param.Limit).Find(&datas).Error
+	if err != nil {
+		helper.LogsError(err)
+		return nil, err
+	}
 	return datas, err
 }

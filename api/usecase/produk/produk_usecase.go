@@ -62,14 +62,14 @@ func (u *produkUsecase) Create(ctx context.Context, produk req.Create) error {
 }
 
 func (u *produkUsecase) GetAll(ctx context.Context, reqProduk req.GetAll) ([]entity.Produk, error) {
-	hargaDetailFilter := reqProduk.HargaDetail != "EMPTY"
+	hasHargaDetail := reqProduk.HargaDetail != "EMPTY"
 	if reqProduk.Limit <= 0 {
 		reqProduk.Limit = 10
 	}
 	datas, err := u.repo.GetAll(ctx, repo.SearchProduk{
 		Nama:             reqProduk.Nama,
 		KategoriProdukId: reqProduk.KategoriID,
-		HasHargaDetail:   hargaDetailFilter,
+		HasHargaDetail:   hasHargaDetail,
 		Next:             reqProduk.Next,
 		Limit:            reqProduk.Limit,
 	})
