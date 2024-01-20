@@ -21,6 +21,7 @@ func NewInvoiceRoute(h handler_init.InvoiceHandlerInit, auth auth.AuthMidleware)
 }
 
 func (ro *invoiceRoute) Invoice(router fiber.Router) {
+	router.Get("", ro.h.InvoiceHandler().GetAll)
 	router.Post("", ro.h.InvoiceHandler().Create)
 }
 

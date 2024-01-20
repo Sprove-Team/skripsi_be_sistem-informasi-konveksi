@@ -2,6 +2,8 @@ package invoice
 
 import (
 	"context"
+	"reflect"
+	"strings"
 	"time"
 
 	"github.com/be-sistem-informasi-konveksi/entity"
@@ -14,9 +16,20 @@ type CreateParam struct {
 	DetailInvoice []entity.DetailInvoice
 }
 
+type SearchFilter struct {
+	StatusProduksi  string
+	Kepada          string
+	TanggalDeadline time.Time
+	TanggalKirim    time.Time
+	Order           string
+	Next            string
+	Limit           int
+}
+
 type InvoiceRepo interface {
 	Create(ctx context.Context, param CreateParam) error
 	GetLastInvoiceCrrYear(ctx context.Context) (entity.Invoice, error)
+	GetAll(ctx context.Context, filter SearchFilter) ([]entity.Invoice, error)
 }
 
 type invoiceRepo struct {
@@ -53,4 +66,57 @@ func (r *invoiceRepo) GetLastInvoiceCrrYear(ctx context.Context) (entity.Invoice
 		return *invoice, err
 	}
 	return *invoice, err
+}
+
+func (r *invoiceRepo) GetAll(ctx context.Context, filter SearchFilter) ([]entity.Invoice, error) {
+	tx := r.DB.WithContext(ctx).Model(&entity.Invoice{})
+
+	if filter.Order == "" {
+		tx = tx.Order("id ASC")
+	}
+
+	s := reflect.ValueOf(filter)
+	orderBy := strings.Split(filter.Order, " ")[1]
+	for i := 0; i < s.NumField(); i++ {
+		// kind := s.Field(i).Kind()
+		key := s.Type().Field(i).Name
+		value := s.Field(i).Interface()
+
+		switch value.(type) {
+		case string:
+			if value != "" {
+				switch key {
+				case "Next":
+					if orderBy == "DESC" {
+						tx = tx.Where("id < ?", value)
+					} else {
+						tx = tx.Where("id > ?", value)
+					}
+				case "Order":
+					tx = tx.Order(value)
+				case "Kepada":
+					tx = tx.Where("kepada LIKE ?", "%"+value.(string)+"%")
+				case "StatusProduksi":
+					tx = tx.Where("status_produksi = ?", value)
+				}
+			}
+		case time.Time:
+			if !value.(time.Time).IsZero() {
+				switch key {
+				case "TanggalDeadline":
+					tx = tx.Where("DATE(tanggal_deadline) = ?", value)
+				case "TanggalKirim":
+					tx = tx.Where("DATE(tanggal_kirim) = ?", value)
+				}
+			}
+		}
+	}
+
+	invoices := make([]entity.Invoice, filter.Limit)
+
+	if err := tx.Limit(filter.Limit).Find(&invoices).Error; err != nil {
+		return nil, err
+	}
+
+	return invoices, nil
 }

@@ -2,6 +2,7 @@ package invoice
 
 import (
 	"context"
+	"fmt"
 
 	usecase "github.com/be-sistem-informasi-konveksi/api/usecase/invoice"
 	"github.com/be-sistem-informasi-konveksi/common/message"
@@ -12,6 +13,7 @@ import (
 )
 
 type InvoiceHandler interface {
+	GetAll(c *fiber.Ctx) error
 	Create(c *fiber.Ctx) error
 }
 
@@ -40,20 +42,47 @@ func errResponse(c *fiber.Ctx, err error) error {
 
 	badRequest := map[string][]string{}
 
-	switch err.Error() {
+	fmt.Println(err.Error())
+	if err.Error() == message.UserNotFound {
+		badRequest["user_id"] = []string{err.Error()}
+	}
+	switch err.Error()[2:] {
 	case message.BordirNotFound:
-		badRequest["bordir_id"] = []string{err.Error()}
+		badRequest[fmt.Sprintf("detail_invoice[%c].bordir_id", err.Error()[0])] = []string{err.Error()[2:]}
 	case message.ProdukNotFound:
-		badRequest["produk_id"] = []string{err.Error()}
+		badRequest[fmt.Sprintf("detail_invoice[%c].produk_id", err.Error()[0])] = []string{err.Error()[2:]}
 	case message.SablonNotFound:
-		badRequest["sablon_id"] = []string{err.Error()}
-
+		badRequest[fmt.Sprintf("detail_invoice[%c].sablon_id", err.Error()[0])] = []string{err.Error()[2:]}
+	case message.HargaDetailProdukNotFound:
+		badRequest[fmt.Sprintf("detail_invoice[%c].harga_produk_id", err.Error()[0])] = []string{err.Error()[2:]}
 	}
 
 	if len(badRequest) > 0 {
 		return c.Status(fiber.StatusBadRequest).JSON(response.ErrorRes(fiber.ErrBadRequest.Code, fiber.ErrBadRequest.Message, badRequest))
 	}
 	return c.Status(fiber.StatusInternalServerError).JSON(response.ErrorRes(fiber.ErrInternalServerError.Code, fiber.ErrInternalServerError.Message, nil))
+}
+
+func (h *invoiceHandler) GetAll(c *fiber.Ctx) error {
+	req := new(req.GetAll)
+
+	c.QueryParser(req)
+
+	errValidate := h.validator.Validate(req)
+	if errValidate != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(errValidate)
+	}
+
+	ctx := c.UserContext()
+	// Call usecase to create KelompokAkun
+	datas, err := h.uc.GetAll(ctx, *req)
+	// Handle errors
+	if err != nil {
+		return errResponse(c, err)
+	}
+
+	// Respond with success status
+	return c.Status(fiber.StatusOK).JSON(response.SuccessRes(fiber.StatusOK, message.OK, datas))
 }
 
 func (h *invoiceHandler) Create(c *fiber.Ctx) error {

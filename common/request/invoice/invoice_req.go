@@ -11,7 +11,7 @@ type ReqDetailInvoice struct {
 
 type Create struct {
 	UserID         string  `json:"user_id" validate:"required,ulid"`
-	StatusProduksi string  `json:"status_produksi_id" validate:"required,oneof=BELUM_DIKERJAKAN DIPROSES SELESAI"`
+	StatusProduksi string  `json:"status_produksi" validate:"omitempty,oneof=BELUM_DIKERJAKAN DIPROSES SELESAI"`
 	Kepada         string  `json:"kepada" validate:"required"`
 	NoTelp         string  `json:"no_telp" validate:"required"`
 	Alamat         string  `json:"alamat" validate:"required"`
@@ -25,8 +25,12 @@ type Create struct {
 }
 
 type GetAll struct {
-	Nama           string `query:"nama" validate:"omitempty"`
-	StatusProduksi string `query:"status_produksi" validate:"omitempty,ulid"`
-	Next           string `query:"next" validate:"omitempty"`
-	Limit          int    `query:"limit" validate:"omitempty,number"`
+	StatusProduksi  string `query:"status_produksi" validate:"omitempty,oneof=BELUM_DIKERJAKAN DIPROSES SELESAI"`
+	Kepada          string `query:"kepada" validate:"omitempty"`
+	TanggalDeadline string `query:"tanggal_deadline" validate:"omitempty,datetime=2006-01-02T15:04:05Z07:00"`
+	TanggalKirim    string `query:"tanggal_kirim" validate:"omitempty,datetime=2006-01-02T15:04:05Z07:00"`
+	SortBy          string `query:"sort_by" validate:"omitempty,oneof=TANGGAL_DEADLINE TANGGAL_KIRIM"`
+	OrderBy         string `query:"order_by" validate:"omitempty,oneof=ASC DESC"`
+	Next            string `query:"next" validate:"omitempty"`
+	Limit           int    `query:"limit" validate:"omitempty,number"`
 }

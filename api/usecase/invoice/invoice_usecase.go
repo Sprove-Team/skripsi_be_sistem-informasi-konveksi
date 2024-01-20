@@ -24,6 +24,7 @@ import (
 )
 
 type InvoiceUsecase interface {
+	GetAll(ctx context.Context, reqFilter req.GetAll) ([]entity.Invoice, error)
 	Create(ctx context.Context, reqInvoice req.Create) error
 }
 
@@ -132,12 +133,12 @@ func (u *invoiceUsecase) Create(ctx context.Context, reqInvoice req.Create) erro
 			g.Go(func() error {
 				var total_harga float64
 				dataBordir, err := u.repoBordir.GetById(ctx, v.BordirID)
-				if err := handleErr(err, message.BordirNotFound); err != nil {
+				if err := handleErr(err, fmt.Sprintf("%d %s", i, message.BordirNotFound)); err != nil {
 					return err
 				}
 				total_harga += dataBordir.Harga
 				dataSablon, err := u.repoSablon.GetById(ctx, v.SablonID)
-				if err := handleErr(err, message.BordirNotFound); err != nil {
+				if err := handleErr(err, fmt.Sprintf("%d %s", i, message.SablonNotFound)); err != nil {
 					return err
 				}
 				total_harga += dataSablon.Harga
@@ -149,11 +150,11 @@ func (u *invoiceUsecase) Create(ctx context.Context, reqInvoice req.Create) erro
 						break
 					}
 				}
-				if err := handleErr(err, message.ProdukNotFound); err != nil {
+				if err := handleErr(err, fmt.Sprintf("%d %s", i, message.ProdukNotFound)); err != nil {
 					return err
 				}
 				if harga_produk == 0 {
-					return errors.New(message.HargaDetailProdukNotFound)
+					return fmt.Errorf("%d %s", i, message.HargaDetailProdukNotFound)
 				}
 				total_harga += harga_produk
 				detailInvoices[i] = entity.DetailInvoice{
@@ -223,4 +224,48 @@ func (u *invoiceUsecase) Create(ctx context.Context, reqInvoice req.Create) erro
 	return nil
 }
 
-// func (u *invoiceUsecase) GetAll(ctx context.Context, reqFilter req.)
+func (u *invoiceUsecase) GetAll(ctx context.Context, reqFilter req.GetAll) ([]entity.Invoice, error) {
+	var tglDeadline, tglKirim time.Time
+	var err error
+	if reqFilter.TanggalDeadline != "" {
+		tglDeadline, err = time.Parse(time.RFC3339, reqFilter.TanggalDeadline)
+		if err != nil {
+			return nil, err
+		}
+	}
+	if reqFilter.TanggalKirim != "" {
+		tglKirim, err = time.Parse(time.RFC3339, reqFilter.TanggalKirim)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	filter := invoice.SearchFilter{
+		StatusProduksi:  reqFilter.StatusProduksi,
+		TanggalDeadline: tglDeadline,
+		TanggalKirim:    tglKirim,
+		Kepada:          reqFilter.Kepada,
+		Limit:           reqFilter.Limit,
+		Next:            reqFilter.Next,
+	}
+
+	if reqFilter.SortBy != "" {
+		filter.Order += strings.ToLower(reqFilter.SortBy)
+		if reqFilter.OrderBy != "" {
+			filter.Order += " " + reqFilter.OrderBy
+		} else {
+			filter.Order += " ASC"
+		}
+	}
+
+	if reqFilter.Limit <= 0 {
+		filter.Limit = 10
+	}
+
+	invoices, err := u.repo.GetAll(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+
+	return invoices, nil
+}
