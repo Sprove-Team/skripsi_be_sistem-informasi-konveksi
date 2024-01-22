@@ -215,13 +215,18 @@ func (u *akuntansiUsecase) GetAllNC(ctx context.Context, reqGetAllNC req.GetAllN
 	dataSaldoAkuns := make([]res.DataSaldoAkun, len(dataAkunsSaldo))
 	i := 0
 	for _, v := range dataAkunsSaldo {
-		nsRes.TotalDebit += v.SaldoDebit
-		nsRes.TotalKredit += v.SaldoKredit
+		// nsRes.TotalDebit += v.SaldoDebit
+		// nsRes.TotalKredit += v.SaldoKredit
 		dataSaldoAkuns[i] = res.DataSaldoAkun{
-			KodeAkun:    v.KodeAkun,
-			NamaAkun:    v.NamaAkun,
-			SaldoDebit:  v.SaldoDebit,
-			SaldoKredit: v.SaldoKredit,
+			KodeAkun: v.KodeAkun,
+			NamaAkun: v.NamaAkun,
+		}
+		if v.SaldoNormal == "DEBIT" {
+			nsRes.TotalDebit += v.Saldo
+			dataSaldoAkuns[i].SaldoDebit = v.Saldo
+		} else {
+			nsRes.TotalKredit += v.Saldo
+			dataSaldoAkuns[i].SaldoKredit = v.Saldo
 		}
 		i++
 	}
@@ -249,7 +254,7 @@ func (u *akuntansiUsecase) GetAllLBR(ctx context.Context, reqGetAllLBR req.GetAl
 	}
 
 	labaRugiMap := map[string]res.LabaRugiRes{}
-
+	var saldoKreditDebit float64
 	for _, v := range lbrRes {
 		labaRugi, ok := labaRugiMap[v.KategoriAkun]
 		if !ok {
@@ -258,13 +263,21 @@ func (u *akuntansiUsecase) GetAllLBR(ctx context.Context, reqGetAllLBR req.GetAl
 			}
 		}
 		labaRugi.Total += v.Saldo
-		labaRugi.DataAkunLBR = append(labaRugi.DataAkunLBR, res.DataAkunLBR{
-			KodeAkun:    v.KodeAkun,
-			NamaAkun:    v.NamaAkun,
-			SaldoKredit: v.SaldoKredit,
-			SaldoDebit:  v.SaldoKredit,
-			Saldo:       v.Saldo,
-		})
+		dataAkunLBR := res.DataAkunLBR{
+			KodeAkun: v.KodeAkun,
+			NamaAkun: v.NamaAkun,
+			Saldo:    v.Saldo,
+		}
+
+		saldoKreditDebit = math.Abs(v.Saldo)
+
+		if v.SaldoNormal == "DEBIT" {
+			dataAkunLBR.SaldoDebit = saldoKreditDebit
+		} else {
+			dataAkunLBR.SaldoKredit = saldoKreditDebit
+		}
+
+		labaRugi.DataAkunLBR = append(labaRugi.DataAkunLBR, dataAkunLBR)
 
 		labaRugiMap[v.KategoriAkun] = labaRugi
 	}

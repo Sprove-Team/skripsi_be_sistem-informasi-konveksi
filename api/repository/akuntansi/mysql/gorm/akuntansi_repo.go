@@ -43,19 +43,22 @@ type ResultSaldoAwalDataBB struct {
 }
 
 type ResultDataNc struct {
-	KodeAkun    string
-	NamaAkun    string
-	SaldoDebit  float64
-	SaldoKredit float64
+	KodeAkun string
+	NamaAkun string
+	// SaldoDebit  float64
+	// SaldoKredit float64
+	SaldoNormal string
+	Saldo       float64
 }
 
 type ResultDataLBR struct {
 	KategoriAkun string
 	NamaAkun     string
 	KodeAkun     string
-	SaldoDebit   float64 // from ayat jurnal
-	SaldoKredit  float64 // from ayat jurnal
-	Saldo        float64 // from total ayat jurnal
+	// SaldoDebit   float64 // from ayat jurnal
+	// SaldoKredit  float64 // from ayat jurnal
+	SaldoNormal string
+	Saldo       float64
 }
 
 type AkuntansiRepo interface {
@@ -84,7 +87,7 @@ func (r *akuntansiRepo) GetDataJU(ctx context.Context, startDate, endDate time.T
 	err := r.DB.WithContext(ctx).Model(&entity.Akun{}).
 		Joins("JOIN ayat_jurnal ON akun.id = ayat_jurnal.akun_id").
 		Joins("JOIN transaksi ON ayat_jurnal.transaksi_id = transaksi.id").
-		Select("ayat_jurnal.id as AyatJurnalID,transaksi.id as TransaksiID,akun.id as AkunID, akun.kode as KodeAkun ,akun.nama as NamaAkun, ayat_jurnal.debit as Debit, ayat_jurnal.kredit as Kredit, transaksi.Tanggal as Tanggal, transaksi.keterangan as Keterangan").
+		Select("ayat_jurnal.id as AyatJurnalID,transaksi.id as TransaksiID,akun.id as AkunID, akun.kode as KodeAkun, akun.nama as NamaAkun, ayat_jurnal.debit as Debit, ayat_jurnal.kredit as Kredit, transaksi.Tanggal as Tanggal, transaksi.keterangan as Keterangan").
 		Where("transaksi.id IN (?)", subQuery).
 		Group("ayat_jurnal.id").
 		Find(&resultDatasJU).Error
@@ -154,11 +157,15 @@ func (r *akuntansiRepo) GetDataBB(ctx context.Context, akunID string, startDate,
 func (r *akuntansiRepo) GetDataNC(ctx context.Context, date time.Time) ([]ResultDataNc, error) {
 	resultDatasNc := []ResultDataNc{}
 	err := r.DB.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+
 		subQueryTr := tx.Model(&entity.Transaksi{}).Select("id").Where("MONTH(tanggal) = ? AND YEAR(tanggal) = ?", date.Month(), date.Year())
+
+		// Select("akun.kode as KodeAkun, akun.nama as NamaAkun, COALESCE(ABS(sum(ayat_jurnal.saldo)), 0) AS Saldo, akun.saldo_normal AS SaldoNormal"). -> hitung manual dari tabel ayatjurnals
+		// Select("akun.kode as KodeAkun, akun.nama as NamaAkun, ABS(akun.saldo) AS Saldo, akun.saldo_normal AS SaldoNormal").
 		err2 := tx.Model(&entity.Akun{}).
 			Joins("JOIN ayat_jurnal ON ayat_jurnal.akun_id = akun.id").
 			Joins("JOIN transaksi ON transaksi.id = ayat_jurnal.transaksi_id").
-			Select("akun.kode as KodeAkun, akun.nama as NamaAkun, COALESCE(SUM(ayat_jurnal.debit),0) as SaldoDebit, COALESCE(SUM(ayat_jurnal.kredit),0) as SaldoKredit").
+			Select("akun.kode as KodeAkun, akun.nama as NamaAkun, COALESCE(ABS(sum(ayat_jurnal.saldo)), 0) AS Saldo, akun.saldo_normal AS SaldoNormal").
 			Where("transaksi.id IN (?)", subQueryTr).
 			Group("akun.id").
 			Find(&resultDatasNc).Error
@@ -177,23 +184,17 @@ func (r *akuntansiRepo) GetDataNC(ctx context.Context, date time.Time) ([]Result
 
 func (r *akuntansiRepo) GetDataLBR(ctx context.Context, startDate, endDate time.Time) ([]ResultDataLBR, error) {
 	datas := []ResultDataLBR{}
-	// subQuery := r.DB.Model(&entity.Transaksi{}).
-	// 	Select("id").
-	// 	Where("DATE(tanggal) >= ? AND DATE(tanggal) <= ?", startDate, endDate)
-	// err := r.DB.WithContext(ctx).Model(&entity.KelompokAkun{}).
-	// 	Where("kategori_akun IN (?)", []string{"PENDAPATAN", "BEBAN"}).
-	// 	Preload("Akuns").
-	// 	Preload("Akuns.AyatJurnals").
-	// 	Find(&datas).Error
+
 	err := r.DB.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		subQueryTr := tx.Model(&entity.Transaksi{}).
 			Select("id").
 			Where("DATE(tanggal) >= ? AND DATE(tanggal) <= ?", startDate, endDate)
 
+			// Select("k.kategori_akun as KategoriAkun, akun.Nama as NamaAkun, akun.saldo as Saldo, COALESCE(sum(ay.debit), 0) as SaldoDebit, COALESCE(sum(ay.kredit), 0) as SaldoKredit, COALESCE(sum(ay.saldo), 0) as Saldo, akun.kode as KodeAkun").
 		err := r.DB.WithContext(ctx).Model(&entity.Akun{}).
 			Joins("JOIN kelompok_akun k ON k.id = akun.kelompok_akun_id AND k.kategori_akun IN (?)", []string{"PENDAPATAN", "BEBAN"}).
 			Joins("JOIN ayat_jurnal ay ON ay.akun_id = akun.id").
-			Select("k.kategori_akun as KategoriAkun, akun.Nama as NamaAkun, akun.saldo as Saldo, COALESCE(sum(ay.debit), 0) as SaldoDebit, COALESCE(sum(ay.kredit), 0) as SaldoKredit, COALESCE(sum(ay.saldo), 0) as Saldo, akun.kode as KodeAkun").
+			Select("akun.kode AS KodeAkun,k.kategori_akun AS KategoriAkun, akun.Nama AS NamaAkun, akun.saldo AS Saldo").
 			Where("ay.transaksi_id IN (?)", subQueryTr).
 			Group("akun.id").
 			Find(&datas).Error
@@ -208,17 +209,3 @@ func (r *akuntansiRepo) GetDataLBR(ctx context.Context, startDate, endDate time.
 	}
 	return datas, nil
 }
-
-// func (r *akuntansiRepo) GetDataLBR(ctx context.Context, startDate, endDate time.Time) ([]entity.KelompokAkun, error) {
-// 	allPreload := []entity.KelompokAkun{}
-// 	err := r.DB.WithContext(ctx).Model(&entity.Akun{}).
-// 		Joins("JOIN golongan_akun g ON g.id = akun.golongan_akun_id").
-// 		Joins("JOIN kelompok_akun k ON k.id = g.kelompok_akun_id").
-// 		Where("k.jenis_akun = ?", "NOMINAL").
-// 		Select("SUM(akun.saldo) as Total, k.nama as NamaKelompok, g.nama as NamaGolongan, akun.nama as NamaAkun").
-// 		Group("akun.id").Find(&resultDataLBR).Error
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	return resultDataLBR, nil
-// }

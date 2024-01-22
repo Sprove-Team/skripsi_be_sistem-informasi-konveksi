@@ -94,28 +94,31 @@ func (r *transaksiRepo) Create(ctx context.Context, param CreateParam) error {
 
 func (r *transaksiRepo) Update(ctx context.Context, param UpdateParam) error {
 	err := r.DB.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		// update transaksi
 		if err := tx.Where("id =? ", param.UpdateTr.ID).Updates(param.UpdateTr).Error; err != nil {
 			helper.LogsError(err)
 			return err
 		}
+		// update ayat jurnals
 		if param.NewAyatJurnals != nil {
 			if err := tx.Unscoped().Where("transaksi_id IN (?)", param.UpdateTr.ID).Delete(&entity.AyatJurnal{}).Error; err != nil {
 				helper.LogsError(err)
 				return err
 			}
+
 			if err := tx.Model(&entity.AyatJurnal{}).Create(param.NewAyatJurnals).Error; err != nil {
 				helper.LogsError(err)
 				return err
 			}
-		}
+			// update akun
+			clause := clause.OnConflict{
+				Columns:   []clause.Column{{Name: "id"}, {Name: "kode"}},
+				DoUpdates: clause.AssignmentColumns([]string{"saldo"}),
+			}
 
-		clause := clause.OnConflict{
-			Columns:   []clause.Column{{Name: "kode"}, {Name: "id"}},
-			DoUpdates: clause.AssignmentColumns([]string{"saldo"}),
-		}
-
-		if err := tx.Clauses(clause).Create(&param.UpdateAkuns).Error; err != nil {
-			return err
+			if err := tx.Clauses(clause).Create(&param.UpdateAkuns).Error; err != nil {
+				return err
+			}
 		}
 
 		// update multiple lines with duplicate IDs in the 'akun' table.
@@ -146,7 +149,7 @@ func (r *transaksiRepo) Delete(ctx context.Context, param DeleteParam) error {
 		}
 
 		clause := clause.OnConflict{
-			Columns:   []clause.Column{{Name: "kode"}, {Name: "id"}},
+			Columns:   []clause.Column{{Name: "id"}, {Name: "kode"}},
 			DoUpdates: clause.AssignmentColumns([]string{"saldo"}),
 		}
 
