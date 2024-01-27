@@ -94,6 +94,7 @@ func main() {
 			akuntansiGroup.Route("/akun", akuntansiRoute.Akun)
 			akuntansiGroup.Route("/kelompok_akun", akuntansiRoute.KelompokAkun)
 			akuntansiGroup.Route("/transaksi", akuntansiRoute.Transaksi)
+			akuntansiGroup.Route("/hutang_piutang", akuntansiRoute.HutangPiutang)
 		}
 
 		// invoice

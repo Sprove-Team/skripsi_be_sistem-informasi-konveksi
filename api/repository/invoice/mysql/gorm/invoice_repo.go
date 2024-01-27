@@ -13,6 +13,8 @@ import (
 
 type CreateParam struct {
 	Invoice       *entity.Invoice
+	Kontak        *entity.Kontak
+	Transaksi     *entity.Transaksi
 	DetailInvoice []entity.DetailInvoice
 }
 
@@ -42,6 +44,12 @@ func NewInvoiceRepo(DB *gorm.DB) InvoiceRepo {
 
 func (r *invoiceRepo) Create(ctx context.Context, param CreateParam) error {
 	err := r.DB.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		if err := tx.Create(param.Kontak).Error; err != nil {
+			return err
+		}
+		if err := tx.Create(param.Transaksi).Error; err != nil {
+			return err
+		}
 		if err := tx.Create(param.Invoice).Error; err != nil {
 			return err
 		}

@@ -1,5 +1,7 @@
 package akuntansi
 
+import "github.com/be-sistem-informasi-konveksi/entity"
+
 type ReqAyatJurnal struct {
 	AkunID string  `json:"akun_id" validate:"required,ulid"`
 	Kredit float64 `json:"kredit" validate:"number,required_without=Debit,excluded_with=Debit"`
@@ -7,18 +9,20 @@ type ReqAyatJurnal struct {
 }
 
 type Create struct {
-	BuktiPembayaran string          `json:"bukti_pembayaran" validate:"omitempty,url_cloud_storage"`
-	Tanggal         string          `json:"tanggal" validate:"required,datetime=2006-01-02T15:04:05Z07:00"`
-	Keterangan      string          `json:"keterangan" validate:"required"`
-	AyatJurnal      []ReqAyatJurnal `json:"ayat_jurnal" validate:"required,min=2,dive"`
+	BuktiPembayaran entity.BuktiPembayaran `json:"bukti_pembayaran" validate:"omitempty,dive,url"`
+	Tanggal         string                 `json:"tanggal" validate:"required,datetime=2006-01-02T15:04:05Z07:00"`
+	Keterangan      string                 `json:"keterangan" validate:"required"`
+	KontakID        string                 `json:"kontak_id" validate:"omitempty,ulid"`
+	AyatJurnal      []ReqAyatJurnal        `json:"ayat_jurnal" validate:"required,min=2,dive"`
+	// Jenis           string                 `json:"jenis" validate:"required,oneof=GENERAL PIUTANG HUTANG"`
 }
 
 type Update struct {
-	ID              string          `param:"id" validate:"required,ulid"`
-	BuktiPembayaran string          `json:"bukti_pembayaran" validate:"omitempty,url_cloud_storage"`
-	Tanggal         string          `json:"tanggal" validate:"omitempty,datetime=2006-01-02T15:04:05Z07:00"`
-	Keterangan      string          `json:"keterangan" validate:"omitempty"`
-	AyatJurnal      []ReqAyatJurnal `json:"ayat_jurnal" validate:"omitempty,min=2,dive"`
+	ID              string                 `param:"id" validate:"required,ulid"`
+	BuktiPembayaran entity.BuktiPembayaran `json:"bukti_pembayaran" validate:"omitempty,dive,url"`
+	Tanggal         string                 `json:"tanggal" validate:"omitempty,datetime=2006-01-02T15:04:05Z07:00"`
+	Keterangan      string                 `json:"keterangan" validate:"omitempty"`
+	AyatJurnal      []ReqAyatJurnal        `json:"ayat_jurnal" validate:"omitempty,min=2,dive"`
 }
 
 type GetAll struct {

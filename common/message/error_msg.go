@@ -28,7 +28,9 @@ var (
 	// kategori
 	KategoriProdukNotFound = "kategori produk tidak ditemukan"
 	// harga detail
-	HargaDetailProdukNotFound = "harga detail produk tidak ditemukan"
+	HargaDetailProdukNotFound              = "harga detail produk tidak ditemukan"
+	HargaDetailProdukEmpty                 = "harga detail produk pada produk ini masih kosong"
+	HargaDetailProdukNotFoundOrNotAddedYet = "harga detail produk dengan qty ini tidak ditemukan atau belum ditambahkan, hubungi direktur untuk informasi lebih lanjut"
 )
 
 // bordir
@@ -49,14 +51,21 @@ var (
 
 // akuntansi
 var (
+	// transaksi
 	CreditDebitNotSame = "total debit dan kredit harus sama"
 	AkunCannotBeSame   = "akun tidak boleh sama"
 	AkunCannotDeleted  = "tidak bisa menghapus akun karena akun masih digunakan pada ayat jurnal"
 	// kategori akun
 	KategoriAkunNotFound = "kategori akun tidak ditemukan"
 	// kelompok akun
-	KelompokAkunIdNotFound    = "kelompok_akun_id tidak valid atau tidak ditemukan"
+	KelompokAkunNotFound      = "kelompok akun tidak ditemukan"
 	KelompokAkunCannotDeleted = "akun dengan kelompok akun yang akan dihapus masih ada pada ayat jurnal"
 	// akun
-	AkunIdNotFound = "akun_id tidak valid atau tidak ditemukan"
+	AkunNotFound = "akun tidak ditemukan"
+	// kontak
+	KontakNotFound = "kontak tidak ditemukan"
+	// huang piutang
+	InvalidAkunHutangPiutang = "akun bukan merupakan akun hutang piutang"
+	// bayar hutang piutang
+	BayarMustLessThanSisaTagihan = "jumlah yang dibayar harus kurang atau sama dengan sisa tagihan"
 )

@@ -35,7 +35,7 @@ func (u *akunUsecase) Create(ctx context.Context, reqAkun req.Create) error {
 	kelompokAkun, err := u.repoKelompokAkun.GetById(ctx, reqAkun.KelompokAkunID)
 	if err != nil {
 		if err.Error() == "record not found" {
-			return errors.New(message.KelompokAkunIdNotFound)
+			return errors.New(message.KelompokAkunNotFound)
 		}
 		return err
 	}
@@ -72,7 +72,7 @@ func (u *akunUsecase) Update(ctx context.Context, reqAkun req.Update) error {
 		klmpAkun, err := u.repoKelompokAkun.GetById(ctx, reqAkun.KelompokAkunID)
 		if err != nil {
 			if err.Error() == "record not found" {
-				return errors.New(message.KelompokAkunIdNotFound)
+				return errors.New(message.KelompokAkunNotFound)
 			}
 		}
 		newKode += klmpAkun.Kode

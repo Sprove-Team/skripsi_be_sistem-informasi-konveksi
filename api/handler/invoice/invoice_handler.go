@@ -2,7 +2,6 @@ package invoice
 
 import (
 	"context"
-	"fmt"
 
 	usecase "github.com/be-sistem-informasi-konveksi/api/usecase/invoice"
 	"github.com/be-sistem-informasi-konveksi/common/message"
@@ -42,19 +41,19 @@ func errResponse(c *fiber.Ctx, err error) error {
 
 	badRequest := map[string][]string{}
 
-	fmt.Println(err.Error())
-	if err.Error() == message.UserNotFound {
+	switch err.Error() {
+	case message.UserNotFound:
 		badRequest["user_id"] = []string{err.Error()}
-	}
-	switch err.Error()[2:] {
+	case message.AkunNotFound:
+		badRequest["akun_pembayaran"] = []string{err.Error()}
 	case message.BordirNotFound:
-		badRequest[fmt.Sprintf("detail_invoice[%c].bordir_id", err.Error()[0])] = []string{err.Error()[2:]}
+		badRequest["detail_invoice.bordir_id"] = []string{err.Error()}
 	case message.ProdukNotFound:
-		badRequest[fmt.Sprintf("detail_invoice[%c].produk_id", err.Error()[0])] = []string{err.Error()[2:]}
+		badRequest["detail_invoice.produk_id"] = []string{err.Error()}
 	case message.SablonNotFound:
-		badRequest[fmt.Sprintf("detail_invoice[%c].sablon_id", err.Error()[0])] = []string{err.Error()[2:]}
-	case message.HargaDetailProdukNotFound:
-		badRequest[fmt.Sprintf("detail_invoice[%c].harga_produk_id", err.Error()[0])] = []string{err.Error()[2:]}
+		badRequest["detail_invoice.sablon_id"] = []string{err.Error()}
+	case message.HargaDetailProdukNotFoundOrNotAddedYet:
+		badRequest["detail_invoice"] = []string{err.Error()}
 	}
 
 	if len(badRequest) > 0 {

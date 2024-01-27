@@ -7,26 +7,16 @@ import (
 	"github.com/be-sistem-informasi-konveksi/entity"
 	"github.com/be-sistem-informasi-konveksi/helper"
 	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
 )
 
 type CreateParam struct {
 	Transaksi   *entity.Transaksi
 	AyatJurnals []*entity.AyatJurnal
-	UpdateAkuns []*entity.Akun
-}
-
-type DeleteParam struct {
-	ID          string
-	UpdateAkuns []entity.Akun
-	// SaldoAkunValues []string
 }
 
 type UpdateParam struct {
 	UpdateTr       *entity.Transaksi
 	NewAyatJurnals []*entity.AyatJurnal
-	UpdateAkuns    []entity.Akun
-	// NewSaldoAkunValues []string
 }
 
 type SearchTransaksi struct {
@@ -39,7 +29,7 @@ type TransaksiRepo interface {
 	Update(ctx context.Context, param UpdateParam) error
 	GetAll(ctx context.Context, param SearchTransaksi) ([]entity.Transaksi, error)
 	GetHistory(ctx context.Context, param SearchTransaksi) ([]entity.Transaksi, error)
-	Delete(ctx context.Context, param DeleteParam) error
+	Delete(ctx context.Context, id string) error
 	GetById(ctx context.Context, id string) (entity.Transaksi, error)
 	// Add more methods as needed for your repository operations
 }
@@ -66,15 +56,6 @@ func (r *transaksiRepo) Create(ctx context.Context, param CreateParam) error {
 
 		if err := tx.Model(&entity.AyatJurnal{}).Create(param.AyatJurnals).Error; err != nil {
 			helper.LogsError(err)
-			return err
-		}
-
-		clause := clause.OnConflict{
-			Columns:   []clause.Column{{Name: "id"}, {Name: "kode"}},
-			DoUpdates: clause.AssignmentColumns([]string{"saldo"}),
-		}
-
-		if err := tx.Clauses(clause).Create(param.UpdateAkuns).Error; err != nil {
 			return err
 		}
 
@@ -111,14 +92,14 @@ func (r *transaksiRepo) Update(ctx context.Context, param UpdateParam) error {
 				return err
 			}
 			// update akun
-			clause := clause.OnConflict{
-				Columns:   []clause.Column{{Name: "id"}, {Name: "kode"}},
-				DoUpdates: clause.AssignmentColumns([]string{"saldo"}),
-			}
+			// clause := clause.OnConflict{
+			// 	Columns:   []clause.Column{{Name: "id"}, {Name: "kode"}},
+			// 	DoUpdates: clause.AssignmentColumns([]string{"saldo"}),
+			// }
 
-			if err := tx.Clauses(clause).Create(&param.UpdateAkuns).Error; err != nil {
-				return err
-			}
+			// if err := tx.Clauses(clause).Create(&param.UpdateAkuns).Error; err != nil {
+			// 	return err
+			// }
 		}
 
 		// update multiple lines with duplicate IDs in the 'akun' table.
@@ -138,23 +119,13 @@ func (r *transaksiRepo) Update(ctx context.Context, param UpdateParam) error {
 	return nil
 }
 
-func (r *transaksiRepo) Delete(ctx context.Context, param DeleteParam) error {
+func (r *transaksiRepo) Delete(ctx context.Context, id string) error {
 	err := r.DB.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		if err := tx.Delete(&entity.Transaksi{}, "id = ?", param.ID).Error; err != nil {
+		if err := tx.Delete(&entity.Transaksi{}, "id = ?", id).Error; err != nil {
 			return err
 		}
 
-		if err := tx.Unscoped().Where("transaksi_id = ?", param.ID).Delete(&entity.AyatJurnal{}).Error; err != nil {
-			return err
-		}
-
-		clause := clause.OnConflict{
-			Columns:   []clause.Column{{Name: "id"}, {Name: "kode"}},
-			DoUpdates: clause.AssignmentColumns([]string{"saldo"}),
-		}
-
-		// update multiple lines with duplicate IDs in the 'akun' table. based on "kode"
-		if err := tx.Clauses(clause).Create(&param.UpdateAkuns).Error; err != nil {
+		if err := tx.Unscoped().Where("transaksi_id = ?", id).Delete(&entity.AyatJurnal{}).Error; err != nil {
 			return err
 		}
 
@@ -215,7 +186,7 @@ func (r *transaksiRepo) GetById(ctx context.Context, id string) (entity.Transaks
 	data := entity.Transaksi{}
 	err := r.DB.WithContext(ctx).Model(&entity.Transaksi{}).Omit("created_at", "deleted_at", "updated_at").Where("id = ?", id).Preload("AyatJurnals", func(db *gorm.DB) *gorm.DB {
 		return db.Omit("created_at", "deleted_at", "updated_at").Preload("Akun", func(db2 *gorm.DB) *gorm.DB {
-			return db2.Select("nama", "id", "saldo_normal", "saldo", "kode", "kelompok_akun_id")
+			return db2.Select("nama", "id", "saldo_normal", "kode", "kelompok_akun_id")
 		})
 	}).First(&data).Error
 	if err != nil {

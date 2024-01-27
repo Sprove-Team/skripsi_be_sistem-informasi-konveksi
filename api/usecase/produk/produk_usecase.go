@@ -50,6 +50,7 @@ func (u *produkUsecase) Create(ctx context.Context, produk req.Create) error {
 			ID: id,
 		},
 		Nama:             produk.Nama,
+		Harga:            produk.Harga,
 		KategoriProdukID: produk.KategoriID,
 	}
 

@@ -47,7 +47,7 @@ func errResponse(c *fiber.Ctx, err error) error {
 
 	badRequest := map[string][]string{}
 
-	if err.Error() == message.KelompokAkunIdNotFound {
+	if err.Error() == message.KelompokAkunNotFound {
 		badRequest["kelompok_akun_id"] = []string{err.Error()}
 	}
 

@@ -11,6 +11,7 @@ type AkuntansiRoute interface {
 	Akun(router fiber.Router)
 	KelompokAkun(router fiber.Router)
 	Transaksi(router fiber.Router)
+	HutangPiutang(router fiber.Router)
 	Akuntansi(router fiber.Router)
 }
 
@@ -47,6 +48,15 @@ func (ro *akuntansiRoute) Transaksi(router fiber.Router) {
 	router.Post("", ro.h.Transaksi().Create)
 	router.Put("/:id", ro.h.Transaksi().Update)
 	router.Delete("/:id", ro.h.Transaksi().Delete)
+}
+
+func (ro *akuntansiRoute) HutangPiutang(router fiber.Router) {
+	// router.Get("/history", ro.h.Transaksi().GetHistory)
+	// router.Get("", ro.h.Transaksi().GetAll)
+	// router.Get("/:id", ro.h.Transaksi().GetById)
+	router.Post("", ro.h.HutangPiutang().Create)
+	// router.Put("/:id", ro.h.Transaksi().Update)
+	// router.Delete("/:id", ro.h.Transaksi().Delete)
 }
 
 func (ro *akuntansiRoute) Akuntansi(router fiber.Router) {

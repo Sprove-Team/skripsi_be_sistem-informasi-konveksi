@@ -3,7 +3,6 @@ package pkg
 import (
 	"bytes"
 	"fmt"
-	"net/url"
 	"strings"
 	"sync"
 	"unicode"
@@ -32,7 +31,7 @@ func NewValidator() Validator {
 	// custom validation
 
 	validate.RegisterValidation("ulid", validateULID)
-	validate.RegisterValidation("url_cloud_storage", validateGoogleStorageURL)
+	// validate.RegisterValidation("url_cloud_storage", validateGoogleStorageURL)
 
 	// default translations
 	trans := (&translator{}).Translator()
@@ -47,12 +46,12 @@ func NewValidator() Validator {
 		return t
 	})
 
-	validate.RegisterTranslation("url_cloud_storage", trans, func(ut ut.Translator) error {
-		return ut.Add("url_cloud_storage", "{0} tidak berupa url cloud storage yang valid", true)
-	}, func(ut ut.Translator, fe validator.FieldError) string {
-		t, _ := ut.T("url_cloud_storage", camelToSnake(fe.Field()))
-		return t
-	})
+	// validate.RegisterTranslation("url_cloud_storage", trans, func(ut ut.Translator) error {
+	// 	return ut.Add("url_cloud_storage", "{0} tidak berupa url cloud storage yang valid", true)
+	// }, func(ut ut.Translator, fe validator.FieldError) string {
+	// 	t, _ := ut.T("url_cloud_storage", camelToSnake(fe.Field()))
+	// 	return t
+	// })
 
 	validate.RegisterTranslation("required_if", trans, func(ut ut.Translator) error {
 		return ut.Add("required_if", "{0} wajib diisi ketika {1}", true)
@@ -95,24 +94,24 @@ func NewValidator() Validator {
 
 // custom validation
 
-func validateGoogleStorageURL(fl validator.FieldLevel) bool {
-	// Parse the URL
+// func validateGoogleStorageURL(fl validator.FieldLevel) bool {
+// 	// Parse the URL
 
-	inputUrl := fl.Field().String()
-	u, err := url.Parse(inputUrl)
-	if err != nil {
-		return false
-	}
+// 	inputUrl := fl.Field().String()
+// 	u, err := url.Parse(inputUrl)
+// 	if err != nil {
+// 		return false
+// 	}
 
-	if u.Scheme != "https" {
-		return false
-	}
+// 	if u.Scheme != "https" {
+// 		return false
+// 	}
 
-	if u.Hostname() != "storage.googleapis.com" {
-		return false
-	}
-	return true
-}
+// 	if u.Hostname() != "storage.googleapis.com" {
+// 		return false
+// 	}
+// 	return true
+// }
 
 func validateULID(fl validator.FieldLevel) bool {
 	ulid := fl.Field().String()

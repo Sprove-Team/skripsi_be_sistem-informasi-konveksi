@@ -29,6 +29,7 @@ type AkunRepo interface {
 	GetById(ctx context.Context, id string) (entity.Akun, error)
 	GetByIds(ctx context.Context, ids []string) ([]entity.Akun, error)
 	GetAkunDetailsByTransactionID(ctx context.Context, id string) ([]AkunTransactionDetails, error)
+	GetAkunByNames(ctx context.Context, names []string) ([]entity.Akun, error)
 	// GetAllWithouFilterPreload(ctx context.Context) ([]entity.Akun, error)
 }
 
@@ -55,7 +56,7 @@ func (r *akunRepo) GetById(ctx context.Context, id string) (entity.Akun, error) 
 func (r *akunRepo) GetByIds(ctx context.Context, ids []string) ([]entity.Akun, error) {
 	datas := []entity.Akun{}
 
-	err := r.DB.WithContext(ctx).Where("id IN ?", ids).Find(&datas).Error
+	err := r.DB.WithContext(ctx).Where("id IN ?", ids).Preload("KelompokAkun").Find(&datas).Error
 	if err != nil {
 		helper.LogsError(err)
 		return datas, err
@@ -137,7 +138,7 @@ func (r *akunRepo) GetAll(ctx context.Context, searchAkun SearchAkun) ([]entity.
 	conditions := map[string]interface{}{
 		"id > ?":      searchAkun.Next,
 		"nama LIKE ?": "%" + searchAkun.Nama + "%",
-		"kode = ?":    searchAkun.Kode,
+		"kode LIKE ?": searchAkun.Kode + "%",
 	}
 
 	for condition, value := range conditions {
@@ -152,6 +153,15 @@ func (r *akunRepo) GetAll(ctx context.Context, searchAkun SearchAkun) ([]entity.
 	if err != nil {
 		helper.LogsError(err)
 		return datas, err
+	}
+	return datas, nil
+}
+
+func (r *akunRepo) GetAkunByNames(ctx context.Context, names []string) ([]entity.Akun, error) {
+	datas := make([]entity.Akun, 0, len(names))
+	if err := r.DB.WithContext(ctx).Where("nama IN (?)", names).Find(&datas).Error; err != nil {
+		helper.LogsError(err)
+		return nil, err
 	}
 	return datas, nil
 }

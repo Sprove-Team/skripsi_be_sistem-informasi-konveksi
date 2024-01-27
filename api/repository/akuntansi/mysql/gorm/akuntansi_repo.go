@@ -191,10 +191,11 @@ func (r *akuntansiRepo) GetDataLBR(ctx context.Context, startDate, endDate time.
 			Where("DATE(tanggal) >= ? AND DATE(tanggal) <= ?", startDate, endDate)
 
 			// Select("k.kategori_akun as KategoriAkun, akun.Nama as NamaAkun, akun.saldo as Saldo, COALESCE(sum(ay.debit), 0) as SaldoDebit, COALESCE(sum(ay.kredit), 0) as SaldoKredit, COALESCE(sum(ay.saldo), 0) as Saldo, akun.kode as KodeAkun").
+			// Select("akun.kode AS KodeAkun,k.kategori_akun AS KategoriAkun, akun.Nama AS NamaAkun, akun.saldo AS Saldo").
 		err := r.DB.WithContext(ctx).Model(&entity.Akun{}).
 			Joins("JOIN kelompok_akun k ON k.id = akun.kelompok_akun_id AND k.kategori_akun IN (?)", []string{"PENDAPATAN", "BEBAN"}).
 			Joins("JOIN ayat_jurnal ay ON ay.akun_id = akun.id").
-			Select("akun.kode AS KodeAkun,k.kategori_akun AS KategoriAkun, akun.Nama AS NamaAkun, akun.saldo AS Saldo").
+			Select("k.kategori_akun as KategoriAkun, akun.Nama as NamaAkun, COALESCE(sum(ay.saldo), 0) as Saldo, akun.kode as KodeAkun").
 			Where("ay.transaksi_id IN (?)", subQueryTr).
 			Group("akun.id").
 			Find(&datas).Error

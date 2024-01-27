@@ -1,4 +1,4 @@
-package transaksi
+package akuntansi
 
 import (
 	"context"
@@ -53,8 +53,8 @@ func errResponse(c *fiber.Ctx, err error) error {
 		badRequest["debit dan kredit"] = []string{message.CreditDebitNotSame}
 	}
 
-	if err.Error() == message.AkunIdNotFound {
-		badRequest["akun_id"] = []string{message.AkunIdNotFound}
+	if err.Error() == message.AkunNotFound {
+		badRequest["akun_id"] = []string{message.AkunNotFound}
 	}
 
 	if len(badRequest) > 0 {

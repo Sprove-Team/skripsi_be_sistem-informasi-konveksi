@@ -13,7 +13,6 @@ import (
 	"github.com/be-sistem-informasi-konveksi/entity"
 	"github.com/be-sistem-informasi-konveksi/helper"
 	"github.com/be-sistem-informasi-konveksi/pkg"
-	"golang.org/x/sync/errgroup"
 )
 
 type TransaksiUsecase interface {
@@ -36,29 +35,7 @@ func NewTransaksiUsecase(repo repo.TransaksiRepo, repoAkun repoAkun.AkunRepo, ul
 }
 
 func (u *transaksiUsecase) Delete(ctx context.Context, id string) error {
-	detailAkuns, err := u.repoAkun.GetAkunDetailsByTransactionID(ctx, id)
-	if err != nil {
-		return err
-	}
-
-	newAkuns := make([]entity.Akun, len(detailAkuns))
-
-	for i, v := range detailAkuns {
-		newAkuns[i] = entity.Akun{
-			Base: entity.Base{
-				ID: v.ID,
-			},
-			KelompokAkunID: v.KelID,
-			Saldo:          v.Saldo - v.TotalSaldoTr,
-			Nama:           v.Nama,
-			Kode:           v.Kode,
-		}
-	}
-
-	return u.repo.Delete(ctx, repo.DeleteParam{
-		ID:          id,
-		UpdateAkuns: newAkuns,
-	})
+	return u.repo.Delete(ctx, id)
 }
 
 func (u *transaksiUsecase) Update(ctx context.Context, reqTransaksi req.Update) error {
@@ -70,8 +47,6 @@ func (u *transaksiUsecase) Update(ctx context.Context, reqTransaksi req.Update) 
 	lengthReqAyatJurnals := len(reqTransaksi.AyatJurnal)
 	lengthOldAyatJurnals := len(oldTr.AyatJurnals)
 
-	// isReqAyatJurnalsEmpty := lengthReqAyatJurnals == 0
-
 	updateTrParam := repo.UpdateParam{}
 
 	newTr := entity.Transaksi{
@@ -82,22 +57,37 @@ func (u *transaksiUsecase) Update(ctx context.Context, reqTransaksi req.Update) 
 		BuktiPembayaran: reqTransaksi.BuktiPembayaran,
 	}
 
-	oldAy := make([]req.ReqAyatJurnal, lengthOldAyatJurnals)
-
-	// isLengthAreSame := lengthReqAyatJurnals == lengthOldAyatJurnals
-	// countSameAyJurnals := 0
-
-	for i, ay := range oldTr.AyatJurnals {
-		oldAy[i] = req.ReqAyatJurnal{
-			AkunID: ay.AkunID,
-			Debit:  ay.Debit,
-			Kredit: ay.Kredit,
+	oldAy := make([]entity.AyatJurnal, lengthOldAyatJurnals)
+	reqAy := make([]entity.AyatJurnal, lengthReqAyatJurnals)
+	wg := &sync.WaitGroup{}
+	wg.Add(2)
+	go func() {
+		defer wg.Done()
+		for i, ay := range oldTr.AyatJurnals {
+			oldAy[i] = entity.AyatJurnal{
+				AkunID: ay.AkunID,
+				Debit:  ay.Debit,
+				Kredit: ay.Kredit,
+			}
 		}
-	}
+	}()
 
-	// change the saldo akun if the ayat jurnals is difference
-	if !isSameReqAyJurnals(oldAy, reqTransaksi.AyatJurnal) {
+	go func() {
+		defer wg.Done()
+		for i, ay := range reqTransaksi.AyatJurnal {
+			reqAy[i] = entity.AyatJurnal{
+				AkunID: ay.AkunID,
+				Debit:  ay.Debit,
+				Kredit: ay.Kredit,
+			}
+		}
+	}()
+	wg.Wait()
 
+	// change the saldo ayat jurnal if the ayat jurnals is difference
+	if !helper.IsSameReqAyJurnals(oldAy, reqAy) {
+
+		// u.repo.GetById()
 		akunIDs := make([]string, lengthReqAyatJurnals)
 		for i, ay := range reqTransaksi.AyatJurnal {
 			akunIDs[i] = ay.AkunID
@@ -115,34 +105,28 @@ func (u *transaksiUsecase) Update(ctx context.Context, reqTransaksi req.Update) 
 		}
 
 		for _, v := range oldTr.AyatJurnals {
-			// update if there a same id with the old one
+			// setup data akun, if there a same id with the old one
 			akun, ok := akunsMap[v.AkunID]
 			if !ok {
 				akun = entity.Akun{
 					Base: entity.Base{
 						ID: v.Akun.ID,
 					},
-					Saldo:          v.Akun.Saldo,
 					Nama:           v.Akun.Nama,
 					Kode:           v.Akun.Kode,
 					KelompokAkunID: v.Akun.KelompokAkunID,
 				}
 			}
-
-			akun.Saldo -= v.Saldo
 			akunsMap[v.AkunID] = akun
 		}
-
-		// wg := &sync.WaitGroup{}
-		// m := &sync.Mutex{}
 
 		// validate kredit, debit and get totalTransaksi
 		var totalTransaksi float64
 
-		if err := isKreditEqualToDebit(reqTransaksi.AyatJurnal, &totalTransaksi); err != nil {
+		if err := helper.IsKreditEqualToDebit(reqAy, &totalTransaksi); err != nil {
 			return err
 		}
-		if err := isDuplicateAkun(reqTransaksi.AyatJurnal); err != nil {
+		if err := helper.IsDuplicateAkun(reqAy); err != nil {
 			return err
 		}
 
@@ -151,19 +135,11 @@ func (u *transaksiUsecase) Update(ctx context.Context, reqTransaksi req.Update) 
 		// add newAyatJurnals
 		newAyatJurnals := make([]*entity.AyatJurnal, len(reqTransaksi.AyatJurnal))
 
-		// maxConcurent := make(chan struct{}, 10)
 		for i, ay := range reqTransaksi.AyatJurnal {
 			akun := akunsMap[ay.AkunID]
 			// logic calculate saldo ayatJurnal
 			var saldo float64
-			// saldo += ay.Debit
-			if ay.Kredit != 0 {
-				updateSaldo(&akun.Saldo, &saldo, ay.Kredit, akun.SaldoNormal == "DEBIT")
-			}
-			if ay.Debit != 0 {
-				updateSaldo(&akun.Saldo, &saldo, ay.Debit, akun.SaldoNormal == "KREDIT")
-			}
-
+			helper.UpdateSaldo(&saldo, ay.Kredit, ay.Debit, akun.SaldoNormal)
 			ayatJurnal := entity.AyatJurnal{
 				Base: entity.Base{
 					ID: u.ulid.MakeUlid().String(),
@@ -178,25 +154,10 @@ func (u *transaksiUsecase) Update(ctx context.Context, reqTransaksi req.Update) 
 			newAyatJurnals[i] = &ayatJurnal
 			akunsMap[ay.AkunID] = akun
 		}
-		// wg.Wait()
-
-		// create new values for saldo akun
-		// newSaldoAkun := make([]string, len(akunsMap))
-
-		newAkuns := make([]entity.Akun, len(akunsMap))
-		i := 0
-		for _, v := range akunsMap {
-			newAkuns[i] = v
-			i++
-			// newSaldoAkun[i] = fmt.Sprintf("('%s', %.2f, '%s', '%s', '%s')", v.ID, v.Saldo, v.KelompokAkunID, v.Nama, v.Kode)
-		}
 
 		updateTrParam.NewAyatJurnals = newAyatJurnals
-		updateTrParam.UpdateAkuns = newAkuns
-		// updateTrParam.NewSaldoAkunValues = newSaldoAkun
 	}
 	updateTrParam.UpdateTr = &newTr
-	// fmt.Println(updateTrParam.NewAyatJurnals)
 
 	if err := u.repo.Update(ctx, updateTrParam); err != nil {
 		return err
@@ -206,18 +167,27 @@ func (u *transaksiUsecase) Update(ctx context.Context, reqTransaksi req.Update) 
 }
 
 func (u *transaksiUsecase) Create(ctx context.Context, reqTransaksi req.Create) error {
-	// validate kredit and debit
-	// wg := &sync.WaitGroup{}
 
+	reqAy := make([]entity.AyatJurnal, len(reqTransaksi.AyatJurnal))
+
+	for i, ay := range reqTransaksi.AyatJurnal {
+		reqAy[i] = entity.AyatJurnal{
+			AkunID: ay.AkunID,
+			Debit:  ay.Debit,
+			Kredit: ay.Kredit,
+		}
+	}
+
+	// get total transaksi
 	var totalTransaksi float64
-	if err := isKreditEqualToDebit(reqTransaksi.AyatJurnal, &totalTransaksi); err != nil {
+	if err := helper.IsKreditEqualToDebit(reqAy, &totalTransaksi); err != nil {
 		return err
 	}
-	if err := isDuplicateAkun(reqTransaksi.AyatJurnal); err != nil {
+	if err := helper.IsDuplicateAkun(reqAy); err != nil {
 		return err
 	}
-	// akun, err := u.repoAkun.GetById(ctx, )
 
+	// get akun that haved by ayatjurnal
 	akunIds := make([]string, len(reqTransaksi.AyatJurnal))
 
 	for i, v := range reqTransaksi.AyatJurnal {
@@ -226,6 +196,9 @@ func (u *transaksiUsecase) Create(ctx context.Context, reqTransaksi req.Create) 
 
 	akuns, err := u.repoAkun.GetByIds(ctx, akunIds)
 	if err != nil {
+		if len(akuns) != len(akunIds) {
+			return errors.New(message.AkunNotFound)
+		}
 		return err
 	}
 
@@ -239,47 +212,28 @@ func (u *transaksiUsecase) Create(ctx context.Context, reqTransaksi req.Create) 
 	dataAyatJurnals := make([]*entity.AyatJurnal, len(reqTransaksi.AyatJurnal))
 	transaksiID := u.ulid.MakeUlid().String()
 
-	updateAkuns := []*entity.Akun{}
-	m := &sync.Mutex{}
-	g := errgroup.Group{}
-
 	for i, v := range reqTransaksi.AyatJurnal {
-		i := i
-		v := v
-		g.Go(func() error {
-			akun, ok := mapAkuns[v.AkunID]
-			if !ok {
-				return errors.New(message.AkunIdNotFound)
-			}
-			// logic calculate saldo ayatJurnal
-			var saldo float64
-			if v.Kredit != 0 {
-				updateSaldo(&akun.Saldo, &saldo, v.Kredit, akun.SaldoNormal == "DEBIT")
-			}
-			if v.Debit != 0 {
-				updateSaldo(&akun.Saldo, &saldo, v.Debit, akun.SaldoNormal == "KREDIT")
-			}
-			// mapAkuns[v.AkunID] = repoAkun
-			updateAkuns = append(updateAkuns, &akun)
-			ayatJurnal := entity.AyatJurnal{
-				Base: entity.Base{
-					ID: u.ulid.MakeUlid().String(),
-				},
-				TransaksiID: transaksiID,
-				AkunID:      v.AkunID,
-				Kredit:      v.Kredit,
-				Debit:       v.Debit,
-				Saldo:       saldo,
-			}
-			m.Lock()
-			dataAyatJurnals[i] = &ayatJurnal
-			m.Unlock()
-			return nil
-		})
-	}
+		akun, ok := mapAkuns[v.AkunID]
+		if !ok {
+			return errors.New(message.AkunNotFound)
+		}
 
-	if err := g.Wait(); err != nil {
-		return err
+		// logic calculate saldo ayatJurnal
+		var saldo float64
+		helper.UpdateSaldo(&saldo, v.Kredit, v.Debit, akun.SaldoNormal)
+
+		ayatJurnal := entity.AyatJurnal{
+			Base: entity.Base{
+				ID: u.ulid.MakeUlid().String(),
+			},
+			TransaksiID: transaksiID,
+			AkunID:      v.AkunID,
+			Kredit:      v.Kredit,
+			Debit:       v.Debit,
+			Saldo:       saldo,
+		}
+		dataAyatJurnals[i] = &ayatJurnal
+
 	}
 
 	parsedTime, err := time.Parse(time.RFC3339, reqTransaksi.Tanggal)
@@ -294,6 +248,7 @@ func (u *transaksiUsecase) Create(ctx context.Context, reqTransaksi req.Create) 
 		},
 		Tanggal:         parsedTime,
 		Keterangan:      reqTransaksi.Keterangan,
+		KontakID:        reqTransaksi.KontakID,
 		BuktiPembayaran: reqTransaksi.BuktiPembayaran,
 		Total:           totalTransaksi,
 	}
@@ -301,7 +256,6 @@ func (u *transaksiUsecase) Create(ctx context.Context, reqTransaksi req.Create) 
 	err = u.repo.Create(ctx, repo.CreateParam{
 		AyatJurnals: dataAyatJurnals,
 		Transaksi:   &dataTransaksi,
-		UpdateAkuns: updateAkuns,
 	})
 
 	if err != nil {

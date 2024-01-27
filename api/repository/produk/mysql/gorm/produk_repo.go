@@ -39,7 +39,9 @@ func (r *produkRepo) Update(ctx context.Context, produk *entity.Produk) error {
 
 func (r *produkRepo) GetById(ctx context.Context, id string) (entity.Produk, error) {
 	data := entity.Produk{}
-	err := r.DB.WithContext(ctx).Where("id = ?", id).Preload("HargaDetails").First(&data).Error
+	err := r.DB.WithContext(ctx).Where("id = ?", id).Preload("HargaDetails", func(db *gorm.DB) *gorm.DB {
+		return db.Order("qty ASC")
+	}).First(&data).Error
 	return data, err
 }
 
@@ -67,7 +69,9 @@ func (r *produkRepo) GetAll(ctx context.Context, param SearchProduk) ([]entity.P
 	}
 
 	if param.HasHargaDetail {
-		tx = tx.Preload("HargaDetails").Joins("JOIN harga_detail_produk hd on hd.produk_id = produk.id")
+		tx = tx.Preload("HargaDetails", func(db *gorm.DB) *gorm.DB {
+			return db.Order("qty ASC")
+		}).Joins("JOIN harga_detail_produk hd on hd.produk_id = produk.id")
 	} else {
 		tx = tx.Joins("LEFT JOIN harga_detail_produk hd on hd.produk_id = produk.id").Where("hd.id IS NULL")
 	}

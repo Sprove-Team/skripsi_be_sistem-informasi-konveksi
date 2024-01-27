@@ -83,15 +83,16 @@ func (dbgc *DBGorm) InitDBGorm(ulid pkg.UlidPkg) *gorm.DB {
 		return nil
 	})
 
-	// akuntansi
-	g.Go(func() error {
-		autoMigrateEntities(db, &entity.KelompokAkun{}, &entity.Akun{}, &entity.Transaksi{}, &entity.AyatJurnal{})
-		return nil
-	})
+	// g.Go(func() error {
+	// 	autoMigrateEntities(db, &entity.KelompokAkun{}, &entity.Akun{}, &entity.Kontak{}, &entity.Transaksi{}, &entity.AyatJurnal{})
+	// 	return nil
+	// })
 
-	// invoice
+	// invoice & akuntansi
 	//  &entity.StatusProduksi{},
 	g.Go(func() error {
+		autoMigrateEntities(db, &entity.KelompokAkun{}, &entity.Akun{}, &entity.Transaksi{}, &entity.AyatJurnal{})
+		autoMigrateEntities(db, &entity.Kontak{}, &entity.HutangPiutang{}, &entity.DataBayarHutangPiutang{})
 		autoMigrateEntities(db, &entity.Invoice{}, &entity.DetailInvoice{})
 		return nil
 	})
@@ -123,6 +124,8 @@ func (dbgc *DBGorm) InitDBGorm(ulid pkg.UlidPkg) *gorm.DB {
 
 func autoMigrateEntities(db *gorm.DB, entities ...interface{}) {
 	for _, entity := range entities {
+		// if !db.Migrator().HasTable(entity) {
+		// }
 		if err := db.AutoMigrate(entity); err != nil {
 			panic(err)
 		}
