@@ -230,7 +230,6 @@ func (u *hutangPiutangUsecase) Create(ctx context.Context, reqHutangPiutang req.
 						},
 					},
 				},
-				Total: trByr.Total,
 			}
 
 			dataByrHutangPiutang[i] = byrHP
@@ -248,8 +247,6 @@ func (u *hutangPiutangUsecase) Create(ctx context.Context, reqHutangPiutang req.
 	}
 
 	repoParam.DataBayarHutangPiutang = dataByrHutangPiutang
-	repoParam.Total = ayTagihan.Debit
-	repoParam.Sisa = sisaHutangPiutang
 	repoParam.Transaksi = transaksiHP
 
 	if err := u.repo.Create(ctx, repoParam); err != nil {
