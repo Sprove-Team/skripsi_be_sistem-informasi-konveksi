@@ -2,27 +2,13 @@ package helper
 
 import (
 	"errors"
+	"strings"
 
 	"github.com/be-sistem-informasi-konveksi/common/message"
 	"github.com/be-sistem-informasi-konveksi/entity"
 )
 
 func UpdateSaldo(saldo *float64, ayKredit, ayDebit float64, saldoNormal string) {
-	// if ayKredit != 0 {
-	// 	if saldoNormal == "DEBIT" {
-	// 		*saldo -= ayKredit
-	// 	} else {
-	// 		*saldo += ayKredit
-	// 	}
-	// }
-	// if ayDebit != 0 {
-	// 	if saldoNormal == "KREDIT" {
-	// 		*saldo -= ayDebit
-	// 	} else {
-	// 		*saldo += ayDebit
-	// 	}
-	// }
-
 	if saldoNormal == "DEBIT" {
 		*saldo = ayDebit - ayKredit
 	}
@@ -85,4 +71,17 @@ func IsDuplicateAkun(ayatJurnals []entity.AyatJurnal) error {
 	}
 
 	return nil
+}
+
+func IsValidAkunHutangPiutang(nama string) bool {
+	validNames := []string{"piutang", "hutang", "kas & bank"}
+	if strings.HasPrefix(nama, "pendapatan") {
+		return true
+	}
+	for _, validName := range validNames {
+		if nama == validName {
+			return true
+		}
+	}
+	return false
 }

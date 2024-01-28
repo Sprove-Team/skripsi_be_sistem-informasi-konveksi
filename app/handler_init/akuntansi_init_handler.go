@@ -21,6 +21,7 @@ import (
 	akunRepo "github.com/be-sistem-informasi-konveksi/api/repository/akuntansi/mysql/gorm/akun"
 	akunUsecase "github.com/be-sistem-informasi-konveksi/api/usecase/akuntansi/akun"
 
+	dataHutangPiutangRepo "github.com/be-sistem-informasi-konveksi/api/repository/akuntansi/mysql/gorm/data_bayar_hutang_piutang"
 	kontakRepo "github.com/be-sistem-informasi-konveksi/api/repository/akuntansi/mysql/gorm/kontak"
 
 	"github.com/be-sistem-informasi-konveksi/pkg"
@@ -65,7 +66,9 @@ func (d *akuntansiHandlerInit) KelompokAkunHandler() kelompokAkunHandler.Kelompo
 func (d *akuntansiHandlerInit) Transaksi() transaksiHandler.TransaksiHandler {
 	r := transaksiRepo.NewTransaksiRepo(d.DB)
 	rr := akunRepo.NewAkunRepo(d.DB)
-	uc := transaksiUsecase.NewTransaksiUsecase(r, rr, d.ulid)
+	rbyr := dataHutangPiutangRepo.NewDataBayarHutangPiutangRepo(d.DB)
+	rhp := hutangPiutangRepo.NewHutangPiutangRepo(d.DB)
+	uc := transaksiUsecase.NewTransaksiUsecase(r, rr, rhp, rbyr, d.ulid)
 	h := transaksiHandler.NewTransaksiHandler(uc, d.validator)
 	return h
 }

@@ -55,6 +55,7 @@ func (ro *akuntansiRoute) HutangPiutang(router fiber.Router) {
 	// router.Get("", ro.h.Transaksi().GetAll)
 	// router.Get("/:id", ro.h.Transaksi().GetById)
 	router.Post("", ro.h.HutangPiutang().Create)
+	router.Get("", ro.h.HutangPiutang().GetAll)
 	// router.Put("/:id", ro.h.Transaksi().Update)
 	// router.Delete("/:id", ro.h.Transaksi().Delete)
 }

@@ -31,9 +31,7 @@ type Create struct {
 }
 
 type GetAll struct {
-	KontakID  string       `json:"kontak_id" validate:"required,ulid"`
-	InvoiceID string       `json:"invoice_id" validate:"required,ulid"`
-	Jenis     string       `json:"jenis" validate:"required,oneof=PIUTANG HUTANG ALL"`
-	Status    string       `json:"status" validate:"required,oneof=BELUM_LUNAS LUNAS ALL"`
-	Transaksi ReqTransaksi `json:"transaksi" validate:"required"`
+	KontakID string `query:"kontak_id" validate:"omitempty,ulid"`
+	Jenis    string `query:"jenis" validate:"omitempty,oneof=PIUTANG HUTANG ALL"`
+	Status   string `query:"status" validate:"omitempty,oneof=BELUM_LUNAS LUNAS ALL"`
 }

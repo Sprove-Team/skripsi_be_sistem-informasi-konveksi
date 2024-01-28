@@ -2,6 +2,7 @@ package akuntansi
 
 import (
 	"context"
+	"fmt"
 
 	usecase "github.com/be-sistem-informasi-konveksi/api/usecase/akuntansi/hutang_piutang"
 	"github.com/be-sistem-informasi-konveksi/common/message"
@@ -15,7 +16,7 @@ type HutangPiutangHandler interface {
 	Create(c *fiber.Ctx) error
 	// Delete(c *fiber.Ctx) error
 	// Update(c *fiber.Ctx) error
-	// GetAll(c *fiber.Ctx) error
+	GetAll(c *fiber.Ctx) error
 	// GetById(c *fiber.Ctx) error
 	// GetHistory(c *fiber.Ctx) error
 }
@@ -88,4 +89,24 @@ func (h *hutangPiutangHandler) Create(c *fiber.Ctx) error {
 
 	// Respond with success status
 	return c.Status(fiber.StatusCreated).JSON(response.SuccessRes(fiber.StatusCreated, message.Created, nil))
+}
+func (h *hutangPiutangHandler) GetAll(c *fiber.Ctx) error {
+	req := new(req.GetAll)
+
+	c.QueryParser(req)
+	fmt.Println(*req)
+
+	errValidate := h.validator.Validate(req)
+	if errValidate != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(errValidate)
+	}
+	ctx := c.UserContext()
+	data, err := h.uc.GetAll(ctx, *req)
+	// Handle errors
+	if err != nil {
+		return errResponse(c, err)
+	}
+
+	// Respond with success status
+	return c.Status(fiber.StatusOK).JSON(response.SuccessRes(fiber.StatusOK, message.OK, data))
 }

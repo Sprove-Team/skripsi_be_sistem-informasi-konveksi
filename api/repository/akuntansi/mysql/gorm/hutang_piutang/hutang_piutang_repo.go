@@ -14,13 +14,16 @@ import (
 // }
 
 type SearchParam struct {
-	Jenis  []string
-	Status []string
+	KontakID string
+	Jenis    []string
+	Status   []string
 }
 
 type HutangPiutangRepo interface {
 	Create(ctx context.Context, hutangPiutang *entity.HutangPiutang) error
-	GetAll(ctx context.Context, search SearchParam) ([]entity.Transaksi, error)
+	GetAll(ctx context.Context, search SearchParam) ([]entity.HutangPiutang, error)
+	GetById(ctx context.Context, id string) (entity.HutangPiutang, error)
+	GetByTrId(ctx context.Context, id string) (entity.HutangPiutang, error)
 	// CreateBayarHutangPiutang(ctx context.Context, )
 	// Update(ctx context.Context, param UpdateParam) error
 	// GetHistory(ctx context.Context, param SearchTransaksi) ([]entity.Transaksi, error)
@@ -45,9 +48,9 @@ func (r *hutangPiutangRepo) Create(ctx context.Context, hutangPiutang *entity.Hu
 	return nil
 }
 
-func (r *hutangPiutangRepo) GetAll(ctx context.Context, search SearchParam) ([]entity.Transaksi, error) {
-	datas := []entity.Transaksi{}
-	tx := r.DB.WithContext(ctx).Model(&datas).Order("id ASC")
+func (r *hutangPiutangRepo) GetAll(ctx context.Context, search SearchParam) ([]entity.HutangPiutang, error) {
+	datas := []entity.HutangPiutang{}
+	tx := r.DB.WithContext(ctx).Model(&entity.HutangPiutang{}).Order("id ASC")
 
 	if search.Jenis != nil {
 		tx = tx.Where("jenis IN (?)", search.Jenis)
@@ -56,6 +59,16 @@ func (r *hutangPiutangRepo) GetAll(ctx context.Context, search SearchParam) ([]e
 		tx = tx.Where("status IN (?)", search.Status)
 	}
 
+	if search.KontakID != "" {
+		tx = tx.Where("kontak_id = ?", search.KontakID)
+	}
+
+	tx = tx.
+		Preload("Transaksi").
+		Preload("Transaksi.Kontak").
+		Preload("DataBayarHutangPiutang").
+		Preload("DataBayarHutangPiutang.Transaksi")
+
 	if err := tx.Find(&datas).Error; err != nil {
 		helper.LogsError(err)
 		return nil, err
@@ -63,4 +76,33 @@ func (r *hutangPiutangRepo) GetAll(ctx context.Context, search SearchParam) ([]e
 
 	return datas, nil
 
+}
+
+func (r *hutangPiutangRepo) GetById(ctx context.Context, id string) (entity.HutangPiutang, error) {
+	data := entity.HutangPiutang{}
+	tx := r.DB.WithContext(ctx).Model(&entity.HutangPiutang{}).Where("id = ?", id).Order("id ASC")
+	tx = tx.
+		Preload("Transaksi").
+		Preload("Transaksi.Kontak").
+		Preload("DataBayarHutangPiutang").
+		Preload("DataBayarHutangPiutang.Transaksi")
+
+	if err := tx.First(&data).Error; err != nil {
+		helper.LogsError(err)
+		return data, err
+	}
+
+	return data, nil
+}
+
+func (r *hutangPiutangRepo) GetByTrId(ctx context.Context, id string) (entity.HutangPiutang, error) {
+	data := entity.HutangPiutang{}
+	tx := r.DB.WithContext(ctx).Model(&entity.HutangPiutang{}).Where("transaksi_id = ?", id)
+
+	if err := tx.First(&data).Error; err != nil {
+		helper.LogsError(err)
+		return data, err
+	}
+
+	return data, nil
 }

@@ -57,6 +57,18 @@ func errResponse(c *fiber.Ctx, err error) error {
 		badRequest["akun_id"] = []string{message.AkunNotFound}
 	}
 
+	if err.Error() == message.AkunHutangPiutangNotEq2 {
+		badRequest["ayat_jurnal"] = []string{err.Error()}
+	}
+
+	if err.Error() == message.InvalidAkunHutangPiutang {
+		badRequest["ayat_jurnal.akun_id"] = []string{err.Error()}
+	}
+
+	if err.Error() == message.AkunNotMatchWithJenisHP {
+		badRequest["ayat_jurnal.akun_id"] = []string{err.Error()}
+	}
+
 	if len(badRequest) > 0 {
 		return c.Status(fiber.StatusBadRequest).JSON(response.ErrorRes(fiber.ErrBadRequest.Code, fiber.ErrBadRequest.Message, badRequest))
 	}

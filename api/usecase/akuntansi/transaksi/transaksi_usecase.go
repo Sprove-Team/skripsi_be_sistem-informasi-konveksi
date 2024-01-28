@@ -3,10 +3,11 @@ package akuntansi
 import (
 	"context"
 	"errors"
-	"sync"
 	"time"
 
 	repoAkun "github.com/be-sistem-informasi-konveksi/api/repository/akuntansi/mysql/gorm/akun"
+	repoDataBayarHutangPiutang "github.com/be-sistem-informasi-konveksi/api/repository/akuntansi/mysql/gorm/data_bayar_hutang_piutang"
+	repoHutangPiutang "github.com/be-sistem-informasi-konveksi/api/repository/akuntansi/mysql/gorm/hutang_piutang"
 	repo "github.com/be-sistem-informasi-konveksi/api/repository/akuntansi/mysql/gorm/transaksi"
 	"github.com/be-sistem-informasi-konveksi/common/message"
 	req "github.com/be-sistem-informasi-konveksi/common/request/akuntansi/transaksi"
@@ -25,13 +26,20 @@ type TransaksiUsecase interface {
 }
 
 type transaksiUsecase struct {
-	repo     repo.TransaksiRepo
-	repoAkun repoAkun.AkunRepo
-	ulid     pkg.UlidPkg
+	repo                       repo.TransaksiRepo
+	repoAkun                   repoAkun.AkunRepo
+	repoHutangPiutang          repoHutangPiutang.HutangPiutangRepo
+	repoDataBayarHutangPiutang repoDataBayarHutangPiutang.DataBayarHutangPiutangRepo
+	ulid                       pkg.UlidPkg
 }
 
-func NewTransaksiUsecase(repo repo.TransaksiRepo, repoAkun repoAkun.AkunRepo, ulid pkg.UlidPkg) TransaksiUsecase {
-	return &transaksiUsecase{repo, repoAkun, ulid}
+func NewTransaksiUsecase(
+	repo repo.TransaksiRepo,
+	repoAkun repoAkun.AkunRepo,
+	repoHutangPiutang repoHutangPiutang.HutangPiutangRepo,
+	repoDataBayarHutangPiutang repoDataBayarHutangPiutang.DataBayarHutangPiutangRepo,
+	ulid pkg.UlidPkg) TransaksiUsecase {
+	return &transaksiUsecase{repo, repoAkun, repoHutangPiutang, repoDataBayarHutangPiutang, ulid}
 }
 
 func (u *transaksiUsecase) Delete(ctx context.Context, id string) error {
@@ -39,14 +47,46 @@ func (u *transaksiUsecase) Delete(ctx context.Context, id string) error {
 }
 
 func (u *transaksiUsecase) Update(ctx context.Context, reqTransaksi req.Update) error {
+	hp, err := u.repoHutangPiutang.GetByTrId(ctx, reqTransaksi.ID)
+	// fmt.Println("kena1 -> ", hp.Jenis)
+	if err != nil {
+		if err.Error() != "record not found" {
+			return err
+		}
+	}
+
+	var hpFromByr entity.DataBayarHutangPiutang
+	// validasi transaksi jika termasuk hutang piutang
+	if hp.ID != "" {
+		if len(reqTransaksi.AyatJurnal) != 2 {
+			return errors.New(message.AkunHutangPiutangNotEq2)
+		}
+		// validasi transaksi jika termasuk bayar hutang piutang
+	} else {
+		hpFromByr, err = u.repoDataBayarHutangPiutang.GetByTrId(ctx, reqTransaksi.ID)
+		if err != nil && err.Error() != "record not found" {
+			return err
+		}
+	}
+
+	lengthReqAyatJurnals := len(reqTransaksi.AyatJurnal)
+	reqAy := make([]entity.AyatJurnal, lengthReqAyatJurnals)
+
+	for i, ay := range reqTransaksi.AyatJurnal {
+		reqAy[i] = entity.AyatJurnal{
+			AkunID: ay.AkunID,
+			Debit:  ay.Debit,
+			Kredit: ay.Kredit,
+		}
+
+	}
+
 	oldTr, err := u.repo.GetById(ctx, reqTransaksi.ID)
 	if err != nil {
 		return err
 	}
 
-	lengthReqAyatJurnals := len(reqTransaksi.AyatJurnal)
 	lengthOldAyatJurnals := len(oldTr.AyatJurnals)
-
 	updateTrParam := repo.UpdateParam{}
 
 	newTr := entity.Transaksi{
@@ -58,31 +98,13 @@ func (u *transaksiUsecase) Update(ctx context.Context, reqTransaksi req.Update) 
 	}
 
 	oldAy := make([]entity.AyatJurnal, lengthOldAyatJurnals)
-	reqAy := make([]entity.AyatJurnal, lengthReqAyatJurnals)
-	wg := &sync.WaitGroup{}
-	wg.Add(2)
-	go func() {
-		defer wg.Done()
-		for i, ay := range oldTr.AyatJurnals {
-			oldAy[i] = entity.AyatJurnal{
-				AkunID: ay.AkunID,
-				Debit:  ay.Debit,
-				Kredit: ay.Kredit,
-			}
+	for i, ay := range oldTr.AyatJurnals {
+		oldAy[i] = entity.AyatJurnal{
+			AkunID: ay.AkunID,
+			Debit:  ay.Debit,
+			Kredit: ay.Kredit,
 		}
-	}()
-
-	go func() {
-		defer wg.Done()
-		for i, ay := range reqTransaksi.AyatJurnal {
-			reqAy[i] = entity.AyatJurnal{
-				AkunID: ay.AkunID,
-				Debit:  ay.Debit,
-				Kredit: ay.Kredit,
-			}
-		}
-	}()
-	wg.Wait()
+	}
 
 	// change the saldo ayat jurnal if the ayat jurnals is difference
 	if !helper.IsSameReqAyJurnals(oldAy, reqAy) {
@@ -101,6 +123,13 @@ func (u *transaksiUsecase) Update(ctx context.Context, reqTransaksi req.Update) 
 		akunsMap := map[string]entity.Akun{}
 
 		for _, v := range akuns {
+			// validasi ayat jurnal jika termasuk hutang piutang
+			if hp.ID != "" || hpFromByr.ID != "" {
+				if !helper.IsValidAkunHutangPiutang(v.KelompokAkun.Nama) {
+					return errors.New(message.InvalidAkunHutangPiutang)
+				}
+			}
+
 			akunsMap[v.ID] = v
 		}
 
@@ -137,6 +166,19 @@ func (u *transaksiUsecase) Update(ctx context.Context, reqTransaksi req.Update) 
 
 		for i, ay := range reqTransaksi.AyatJurnal {
 			akun := akunsMap[ay.AkunID]
+
+			// validasi akun sesuai dengan jenis hutang piutang baik itu tr hp atau byr hp
+			if (hp.Jenis == "PIUTANG" || hpFromByr.HutangPiutang.Jenis == "PIUTANG") && ay.Debit != 0 {
+				if akun.KelompokAkun.Nama != "piutang" {
+					return errors.New(message.AkunNotMatchWithJenisHP)
+				}
+			}
+			if (hp.Jenis == "HUTANG" || hpFromByr.HutangPiutang.Jenis == "HUTANG") && ay.Kredit != 0 {
+				if akun.KelompokAkun.Nama != "hutang" {
+					return errors.New(message.AkunNotMatchWithJenisHP)
+				}
+			}
+
 			// logic calculate saldo ayatJurnal
 			var saldo float64
 			helper.UpdateSaldo(&saldo, ay.Kredit, ay.Debit, akun.SaldoNormal)

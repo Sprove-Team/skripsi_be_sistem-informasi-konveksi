@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"math"
-	"strings"
 	"sync"
 	"time"
 
@@ -13,6 +12,7 @@ import (
 	repoKontak "github.com/be-sistem-informasi-konveksi/api/repository/akuntansi/mysql/gorm/kontak"
 	"github.com/be-sistem-informasi-konveksi/common/message"
 	req "github.com/be-sistem-informasi-konveksi/common/request/akuntansi/hutang_piutang"
+	res "github.com/be-sistem-informasi-konveksi/common/response/akuntansi/hutang_piutang"
 	"github.com/be-sistem-informasi-konveksi/entity"
 	"github.com/be-sistem-informasi-konveksi/helper"
 	"github.com/be-sistem-informasi-konveksi/pkg"
@@ -21,7 +21,7 @@ import (
 
 type HutangPiutangUsecase interface {
 	Create(ctx context.Context, reqHutangPiutang req.Create) error
-	// GetAll(ctx context.Context, reqHutangPiutang req.GetAll) ([]entity.HutangPiutang, error)
+	GetAll(ctx context.Context, reqHutangPiutang req.GetAll) ([]res.GetAll, error)
 	// CreateBayarHutangPiutang(ctx context.Context, reqBayarHutangPiutang req.BayarHutangPiutang) error
 }
 
@@ -34,19 +34,6 @@ type hutangPiutangUsecase struct {
 
 func NewHutangPiutangUsecase(repo repo.HutangPiutangRepo, repoAkun repoAkun.AkunRepo, repoKontak repoKontak.KontakRepo, ulid pkg.UlidPkg) HutangPiutangUsecase {
 	return &hutangPiutangUsecase{repo, repoAkun, repoKontak, ulid}
-}
-
-func isValidAkunHutangPiutang(nama string) bool {
-	validNames := []string{"piutang", "hutang", "kas & bank"}
-	if strings.HasPrefix(nama, "pendapatan") {
-		return true
-	}
-	for _, validName := range validNames {
-		if nama == validName {
-			return true
-		}
-	}
-	return false
 }
 
 func (u *hutangPiutangUsecase) Create(ctx context.Context, reqHutangPiutang req.Create) error {
@@ -127,7 +114,7 @@ func (u *hutangPiutangUsecase) Create(ctx context.Context, reqHutangPiutang req.
 	for _, akun := range akuns {
 		func(akun entity.Akun) {
 			g.Go(func() error {
-				if !isValidAkunHutangPiutang(akun.KelompokAkun.Nama) {
+				if !helper.IsValidAkunHutangPiutang(akun.KelompokAkun.Nama) {
 					return errors.New(message.InvalidAkunHutangPiutang)
 				}
 				switch akun.ID {
@@ -255,6 +242,106 @@ func (u *hutangPiutangUsecase) Create(ctx context.Context, reqHutangPiutang req.
 	return nil
 }
 
-// func (u *hutangPiutangUsecase) GetAll(ctx context.Context, reqHutangPiutang req.GetAll) ([]entity.HutangPiutang, error) {
-// 	// if reqHutangPiutang.Jenis ==
-// }
+func (u *hutangPiutangUsecase) GetAll(ctx context.Context, reqHutangPiutang req.GetAll) ([]res.GetAll, error) {
+	repoSearch := repo.SearchParam{
+		KontakID: reqHutangPiutang.KontakID,
+		Status:   []string{reqHutangPiutang.Status},
+		Jenis:    []string{reqHutangPiutang.Jenis},
+	}
+
+	if reqHutangPiutang.Jenis == "ALL" || reqHutangPiutang.Jenis == "" {
+		repoSearch.Jenis = []string{"PIUTANG", "HUTANG"}
+	}
+	if reqHutangPiutang.Status == "ALL" || reqHutangPiutang.Status == "" {
+		repoSearch.Status = []string{"BELUM_LUNAS", "LUNAS"}
+	}
+
+	datas, err := u.repo.GetAll(ctx, repoSearch)
+	if err != nil {
+		return nil, err
+	}
+
+	groupDataByKontak := make(map[string]res.GetAll)
+
+	m := new(sync.RWMutex)
+	wg := new(sync.WaitGroup)
+	maxGoroutines := 12
+	guard := make(chan struct{}, maxGoroutines)
+	for _, dataHpMixUp := range datas {
+		wg.Add(1)
+		guard <- struct{}{} // would block if guard channel is already filled
+		go func(data entity.HutangPiutang) {
+			defer func() {
+				<-guard
+				wg.Done()
+			}()
+			m.Lock()
+			defer m.Unlock()
+			dat, ok := groupDataByKontak[data.Transaksi.Kontak.Nama]
+			if !ok {
+				dat = res.GetAll{
+					Nama: data.Transaksi.Kontak.Nama,
+				}
+			}
+
+			dataHp := res.ResDataHutangPiutang{
+				ID:          data.ID,
+				InvoiceSlug: data.InvoiceSlug,
+				Jenis:       data.Jenis,
+				TransaksiID: data.TransaksiID,
+				Status:      data.Status,
+				Total:       data.Transaksi.Total,
+				Sisa:        data.Transaksi.Total,
+			}
+
+			for _, dataByr := range data.DataBayarHutangPiutang {
+				// if dataHp.Jenis == "HUTANG"  {
+
+				// }
+				// dataByr.Transaksi.AyatJurnals
+				dataHp.Sisa -= dataByr.Transaksi.Total
+			}
+
+			dat.Total += dataHp.Total
+			dat.Sisa += dataHp.Sisa
+			dat.HutangPiutang = append(dat.HutangPiutang, dataHp)
+			groupDataByKontak[data.Transaksi.Kontak.Nama] = dat
+
+		}(dataHpMixUp)
+	}
+	wg.Wait()
+
+	// for _, dataHpMixUp := range datas {
+	// 	dat, ok := groupDataByKontak[dataHpMixUp.Transaksi.Kontak.Nama]
+	// 	if !ok {
+	// 		dat = res.GetAll{
+	// 			Nama: dataHpMixUp.Transaksi.Kontak.Nama,
+	// 		}
+	// 	}
+	// 	dataHp := res.ResDataHutangPiutang{
+	// 		ID:          dataHpMixUp.ID,
+	// 		InvoiceSlug: dataHpMixUp.InvoiceSlug,
+	// 		Jenis:       dataHpMixUp.Jenis,
+	// 		TransaksiID: dataHpMixUp.TransaksiID,
+	// 		Status:      dataHpMixUp.Status,
+	// 		Total:       dataHpMixUp.Transaksi.Total,
+	// 		Sisa:        dataHpMixUp.Transaksi.Total,
+	// 	}
+	// 	for _, dataByr := range dataHpMixUp.DataBayarHutangPiutang {
+	// 		dataHp.Sisa -= dataByr.Transaksi.Total
+	// 	}
+	// 	dat.Total += dataHp.Total
+	// 	dat.Sisa += dataHp.Sisa
+	// 	dat.HutangPiutang = append(dat.HutangPiutang, dataHp)
+
+	// 	groupDataByKontak[dataHpMixUp.Transaksi.Kontak.Nama] = dat
+	// }
+
+	resData := make([]res.GetAll, len(groupDataByKontak))
+	i := 0
+	for _, v := range groupDataByKontak {
+		resData[i] = v
+		i++
+	}
+	return resData, nil
+}
