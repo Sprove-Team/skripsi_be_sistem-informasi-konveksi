@@ -4,12 +4,14 @@ import (
 	"context"
 	"errors"
 	"math"
+	"strings"
 	"sync"
 	"time"
 
 	repoAkun "github.com/be-sistem-informasi-konveksi/api/repository/akuntansi/mysql/gorm/akun"
 	repo "github.com/be-sistem-informasi-konveksi/api/repository/akuntansi/mysql/gorm/hutang_piutang"
 	repoKontak "github.com/be-sistem-informasi-konveksi/api/repository/akuntansi/mysql/gorm/kontak"
+	pkgAkuntansiLogic "github.com/be-sistem-informasi-konveksi/api/usecase/akuntansi"
 	"github.com/be-sistem-informasi-konveksi/common/message"
 	req "github.com/be-sistem-informasi-konveksi/common/request/akuntansi/hutang_piutang"
 	res "github.com/be-sistem-informasi-konveksi/common/response/akuntansi/hutang_piutang"
@@ -39,9 +41,7 @@ func NewHutangPiutangUsecase(repo repo.HutangPiutangRepo, repoAkun repoAkun.Akun
 func (u *hutangPiutangUsecase) Create(ctx context.Context, reqHutangPiutang req.Create) error {
 
 	g := &errgroup.Group{}
-	m := &sync.Mutex{}
 	g.SetLimit(10)
-
 	// check kontak is founded
 	var kontak entity.Kontak
 	g.Go(func() error {
@@ -110,37 +110,59 @@ func (u *hutangPiutangUsecase) Create(ctx context.Context, reqHutangPiutang req.
 	akunMap := map[string]entity.Akun{}
 
 	// validate akun + add ayat jurnal saldo untk create tr hutang piutang
-	ayTagihan := entity.AyatJurnal{} // ay utang/piutang yg akan dibayar bila bayar tidak kosong
+	ayTagihan := entity.AyatJurnal{} // ay hutang/piutang yg akan dibayar bila bayar tidak kosong
+	akunTagihan := entity.Akun{}
 	for _, akun := range akuns {
-		func(akun entity.Akun) {
-			g.Go(func() error {
-				if !helper.IsValidAkunHutangPiutang(akun.KelompokAkun.Nama) {
-					return errors.New(message.InvalidAkunHutangPiutang)
+		if !pkgAkuntansiLogic.IsValidAkunHutangPiutang(akun.KelompokAkun.Nama) {
+			return errors.New(message.InvalidAkunHutangPiutang)
+		}
+
+		// pasti ada 1 saldo debit jika jenis piutang, jika tidak error, begitu sebaliknya untuk hutang
+		switch akun.ID {
+		case ayHP1.AkunID:
+			pkgAkuntansiLogic.UpdateSaldo(&ayHP1.Saldo, ayHP1.Kredit, ayHP1.Debit, akun.SaldoNormal)
+			if reqHutangPiutang.Jenis == "PIUTANG" {
+				if akun.SaldoNormal == "DEBIT" {
+					ayTagihan = ayHP2
+					akunTagihan = akun
 				}
-				switch akun.ID {
-				case ayHP1.AkunID:
-					helper.UpdateSaldo(&ayHP1.Saldo, ayHP1.Kredit, ayHP1.Debit, akun.SaldoNormal)
-					if akun.SaldoNormal == "DEBIT" {
-						ayTagihan = ayHP1
-					}
-				case ayHP2.AkunID:
-					helper.UpdateSaldo(&ayHP2.Saldo, ayHP2.Kredit, ayHP2.Debit, akun.SaldoNormal)
-					if akun.SaldoNormal == "DEBIT" {
-						ayTagihan = ayHP2
-					}
+			} else {
+				if akun.SaldoNormal == "KREDIT" {
+					ayTagihan = ayHP2
+					akunTagihan = akun
 				}
-				m.Lock()
-				akunMap[akun.ID] = akun
-				m.Unlock()
-				return nil
-			})
-		}(akun)
+			}
+
+		case ayHP2.AkunID:
+			pkgAkuntansiLogic.UpdateSaldo(&ayHP2.Saldo, ayHP2.Kredit, ayHP2.Debit, akun.SaldoNormal)
+			if reqHutangPiutang.Jenis == "PIUTANG" {
+				if akun.SaldoNormal == "DEBIT" {
+					ayTagihan = ayHP2
+					akunTagihan = akun
+				}
+			} else {
+				if akun.SaldoNormal == "KREDIT" {
+					ayTagihan = ayHP2
+					akunTagihan = akun
+				}
+			}
+		}
+
+		akunMap[akun.ID] = akun
 	}
-	if err := g.Wait(); err != nil {
-		return err
+
+	// cek kelompok akun sesuai dengan jenis hutang/piutang
+	if akunTagihan.KelompokAkun == nil {
+		return errors.New(message.AkunNotMatchWithJenisHP)
+	}
+	if !strings.EqualFold(akunTagihan.KelompokAkun.Nama, reqHutangPiutang.Jenis) {
+		return errors.New(message.AkunNotMatchWithJenisHP)
 	}
 
 	// validate credit, debit hp is equal
+	if ayHP1.Saldo < 0 || ayHP2.Saldo < 0 {
+		return errors.New(message.IncorrectPlacementOfCreditAndDebit)
+	}
 	if ayHP1.Saldo-ayHP2.Saldo != 0 {
 		return errors.New(message.CreditDebitNotSame)
 	}
@@ -171,55 +193,16 @@ func (u *hutangPiutangUsecase) Create(ctx context.Context, reqHutangPiutang req.
 	var totalAllTrBayar float64
 	if lengthAyByr > 0 {
 		for i, trByr := range reqHutangPiutang.BayarAwal {
-			tanggal, err := time.Parse(time.RFC3339, trByr.Tanggal)
+			totalAllTrBayar += trByr.Total
+			akun := akunMap[trByr.AkunBayarID]
+			if akun.KelompokAkun.Nama != "kas & bank" {
+				return errors.New(message.InvalidAkunBayar)
+			}
+			byrHP, err := autoCreateDataBayarAwal(trByr, ayTagihan, reqHutangPiutang.KontakID, kontak.Nama+" melakukan pembayaran dengan akun "+akun.Nama, u.ulid)
 			if err != nil {
-				helper.LogsError(err)
 				return err
 			}
-			trByr.Total = math.Abs(trByr.Total)
-			// cek jika total bayarnya lebih besar dari sisa tagihan
-			if trByr.Total > ayTagihan.Debit {
-				return errors.New(message.BayarMustLessThanSisaTagihan)
-			}
-
-			totalAllTrBayar += trByr.Total
-
-			byrHP := entity.DataBayarHutangPiutang{
-				Base: entity.Base{
-					ID: u.ulid.MakeUlid().String(),
-				},
-				Transaksi: entity.Transaksi{
-					Base: entity.Base{
-						ID: u.ulid.MakeUlid().String(),
-					},
-					Keterangan:      kontak.Nama + " melakukan pembayaran dengan akun " + akunMap[trByr.AkunBayarID].Nama,
-					BuktiPembayaran: trByr.BuktiPembayaran,
-					Total:           trByr.Total,
-					Tanggal:         tanggal,
-					KontakID:        reqHutangPiutang.KontakID,
-					AyatJurnals: []entity.AyatJurnal{
-						{
-							Base: entity.Base{
-								ID: u.ulid.MakeUlid().String(),
-							},
-							AkunID: trByr.AkunBayarID,
-							Debit:  trByr.Total,
-							Saldo:  trByr.Total,
-						},
-						// ay kredit, bayar mengurangi akun utang/piutangnya
-						{
-							Base: entity.Base{
-								ID: u.ulid.MakeUlid().String(),
-							},
-							AkunID: ayTagihan.AkunID,
-							Kredit: trByr.Total,
-							Saldo:  -trByr.Total,
-						},
-					},
-				},
-			}
-
-			dataByrHutangPiutang[i] = byrHP
+			dataByrHutangPiutang[i] = *byrHP
 		}
 	}
 
@@ -227,12 +210,11 @@ func (u *hutangPiutangUsecase) Create(ctx context.Context, reqHutangPiutang req.
 		return errors.New(message.BayarMustLessThanSisaTagihan)
 	}
 
-	// default status = "BELUM_LUNAS"
-	sisaHutangPiutang := ayTagihan.Debit - totalAllTrBayar
-	if sisaHutangPiutang == 0 {
+	repoParam.Total = transaksiHP.Total
+	repoParam.Sisa = transaksiHP.Total - totalAllTrBayar
+	if repoParam.Sisa <= 0 {
 		repoParam.Status = "LUNAS"
 	}
-
 	repoParam.DataBayarHutangPiutang = dataByrHutangPiutang
 	repoParam.Transaksi = transaksiHP
 
@@ -290,52 +272,24 @@ func (u *hutangPiutangUsecase) GetAll(ctx context.Context, reqHutangPiutang req.
 				Jenis:       data.Jenis,
 				TransaksiID: data.TransaksiID,
 				Status:      data.Status,
-				Total:       data.Transaksi.Total,
-				Sisa:        data.Transaksi.Total,
+				Total:       data.Total,
+				Sisa:        data.Sisa,
 			}
 
-			for _, dataByr := range data.DataBayarHutangPiutang {
-				// if dataHp.Jenis == "HUTANG"  {
-
-				// }
-				// dataByr.Transaksi.AyatJurnals
-				dataHp.Sisa -= dataByr.Transaksi.Total
+			if data.Jenis == "PIUTANG" {
+				dat.TotalPiutang += data.Total
+				dat.SisaPiutang += data.Sisa
+			} else {
+				dat.TotalHutang += data.Total
+				dat.SisaHutang += data.Sisa
 			}
 
-			dat.Total += dataHp.Total
-			dat.Sisa += dataHp.Sisa
 			dat.HutangPiutang = append(dat.HutangPiutang, dataHp)
 			groupDataByKontak[data.Transaksi.Kontak.Nama] = dat
 
 		}(dataHpMixUp)
 	}
 	wg.Wait()
-
-	// for _, dataHpMixUp := range datas {
-	// 	dat, ok := groupDataByKontak[dataHpMixUp.Transaksi.Kontak.Nama]
-	// 	if !ok {
-	// 		dat = res.GetAll{
-	// 			Nama: dataHpMixUp.Transaksi.Kontak.Nama,
-	// 		}
-	// 	}
-	// 	dataHp := res.ResDataHutangPiutang{
-	// 		ID:          dataHpMixUp.ID,
-	// 		InvoiceSlug: dataHpMixUp.InvoiceSlug,
-	// 		Jenis:       dataHpMixUp.Jenis,
-	// 		TransaksiID: dataHpMixUp.TransaksiID,
-	// 		Status:      dataHpMixUp.Status,
-	// 		Total:       dataHpMixUp.Transaksi.Total,
-	// 		Sisa:        dataHpMixUp.Transaksi.Total,
-	// 	}
-	// 	for _, dataByr := range dataHpMixUp.DataBayarHutangPiutang {
-	// 		dataHp.Sisa -= dataByr.Transaksi.Total
-	// 	}
-	// 	dat.Total += dataHp.Total
-	// 	dat.Sisa += dataHp.Sisa
-	// 	dat.HutangPiutang = append(dat.HutangPiutang, dataHp)
-
-	// 	groupDataByKontak[dataHpMixUp.Transaksi.Kontak.Nama] = dat
-	// }
 
 	resData := make([]res.GetAll, len(groupDataByKontak))
 	i := 0

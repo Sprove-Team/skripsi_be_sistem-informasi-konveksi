@@ -31,6 +31,7 @@ func NewHutangPiutangHandler(uc usecase.HutangPiutangUsecase, validator pkg.Vali
 }
 
 func errResponse(c *fiber.Ctx, err error) error {
+	fmt.Println(err.Error())
 	if err == context.DeadlineExceeded {
 		return c.Status(fiber.StatusRequestTimeout).JSON(response.ErrorRes(fiber.ErrRequestTimeout.Code, fiber.ErrRequestTimeout.Message, nil))
 	}
@@ -50,7 +51,7 @@ func errResponse(c *fiber.Ctx, err error) error {
 	}
 
 	if err.Error() == message.CreditDebitNotSame {
-		badRequest["debit dan kredit"] = []string{err.Error()}
+		badRequest["transaksi.ayat_jurnal"] = []string{err.Error()}
 	}
 
 	if err.Error() == message.AkunNotFound {
@@ -62,6 +63,22 @@ func errResponse(c *fiber.Ctx, err error) error {
 	}
 
 	if err.Error() == message.InvalidAkunHutangPiutang {
+		badRequest["transaksi.ayat_jurnal.akun_id"] = []string{err.Error()}
+	}
+
+	if err.Error() == message.AkunNotMatchWithJenisHP {
+		badRequest["transaksi.ayat_jurnal.akun_id"] = []string{err.Error()}
+	}
+
+	if err.Error() == message.InvalidAkunBayar {
+		badRequest["transaksi.ayat_jurnal.akun_id"] = []string{err.Error()}
+	}
+
+	if err.Error() == message.BayarMustLessThanSisaTagihan {
+		badRequest["transaksi.ayat_jurnal.akun_id"] = []string{err.Error()}
+	}
+
+	if err.Error() == message.IncorrectPlacementOfCreditAndDebit {
 		badRequest["transaksi.ayat_jurnal.akun_id"] = []string{err.Error()}
 	}
 

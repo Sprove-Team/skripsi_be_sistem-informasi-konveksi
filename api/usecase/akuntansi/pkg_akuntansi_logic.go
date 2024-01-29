@@ -1,4 +1,4 @@
-package helper
+package akuntansi
 
 import (
 	"errors"
@@ -76,6 +76,9 @@ func IsDuplicateAkun(ayatJurnals []entity.AyatJurnal) error {
 func IsValidAkunHutangPiutang(nama string) bool {
 	validNames := []string{"piutang", "hutang", "kas & bank"}
 	if strings.HasPrefix(nama, "pendapatan") {
+		return true
+	}
+	if strings.HasPrefix(nama, "beban") {
 		return true
 	}
 	for _, validName := range validNames {

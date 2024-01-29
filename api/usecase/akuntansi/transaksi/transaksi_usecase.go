@@ -9,6 +9,7 @@ import (
 	repoDataBayarHutangPiutang "github.com/be-sistem-informasi-konveksi/api/repository/akuntansi/mysql/gorm/data_bayar_hutang_piutang"
 	repoHutangPiutang "github.com/be-sistem-informasi-konveksi/api/repository/akuntansi/mysql/gorm/hutang_piutang"
 	repo "github.com/be-sistem-informasi-konveksi/api/repository/akuntansi/mysql/gorm/transaksi"
+	pkgAkuntansiLogic "github.com/be-sistem-informasi-konveksi/api/usecase/akuntansi"
 	"github.com/be-sistem-informasi-konveksi/common/message"
 	req "github.com/be-sistem-informasi-konveksi/common/request/akuntansi/transaksi"
 	"github.com/be-sistem-informasi-konveksi/entity"
@@ -48,7 +49,6 @@ func (u *transaksiUsecase) Delete(ctx context.Context, id string) error {
 
 func (u *transaksiUsecase) Update(ctx context.Context, reqTransaksi req.Update) error {
 	hp, err := u.repoHutangPiutang.GetByTrId(ctx, reqTransaksi.ID)
-	// fmt.Println("kena1 -> ", hp.Jenis)
 	if err != nil {
 		if err.Error() != "record not found" {
 			return err
@@ -78,7 +78,6 @@ func (u *transaksiUsecase) Update(ctx context.Context, reqTransaksi req.Update) 
 			Debit:  ay.Debit,
 			Kredit: ay.Kredit,
 		}
-
 	}
 
 	oldTr, err := u.repo.GetById(ctx, reqTransaksi.ID)
@@ -87,14 +86,16 @@ func (u *transaksiUsecase) Update(ctx context.Context, reqTransaksi req.Update) 
 	}
 
 	lengthOldAyatJurnals := len(oldTr.AyatJurnals)
-	updateTrParam := repo.UpdateParam{}
 
-	newTr := entity.Transaksi{
-		Base: entity.Base{
-			ID: reqTransaksi.ID,
+	// setup param tr update
+	repoParam := repo.UpdateParam{
+		UpdateTr: &entity.Transaksi{
+			Base: entity.Base{
+				ID: reqTransaksi.ID,
+			},
+			Keterangan:      reqTransaksi.Keterangan,
+			BuktiPembayaran: reqTransaksi.BuktiPembayaran,
 		},
-		Keterangan:      reqTransaksi.Keterangan,
-		BuktiPembayaran: reqTransaksi.BuktiPembayaran,
 	}
 
 	oldAy := make([]entity.AyatJurnal, lengthOldAyatJurnals)
@@ -107,7 +108,7 @@ func (u *transaksiUsecase) Update(ctx context.Context, reqTransaksi req.Update) 
 	}
 
 	// change the saldo ayat jurnal if the ayat jurnals is difference
-	if !helper.IsSameReqAyJurnals(oldAy, reqAy) {
+	if !pkgAkuntansiLogic.IsSameReqAyJurnals(oldAy, reqAy) {
 
 		// u.repo.GetById()
 		akunIDs := make([]string, lengthReqAyatJurnals)
@@ -125,7 +126,7 @@ func (u *transaksiUsecase) Update(ctx context.Context, reqTransaksi req.Update) 
 		for _, v := range akuns {
 			// validasi ayat jurnal jika termasuk hutang piutang
 			if hp.ID != "" || hpFromByr.ID != "" {
-				if !helper.IsValidAkunHutangPiutang(v.KelompokAkun.Nama) {
+				if !pkgAkuntansiLogic.IsValidAkunHutangPiutang(v.KelompokAkun.Nama) {
 					return errors.New(message.InvalidAkunHutangPiutang)
 				}
 			}
@@ -152,14 +153,20 @@ func (u *transaksiUsecase) Update(ctx context.Context, reqTransaksi req.Update) 
 		// validate kredit, debit and get totalTransaksi
 		var totalTransaksi float64
 
-		if err := helper.IsKreditEqualToDebit(reqAy, &totalTransaksi); err != nil {
+		if err := pkgAkuntansiLogic.IsKreditEqualToDebit(reqAy, &totalTransaksi); err != nil {
 			return err
 		}
-		if err := helper.IsDuplicateAkun(reqAy); err != nil {
+		if err := pkgAkuntansiLogic.IsDuplicateAkun(reqAy); err != nil {
 			return err
 		}
 
-		newTr.Total = totalTransaksi
+		if hpFromByr.ID != "" {
+			if totalTransaksi > hp.Total {
+				return errors.New(message.BayarMustLessThanSisaTagihan)
+			}
+		}
+
+		repoParam.UpdateTr.Total = totalTransaksi
 
 		// add newAyatJurnals
 		newAyatJurnals := make([]*entity.AyatJurnal, len(reqTransaksi.AyatJurnal))
@@ -170,18 +177,18 @@ func (u *transaksiUsecase) Update(ctx context.Context, reqTransaksi req.Update) 
 			// validasi akun sesuai dengan jenis hutang piutang baik itu tr hp atau byr hp
 			if (hp.Jenis == "PIUTANG" || hpFromByr.HutangPiutang.Jenis == "PIUTANG") && ay.Debit != 0 {
 				if akun.KelompokAkun.Nama != "piutang" {
-					return errors.New(message.AkunNotMatchWithJenisHP)
+					return errors.New(message.AkunNotMatchWithJenisHPTr)
 				}
 			}
 			if (hp.Jenis == "HUTANG" || hpFromByr.HutangPiutang.Jenis == "HUTANG") && ay.Kredit != 0 {
 				if akun.KelompokAkun.Nama != "hutang" {
-					return errors.New(message.AkunNotMatchWithJenisHP)
+					return errors.New(message.AkunNotMatchWithJenisHPTr)
 				}
 			}
 
 			// logic calculate saldo ayatJurnal
 			var saldo float64
-			helper.UpdateSaldo(&saldo, ay.Kredit, ay.Debit, akun.SaldoNormal)
+			pkgAkuntansiLogic.UpdateSaldo(&saldo, ay.Kredit, ay.Debit, akun.SaldoNormal)
 			ayatJurnal := entity.AyatJurnal{
 				Base: entity.Base{
 					ID: u.ulid.MakeUlid().String(),
@@ -197,11 +204,32 @@ func (u *transaksiUsecase) Update(ctx context.Context, reqTransaksi req.Update) 
 			akunsMap[ay.AkunID] = akun
 		}
 
-		updateTrParam.NewAyatJurnals = newAyatJurnals
+		repoParam.NewAyatJurnals = newAyatJurnals
 	}
-	updateTrParam.UpdateTr = &newTr
 
-	if err := u.repo.Update(ctx, updateTrParam); err != nil {
+	// set data hutang piutang
+	if hp.ID != "" {
+		repoParam.UpdateHutangPiutang = &hp
+		repoParam.UpdateHutangPiutang.Total = repoParam.UpdateTr.Total
+		// total baru - total dibayar didapat dari old total - old sisa
+		repoParam.UpdateHutangPiutang.Sisa = repoParam.UpdateTr.Total - (oldTr.Total - hp.Sisa)
+	}
+
+	if hpFromByr.ID != "" {
+		repoParam.UpdateHutangPiutang = &hpFromByr.HutangPiutang
+		repoParam.UpdateDataBayarHutangPiutang = &hpFromByr
+		repoParam.UpdateDataBayarHutangPiutang.Total = repoParam.UpdateTr.Total
+		// logic update sisa hp, dengan logika (sisa_old + total_byr old) - total_byr skrng
+		repoParam.UpdateDataBayarHutangPiutang.HutangPiutang.Sisa = (hpFromByr.HutangPiutang.Sisa + hpFromByr.Total) - repoParam.UpdateTr.Total
+	}
+
+	if repoParam.UpdateHutangPiutang.Sisa <= 0 && repoParam.UpdateHutangPiutang.Status != "LUNAS" {
+		repoParam.UpdateHutangPiutang.Status = "LUNAS"
+	} else if repoParam.UpdateHutangPiutang.Status != "BELUM_LUNAS" {
+		repoParam.UpdateHutangPiutang.Status = "BELUM_LUNAS"
+	}
+
+	if err := u.repo.Update(ctx, repoParam); err != nil {
 		return err
 	}
 
@@ -222,10 +250,10 @@ func (u *transaksiUsecase) Create(ctx context.Context, reqTransaksi req.Create) 
 
 	// get total transaksi
 	var totalTransaksi float64
-	if err := helper.IsKreditEqualToDebit(reqAy, &totalTransaksi); err != nil {
+	if err := pkgAkuntansiLogic.IsKreditEqualToDebit(reqAy, &totalTransaksi); err != nil {
 		return err
 	}
-	if err := helper.IsDuplicateAkun(reqAy); err != nil {
+	if err := pkgAkuntansiLogic.IsDuplicateAkun(reqAy); err != nil {
 		return err
 	}
 
@@ -262,7 +290,7 @@ func (u *transaksiUsecase) Create(ctx context.Context, reqTransaksi req.Create) 
 
 		// logic calculate saldo ayatJurnal
 		var saldo float64
-		helper.UpdateSaldo(&saldo, v.Kredit, v.Debit, akun.SaldoNormal)
+		pkgAkuntansiLogic.UpdateSaldo(&saldo, v.Kredit, v.Debit, akun.SaldoNormal)
 
 		ayatJurnal := entity.AyatJurnal{
 			Base: entity.Base{

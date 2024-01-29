@@ -50,7 +50,7 @@ func errResponse(c *fiber.Ctx, err error) error {
 	}
 
 	if err.Error() == message.CreditDebitNotSame {
-		badRequest["debit dan kredit"] = []string{message.CreditDebitNotSame}
+		badRequest["ayat_jurnal"] = []string{message.CreditDebitNotSame}
 	}
 
 	if err.Error() == message.AkunNotFound {
@@ -65,7 +65,7 @@ func errResponse(c *fiber.Ctx, err error) error {
 		badRequest["ayat_jurnal.akun_id"] = []string{err.Error()}
 	}
 
-	if err.Error() == message.AkunNotMatchWithJenisHP {
+	if err.Error() == message.AkunNotMatchWithJenisHPTr {
 		badRequest["ayat_jurnal.akun_id"] = []string{err.Error()}
 	}
 

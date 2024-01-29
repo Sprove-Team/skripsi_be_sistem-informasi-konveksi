@@ -14,8 +14,10 @@ type ResDataHutangPiutang struct {
 
 type GetAll struct {
 	Nama          string                 `json:"nama"`
-	Total         float64                `json:"total"`
-	Sisa          float64                `json:"sisa"`
+	TotalPiutang  float64                `json:"total_piutang"`
+	SisaPiutang   float64                `json:"sisa_piutang"`
+	TotalHutang   float64                `json:"total_hutang"`
+	SisaHutang    float64                `json:"sisa_hutang"`
 	HutangPiutang []ResDataHutangPiutang `json:"hutang_piutang"`
 }
 

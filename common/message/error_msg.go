@@ -52,11 +52,11 @@ var (
 // akuntansi
 var (
 	// transaksi
-	CreditDebitNotSame      = "total debit dan kredit harus sama"
-	AkunCannotBeSame        = "akun tidak boleh sama"
-	AkunCannotDeleted       = "tidak bisa menghapus akun karena akun masih digunakan pada ayat jurnal"
-	AkunHutangPiutangNotEq2 = "transaksi merupakan hutang piutang, ayat_jurnal harus berjumlah 2"
-	AkunNotMatchWithJenisHP = "transaksi merupakan hutang piutang, akun harus sama dengan jenis hutang piutang"
+	CreditDebitNotSame        = "total debit dan kredit harus sama"
+	AkunCannotBeSame          = "akun tidak boleh sama"
+	AkunCannotDeleted         = "tidak bisa menghapus akun karena akun masih digunakan pada ayat jurnal"
+	AkunHutangPiutangNotEq2   = "transaksi merupakan hutang piutang, ayat_jurnal harus berjumlah 2"
+	AkunNotMatchWithJenisHPTr = "transaksi merupakan hutang piutang, akun harus sama dengan jenis hutang piutang"
 	// kategori akun
 	KategoriAkunNotFound = "kategori akun tidak ditemukan"
 	// kelompok akun
@@ -67,7 +67,10 @@ var (
 	// kontak
 	KontakNotFound = "kontak tidak ditemukan"
 	// hutang piutang
-	InvalidAkunHutangPiutang = "akun bukan merupakan akun hutang piutang"
+	AkunNotMatchWithJenisHP            = "akun harus sama dengan jenis hutang piutang"
+	InvalidAkunHutangPiutang           = "akun bukan merupakan akun hutang piutang"
+	IncorrectPlacementOfCreditAndDebit = "peletakan total debit dan kredit untuk hutang piutang tidak benar"
 	// bayar hutang piutang
 	BayarMustLessThanSisaTagihan = "jumlah yang dibayar harus kurang atau sama dengan sisa tagihan"
+	InvalidAkunBayar             = "akun untuk bayar hutang piutang tidak valid"
 )

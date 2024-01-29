@@ -14,7 +14,7 @@ type ReqTransaksi struct {
 	AyatJurnal      []ReqAyatJurnal        `json:"ayat_jurnal" validate:"required,eq=2,dive"`
 }
 
-type ReqBayarAwal struct {
+type ReqBayar struct {
 	Tanggal         string                 `json:"tanggal" validate:"required,datetime=2006-01-02T15:04:05Z07:00"`
 	BuktiPembayaran entity.BuktiPembayaran `json:"bukti_pembayaran" validate:"omitempty,dive,url"`
 	AkunBayarID     string                 `json:"akun_bayar_id" validate:"required,ulid"`
@@ -22,12 +22,17 @@ type ReqBayarAwal struct {
 }
 
 type Create struct {
-	KontakID   string         `json:"kontak_id" validate:"required,ulid"`
-	InvoiceID  string         `json:"invoice_id" validate:"omitempty,ulid"`
-	Jenis      string         `json:"jenis" validate:"required,oneof=PIUTANG HUTANG"`
-	Keterangan string         `json:"keterangan" validate:"required"`
-	Transaksi  ReqTransaksi   `json:"transaksi" validate:"required"`
-	BayarAwal  []ReqBayarAwal `json:"bayar_awal" validate:"omitempty,min=1,dive"`
+	KontakID   string       `json:"kontak_id" validate:"required,ulid"`
+	InvoiceID  string       `json:"invoice_id" validate:"omitempty,ulid"`
+	Jenis      string       `json:"jenis" validate:"required,oneof=PIUTANG HUTANG"`
+	Keterangan string       `json:"keterangan" validate:"required"`
+	Transaksi  ReqTransaksi `json:"transaksi" validate:"required"`
+	BayarAwal  []ReqBayar   `json:"bayar_awal" validate:"omitempty,min=1,dive"`
+}
+
+type CreateBayar struct {
+	HutangPiutangID string `json:"hutang_piutang_id" validate:"required,ulid"`
+	ReqBayar
 }
 
 type GetAll struct {

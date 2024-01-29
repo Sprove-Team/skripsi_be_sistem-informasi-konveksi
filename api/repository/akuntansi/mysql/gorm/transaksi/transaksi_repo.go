@@ -15,8 +15,10 @@ type CreateParam struct {
 }
 
 type UpdateParam struct {
-	UpdateTr       *entity.Transaksi
-	NewAyatJurnals []*entity.AyatJurnal
+	UpdateTr                     *entity.Transaksi
+	NewAyatJurnals               []*entity.AyatJurnal
+	UpdateHutangPiutang          *entity.HutangPiutang
+	UpdateDataBayarHutangPiutang *entity.DataBayarHutangPiutang
 }
 
 type SearchTransaksi struct {
@@ -59,11 +61,6 @@ func (r *transaksiRepo) Create(ctx context.Context, param CreateParam) error {
 			return err
 		}
 
-		// for _, akun := range param.UpdateAkuns {
-		// 	if err := tx.Model(&entity.Akun{}).Where("id = ?", akun.ID).Update("saldo", akun.Saldo).Error; err != nil {
-		// 		return err
-		// 	}
-		// }
 		return nil
 	})
 	if err != nil {
@@ -80,6 +77,15 @@ func (r *transaksiRepo) Update(ctx context.Context, param UpdateParam) error {
 			helper.LogsError(err)
 			return err
 		}
+		if err := tx.Where("id = ?", param.UpdateHutangPiutang.ID).Updates(param.UpdateHutangPiutang).Error; err != nil {
+			helper.LogsError(err)
+			return err
+		}
+
+		if err := tx.Where("id = ?", param.UpdateDataBayarHutangPiutang.ID).Updates(param.UpdateDataBayarHutangPiutang).Error; err != nil {
+			helper.LogsError(err)
+			return err
+		}
 		// update ayat jurnals
 		if param.NewAyatJurnals != nil {
 			if err := tx.Unscoped().Where("transaksi_id IN (?)", param.UpdateTr.ID).Delete(&entity.AyatJurnal{}).Error; err != nil {
@@ -91,15 +97,9 @@ func (r *transaksiRepo) Update(ctx context.Context, param UpdateParam) error {
 				helper.LogsError(err)
 				return err
 			}
-			// update akun
-			// clause := clause.OnConflict{
-			// 	Columns:   []clause.Column{{Name: "id"}, {Name: "kode"}},
-			// 	DoUpdates: clause.AssignmentColumns([]string{"saldo"}),
-			// }
 
-			// if err := tx.Clauses(clause).Create(&param.UpdateAkuns).Error; err != nil {
-			// 	return err
-			// }
+			// update hutang piutang
+
 		}
 
 		// update multiple lines with duplicate IDs in the 'akun' table.

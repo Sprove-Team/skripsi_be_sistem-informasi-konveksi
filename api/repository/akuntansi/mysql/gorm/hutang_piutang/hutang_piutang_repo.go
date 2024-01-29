@@ -55,6 +55,7 @@ func (r *hutangPiutangRepo) GetAll(ctx context.Context, search SearchParam) ([]e
 	if search.Jenis != nil {
 		tx = tx.Where("jenis IN (?)", search.Jenis)
 	}
+
 	if search.Status != nil {
 		tx = tx.Where("status IN (?)", search.Status)
 	}
