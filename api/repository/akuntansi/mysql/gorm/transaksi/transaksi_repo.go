@@ -7,6 +7,7 @@ import (
 	"github.com/be-sistem-informasi-konveksi/entity"
 	"github.com/be-sistem-informasi-konveksi/helper"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type CreateParam struct {
@@ -120,29 +121,47 @@ func (r *transaksiRepo) Update(ctx context.Context, param UpdateParam) error {
 func (r *transaksiRepo) Delete(ctx context.Context, id string) error {
 	err := r.DB.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 
+		var transaksi entity.Transaksi
 		// delete transaksi by id
-		if err := tx.Delete(&entity.Transaksi{}, "id = ? ", id).Error; err != nil {
+		if err := tx.Model(&transaksi).First(&transaksi, "id = ?", id).Error; err != nil {
+			helper.LogsError(err)
 			return err
 		}
+
+		if err := tx.Select(clause.Associations).Delete(&transaksi).Error; err != nil {
+			helper.LogsError(err)
+			return err
+		}
+
 		// delete transaksi bayar if id is transaksi in hutang piutang
-		subquery := tx.Model(&entity.DataBayarHutangPiutang{}).
+		var idsTrByr []string
+		err := tx.Model(&entity.DataBayarHutangPiutang{}).
 			Joins("JOIN hutang_piutang hp ON data_bayar_hutang_piutang.hutang_piutang_id = hp.id").
 			Where("hp.transaksi_id = ?", id).
-			Select("data_bayar_hutang_piutang.transaksi_id")
+			Select("data_bayar_hutang_piutang.transaksi_id").Pluck("transaksi_id", &idsTrByr).Error
 
-		if err := tx.Delete(&entity.Transaksi{}, "id IN (?)", subquery).Error; err != nil {
+		if err != nil {
+			helper.LogsError(err)
 			return err
 		}
 
-		// delete permanent hutang piutang and bayar
-		if err := tx.Unscoped().Delete(&entity.HutangPiutang{}, "transaksi_id = (?)", id).Error; err != nil {
-			return err
+		// delete rest of transaksi data in data bayar
+		if len(idsTrByr) > 0 {
+			var transaksiByr []entity.Transaksi
+			err = tx.Find(&transaksiByr, "id IN (?)", idsTrByr).Error
+			if err != nil {
+				helper.LogsError(err)
+				return err
+			}
+			if err := tx.Select(clause.Associations).Delete(&transaksiByr).Error; err != nil {
+				helper.LogsError(err)
+				return err
+			}
 		}
 
 		return nil
 	})
 	if err != nil {
-		helper.LogsError(err)
 		return err
 	}
 	return nil
