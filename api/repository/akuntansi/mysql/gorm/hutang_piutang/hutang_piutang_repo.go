@@ -42,6 +42,7 @@ func NewHutangPiutangRepo(DB *gorm.DB) HutangPiutangRepo {
 
 func (r *hutangPiutangRepo) Create(ctx context.Context, hutangPiutang *entity.HutangPiutang) error {
 	// fmt.Println()
+	// fmt.Println("kena ->", len(hutangPiutang.DataBayarHutangPiutang))
 	if err := r.DB.WithContext(ctx).Create(hutangPiutang).Error; err != nil {
 		return err
 	}

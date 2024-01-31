@@ -56,10 +56,10 @@ func (u *hutangPiutangUsecase) Create(ctx context.Context, reqHutangPiutang req.
 		return nil
 	})
 
-	hutangPiuatangID := u.ulid.MakeUlid().String()
+	hutangPiutangID := u.ulid.MakeUlid().String()
 	repoParam := &entity.HutangPiutang{
 		Base: entity.Base{
-			ID: hutangPiuatangID,
+			ID: hutangPiutangID,
 		},
 		Jenis: reqHutangPiutang.Jenis,
 	}
@@ -217,6 +217,8 @@ func (u *hutangPiutangUsecase) Create(ctx context.Context, reqHutangPiutang req.
 	}
 	repoParam.DataBayarHutangPiutang = dataByrHutangPiutang
 	repoParam.Transaksi = transaksiHP
+
+	// fmt.Println(len(repoParam.DataBayarHutangPiutang))
 
 	if err := u.repo.Create(ctx, repoParam); err != nil {
 		return err

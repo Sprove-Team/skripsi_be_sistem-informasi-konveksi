@@ -77,12 +77,12 @@ func (r *transaksiRepo) Update(ctx context.Context, param UpdateParam) error {
 			helper.LogsError(err)
 			return err
 		}
-		if err := tx.Where("id = ?", param.UpdateHutangPiutang.ID).Updates(param.UpdateHutangPiutang).Error; err != nil {
+		if err := tx.Where("transaksi_id = ?", param.UpdateHutangPiutang.TransaksiID).Updates(param.UpdateHutangPiutang).Error; err != nil {
 			helper.LogsError(err)
 			return err
 		}
 
-		if err := tx.Where("id = ?", param.UpdateDataBayarHutangPiutang.ID).Updates(param.UpdateDataBayarHutangPiutang).Error; err != nil {
+		if err := tx.Where("transaksi_id = ?", param.UpdateDataBayarHutangPiutang.TransaksiID).Updates(param.UpdateDataBayarHutangPiutang).Error; err != nil {
 			helper.LogsError(err)
 			return err
 		}
@@ -97,8 +97,6 @@ func (r *transaksiRepo) Update(ctx context.Context, param UpdateParam) error {
 				helper.LogsError(err)
 				return err
 			}
-
-			// update hutang piutang
 
 		}
 
@@ -121,11 +119,23 @@ func (r *transaksiRepo) Update(ctx context.Context, param UpdateParam) error {
 
 func (r *transaksiRepo) Delete(ctx context.Context, id string) error {
 	err := r.DB.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		if err := tx.Delete(&entity.Transaksi{}, "id = ?", id).Error; err != nil {
+
+		// delete transaksi by id
+		if err := tx.Delete(&entity.Transaksi{}, "id = ? ", id).Error; err != nil {
+			return err
+		}
+		// delete transaksi bayar if id is transaksi in hutang piutang
+		subquery := tx.Model(&entity.DataBayarHutangPiutang{}).
+			Joins("JOIN hutang_piutang hp ON data_bayar_hutang_piutang.hutang_piutang_id = hp.id").
+			Where("hp.transaksi_id = ?", id).
+			Select("data_bayar_hutang_piutang.transaksi_id")
+
+		if err := tx.Delete(&entity.Transaksi{}, "id IN (?)", subquery).Error; err != nil {
 			return err
 		}
 
-		if err := tx.Unscoped().Where("transaksi_id = ?", id).Delete(&entity.AyatJurnal{}).Error; err != nil {
+		// delete permanent hutang piutang and bayar
+		if err := tx.Unscoped().Delete(&entity.HutangPiutang{}, "transaksi_id = (?)", id).Error; err != nil {
 			return err
 		}
 
@@ -150,7 +160,7 @@ func (r *transaksiRepo) GetAll(ctx context.Context, param SearchTransaksi) ([]en
 	}).
 		Preload("AyatJurnals.Akun", func(db *gorm.DB) *gorm.DB {
 			return db.Omit("created_at", "deleted_at", "updated_at").
-				Select("nama", "id", "saldo_normal", "saldo", "kode", "kelompok_akun_id")
+				Select("nama", "id", "saldo_normal", "kode", "kelompok_akun_id")
 		}).
 		Find(&datas).Error
 	if err != nil {
@@ -172,7 +182,7 @@ func (r *transaksiRepo) GetHistory(ctx context.Context, param SearchTransaksi) (
 	}).
 		Preload("AyatJurnals.Akun", func(db *gorm.DB) *gorm.DB {
 			return db.Omit("created_at", "deleted_at", "updated_at").
-				Select("nama", "id", "saldo_normal", "saldo", "kode", "kelompok_akun_id")
+				Select("nama", "id", "saldo_normal", "kode", "kelompok_akun_id")
 		}).
 		Find(&datas).Error
 	if err != nil {
