@@ -119,6 +119,9 @@ func (u *userUsecase) Delete(ctx context.Context, id string) error {
 
 func (u *userUsecase) GetAll(ctx context.Context, reqUser req.GetAll) ([]res.DataGetAllUserRes, error) {
 	// currentPage, offset, limit := u.paginate.GetPaginateData(reqUser.Page, reqUser.Limit)
+	if reqUser.Limit <= 0 {
+		reqUser.Limit = 10
+	}
 	datas, err := u.repo.GetAll(ctx, repo.SearchUser{
 		Nama:       reqUser.Search.Nama,
 		Alamat:     reqUser.Search.Alamat,
@@ -128,7 +131,6 @@ func (u *userUsecase) GetAll(ctx context.Context, reqUser req.GetAll) ([]res.Dat
 		JenisSpvId: reqUser.Search.JenisSpvID,
 		Limit:      reqUser.Limit,
 		Next:       reqUser.Next,
-		// Offset:     offset,
 	})
 	if err != nil {
 		return nil, err
