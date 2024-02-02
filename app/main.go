@@ -7,6 +7,7 @@ import (
 	_ "github.com/joho/godotenv/autoload"
 
 	"github.com/be-sistem-informasi-konveksi/api/middleware/auth"
+	corsMid "github.com/be-sistem-informasi-konveksi/api/middleware/cors"
 	timeoutMid "github.com/be-sistem-informasi-konveksi/api/middleware/timeout"
 	user "github.com/be-sistem-informasi-konveksi/api/repository/user/mysql/gorm"
 	"github.com/be-sistem-informasi-konveksi/app/config"
@@ -26,7 +27,6 @@ func main() {
 		DB_Password: os.Getenv("DB_PASSWORD"),
 		DB_Name:     os.Getenv("DB_NAME"),
 		DB_Port:     os.Getenv("DB_PORT"),
-		DB_Host:     os.Getenv("DB_HOST"),
 	}
 
 	dbGorm := dbGormConf.InitDBGorm(ulidPkg)
@@ -39,8 +39,10 @@ func main() {
 	userRepo := user.NewUserRepo(dbGorm)
 	authMid := auth.NewAuthMiddleware(userRepo)
 	timeoutMid := timeoutMid.NewTimeoutMiddleware()
+	corsMid := corsMid.NewCorsMiddleware()
 
 	// domain
+	app.Use(corsMid.Cors())
 	api := app.Group("/api")
 	v1 := api.Group("/v1", timeoutMid.Timeout(nil))
 	// special metrics

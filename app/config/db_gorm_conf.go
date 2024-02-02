@@ -22,23 +22,22 @@ type DBGorm struct {
 	DB_Username string
 	DB_Password string
 	DB_Port     string
-	DB_Host     string
 	DB_Name     string
 }
 
 func (dbgc *DBGorm) InitDBGorm(ulid pkg.UlidPkg) *gorm.DB {
+	host := "localhost"
+	logLevel := logger.Info
+	if os.Getenv("ENVIRONMENT") == "PRODUCTION" {
+		host = "db"
+		logLevel = logger.Silent
+	}
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8&parseTime=True&loc=Local",
 		dbgc.DB_Username,
 		dbgc.DB_Password,
-		dbgc.DB_Host,
+		host,
 		dbgc.DB_Port,
 		dbgc.DB_Name)
-
-	logLevel := logger.Silent
-
-	if os.Getenv("PRODUCTION") == "" {
-		logLevel = logger.Info
-	}
 
 	newLogger := logger.New(
 		log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer
