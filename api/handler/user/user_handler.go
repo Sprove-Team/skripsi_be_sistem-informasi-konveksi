@@ -2,6 +2,7 @@ package user
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
@@ -15,9 +16,9 @@ import (
 )
 
 type UserHandler interface {
+	// GetById(c *fiber.Ctx) error
 	Create(c *fiber.Ctx) error
 	GetAll(c *fiber.Ctx) error
-	// GetById(c *fiber.Ctx) error
 	Update(c *fiber.Ctx) error
 	Delete(c *fiber.Ctx) error
 }
@@ -34,9 +35,7 @@ func NewUserHandler(uc usecase.UserUsecase, validator pkg.Validator) UserHandler
 func (h *userHandler) Create(c *fiber.Ctx) error {
 	req := new(req.Create)
 	c.BodyParser(req)
-	// if err := c.BodyParser(req); err != nil {
-	// 	return c.Status(fiber.StatusBadRequest).JSON(resGlobal.ErrorResWithoutData(fiber.StatusBadRequest))
-	// }
+
 	req.Role = strings.ToUpper(req.Role)
 	errValidate := h.validator.Validate(req)
 
@@ -61,8 +60,9 @@ func (h *userHandler) Create(c *fiber.Ctx) error {
 
 func (h *userHandler) GetAll(c *fiber.Ctx) error {
 	req := new(req.GetAll)
-	c.BodyParser(req)
 	c.QueryParser(req)
+
+	fmt.Println(req.Search)
 
 	req.Search.Role = strings.ToUpper(req.Search.Role)
 	errValidate := h.validator.Validate(req)
@@ -78,19 +78,13 @@ func (h *userHandler) GetAll(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(response.ErrorRes(fiber.ErrInternalServerError.Code, fiber.ErrInternalServerError.Message, nil))
 	}
-
-	// dataRes := fiber.Map{
-	// 	"user": data,
-	// }
 	return c.Status(fiber.StatusOK).JSON(response.SuccessRes(fiber.StatusOK, message.OK, data))
 }
 
 func (h *userHandler) Update(c *fiber.Ctx) error {
 	req := new(req.Update)
 	c.ParamsParser(req)
-	// if err := c.ParamsParser(req); err != nil {
-	// 	return c.Status(fiber.StatusBadRequest).JSON(resGlobal.ErrorResWithoutData(fiber.StatusBadRequest))
-	// }
+
 	c.BodyParser(req)
 	req.Role = strings.ToUpper(req.Role)
 	errValidate := h.validator.Validate(req)
@@ -116,10 +110,6 @@ func (h *userHandler) Update(c *fiber.Ctx) error {
 func (h *userHandler) Delete(c *fiber.Ctx) error {
 	req := new(reqGlobal.ParamByID)
 	c.ParamsParser(req)
-	// if err := ; err != nil {
-	// 	log.Println(err)
-	// 	return c.Status(fiber.StatusBadRequest).JSON(resGlobal.ErrorResWithoutData(fiber.StatusBadRequest))
-	// }
 	errValidate := h.validator.Validate(req)
 	if errValidate != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(response.ErrorRes(fiber.ErrBadRequest.Code, fiber.ErrBadRequest.Message, nil))

@@ -22,17 +22,17 @@ type Update struct {
 }
 
 type SearchFilter struct {
-	Nama        string `json:"nama" validate:"omitempty,printascii"`
-	Role        string `json:"role" validate:"omitempty,oneof=DIREKTUR ADMIN BENDAHARA MANAJER_PRODUKSI SUPERVISOR"`
-	Username    string `json:"username" validate:"omitempty,printascii"`
-	Alamat      string `json:"alamat" validate:"omitempty,printascii"`
-	NoTelp      string `json:"no_telp" validate:"omitempty,e164"`
-	JenisSpvID  string `json:"jenis_spv_id" validate:"required_if=AllJenisSpv false,omitempty,ulid"`
-	AllJenisSpv bool   `json:"all_jenis_spv" validate:"omitempty,boolean"`
+	Nama        string `query:"nama" validate:"omitempty,printascii"`
+	Role        string `query:"role" validate:"omitempty,oneof=DIREKTUR ADMIN BENDAHARA MANAJER_PRODUKSI SUPERVISOR"`
+	Username    string `query:"username" validate:"omitempty,printascii"`
+	Alamat      string `query:"alamat" validate:"omitempty,printascii"`
+	NoTelp      string `query:"no_telp" validate:"omitempty,e164"`
+	JenisSpvID  string `query:"jenis_spv_id" validate:"required_if=AllJenisSpv false,omitempty,ulid"`
+	AllJenisSpv bool   `query:"all_jenis_spv" validate:"omitempty,boolean"`
 }
 
 type GetAll struct {
-	Search SearchFilter `json:"search" validate:"omitempty"`
+	Search SearchFilter `query:"search" validate:"omitempty"`
 	Next   string       `query:"page" validate:"omitempty"`
 	Limit  int          `query:"limit" validate:"omitempty,number"`
 }
