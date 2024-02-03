@@ -48,8 +48,6 @@ func (u *transaksiUsecase) Delete(ctx context.Context, id string) error {
 }
 
 func (u *transaksiUsecase) Update(ctx context.Context, reqTransaksi req.Update) error {
-	// g := &errgroup.Group{}
-	// g.SetLimit(10)
 
 	hp, err := u.repoHutangPiutang.GetByTrId(ctx, reqTransaksi.ID)
 	if err != nil {
@@ -181,6 +179,7 @@ func (u *transaksiUsecase) Update(ctx context.Context, reqTransaksi req.Update) 
 			}
 		}
 
+		// set new total for update tr
 		repoParam.UpdateTr.Total = totalTransaksi
 
 		// add newAyatJurnals
