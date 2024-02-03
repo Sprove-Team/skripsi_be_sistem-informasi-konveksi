@@ -86,6 +86,8 @@ func (r *hutangPiutangRepo) GetById(ctx context.Context, id string) (entity.Huta
 	tx = tx.
 		Preload("Transaksi").
 		Preload("Transaksi.Kontak").
+		Preload("Transaksi.AyatJurnals").
+		Preload("Transaksi.AyatJurnals.Akun").
 		Preload("DataBayarHutangPiutang").
 		Preload("DataBayarHutangPiutang.Transaksi")
 

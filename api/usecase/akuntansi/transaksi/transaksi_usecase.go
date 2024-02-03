@@ -130,8 +130,8 @@ func (u *transaksiUsecase) Update(ctx context.Context, reqTransaksi req.Update) 
 		for _, v := range akuns {
 			// validasi ayat jurnal jika termasuk hutang piutang
 			if hp.ID != "" || hpFromByr.ID != "" {
-				if !pkgAkuntansiLogic.IsValidAkunHutangPiutang(v.KelompokAkun.Nama) {
-					return errors.New(message.InvalidAkunHutangPiutang)
+				if err := pkgAkuntansiLogic.IsValidAkunHutangPiutang(v.KelompokAkun.Nama); err != nil {
+					return err
 				}
 			}
 
@@ -188,10 +188,10 @@ func (u *transaksiUsecase) Update(ctx context.Context, reqTransaksi req.Update) 
 		for i, ay := range reqTransaksi.AyatJurnal {
 			akun := akunsMap[ay.AkunID]
 
-			if err := isValidAkunHp(&hp, &akun, &ay); err != nil {
+			if err := pkgAkuntansiLogic.IsValidAkunHp(&hp, &akun, &ay); err != nil {
 				return err
 			}
-			if err := isValidAkunByrHP(&hpFromByr, &akun, &ay); err != nil {
+			if err := pkgAkuntansiLogic.IsValidAkunByrHP(&hpFromByr, &akun, &ay); err != nil {
 				return err
 			}
 

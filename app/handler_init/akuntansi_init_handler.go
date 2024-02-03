@@ -21,7 +21,7 @@ import (
 	akunRepo "github.com/be-sistem-informasi-konveksi/api/repository/akuntansi/mysql/gorm/akun"
 	akunUsecase "github.com/be-sistem-informasi-konveksi/api/usecase/akuntansi/akun"
 
-	dataHutangPiutangRepo "github.com/be-sistem-informasi-konveksi/api/repository/akuntansi/mysql/gorm/data_bayar_hutang_piutang"
+	dataBayarHutangPiutangRepo "github.com/be-sistem-informasi-konveksi/api/repository/akuntansi/mysql/gorm/data_bayar_hutang_piutang"
 	kontakRepo "github.com/be-sistem-informasi-konveksi/api/repository/akuntansi/mysql/gorm/kontak"
 
 	"github.com/be-sistem-informasi-konveksi/pkg"
@@ -36,54 +36,61 @@ type AkuntansiHandlerInit interface {
 	Akuntansi() akuntansiHandler.AkuntansiHandler
 }
 
+type repoInit struct {
+	akun                   akunRepo.AkunRepo
+	kelompokAkun           kelompokAkunRepo.KelompokAkunRepo
+	transaksi              transaksiRepo.TransaksiRepo
+	hutangPiutang          hutangPiutangRepo.HutangPiutangRepo
+	kontak                 kontakRepo.KontakRepo
+	dataBayarHutangPiutang dataBayarHutangPiutangRepo.DataBayarHutangPiutangRepo
+	akuntansi              akuntansiRepo.AkuntansiRepo
+}
+
 type akuntansiHandlerInit struct {
 	DB        *gorm.DB
 	validator pkg.Validator
 	ulid      pkg.UlidPkg
+	repo      repoInit
 }
 
 func NewAkuntansiHandlerInit(DB *gorm.DB, validator pkg.Validator, ulid pkg.UlidPkg) AkuntansiHandlerInit {
-	return &akuntansiHandlerInit{DB, validator, ulid}
+	r := repoInit{
+		akun:                   akunRepo.NewAkunRepo(DB),
+		kelompokAkun:           kelompokAkunRepo.NewKelompokAkunRepo(DB),
+		transaksi:              transaksiRepo.NewTransaksiRepo(DB),
+		hutangPiutang:          hutangPiutangRepo.NewHutangPiutangRepo(DB),
+		dataBayarHutangPiutang: dataBayarHutangPiutangRepo.NewDataBayarHutangPiutangRepo(DB),
+		akuntansi:              akuntansiRepo.NewAkuntansiRepo(DB),
+		kontak:                 kontakRepo.NewKontakRepo(DB),
+	}
+	return &akuntansiHandlerInit{DB, validator, ulid, r}
 }
 
 func (d *akuntansiHandlerInit) AkunHandler() akunHandler.AkunHandler {
-	r := akunRepo.NewAkunRepo(d.DB)
-	// rg := golonganAkunRepo.NewGolonganAkunRepo(d.DB)
-	rk := kelompokAkunRepo.NewKelompokAkunRepo(d.DB)
-
-	uc := akunUsecase.NewAkunUsecase(r, d.ulid, rk)
+	uc := akunUsecase.NewAkunUsecase(d.repo.akun, d.ulid, d.repo.kelompokAkun)
 	h := akunHandler.NewAkunHandler(uc, d.validator)
 	return h
 }
 
 func (d *akuntansiHandlerInit) KelompokAkunHandler() kelompokAkunHandler.KelompokAkunHandler {
-	r := kelompokAkunRepo.NewKelompokAkunRepo(d.DB)
-	uc := kelompokAkunUsecase.NewKelompokAkunUsecase(r, d.ulid)
+	uc := kelompokAkunUsecase.NewKelompokAkunUsecase(d.repo.kelompokAkun, d.ulid)
 	h := kelompokAkunHandler.NewKelompokAkunHandler(uc, d.validator)
 	return h
 }
 
 func (d *akuntansiHandlerInit) Transaksi() transaksiHandler.TransaksiHandler {
-	r := transaksiRepo.NewTransaksiRepo(d.DB)
-	rr := akunRepo.NewAkunRepo(d.DB)
-	rbyr := dataHutangPiutangRepo.NewDataBayarHutangPiutangRepo(d.DB)
-	rhp := hutangPiutangRepo.NewHutangPiutangRepo(d.DB)
-	uc := transaksiUsecase.NewTransaksiUsecase(r, rr, rhp, rbyr, d.ulid)
+	uc := transaksiUsecase.NewTransaksiUsecase(d.repo.transaksi, d.repo.akun, d.repo.hutangPiutang, d.repo.dataBayarHutangPiutang, d.ulid)
 	h := transaksiHandler.NewTransaksiHandler(uc, d.validator)
 	return h
 }
 func (d *akuntansiHandlerInit) HutangPiutang() hutangPiutangHandler.HutangPiutangHandler {
-	r := hutangPiutangRepo.NewHutangPiutangRepo(d.DB)
-	rr := akunRepo.NewAkunRepo(d.DB)
-	rk := kontakRepo.NewKontakRepo(d.DB)
-	uc := hutangPiutangUsecase.NewHutangPiutangUsecase(r, rr, rk, d.ulid)
+	uc := hutangPiutangUsecase.NewHutangPiutangUsecase(d.repo.hutangPiutang, d.repo.dataBayarHutangPiutang, d.repo.akun, d.repo.kontak, d.ulid)
 	h := hutangPiutangHandler.NewHutangPiutangHandler(uc, d.validator)
 	return h
 }
 
 func (d *akuntansiHandlerInit) Akuntansi() akuntansiHandler.AkuntansiHandler {
-	ra := akuntansiRepo.NewAkuntansiRepo(d.DB)
-	uc := akuntansiUsecase.NewAkuntansiUsecase(ra)
+	uc := akuntansiUsecase.NewAkuntansiUsecase(d.repo.akuntansi)
 	h := akuntansiHandler.NewAkuntansiHandler(uc, d.validator)
 	return h
 }

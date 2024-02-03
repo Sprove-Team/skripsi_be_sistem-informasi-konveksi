@@ -1,6 +1,8 @@
 package akuntansi
 
-import "github.com/be-sistem-informasi-konveksi/entity"
+import (
+	"github.com/be-sistem-informasi-konveksi/entity"
+)
 
 type ReqAyatJurnal struct {
 	AkunID string  `json:"akun_id" validate:"required,ulid"`
@@ -31,7 +33,8 @@ type Create struct {
 }
 
 type CreateBayar struct {
-	HutangPiutangID string `json:"hutang_piutang_id" validate:"required,ulid"`
+	HutangPiutangID string `params:"hutang_piutang_id" validate:"required,ulid"`
+	Keterangan      string `json:"keterangan" validate:"required"`
 	ReqBayar
 }
 

@@ -18,7 +18,7 @@ type Create struct {
 }
 
 type Update struct {
-	ID              string                 `param:"id" validate:"required,ulid"`
+	ID              string                 `params:"id" validate:"required,ulid"`
 	BuktiPembayaran entity.BuktiPembayaran `json:"bukti_pembayaran" validate:"omitempty,dive,url"`
 	Tanggal         string                 `json:"tanggal" validate:"omitempty,datetime=2006-01-02T15:04:05Z07:00"`
 	Keterangan      string                 `json:"keterangan" validate:"omitempty"`

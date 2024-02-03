@@ -1,7 +1,6 @@
 package akuntansi
 
 import (
-	"context"
 	"fmt"
 
 	usecase "github.com/be-sistem-informasi-konveksi/api/usecase/akuntansi/hutang_piutang"
@@ -14,8 +13,7 @@ import (
 
 type HutangPiutangHandler interface {
 	Create(c *fiber.Ctx) error
-	// Delete(c *fiber.Ctx) error
-	// Update(c *fiber.Ctx) error
+	CreateBayar(c *fiber.Ctx) error
 	GetAll(c *fiber.Ctx) error
 	// GetById(c *fiber.Ctx) error
 	// GetHistory(c *fiber.Ctx) error
@@ -24,68 +22,11 @@ type HutangPiutangHandler interface {
 type hutangPiutangHandler struct {
 	uc        usecase.HutangPiutangUsecase
 	validator pkg.Validator
+	errResponse
 }
 
 func NewHutangPiutangHandler(uc usecase.HutangPiutangUsecase, validator pkg.Validator) HutangPiutangHandler {
-	return &hutangPiutangHandler{uc, validator}
-}
-
-func errResponse(c *fiber.Ctx, err error) error {
-	fmt.Println(err.Error())
-	if err == context.DeadlineExceeded {
-		return c.Status(fiber.StatusRequestTimeout).JSON(response.ErrorRes(fiber.ErrRequestTimeout.Code, fiber.ErrRequestTimeout.Message, nil))
-	}
-
-	if err.Error() == "record not found" {
-		return c.Status(fiber.StatusNotFound).JSON(response.ErrorRes(fiber.ErrNotFound.Code, fiber.ErrNotFound.Message, nil))
-	}
-
-	if err.Error() == "duplicated key not allowed" {
-		return c.Status(fiber.StatusConflict).JSON(response.ErrorRes(fiber.ErrConflict.Code, fiber.ErrConflict.Message, nil))
-	}
-
-	badRequest := map[string][]string{}
-
-	if err.Error() == message.AkunCannotBeSame {
-		badRequest["ayat_jurnal"] = []string{err.Error()}
-	}
-
-	if err.Error() == message.CreditDebitNotSame {
-		badRequest["transaksi.ayat_jurnal"] = []string{err.Error()}
-	}
-
-	if err.Error() == message.AkunNotFound {
-		badRequest["transaksi.ayat_jurnal.akun_id"] = []string{err.Error()}
-	}
-
-	if err.Error() == message.KontakNotFound {
-		badRequest["kontak_id"] = []string{err.Error()}
-	}
-
-	if err.Error() == message.InvalidAkunHutangPiutang {
-		badRequest["transaksi.ayat_jurnal.akun_id"] = []string{err.Error()}
-	}
-
-	if err.Error() == message.AkunNotMatchWithJenisHP {
-		badRequest["transaksi.ayat_jurnal.akun_id"] = []string{err.Error()}
-	}
-
-	if err.Error() == message.InvalidAkunBayar {
-		badRequest["transaksi.ayat_jurnal.akun_id"] = []string{err.Error()}
-	}
-
-	if err.Error() == message.BayarMustLessThanSisaTagihan {
-		badRequest["transaksi.ayat_jurnal.akun_id"] = []string{err.Error()}
-	}
-
-	if err.Error() == message.IncorrectPlacementOfCreditAndDebit {
-		badRequest["transaksi.ayat_jurnal.akun_id"] = []string{err.Error()}
-	}
-
-	if len(badRequest) > 0 {
-		return c.Status(fiber.StatusBadRequest).JSON(response.ErrorRes(fiber.ErrBadRequest.Code, fiber.ErrBadRequest.Message, badRequest))
-	}
-	return c.Status(fiber.StatusInternalServerError).JSON(response.ErrorRes(fiber.ErrInternalServerError.Code, fiber.ErrInternalServerError.Message, nil))
+	return &hutangPiutangHandler{uc, validator, errResponse{}}
 }
 
 func (h *hutangPiutangHandler) Create(c *fiber.Ctx) error {
@@ -101,7 +42,30 @@ func (h *hutangPiutangHandler) Create(c *fiber.Ctx) error {
 	err := h.uc.Create(ctx, *req)
 	// Handle errors
 	if err != nil {
-		return errResponse(c, err)
+		return h.errHP(c, err)
+	}
+
+	// Respond with success status
+	return c.Status(fiber.StatusCreated).JSON(response.SuccessRes(fiber.StatusCreated, message.Created, nil))
+}
+
+func (h *hutangPiutangHandler) CreateBayar(c *fiber.Ctx) error {
+
+	req := new(req.CreateBayar)
+
+	c.BodyParser(req)
+	c.ParamsParser(req)
+
+	errValidate := h.validator.Validate(req)
+	if errValidate != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(errValidate)
+	}
+	fmt.Println(req.HutangPiutangID)
+	ctx := c.UserContext()
+	err := h.uc.CreateBayar(ctx, *req)
+	// Handle errors
+	if err != nil {
+		return h.errBayar(c, err)
 	}
 
 	// Respond with success status
@@ -111,7 +75,6 @@ func (h *hutangPiutangHandler) GetAll(c *fiber.Ctx) error {
 	req := new(req.GetAll)
 
 	c.QueryParser(req)
-	fmt.Println(*req)
 
 	errValidate := h.validator.Validate(req)
 	if errValidate != nil {
@@ -121,7 +84,7 @@ func (h *hutangPiutangHandler) GetAll(c *fiber.Ctx) error {
 	data, err := h.uc.GetAll(ctx, *req)
 	// Handle errors
 	if err != nil {
-		return errResponse(c, err)
+		return h.errHP(c, err)
 	}
 
 	// Respond with success status

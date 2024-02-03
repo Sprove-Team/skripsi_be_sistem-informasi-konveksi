@@ -5,7 +5,7 @@ type Create struct {
 }
 
 type Update struct {
-	ID   string `param:"id" validate:"required,ulid"`
+	ID   string `params:"id" validate:"required,ulid"`
 	Nama string `json:"nama" validate:"omitempty"`
 }
 

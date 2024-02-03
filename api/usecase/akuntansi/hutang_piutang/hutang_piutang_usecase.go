@@ -9,6 +9,7 @@ import (
 	"time"
 
 	repoAkun "github.com/be-sistem-informasi-konveksi/api/repository/akuntansi/mysql/gorm/akun"
+	repoBayarHP "github.com/be-sistem-informasi-konveksi/api/repository/akuntansi/mysql/gorm/data_bayar_hutang_piutang"
 	repo "github.com/be-sistem-informasi-konveksi/api/repository/akuntansi/mysql/gorm/hutang_piutang"
 	repoKontak "github.com/be-sistem-informasi-konveksi/api/repository/akuntansi/mysql/gorm/kontak"
 	pkgAkuntansiLogic "github.com/be-sistem-informasi-konveksi/api/usecase/akuntansi"
@@ -23,19 +24,20 @@ import (
 
 type HutangPiutangUsecase interface {
 	Create(ctx context.Context, reqHutangPiutang req.Create) error
+	CreateBayar(ctx context.Context, reqHutangPiutang req.CreateBayar) error
 	GetAll(ctx context.Context, reqHutangPiutang req.GetAll) ([]res.GetAll, error)
-	// CreateBayarHutangPiutang(ctx context.Context, reqBayarHutangPiutang req.BayarHutangPiutang) error
 }
 
 type hutangPiutangUsecase struct {
-	repo       repo.HutangPiutangRepo
-	repoAkun   repoAkun.AkunRepo
-	repoKontak repoKontak.KontakRepo
-	ulid       pkg.UlidPkg
+	repo        repo.HutangPiutangRepo
+	repoBayarHP repoBayarHP.DataBayarHutangPiutangRepo
+	repoAkun    repoAkun.AkunRepo
+	repoKontak  repoKontak.KontakRepo
+	ulid        pkg.UlidPkg
 }
 
-func NewHutangPiutangUsecase(repo repo.HutangPiutangRepo, repoAkun repoAkun.AkunRepo, repoKontak repoKontak.KontakRepo, ulid pkg.UlidPkg) HutangPiutangUsecase {
-	return &hutangPiutangUsecase{repo, repoAkun, repoKontak, ulid}
+func NewHutangPiutangUsecase(repo repo.HutangPiutangRepo, repoBayarHP repoBayarHP.DataBayarHutangPiutangRepo, repoAkun repoAkun.AkunRepo, repoKontak repoKontak.KontakRepo, ulid pkg.UlidPkg) HutangPiutangUsecase {
+	return &hutangPiutangUsecase{repo, repoBayarHP, repoAkun, repoKontak, ulid}
 }
 
 func (u *hutangPiutangUsecase) Create(ctx context.Context, reqHutangPiutang req.Create) error {
@@ -113,8 +115,8 @@ func (u *hutangPiutangUsecase) Create(ctx context.Context, reqHutangPiutang req.
 	ayTagihan := entity.AyatJurnal{} // ay hutang/piutang yg akan dibayar bila bayar tidak kosong
 	akunTagihan := entity.Akun{}
 	for _, akun := range akuns {
-		if !pkgAkuntansiLogic.IsValidAkunHutangPiutang(akun.KelompokAkun.Nama) {
-			return errors.New(message.InvalidAkunHutangPiutang)
+		if err := pkgAkuntansiLogic.IsValidAkunHutangPiutang(akun.KelompokAkun.Nama); err != nil {
+			return err
 		}
 
 		// pasti ada 1 saldo debit jika jenis piutang, jika tidak error, begitu sebaliknya untuk hutang
@@ -188,7 +190,7 @@ func (u *hutangPiutangUsecase) Create(ctx context.Context, reqHutangPiutang req.
 		AyatJurnals:     []entity.AyatJurnal{ayHP1, ayHP2},
 	}
 
-	// create transaksi bayar hp
+	// create transaksi bayar awal hp
 	dataByrHutangPiutang := make([]entity.DataBayarHutangPiutang, lengthAyByr)
 	var totalAllTrBayar float64
 	if lengthAyByr > 0 {
@@ -198,7 +200,8 @@ func (u *hutangPiutangUsecase) Create(ctx context.Context, reqHutangPiutang req.
 			if akun.KelompokAkun.Nama != "kas & bank" {
 				return errors.New(message.InvalidAkunBayar)
 			}
-			byrHP, err := autoCreateDataBayarAwal(trByr, ayTagihan, reqHutangPiutang.KontakID, kontak.Nama+" melakukan pembayaran dengan akun "+akun.Nama, u.ulid)
+			keterangan := kontak.Nama + " melakukan pembayaran dengan akun " + akun.Nama
+			byrHP, err := pkgAkuntansiLogic.CreateDataBayarHP(trByr, ayTagihan, reqHutangPiutang.KontakID, keterangan, u.ulid)
 			if err != nil {
 				return err
 			}
@@ -217,8 +220,6 @@ func (u *hutangPiutangUsecase) Create(ctx context.Context, reqHutangPiutang req.
 	}
 	repoParam.DataBayarHutangPiutang = dataByrHutangPiutang
 	repoParam.Transaksi = transaksiHP
-
-	// fmt.Println(len(repoParam.DataBayarHutangPiutang))
 
 	if err := u.repo.Create(ctx, repoParam); err != nil {
 		return err
@@ -300,4 +301,95 @@ func (u *hutangPiutangUsecase) GetAll(ctx context.Context, reqHutangPiutang req.
 		i++
 	}
 	return resData, nil
+}
+
+func (u *hutangPiutangUsecase) CreateBayar(ctx context.Context, reqHutangPiutang req.CreateBayar) error {
+
+	var resLength = 2
+	var res = make(chan any, resLength)
+	go func() {
+		hp, err := u.repo.GetById(ctx, reqHutangPiutang.HutangPiutangID)
+		if err != nil {
+			if err.Error() == "record not found" {
+				res <- errors.New(message.HutangPiutangNotFound)
+				return
+			}
+			res <- err
+			return
+		}
+		if reqHutangPiutang.Total > hp.Sisa {
+			res <- errors.New(message.BayarMustLessThanSisaTagihan)
+			return
+		}
+		res <- hp
+	}()
+	go func() {
+		akun, err := u.repoAkun.GetById(ctx, reqHutangPiutang.AkunBayarID)
+		if err != nil {
+			if err.Error() == "record not found" {
+				res <- errors.New(message.AkunNotFound)
+				return
+			}
+			res <- err
+			return
+		}
+		if akun.KelompokAkun.Nama != "kas & bank" {
+			res <- errors.New(message.InvalidAkunBayar)
+			return
+		}
+		res <- akun
+	}()
+
+	var hp entity.HutangPiutang
+
+	for i := 0; i < resLength; i++ {
+		switch r := (<-res).(type) {
+		case entity.HutangPiutang:
+			hp = r
+		case error:
+			return r
+		default:
+			break
+		}
+	}
+
+	var ayTagihan entity.AyatJurnal
+	for _, ay := range hp.Transaksi.AyatJurnals {
+		// Check if the account ID matches and transaction type is 'PIUTANG' or 'HUTANG'
+		kodeKlompokAkun := ay.Akun.Kode[0:2]
+		if (kodeKlompokAkun == "12" && hp.Jenis == "PIUTANG") ||
+			(kodeKlompokAkun == "27" && hp.Jenis == "HUTANG") {
+
+			ayTagihan.AkunID = ay.AkunID
+			ayTagihan.Saldo = -reqHutangPiutang.Total
+
+			// Set Kredit or Debit based on transaction type
+			if hp.Jenis == "PIUTANG" {
+				ayTagihan.Kredit = reqHutangPiutang.Total
+			} else if hp.Jenis == "HUTANG" {
+				ayTagihan.Debit = reqHutangPiutang.Total
+			}
+			break
+		}
+	}
+
+	byrHP, err := pkgAkuntansiLogic.CreateDataBayarHP(reqHutangPiutang.ReqBayar, ayTagihan, hp.Transaksi.KontakID, reqHutangPiutang.Keterangan, u.ulid)
+
+	if err != nil {
+		return err
+	}
+
+	byrHP.HutangPiutang = hp
+	byrHP.HutangPiutang.Sisa = hp.Sisa - reqHutangPiutang.Total
+	if byrHP.HutangPiutang.Sisa <= 0 {
+		byrHP.HutangPiutang.Status = "LUNAS"
+	}
+
+	// fmt.Println(byrHP.HutangPiutang.Sisa)
+
+	if err := u.repoBayarHP.Create(ctx, byrHP); err != nil {
+		return err
+	}
+
+	return nil
 }

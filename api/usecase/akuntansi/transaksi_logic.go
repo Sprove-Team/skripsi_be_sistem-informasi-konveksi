@@ -2,12 +2,13 @@ package akuntansi
 
 import (
 	"errors"
-	"strings"
 
 	"github.com/be-sistem-informasi-konveksi/common/message"
+
 	"github.com/be-sistem-informasi-konveksi/entity"
 )
 
+// transaksi
 func UpdateSaldo(saldo *float64, ayKredit, ayDebit float64, saldoNormal string) {
 	if saldoNormal == "DEBIT" {
 		*saldo = ayDebit - ayKredit
@@ -71,20 +72,4 @@ func IsDuplicateAkun(ayatJurnals []entity.AyatJurnal) error {
 	}
 
 	return nil
-}
-
-func IsValidAkunHutangPiutang(nama string) bool {
-	validNames := []string{"piutang", "hutang", "kas & bank"}
-	if strings.HasPrefix(nama, "pendapatan") {
-		return true
-	}
-	if strings.HasPrefix(nama, "beban") {
-		return true
-	}
-	for _, validName := range validNames {
-		if nama == validName {
-			return true
-		}
-	}
-	return false
 }

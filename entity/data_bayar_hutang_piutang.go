@@ -8,3 +8,7 @@ type DataBayarHutangPiutang struct {
 	TransaksiID     string        `gorm:"type:varchar(26);not null;uniqueIndex;" json:"transaksi_id"`
 	Transaksi       Transaksi     `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"-"`
 }
+
+func (DataBayarHutangPiutang) TableName() string {
+	return "data_bayar_hutang_piutang"
+}

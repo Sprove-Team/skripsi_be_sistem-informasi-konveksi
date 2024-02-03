@@ -10,3 +10,7 @@ type DetailInvoice struct {
 	Qty          int     `gorm:"type:MEDIUMINT" json:"qty"`
 	Total        float64 `gorm:"type:decimal(10,2)" json:"total"`
 }
+
+func (DetailInvoice) TableName() string {
+	return "detail_invoice"
+}

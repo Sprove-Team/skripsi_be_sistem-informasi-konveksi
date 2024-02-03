@@ -9,6 +9,7 @@ import (
 )
 
 type DataBayarHutangPiutangRepo interface {
+	Create(ctx context.Context, dataBayar *entity.DataBayarHutangPiutang) error
 	GetByTrId(ctx context.Context, id string) (entity.DataBayarHutangPiutang, error)
 }
 
@@ -30,4 +31,21 @@ func (r *dataBayarHutangPiutangRepo) GetByTrId(ctx context.Context, id string) (
 	}
 
 	return data, nil
+}
+func (r *dataBayarHutangPiutangRepo) Create(ctx context.Context, dataBayar *entity.DataBayarHutangPiutang) error {
+	tx := r.DB.WithContext(ctx)
+	err := tx.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Create(dataBayar).Error; err != nil {
+			return err
+		}
+		if err := tx.Select("sisa", "status").Updates(&dataBayar.HutangPiutang).Error; err != nil {
+			return err
+		}
+		return nil
+	})
+	if err != nil {
+		helper.LogsError(err)
+		return err
+	}
+	return nil
 }

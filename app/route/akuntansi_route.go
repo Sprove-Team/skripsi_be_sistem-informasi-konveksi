@@ -51,13 +51,9 @@ func (ro *akuntansiRoute) Transaksi(router fiber.Router) {
 }
 
 func (ro *akuntansiRoute) HutangPiutang(router fiber.Router) {
-	// router.Get("/history", ro.h.Transaksi().GetHistory)
-	// router.Get("", ro.h.Transaksi().GetAll)
-	// router.Get("/:id", ro.h.Transaksi().GetById)
 	router.Post("", ro.h.HutangPiutang().Create)
+	router.Post("/bayar/:hutang_piutang_id", ro.h.HutangPiutang().CreateBayar)
 	router.Get("", ro.h.HutangPiutang().GetAll)
-	// router.Put("/:id", ro.h.Transaksi().Update)
-	// router.Delete("/:id", ro.h.Transaksi().Delete)
 }
 
 func (ro *akuntansiRoute) Akuntansi(router fiber.Router) {

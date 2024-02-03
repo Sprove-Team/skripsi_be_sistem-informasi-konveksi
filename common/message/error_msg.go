@@ -67,6 +67,7 @@ var (
 	// kontak
 	KontakNotFound = "kontak tidak ditemukan"
 	// hutang piutang
+	HutangPiutangNotFound              = "hutang piutang tidak di temukan"
 	AkunNotMatchWithJenisHP            = "akun harus sama dengan jenis hutang piutang"
 	InvalidAkunHutangPiutang           = "akun bukan merupakan akun hutang piutang"
 	IncorrectPlacementOfCreditAndDebit = "peletakan total debit dan kredit untuk hutang piutang tidak benar"

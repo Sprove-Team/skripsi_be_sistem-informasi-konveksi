@@ -9,7 +9,7 @@ type Create struct {
 }
 
 type Update struct {
-	ID             string `param:"id" validate:"required,ulid"`
+	ID             string `params:"id" validate:"required,ulid"`
 	KelompokAkunID string `json:"kelompok_akun_id" validate:"omitempty,ulid"`
 	Nama           string `json:"nama" validate:"omitempty,printascii"`
 	Kode           string `json:"kode" validate:"omitempty"`
