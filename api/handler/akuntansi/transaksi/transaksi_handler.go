@@ -2,6 +2,7 @@ package akuntansi
 
 import (
 	"context"
+	"fmt"
 
 	usecase "github.com/be-sistem-informasi-konveksi/api/usecase/akuntansi/transaksi"
 	"github.com/be-sistem-informasi-konveksi/common/message"
@@ -31,6 +32,7 @@ func NewTransaksiHandler(uc usecase.TransaksiUsecase, validator pkg.Validator) T
 }
 
 func errResponse(c *fiber.Ctx, err error) error {
+	fmt.Println(err)
 	if err == context.DeadlineExceeded {
 		return c.Status(fiber.StatusRequestTimeout).JSON(response.ErrorRes(fiber.ErrRequestTimeout.Code, fiber.ErrRequestTimeout.Message, nil))
 	}
@@ -58,6 +60,14 @@ func errResponse(c *fiber.Ctx, err error) error {
 	}
 
 	if err.Error() == message.AkunHutangPiutangNotEq2 {
+		badRequest["ayat_jurnal"] = []string{err.Error()}
+	}
+
+	if err.Error() == message.BayarMustLessThanSisaTagihan {
+		badRequest["ayat_jurnal"] = []string{err.Error()}
+	}
+
+	if err.Error() == message.TotalHPMustGeOrEqToTotalByr {
 		badRequest["ayat_jurnal"] = []string{err.Error()}
 	}
 

@@ -72,21 +72,27 @@ func (r *transaksiRepo) Create(ctx context.Context, param CreateParam) error {
 }
 
 func (r *transaksiRepo) Update(ctx context.Context, param UpdateParam) error {
+
 	err := r.DB.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		// update transaksi
 		if err := tx.Where("id =? ", param.UpdateTr.ID).Updates(param.UpdateTr).Error; err != nil {
 			helper.LogsError(err)
 			return err
 		}
-		if err := tx.Where("transaksi_id = ?", param.UpdateHutangPiutang.TransaksiID).Updates(param.UpdateHutangPiutang).Error; err != nil {
-			helper.LogsError(err)
-			return err
+		if param.UpdateHutangPiutang != nil {
+			if err := tx.Select("status", "sisa", "total").Updates(param.UpdateHutangPiutang).Error; err != nil {
+				helper.LogsError(err)
+				return err
+			}
 		}
 
-		if err := tx.Where("transaksi_id = ?", param.UpdateDataBayarHutangPiutang.TransaksiID).Updates(param.UpdateDataBayarHutangPiutang).Error; err != nil {
-			helper.LogsError(err)
-			return err
+		if param.UpdateDataBayarHutangPiutang != nil {
+			if err := tx.Updates(param.UpdateDataBayarHutangPiutang).Error; err != nil {
+				helper.LogsError(err)
+				return err
+			}
 		}
+
 		// update ayat jurnals
 		if param.NewAyatJurnals != nil {
 			if err := tx.Unscoped().Where("transaksi_id IN (?)", param.UpdateTr.ID).Delete(&entity.AyatJurnal{}).Error; err != nil {
@@ -119,6 +125,7 @@ func (r *transaksiRepo) Update(ctx context.Context, param UpdateParam) error {
 }
 
 func (r *transaksiRepo) Delete(ctx context.Context, id string) error {
+
 	err := r.DB.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 
 		var transaksi entity.Transaksi
@@ -144,17 +151,14 @@ func (r *transaksiRepo) Delete(ctx context.Context, id string) error {
 			helper.LogsError(err)
 			return err
 		}
-
-		// delete rest of transaksi data in data bayar
 		if len(idsTrByr) > 0 {
-			var transaksiByr []entity.Transaksi
-			err = tx.Find(&transaksiByr, "id IN (?)", idsTrByr).Error
-			if err != nil {
-				helper.LogsError(err)
+			if err := tx.Delete(&entity.Transaksi{}, "id IN (?)", idsTrByr).Error; err != nil {
 				return err
 			}
-			if err := tx.Select(clause.Associations).Delete(&transaksiByr).Error; err != nil {
-				helper.LogsError(err)
+			if err := tx.Delete(&entity.AyatJurnal{}, "transaksi_id IN (?)", idsTrByr).Error; err != nil {
+				return err
+			}
+			if err := tx.Delete(&entity.DataBayarHutangPiutang{}, "transaksi_id IN (?)", idsTrByr).Error; err != nil {
 				return err
 			}
 		}

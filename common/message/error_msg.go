@@ -70,6 +70,7 @@ var (
 	AkunNotMatchWithJenisHP            = "akun harus sama dengan jenis hutang piutang"
 	InvalidAkunHutangPiutang           = "akun bukan merupakan akun hutang piutang"
 	IncorrectPlacementOfCreditAndDebit = "peletakan total debit dan kredit untuk hutang piutang tidak benar"
+	TotalHPMustGeOrEqToTotalByr        = "jumlah hutang piutang harus lebih besar atau sama dengan total hutang piutang yang telah dibayar"
 	// bayar hutang piutang
 	BayarMustLessThanSisaTagihan = "jumlah yang dibayar harus kurang atau sama dengan sisa tagihan"
 	InvalidAkunBayar             = "akun untuk bayar hutang piutang tidak valid"

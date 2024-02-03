@@ -48,6 +48,9 @@ func (u *transaksiUsecase) Delete(ctx context.Context, id string) error {
 }
 
 func (u *transaksiUsecase) Update(ctx context.Context, reqTransaksi req.Update) error {
+	// g := &errgroup.Group{}
+	// g.SetLimit(10)
+
 	hp, err := u.repoHutangPiutang.GetByTrId(ctx, reqTransaksi.ID)
 	if err != nil {
 		if err.Error() != "record not found" {
@@ -64,9 +67,12 @@ func (u *transaksiUsecase) Update(ctx context.Context, reqTransaksi req.Update) 
 		// validasi transaksi jika termasuk bayar hutang piutang
 	} else {
 		hpFromByr, err = u.repoDataBayarHutangPiutang.GetByTrId(ctx, reqTransaksi.ID)
-		if err != nil && err.Error() != "record not found" {
-			return err
+		if err != nil {
+			if err.Error() != "record not found" {
+				return err
+			}
 		}
+
 	}
 
 	lengthReqAyatJurnals := len(reqTransaksi.AyatJurnal)
@@ -160,8 +166,17 @@ func (u *transaksiUsecase) Update(ctx context.Context, reqTransaksi req.Update) 
 			return err
 		}
 
+		// validate total bayar with total tr hp
+		if hp.ID != "" {
+			totalByr := hp.Total - hp.Sisa
+			if totalTransaksi < totalByr {
+				return errors.New(message.TotalHPMustGeOrEqToTotalByr)
+			}
+		}
+		// validate total bayar dengan sisa tagihan
 		if hpFromByr.ID != "" {
-			if totalTransaksi > hp.Total {
+			currentSisa := hpFromByr.HutangPiutang.Sisa + hpFromByr.Total
+			if totalTransaksi > currentSisa {
 				return errors.New(message.BayarMustLessThanSisaTagihan)
 			}
 		}
@@ -174,16 +189,11 @@ func (u *transaksiUsecase) Update(ctx context.Context, reqTransaksi req.Update) 
 		for i, ay := range reqTransaksi.AyatJurnal {
 			akun := akunsMap[ay.AkunID]
 
-			// validasi akun sesuai dengan jenis hutang piutang baik itu tr hp atau byr hp
-			if (hp.Jenis == "PIUTANG" || hpFromByr.HutangPiutang.Jenis == "PIUTANG") && ay.Debit != 0 {
-				if akun.KelompokAkun.Nama != "piutang" {
-					return errors.New(message.AkunNotMatchWithJenisHPTr)
-				}
+			if err := isValidAkunHp(&hp, &akun, &ay); err != nil {
+				return err
 			}
-			if (hp.Jenis == "HUTANG" || hpFromByr.HutangPiutang.Jenis == "HUTANG") && ay.Kredit != 0 {
-				if akun.KelompokAkun.Nama != "hutang" {
-					return errors.New(message.AkunNotMatchWithJenisHPTr)
-				}
+			if err := isValidAkunByrHP(&hpFromByr, &akun, &ay); err != nil {
+				return err
 			}
 
 			// logic calculate saldo ayatJurnal
@@ -205,28 +215,36 @@ func (u *transaksiUsecase) Update(ctx context.Context, reqTransaksi req.Update) 
 		}
 
 		repoParam.NewAyatJurnals = newAyatJurnals
-	}
 
-	// set data hutang piutang
-	if hp.ID != "" {
-		repoParam.UpdateHutangPiutang = &hp
-		repoParam.UpdateHutangPiutang.Total = repoParam.UpdateTr.Total
-		// total baru - total dibayar didapat dari old total - old sisa
-		repoParam.UpdateHutangPiutang.Sisa = repoParam.UpdateTr.Total - (oldTr.Total - hp.Sisa)
-	}
+		if repoParam.UpdateTr.Total != oldTr.Total {
+			// set data hutang piutang
+			if hp.ID != "" {
+				repoParam.UpdateHutangPiutang = &hp
+				repoParam.UpdateHutangPiutang.Total = repoParam.UpdateTr.Total
+				// total baru - total dibayar didapat dari old total - old sisa
+				repoParam.UpdateHutangPiutang.Sisa = repoParam.UpdateTr.Total - (oldTr.Total - hp.Sisa)
 
-	if hpFromByr.ID != "" {
-		repoParam.UpdateHutangPiutang = &hpFromByr.HutangPiutang
-		repoParam.UpdateDataBayarHutangPiutang = &hpFromByr
-		repoParam.UpdateDataBayarHutangPiutang.Total = repoParam.UpdateTr.Total
-		// logic update sisa hp, dengan logika (sisa_old + total_byr old) - total_byr skrng
-		repoParam.UpdateDataBayarHutangPiutang.HutangPiutang.Sisa = (hpFromByr.HutangPiutang.Sisa + hpFromByr.Total) - repoParam.UpdateTr.Total
-	}
+			}
 
-	if repoParam.UpdateHutangPiutang.Sisa <= 0 && repoParam.UpdateHutangPiutang.Status != "LUNAS" {
-		repoParam.UpdateHutangPiutang.Status = "LUNAS"
-	} else if repoParam.UpdateHutangPiutang.Status != "BELUM_LUNAS" {
-		repoParam.UpdateHutangPiutang.Status = "BELUM_LUNAS"
+			if hpFromByr.ID != "" {
+				// update data hp
+				repoParam.UpdateHutangPiutang = &hpFromByr.HutangPiutang
+				// logic update sisa hp, dengan logika (sisa_old + total_byr old) - total_byr skrng
+				repoParam.UpdateHutangPiutang.Sisa = (hpFromByr.HutangPiutang.Sisa + hpFromByr.Total) - repoParam.UpdateTr.Total
+				// update data bayar
+				repoParam.UpdateDataBayarHutangPiutang = &hpFromByr
+				repoParam.UpdateDataBayarHutangPiutang.Total = repoParam.UpdateTr.Total
+			}
+
+			if repoParam.UpdateHutangPiutang != nil {
+				if repoParam.UpdateHutangPiutang.Sisa <= 0 && repoParam.UpdateHutangPiutang.Status != "LUNAS" {
+					repoParam.UpdateHutangPiutang.Status = "LUNAS"
+				} else if repoParam.UpdateHutangPiutang.Status != "BELUM_LUNAS" {
+					repoParam.UpdateHutangPiutang.Status = "BELUM_LUNAS"
+				}
+			}
+		}
+
 	}
 
 	if err := u.repo.Update(ctx, repoParam); err != nil {
