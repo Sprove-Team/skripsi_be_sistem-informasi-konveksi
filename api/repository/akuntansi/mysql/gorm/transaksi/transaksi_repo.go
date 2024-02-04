@@ -79,6 +79,7 @@ func (r *transaksiRepo) Update(ctx context.Context, param UpdateParam) error {
 			helper.LogsError(err)
 			return err
 		}
+
 		if param.UpdateHutangPiutang != nil {
 			if err := tx.Select("status", "sisa", "total").Updates(param.UpdateHutangPiutang).Error; err != nil {
 				helper.LogsError(err)
@@ -104,7 +105,6 @@ func (r *transaksiRepo) Update(ctx context.Context, param UpdateParam) error {
 				helper.LogsError(err)
 				return err
 			}
-
 		}
 
 		// update multiple lines with duplicate IDs in the 'akun' table.
@@ -130,9 +130,15 @@ func (r *transaksiRepo) Delete(ctx context.Context, id string) error {
 
 		var transaksi entity.Transaksi
 		// delete transaksi by id
-		if err := tx.Model(&transaksi).First(&transaksi, "id = ?", id).Error; err != nil {
+		if err := tx.Preload("HutangPiutang").Preload("DataBayarHutangPiutang").First(&transaksi, "id = ?", id).Error; err != nil {
 			helper.LogsError(err)
 			return err
+		}
+
+		if transaksi.DataBayarHutangPiutang != nil {
+			if err := r.OnDeleteTrDataBayarHP(tx, &transaksi); err != nil {
+				return err
+			}
 		}
 
 		if err := tx.Select(clause.Associations).Delete(&transaksi).Error; err != nil {
@@ -140,27 +146,11 @@ func (r *transaksiRepo) Delete(ctx context.Context, id string) error {
 			return err
 		}
 
-		// delete transaksi bayar if id is transaksi in hutang piutang
-		var idsTrByr []string
-		err := tx.Model(&entity.DataBayarHutangPiutang{}).
-			Joins("JOIN hutang_piutang hp ON data_bayar_hutang_piutang.hutang_piutang_id = hp.id").
-			Where("hp.transaksi_id = ?", id).
-			Select("data_bayar_hutang_piutang.transaksi_id").Pluck("transaksi_id", &idsTrByr).Error
+		if transaksi.HutangPiutang != nil {
+			if err := r.OnDeleteTrHP(tx, &transaksi); err != nil {
+				return err
+			}
 
-		if err != nil {
-			helper.LogsError(err)
-			return err
-		}
-		if len(idsTrByr) > 0 {
-			if err := tx.Delete(&entity.Transaksi{}, "id IN (?)", idsTrByr).Error; err != nil {
-				return err
-			}
-			if err := tx.Delete(&entity.AyatJurnal{}, "transaksi_id IN (?)", idsTrByr).Error; err != nil {
-				return err
-			}
-			if err := tx.Delete(&entity.DataBayarHutangPiutang{}, "transaksi_id IN (?)", idsTrByr).Error; err != nil {
-				return err
-			}
 		}
 
 		return nil
