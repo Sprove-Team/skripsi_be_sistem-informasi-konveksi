@@ -4,7 +4,6 @@ import (
 	"time"
 )
 
-// BuktiPembayaran string       `gorm:"type:varchar(255)" json:"bukti_pembayaran,omitempty"`
 type Transaksi struct {
 	Base
 	Keterangan             string                  `gorm:"type:longtext" json:"keterangan,omitempty"`
