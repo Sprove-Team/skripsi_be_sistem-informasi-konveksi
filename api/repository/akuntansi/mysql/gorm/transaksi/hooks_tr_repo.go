@@ -2,7 +2,6 @@ package akuntansi
 
 import (
 	"github.com/be-sistem-informasi-konveksi/entity"
-	"github.com/be-sistem-informasi-konveksi/helper"
 	"gorm.io/gorm"
 )
 
@@ -26,47 +25,32 @@ func (r *transaksiRepo) OnDeleteTrDataBayarHP(tx *gorm.DB, tr *entity.Transaksi)
 
 func (r *transaksiRepo) OnDeleteTrHP(tx *gorm.DB, tr *entity.Transaksi) error {
 
-	var dataByrHp []entity.DataBayarHutangPiutang
-	err := tx.Find(&dataByrHp, "hutang_piutang_id = ?", tr.HutangPiutang.ID).Error
+	lengthReq := 2
+	errs := make(chan error, lengthReq)
+	subQuery := tx.Model(&entity.DataBayarHutangPiutang{}).Where("hutang_piutang_id = ?", tr.HutangPiutang.ID).Select("transaksi_id")
+	go func() {
+		if err := tx.Delete(&entity.Transaksi{}, "id IN (?)", subQuery).Error; err != nil {
+			errs <- err
+			return
+		}
+		errs <- nil
+	}()
+	go func() {
+		if err := tx.Delete(&entity.AyatJurnal{}, "transaksi_id IN (?)", subQuery).Error; err != nil {
+			errs <- err
+			return
+		}
+		errs <- nil
+	}()
 
-	if err != nil {
-		helper.LogsError(err)
-		return err
+	for i := 0; i < lengthReq; i++ {
+		if err := <-errs; err != nil {
+			return err
+		}
 	}
 
-	lengthByr := len(dataByrHp)
-	if lengthByr > 0 {
-		var idsTrByr = make([]string, lengthByr)
-		for i, v := range dataByrHp {
-			idsTrByr[i] = v.TransaksiID
-		}
-		var errs = make(chan error, 3)
-		go func() {
-			if err := tx.Delete(&entity.Transaksi{}, "id IN (?)", idsTrByr).Error; err != nil {
-				errs <- err
-			}
-			errs <- nil
-		}()
-		go func() {
-			if err := tx.Delete(&entity.AyatJurnal{}, "transaksi_id IN (?)", idsTrByr).Error; err != nil {
-				errs <- err
-			}
-			errs <- nil
-		}()
-
-		go func() {
-			if err := tx.Delete(&dataByrHp).Error; err != nil {
-				errs <- err
-			}
-			errs <- nil
-		}()
-
-		for i := 0; i < 3; i++ {
-			if err := <-errs; err != nil {
-				return err
-			}
-		}
-
+	if err := tx.Delete(&entity.DataBayarHutangPiutang{}, "hutang_piutang_id = ?", tr.HutangPiutang.ID).Error; err != nil {
+		return err
 	}
 
 	return nil
