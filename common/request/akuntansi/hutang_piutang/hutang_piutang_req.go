@@ -6,8 +6,8 @@ import (
 
 type ReqAyatJurnal struct {
 	AkunID string  `json:"akun_id" validate:"required,ulid"`
-	Kredit float64 `json:"kredit" validate:"number,required_without=Debit,excluded_with=Debit"`
-	Debit  float64 `json:"debit" validate:"number,required_without=Kredit,excluded_with=Kredit"`
+	Kredit float64 `json:"kredit" validate:"number,gt=0,required_without=Debit,excluded_with=Debit"`
+	Debit  float64 `json:"debit" validate:"number,gt=0,required_without=Kredit,excluded_with=Kredit"`
 }
 
 type ReqTransaksi struct {
@@ -20,7 +20,7 @@ type ReqBayar struct {
 	Tanggal         string                 `json:"tanggal" validate:"required,datetime=2006-01-02T15:04:05Z07:00"`
 	BuktiPembayaran entity.BuktiPembayaran `json:"bukti_pembayaran" validate:"omitempty,dive,url"`
 	AkunBayarID     string                 `json:"akun_bayar_id" validate:"required,ulid"`
-	Total           float64                `json:"total" validate:"required,number"`
+	Total           float64                `json:"total" validate:"required,number,gt=0"`
 }
 
 type Create struct {
