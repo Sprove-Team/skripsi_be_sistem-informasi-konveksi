@@ -305,87 +305,79 @@ func (u *hutangPiutangUsecase) GetAll(ctx context.Context, reqHutangPiutang req.
 
 func (u *hutangPiutangUsecase) CreateBayar(ctx context.Context, reqHutangPiutang req.CreateBayar) error {
 
-	var resLength = 2
-	var res = make(chan any, resLength)
+	hpChan := make(chan entity.HutangPiutang, 1)
+	errChan := make(chan error, 1)
 	go func() {
-		hp, err := u.repo.GetById(ctx, reqHutangPiutang.HutangPiutangID)
+		hp, err := u.repo.GetHPForBayar(ctx, reqHutangPiutang.HutangPiutangID)
 		if err != nil {
 			if err.Error() == "record not found" {
-				res <- errors.New(message.HutangPiutangNotFound)
+				errChan <- errors.New(message.HutangPiutangNotFound)
 				return
 			}
-			res <- err
+			errChan <- err
 			return
 		}
 		if reqHutangPiutang.Total > hp.Sisa {
-			res <- errors.New(message.BayarMustLessThanSisaTagihan)
+			errChan <- errors.New(message.BayarMustLessThanSisaTagihan)
 			return
 		}
-		res <- hp
+		hpChan <- hp
 	}()
 	go func() {
 		akun, err := u.repoAkun.GetById(ctx, reqHutangPiutang.AkunBayarID)
 		if err != nil {
 			if err.Error() == "record not found" {
-				res <- errors.New(message.AkunNotFound)
+				errChan <- errors.New(message.AkunNotFound)
 				return
 			}
-			res <- err
+			errChan <- err
 			return
 		}
 		if akun.KelompokAkun.Nama != "kas & bank" {
-			res <- errors.New(message.InvalidAkunBayar)
+			errChan <- errors.New(message.InvalidAkunBayar)
 			return
 		}
-		res <- akun
 	}()
 
-	var hp entity.HutangPiutang
-
-	for i := 0; i < resLength; i++ {
-		switch r := (<-res).(type) {
-		case entity.HutangPiutang:
-			hp = r
-		case error:
-			return r
-		default:
-			break
-		}
-	}
-
 	var ayTagihan entity.AyatJurnal
-	for _, ay := range hp.Transaksi.AyatJurnals {
-		// Check if the account ID matches and transaction type is 'PIUTANG' or 'HUTANG'
-		kodeKlompokAkun := ay.Akun.Kode[0:2]
-		if (kodeKlompokAkun == "12" && hp.Jenis == "PIUTANG") ||
-			(kodeKlompokAkun == "27" && hp.Jenis == "HUTANG") {
+	var byrHP *entity.DataBayarHutangPiutang
+	select {
+	case hp := <-hpChan:
+		for _, ay := range hp.Transaksi.AyatJurnals {
+			// Check if the account ID matches and transaction type is 'PIUTANG' or 'HUTANG'
+			kodeKlompokAkun := ay.Akun.Kode[0:2]
+			if (kodeKlompokAkun == "12" && hp.Jenis == "PIUTANG") ||
+				(kodeKlompokAkun == "27" && hp.Jenis == "HUTANG") {
 
-			ayTagihan.AkunID = ay.AkunID
-			ayTagihan.Saldo = -reqHutangPiutang.Total
+				ayTagihan.AkunID = ay.AkunID
+				ayTagihan.Saldo = -reqHutangPiutang.Total
 
-			// Set Kredit or Debit based on transaction type
-			if hp.Jenis == "PIUTANG" {
-				ayTagihan.Kredit = reqHutangPiutang.Total
-			} else if hp.Jenis == "HUTANG" {
-				ayTagihan.Debit = reqHutangPiutang.Total
+				// Set Kredit or Debit based on transaction type
+				if hp.Jenis == "PIUTANG" {
+					ayTagihan.Kredit = reqHutangPiutang.Total
+				} else if hp.Jenis == "HUTANG" {
+					ayTagihan.Debit = reqHutangPiutang.Total
+				}
+				break
 			}
-			break
 		}
-	}
+		var err error
 
-	byrHP, err := pkgAkuntansiLogic.CreateDataBayarHP(reqHutangPiutang.ReqBayar, ayTagihan, hp.Transaksi.KontakID, reqHutangPiutang.Keterangan, u.ulid)
+		byrHP, err = pkgAkuntansiLogic.CreateDataBayarHP(reqHutangPiutang.ReqBayar, ayTagihan, hp.Transaksi.KontakID, reqHutangPiutang.Keterangan, u.ulid)
 
-	if err != nil {
+		if err != nil {
+			return err
+		}
+
+		byrHP.HutangPiutang = hp
+		byrHP.HutangPiutang.Sisa = hp.Sisa - reqHutangPiutang.Total
+		if byrHP.HutangPiutang.Sisa <= 0 {
+			byrHP.HutangPiutang.Status = "LUNAS"
+		}
+
+	case err := <-errChan:
 		return err
 	}
-
-	byrHP.HutangPiutang = hp
-	byrHP.HutangPiutang.Sisa = hp.Sisa - reqHutangPiutang.Total
-	if byrHP.HutangPiutang.Sisa <= 0 {
-		byrHP.HutangPiutang.Status = "LUNAS"
-	}
-
-	// fmt.Println(byrHP.HutangPiutang.Sisa)
 
 	if err := u.repoBayarHP.Create(ctx, byrHP); err != nil {
 		return err

@@ -24,6 +24,7 @@ type HutangPiutangRepo interface {
 	GetAll(ctx context.Context, search SearchParam) ([]entity.HutangPiutang, error)
 	GetById(ctx context.Context, id string) (entity.HutangPiutang, error)
 	GetByTrId(ctx context.Context, id string) (entity.HutangPiutang, error)
+	GetHPForBayar(ctx context.Context, id string) (entity.HutangPiutang, error)
 	// CreateBayarHutangPiutang(ctx context.Context, )
 	// Update(ctx context.Context, param UpdateParam) error
 	// GetHistory(ctx context.Context, param SearchTransaksi) ([]entity.Transaksi, error)
@@ -80,14 +81,25 @@ func (r *hutangPiutangRepo) GetAll(ctx context.Context, search SearchParam) ([]e
 
 }
 
+func (r *hutangPiutangRepo) GetHPForBayar(ctx context.Context, id string) (entity.HutangPiutang, error) {
+	data := entity.HutangPiutang{}
+	tx := r.DB.WithContext(ctx).Model(&entity.HutangPiutang{}).Where("id = ?", id)
+	tx = tx.
+		Preload("Transaksi").
+		Preload("Transaksi.AyatJurnals.Akun")
+
+	if err := tx.First(&data).Error; err != nil {
+		return data, err
+	}
+	return data, nil
+}
+
 func (r *hutangPiutangRepo) GetById(ctx context.Context, id string) (entity.HutangPiutang, error) {
 	data := entity.HutangPiutang{}
 	tx := r.DB.WithContext(ctx).Model(&entity.HutangPiutang{}).Where("id = ?", id).Order("id ASC")
 	tx = tx.
 		Preload("Transaksi").
 		Preload("Transaksi.Kontak").
-		Preload("Transaksi.AyatJurnals").
-		Preload("Transaksi.AyatJurnals.Akun").
 		Preload("DataBayarHutangPiutang").
 		Preload("DataBayarHutangPiutang.Transaksi")
 
