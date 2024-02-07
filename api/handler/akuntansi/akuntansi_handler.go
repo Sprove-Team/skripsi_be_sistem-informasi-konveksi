@@ -2,7 +2,6 @@ package akuntansi
 
 import (
 	"context"
-	"fmt"
 
 	usecase "github.com/be-sistem-informasi-konveksi/api/usecase/akuntansi"
 	"github.com/be-sistem-informasi-konveksi/common/message"
@@ -91,7 +90,7 @@ func (h *akuntansiHandler) GetAllNC(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusRequestTimeout).JSON(response.ErrorRes(fiber.ErrRequestTimeout.Code, fiber.ErrRequestTimeout.Message, nil))
 	}
 
-	fmt.Println(datasNC)
+	// fmt.Println(datasNC)
 
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(response.ErrorRes(fiber.ErrInternalServerError.Code, fiber.ErrInternalServerError.Message, nil))

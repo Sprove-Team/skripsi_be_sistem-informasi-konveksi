@@ -7,6 +7,7 @@ import (
 
 	repo "github.com/be-sistem-informasi-konveksi/api/repository/akuntansi/mysql/gorm/akun"
 	repoKelompokAkun "github.com/be-sistem-informasi-konveksi/api/repository/akuntansi/mysql/gorm/kelompok_akun"
+	dataDefault "github.com/be-sistem-informasi-konveksi/app/static_data"
 	"github.com/be-sistem-informasi-konveksi/common/message"
 	req "github.com/be-sistem-informasi-konveksi/common/request/akuntansi/akun"
 	"github.com/be-sistem-informasi-konveksi/entity"
@@ -60,6 +61,10 @@ func (u *akunUsecase) GetById(ctx context.Context, id string) (entity.Akun, erro
 }
 
 func (u *akunUsecase) Update(ctx context.Context, reqAkun req.Update) error {
+	defaultData := dataDefault.DefaultKodeAkunNKelompokAkun
+	if _, ok := defaultData[reqAkun.ID]; ok {
+		return errors.New(message.CantDeleteDefaultData)
+	}
 	akun, err := u.repo.GetById(ctx, reqAkun.ID)
 	if err != nil {
 		return err
@@ -105,6 +110,10 @@ func (u *akunUsecase) Update(ctx context.Context, reqAkun req.Update) error {
 }
 
 func (u *akunUsecase) Delete(ctx context.Context, id string) error {
+	defaultData := dataDefault.DefaultKodeAkunNKelompokAkun
+	if _, ok := defaultData[id]; ok {
+		return errors.New(message.CantDeleteDefaultData)
+	}
 	return u.repo.Delete(ctx, id)
 }
 

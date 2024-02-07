@@ -49,19 +49,23 @@ var (
 	UserNotFound        = "user tidak ditemukan"
 )
 
+// misc
+var (
+	CantDeleteDefaultData = "tidak dapat menghapus atau mengubah data default"
+)
+
 // akuntansi
 var (
 	// transaksi
 	CreditDebitNotSame        = "total debit dan kredit harus sama"
 	AkunCannotBeSame          = "akun tidak boleh sama"
 	AkunCannotDeleted         = "tidak bisa menghapus akun karena akun masih digunakan pada ayat jurnal"
-	AkunHutangPiutangNotEq2   = "transaksi merupakan hutang piutang, ayat_jurnal harus berjumlah 2"
+	AkunHutangPiutangNotEq2   = "transaksi merupakan hutang piutang, data ayat_jurnal harus berjumlah 2"
 	AkunNotMatchWithJenisHPTr = "transaksi merupakan hutang piutang, akun harus sama dengan jenis hutang piutang"
 	// kategori akun
 	KategoriAkunNotFound = "kategori akun tidak ditemukan"
 	// kelompok akun
-	KelompokAkunNotFound      = "kelompok akun tidak ditemukan"
-	KelompokAkunCannotDeleted = "akun dengan kelompok akun yang akan dihapus masih ada pada ayat jurnal"
+	KelompokAkunNotFound = "kelompok akun tidak ditemukan"
 	// akun
 	AkunNotFound = "akun tidak ditemukan"
 	// kontak

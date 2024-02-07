@@ -7,7 +7,6 @@ import (
 	req "github.com/be-sistem-informasi-konveksi/common/request/akuntansi/kelompok_akun"
 	reqGlobal "github.com/be-sistem-informasi-konveksi/common/request/global"
 	"github.com/be-sistem-informasi-konveksi/common/response"
-	"github.com/be-sistem-informasi-konveksi/helper"
 
 	usecase "github.com/be-sistem-informasi-konveksi/api/usecase/akuntansi/kelompok_akun"
 	"github.com/be-sistem-informasi-konveksi/pkg"
@@ -16,6 +15,7 @@ import (
 
 type KelompokAkunHandler interface {
 	GetAll(c *fiber.Ctx) error
+	GetById(c *fiber.Ctx) error
 	Create(c *fiber.Ctx) error
 	Update(c *fiber.Ctx) error
 	Delete(c *fiber.Ctx) error
@@ -43,11 +43,17 @@ func errResponse(c *fiber.Ctx, err error) error {
 		return c.Status(fiber.StatusConflict).JSON(response.ErrorRes(fiber.ErrConflict.Code, fiber.ErrConflict.Message, nil))
 	}
 
-	if err.Error() == message.KelompokAkunCannotDeleted {
-		return c.Status(fiber.StatusInternalServerError).JSON(response.ErrorInterWithMessageRes(fiber.ErrInternalServerError.Code, fiber.ErrInternalServerError.Message, err.Error()))
+	badRequest := make([]string, 0, 1)
+
+	switch err.Error() {
+	case message.CantDeleteDefaultData:
+		badRequest = append(badRequest, err.Error())
 	}
 
-	helper.LogsError(err)
+	if len(badRequest) > 0 {
+		return c.Status(fiber.StatusBadRequest).JSON(response.ErrorRes(fiber.ErrBadRequest.Code, fiber.ErrBadRequest.Message, badRequest))
+	}
+
 	return c.Status(fiber.StatusInternalServerError).JSON(response.ErrorRes(fiber.ErrInternalServerError.Code, fiber.ErrInternalServerError.Message, nil))
 }
 
@@ -118,6 +124,30 @@ func (h *kelompokAkunHandler) GetAll(c *fiber.Ctx) error {
 
 	// Call usecase to create KelompokAkun
 	datas, err := h.uc.GetAll(ctx, *req)
+	// Handle errors
+	if err != nil {
+		return errResponse(c, err)
+	}
+
+	// Respond with success status
+	return c.Status(fiber.StatusOK).JSON(response.SuccessRes(fiber.StatusOK, message.OK, datas))
+}
+
+func (h *kelompokAkunHandler) GetById(c *fiber.Ctx) error {
+	req := new(reqGlobal.ParamByID)
+
+	c.ParamsParser(req)
+	// Validate request
+	errValidate := h.validator.Validate(req)
+	if errValidate != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(errValidate)
+	}
+
+	// Create context
+	ctx := c.UserContext()
+
+	// Call usecase to create KelompokAkun
+	datas, err := h.uc.GetById(ctx, req.ID)
 	// Handle errors
 	if err != nil {
 		return errResponse(c, err)

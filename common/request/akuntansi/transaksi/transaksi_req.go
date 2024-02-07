@@ -4,8 +4,8 @@ import "github.com/be-sistem-informasi-konveksi/entity"
 
 type ReqAyatJurnal struct {
 	AkunID string  `json:"akun_id" validate:"required,ulid"`
-	Kredit float64 `json:"kredit" validate:"number,required_without=Debit,excluded_with=Debit"`
-	Debit  float64 `json:"debit" validate:"number,required_without=Kredit,excluded_with=Kredit"`
+	Kredit float64 `json:"kredit" validate:"number,gte=0,required_without=Debit,excluded_with=Debit"`
+	Debit  float64 `json:"debit" validate:"number,gte=0,required_without=Kredit,excluded_with=Kredit"`
 }
 
 type Create struct {

@@ -44,10 +44,11 @@ func errResponse(c *fiber.Ctx, err error) error {
 		return c.Status(fiber.StatusConflict).JSON(response.ErrorRes(fiber.ErrConflict.Code, fiber.ErrConflict.Message, nil))
 	}
 
-	badRequest := map[string][]string{}
+	badRequest := make([]string, 0, 1)
 
-	if err.Error() == message.KategoriProdukNotFound {
-		badRequest["kategori_id"] = []string{err.Error()}
+	switch err.Error() {
+	case message.KategoriProdukNotFound:
+		badRequest = append(badRequest, err.Error())
 	}
 
 	if len(badRequest) > 0 {

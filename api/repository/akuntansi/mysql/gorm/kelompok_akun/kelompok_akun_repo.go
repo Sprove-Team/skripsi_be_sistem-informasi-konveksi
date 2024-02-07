@@ -5,10 +5,8 @@ import (
 	"errors"
 	"log"
 
-	"github.com/be-sistem-informasi-konveksi/common/message"
 	"github.com/be-sistem-informasi-konveksi/entity"
 	"github.com/be-sistem-informasi-konveksi/helper"
-	"github.com/go-sql-driver/mysql"
 	"gorm.io/gorm"
 )
 
@@ -50,14 +48,6 @@ func (r *kelompokAkunRepo) Update(ctx context.Context, kelompokAkun *entity.Kelo
 func (r *kelompokAkunRepo) Delete(ctx context.Context, id string) error {
 	err := r.DB.WithContext(ctx).Where("id = ?", id).Delete(&entity.KelompokAkun{}).Error
 	if err != nil {
-		if mysqlErr, ok := err.(*mysql.MySQLError); ok {
-			switch mysqlErr.Number {
-			case 1451:
-				return errors.New(message.KelompokAkunCannotDeleted)
-			default:
-				return err
-			}
-		}
 		return err
 	}
 	return nil

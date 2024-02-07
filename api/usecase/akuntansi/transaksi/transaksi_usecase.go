@@ -3,6 +3,7 @@ package akuntansi
 import (
 	"context"
 	"errors"
+	"sync"
 	"time"
 
 	repoAkun "github.com/be-sistem-informasi-konveksi/api/repository/akuntansi/mysql/gorm/akun"
@@ -54,42 +55,65 @@ func (u *transaksiUsecase) Update(ctx context.Context, reqTransaksi req.Update) 
 		if err.Error() != "record not found" {
 			return err
 		}
-	}
-
-	var hpFromByr entity.DataBayarHutangPiutang
-	// validasi transaksi jika termasuk hutang piutang
-	if hp.ID != "" {
-		if len(reqTransaksi.AyatJurnal) != 2 {
+	} else {
+		if hp.ID != "" && len(reqTransaksi.AyatJurnal) != 2 {
 			return errors.New(message.AkunHutangPiutangNotEq2)
 		}
-		// validasi transaksi jika termasuk bayar hutang piutang
-	} else {
+	}
+
+	// validasi transaksi jika termasuk hutang piutang
+	var hpFromByr entity.DataBayarHutangPiutang
+	if hp.ID == "" {
 		hpFromByr, err = u.repoDataBayarHutangPiutang.GetByTrId(ctx, reqTransaksi.ID)
-		if err != nil {
-			if err.Error() != "record not found" {
-				return err
+		if err != nil && err.Error() != "record not found" {
+			return err
+		}
+	}
+	lengthReqAyatJurnals := len(reqTransaksi.AyatJurnal)
+
+	var wg sync.WaitGroup
+	wg.Add(2)
+
+	var reqAy []entity.AyatJurnal
+	var oldTr entity.Transaksi
+	var oldAy []entity.AyatJurnal
+
+	go func() {
+		defer wg.Done()
+		var reqAyData = make([]entity.AyatJurnal, lengthReqAyatJurnals)
+		for i, ay := range reqTransaksi.AyatJurnal {
+			reqAyData[i] = entity.AyatJurnal{
+				AkunID: ay.AkunID,
+				Debit:  ay.Debit,
+				Kredit: ay.Kredit,
 			}
 		}
+		reqAy = reqAyData
+	}()
 
-	}
-
-	lengthReqAyatJurnals := len(reqTransaksi.AyatJurnal)
-	reqAy := make([]entity.AyatJurnal, lengthReqAyatJurnals)
-
-	for i, ay := range reqTransaksi.AyatJurnal {
-		reqAy[i] = entity.AyatJurnal{
-			AkunID: ay.AkunID,
-			Debit:  ay.Debit,
-			Kredit: ay.Kredit,
+	// Fetch oldTr
+	go func() {
+		defer wg.Done()
+		oldTr, err = u.repo.GetById(ctx, reqTransaksi.ID)
+		if err != nil {
+			return
 		}
-	}
+		oldAyData := make([]entity.AyatJurnal, len(oldTr.AyatJurnals))
+		for i, ay := range oldTr.AyatJurnals {
+			oldAyData[i] = entity.AyatJurnal{
+				AkunID: ay.AkunID,
+				Debit:  ay.Debit,
+				Kredit: ay.Kredit,
+			}
+		}
+		oldAy = oldAyData
+	}()
+	wg.Wait()
 
-	oldTr, err := u.repo.GetById(ctx, reqTransaksi.ID)
+	// Handle errors if any
 	if err != nil {
 		return err
 	}
-
-	lengthOldAyatJurnals := len(oldTr.AyatJurnals)
 
 	// setup param tr update
 	repoParam := repo.UpdateParam{
@@ -102,17 +126,9 @@ func (u *transaksiUsecase) Update(ctx context.Context, reqTransaksi req.Update) 
 		},
 	}
 
-	oldAy := make([]entity.AyatJurnal, lengthOldAyatJurnals)
-	for i, ay := range oldTr.AyatJurnals {
-		oldAy[i] = entity.AyatJurnal{
-			AkunID: ay.AkunID,
-			Debit:  ay.Debit,
-			Kredit: ay.Kredit,
-		}
-	}
-
 	// change the saldo ayat jurnal if the ayat jurnals is difference
-	if !pkgAkuntansiLogic.IsSameReqAyJurnals(oldAy, reqAy) {
+	isSameAy := pkgAkuntansiLogic.IsSameReqAyJurnals(oldAy, reqAy)
+	if !isSameAy {
 
 		// u.repo.GetById()
 		akunIDs := make([]string, lengthReqAyatJurnals)
@@ -140,9 +156,8 @@ func (u *transaksiUsecase) Update(ctx context.Context, reqTransaksi req.Update) 
 
 		for _, v := range oldTr.AyatJurnals {
 			// setup data akun, if there a same id with the old one
-			akun, ok := akunsMap[v.AkunID]
-			if !ok {
-				akun = entity.Akun{
+			if _, ok := akunsMap[v.AkunID]; !ok {
+				akunsMap[v.AkunID] = entity.Akun{
 					Base: entity.Base{
 						ID: v.Akun.ID,
 					},
@@ -151,7 +166,6 @@ func (u *transaksiUsecase) Update(ctx context.Context, reqTransaksi req.Update) 
 					KelompokAkunID: v.Akun.KelompokAkunID,
 				}
 			}
-			akunsMap[v.AkunID] = akun
 		}
 
 		// validate kredit, debit and get totalTransaksi
@@ -166,6 +180,10 @@ func (u *transaksiUsecase) Update(ctx context.Context, reqTransaksi req.Update) 
 
 		// validate total bayar with total tr hp
 		if hp.ID != "" {
+			// dont update
+			// if hp.Total == totalTransaksi {
+			// 	return nil
+			// }
 			totalByr := hp.Total - hp.Sisa
 			if totalTransaksi < totalByr {
 				return errors.New(message.TotalHPMustGeOrEqToTotalByr)
@@ -215,7 +233,7 @@ func (u *transaksiUsecase) Update(ctx context.Context, reqTransaksi req.Update) 
 
 		repoParam.NewAyatJurnals = newAyatJurnals
 
-		if repoParam.UpdateTr.Total != oldTr.Total {
+		if hp.Total != totalTransaksi {
 			// set data hutang piutang
 			if hp.ID != "" {
 				repoParam.UpdateHutangPiutang = &hp

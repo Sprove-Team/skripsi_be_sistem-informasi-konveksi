@@ -32,42 +32,19 @@ func (e *errResponse) errHP(c *fiber.Ctx, err error) error {
 		return err
 	}
 
-	badRequest := map[string][]string{}
+	badRequest := make([]string, 0, 1)
 
-	if err.Error() == message.AkunCannotBeSame {
-		badRequest["ayat_jurnal"] = []string{err.Error()}
-	}
-
-	if err.Error() == message.CreditDebitNotSame {
-		badRequest["transaksi.ayat_jurnal"] = []string{err.Error()}
-	}
-
-	if err.Error() == message.AkunNotFound {
-		badRequest["transaksi.ayat_jurnal.akun_id"] = []string{err.Error()}
-	}
-
-	if err.Error() == message.KontakNotFound {
-		badRequest["kontak_id"] = []string{err.Error()}
-	}
-
-	if err.Error() == message.InvalidAkunHutangPiutang {
-		badRequest["transaksi.ayat_jurnal.akun_id"] = []string{err.Error()}
-	}
-
-	if err.Error() == message.AkunNotMatchWithJenisHP {
-		badRequest["transaksi.ayat_jurnal.akun_id"] = []string{err.Error()}
-	}
-
-	if err.Error() == message.InvalidAkunBayar {
-		badRequest["transaksi.ayat_jurnal.akun_id"] = []string{err.Error()}
-	}
-
-	if err.Error() == message.BayarMustLessThanSisaTagihan {
-		badRequest["transaksi.ayat_jurnal.akun_id"] = []string{err.Error()}
-	}
-
-	if err.Error() == message.IncorrectPlacementOfCreditAndDebit {
-		badRequest["transaksi.ayat_jurnal.akun_id"] = []string{err.Error()}
+	switch err.Error() {
+	case message.AkunCannotBeSame,
+		message.CreditDebitNotSame,
+		message.AkunNotFound,
+		message.KontakNotFound,
+		message.InvalidAkunHutangPiutang,
+		message.AkunNotMatchWithJenisHP,
+		message.InvalidAkunBayar,
+		message.BayarMustLessThanSisaTagihan,
+		message.IncorrectPlacementOfCreditAndDebit:
+		badRequest = append(badRequest, err.Error())
 	}
 
 	if len(badRequest) > 0 {
@@ -81,28 +58,16 @@ func (e *errResponse) errBayar(c *fiber.Ctx, err error) error {
 		return err
 	}
 
-	badRequest := map[string][]string{}
+	badRequest := make([]string, 0, 1)
 
-	if err.Error() == message.AkunNotFound {
-		badRequest["akun_bayar_id"] = []string{err.Error()}
+	switch err.Error() {
+	case message.AkunNotFound,
+		message.InvalidAkunBayar,
+		message.KontakNotFound,
+		message.HutangPiutangNotFound,
+		message.BayarMustLessThanSisaTagihan:
+		badRequest = append(badRequest, err.Error())
 	}
-
-	if err.Error() == message.InvalidAkunBayar {
-		badRequest["akun_bayar_id"] = []string{err.Error()}
-	}
-
-	if err.Error() == message.KontakNotFound {
-		badRequest["kontak_id"] = []string{err.Error()}
-	}
-
-	if err.Error() == message.HutangPiutangNotFound {
-		badRequest["hutang_piutang_id"] = []string{err.Error()}
-	}
-
-	if err.Error() == message.BayarMustLessThanSisaTagihan {
-		badRequest["total"] = []string{err.Error()}
-	}
-
 	if len(badRequest) > 0 {
 		return c.Status(fiber.StatusBadRequest).JSON(response.ErrorRes(fiber.ErrBadRequest.Code, fiber.ErrBadRequest.Message, badRequest))
 	}

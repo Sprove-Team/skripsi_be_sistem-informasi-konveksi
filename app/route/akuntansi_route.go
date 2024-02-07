@@ -37,6 +37,7 @@ func (ro *akuntansiRoute) Akun(router fiber.Router) {
 func (ro *akuntansiRoute) KelompokAkun(router fiber.Router) {
 	router.Post("", ro.h.KelompokAkunHandler().Create)
 	router.Get("", ro.h.KelompokAkunHandler().GetAll)
+	router.Get("/:id", ro.h.KelompokAkunHandler().GetById)
 	router.Put("/:id", ro.h.KelompokAkunHandler().Update)
 	router.Delete("/:id", ro.h.KelompokAkunHandler().Delete)
 }

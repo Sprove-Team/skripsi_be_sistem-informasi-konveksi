@@ -39,21 +39,16 @@ func errResponse(c *fiber.Ctx, err error) error {
 		return c.Status(fiber.StatusConflict).JSON(response.ErrorRes(fiber.ErrConflict.Code, fiber.ErrConflict.Message, nil))
 	}
 
-	badRequest := map[string][]string{}
+	badRequest := make([]string, 0, 1)
 
 	switch err.Error() {
-	case message.UserNotFound:
-		badRequest["user_id"] = []string{err.Error()}
-	case message.AkunNotFound:
-		badRequest["akun_pembayaran"] = []string{err.Error()}
-	case message.BordirNotFound:
-		badRequest["detail_invoice.bordir_id"] = []string{err.Error()}
-	case message.ProdukNotFound:
-		badRequest["detail_invoice.produk_id"] = []string{err.Error()}
-	case message.SablonNotFound:
-		badRequest["detail_invoice.sablon_id"] = []string{err.Error()}
-	case message.HargaDetailProdukNotFoundOrNotAddedYet:
-		badRequest["detail_invoice"] = []string{err.Error()}
+	case message.UserNotFound,
+		message.AkunNotFound,
+		message.BordirNotFound,
+		message.ProdukNotFound,
+		message.SablonNotFound,
+		message.HargaDetailProdukNotFoundOrNotAddedYet:
+		badRequest = append(badRequest, err.Error())
 	}
 
 	if len(badRequest) > 0 {

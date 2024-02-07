@@ -45,38 +45,18 @@ func errResponse(c *fiber.Ctx, err error) error {
 		return c.Status(fiber.StatusConflict).JSON(response.ErrorRes(fiber.ErrConflict.Code, fiber.ErrConflict.Message, nil))
 	}
 
-	badRequest := map[string][]string{}
+	badRequest := make([]string, 0, 1)
 
-	if err.Error() == message.AkunCannotBeSame {
-		badRequest["ayat_jurnal"] = []string{message.AkunCannotBeSame}
-	}
-
-	if err.Error() == message.CreditDebitNotSame {
-		badRequest["ayat_jurnal"] = []string{message.CreditDebitNotSame}
-	}
-
-	if err.Error() == message.AkunNotFound {
-		badRequest["akun_id"] = []string{message.AkunNotFound}
-	}
-
-	if err.Error() == message.AkunHutangPiutangNotEq2 {
-		badRequest["ayat_jurnal"] = []string{err.Error()}
-	}
-
-	if err.Error() == message.BayarMustLessThanSisaTagihan {
-		badRequest["ayat_jurnal"] = []string{err.Error()}
-	}
-
-	if err.Error() == message.TotalHPMustGeOrEqToTotalByr {
-		badRequest["ayat_jurnal"] = []string{err.Error()}
-	}
-
-	if err.Error() == message.InvalidAkunHutangPiutang {
-		badRequest["ayat_jurnal.akun_id"] = []string{err.Error()}
-	}
-
-	if err.Error() == message.AkunNotMatchWithJenisHPTr {
-		badRequest["ayat_jurnal.akun_id"] = []string{err.Error()}
+	switch err.Error() {
+	case message.AkunCannotBeSame,
+		message.CreditDebitNotSame,
+		message.AkunNotFound,
+		message.AkunHutangPiutangNotEq2,
+		message.BayarMustLessThanSisaTagihan,
+		message.TotalHPMustGeOrEqToTotalByr,
+		message.InvalidAkunHutangPiutang,
+		message.AkunNotMatchWithJenisHPTr:
+		badRequest = append(badRequest, err.Error())
 	}
 
 	if len(badRequest) > 0 {
