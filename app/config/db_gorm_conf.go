@@ -95,7 +95,11 @@ func (dbgc *DBGorm) InitDBGorm(ulid pkg.UlidPkg) *gorm.DB {
 		autoMigrateEntities(db, &entity.Invoice{}, &entity.DetailInvoice{})
 		return nil
 	})
-	g.Wait()
+
+	if err := g.Wait(); err != nil {
+		helper.LogsError(err)
+		os.Exit(1)
+	}
 
 	// add default value
 	// default value for akuntansi

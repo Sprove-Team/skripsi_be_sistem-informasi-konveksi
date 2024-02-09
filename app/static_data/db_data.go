@@ -11,103 +11,103 @@ import (
 
 var DataKelompokAkun = []entity.KelompokAkun{
 	// Aset
-	{Base: entity.Base{ID: "01HN592DA7QWCV1SFMWDJTQNGS"}, Nama: "kas & bank", KategoriAkun: "ASET"},
-	{Base: entity.Base{ID: "01HN592DA7QWCV1SFMWFGPJ0NC"}, Nama: "piutang", KategoriAkun: "ASET"},
-	{Base: entity.Base{ID: "01HN592DA7QWCV1SFMWKA5M0WJ"}, Nama: "aset lancar lainnya", KategoriAkun: "ASET"},
-	{Base: entity.Base{ID: "01HN592DA7QWCV1SFMWNKW2MY2"}, Nama: "aset tetap berwujud", KategoriAkun: "ASET"},
-	{Base: entity.Base{ID: "01HN592DA7QWCV1SFMWR3BQCJE"}, Nama: "aset tetap tidak berwujud", KategoriAkun: "ASET"},
-	{Base: entity.Base{ID: "01HN592DA7QWCV1SFMWVJP5V5X"}, Nama: "aset tidak lancar lainnya", KategoriAkun: "ASET"},
+	{Base: entity.Base{ID: "01HP7DVBGQB9D016VRJN4HEZXM"}, Nama: "kas & bank", KategoriAkun: "ASET"},
+	{Base: entity.Base{ID: "01HP7DVBGQB9D016VRJQNE3SW3"}, Nama: "piutang", KategoriAkun: "ASET"},
+	{Base: entity.Base{ID: "01HP7DVBGRW9YXSCGCYZNBRNEN"}, Nama: "aset lancar lainnya", KategoriAkun: "ASET"},
+	{Base: entity.Base{ID: "01HP7DVBGRW9YXSCGCZ0RK7RJQ"}, Nama: "aset tetap berwujud", KategoriAkun: "ASET"},
+	{Base: entity.Base{ID: "01HP7DVBGRW9YXSCGCZ3WQPGJE"}, Nama: "aset tetap tidak berwujud", KategoriAkun: "ASET"},
+	{Base: entity.Base{ID: "01HP7DVBGRW9YXSCGCZ6ARQK30"}, Nama: "aset tidak lancar lainnya", KategoriAkun: "ASET"},
 	// Kewajiban
-	{Base: entity.Base{ID: "01HN592DA7QWCV1SFMWXFG0ETJ"}, Nama: "hutang", KategoriAkun: "KEWAJIBAN"},
-	{Base: entity.Base{ID: "01HN592DA7QWCV1SFMWXZHT3YH"}, Nama: "kewajiban lancar lainnya", KategoriAkun: "KEWAJIBAN"},
-	{Base: entity.Base{ID: "01HN592DA7QWCV1SFMWY91025S"}, Nama: "kewajiban jangka panjang", KategoriAkun: "KEWAJIBAN"},
+	{Base: entity.Base{ID: "01HP7DVBGRW9YXSCGCZ75DFW6Z"}, Nama: "hutang", KategoriAkun: "KEWAJIBAN"},
+	{Base: entity.Base{ID: "01HP7DVBGRW9YXSCGCZ9KY625R"}, Nama: "kewajiban lancar lainnya", KategoriAkun: "KEWAJIBAN"},
+	{Base: entity.Base{ID: "01HP7DVBGSM7P4AVN1TEFNC2G6"}, Nama: "kewajiban jangka panjang", KategoriAkun: "KEWAJIBAN"},
 	// Modal
-	{Base: entity.Base{ID: "01HN592DA7QWCV1SFMX1N3XR54"}, Nama: "modal", KategoriAkun: "MODAL"},
+	{Base: entity.Base{ID: "01HP7DVBGSM7P4AVN1TG9179N2"}, Nama: "modal", KategoriAkun: "MODAL"},
 	// Pendapatan
-	{Base: entity.Base{ID: "01HN592DA7QWCV1SFMX56J933W"}, Nama: "pendapatan usaha", KategoriAkun: "PENDAPATAN"},
-	{Base: entity.Base{ID: "01HN592DA7QWCV1SFMX94R3KZV"}, Nama: "pendapatan di luar usaha", KategoriAkun: "PENDAPATAN"},
+	{Base: entity.Base{ID: "01HP7DVBGSM7P4AVN1TJEYQZBQ"}, Nama: "pendapatan usaha", KategoriAkun: "PENDAPATAN"},
+	{Base: entity.Base{ID: "01HP7DVBGTC06PXWT6F2T4K9CB"}, Nama: "pendapatan di luar usaha", KategoriAkun: "PENDAPATAN"},
 	// Beban
-	{Base: entity.Base{ID: "01HN592DA7QWCV1SFMXBWMC2GK"}, Nama: "harga pokok penjualan", KategoriAkun: "BEBAN"},
-	{Base: entity.Base{ID: "01HN592DA7QWCV1SFMXDG18Q11"}, Nama: "beban usaha lainnya", KategoriAkun: "BEBAN"},
-	{Base: entity.Base{ID: "01HN592DA7QWCV1SFMXEJ8RX88"}, Nama: "beban diluar usaha lainnya", KategoriAkun: "BEBAN"},
+	{Base: entity.Base{ID: "01HP7DVBGTC06PXWT6F6FB9DJF"}, Nama: "harga pokok penjualan", KategoriAkun: "BEBAN"},
+	{Base: entity.Base{ID: "01HP7DVBGTC06PXWT6F9DES6BC"}, Nama: "beban usaha lainnya", KategoriAkun: "BEBAN"},
+	{Base: entity.Base{ID: "01HP7DVBGTC06PXWT6FD1PCEWR"}, Nama: "beban diluar usaha lainnya", KategoriAkun: "BEBAN"},
 }
 
 var DataAkun = [][]entity.Akun{
 	// Kas & Bank
 	{
-		{Base: entity.Base{ID: "01HN592DA7QWCV1SFMXGPC0KSP"}, Nama: "kas", SaldoNormal: "DEBIT", Deskripsi: "Kas dari usaha"},
+		{Base: entity.Base{ID: "01HP7DVBGTC06PXWT6FD66VERN"}, Nama: "kas", SaldoNormal: "DEBIT", Deskripsi: "Kas dari usaha"},
 	},
 	// Piutang
 	{
-		{Base: entity.Base{ID: "01HN592DA7QWCV1SFMXKJAR066"}, Nama: "piutang usaha", SaldoNormal: "DEBIT", Deskripsi: "Piutang dari penjualan barang atau jasa kepada pelanggan"},
+		{Base: entity.Base{ID: "01HP7DVBGTC06PXWT6FF89WRAB"}, Nama: "piutang usaha", SaldoNormal: "DEBIT", Deskripsi: "Piutang dari penjualan barang atau jasa kepada pelanggan"},
 	},
 	// Aset Lancar Lainnya
 	{
-		{Base: entity.Base{ID: "01HN592DA7QWCV1SFMXMGHHDYC"}, Nama: "perlengkapan", SaldoNormal: "DEBIT", Deskripsi: "Perlengkapan yang digunakan dalam usaha"},
+		{Base: entity.Base{ID: "01HP7DVBGTC06PXWT6FFSJ2FEA"}, Nama: "perlengkapan", SaldoNormal: "DEBIT", Deskripsi: "Perlengkapan yang digunakan dalam usaha"},
 	},
 	// Aset Tetap Berwujud
 	{
-		{Base: entity.Base{ID: "01HN592DA7QWCV1SFMXNF1JSDW"}, Nama: "peralatan", SaldoNormal: "DEBIT", Deskripsi: "Peralatan yang digunakan dalam usaha"},
-		{Base: entity.Base{ID: "01HN592DA7QWCV1SFMXNF6PZNS"}, Nama: "mesin-mesin", SaldoNormal: "DEBIT", Deskripsi: "Mesin-mesin yang digunakan dalam usaha"},
+		{Base: entity.Base{ID: "01HP7DVBGVHMSA4VHWXPQ3635H"}, Nama: "peralatan", SaldoNormal: "DEBIT", Deskripsi: "Peralatan yang digunakan dalam usaha"},
+		{Base: entity.Base{ID: "01HP7DVBGVHMSA4VHWXRNS06R3"}, Nama: "mesin-mesin", SaldoNormal: "DEBIT", Deskripsi: "Mesin-mesin yang digunakan dalam usaha"},
 	},
 	// Aset Tetap Tidak Berwujud
 	{
-		{Base: entity.Base{ID: "01HN592DA7QWCV1SFMXSAWKPPX"}, Nama: "hak cipta", SaldoNormal: "DEBIT", Deskripsi: "Hak cipta dari suatu karya atau lainnya"},
+		{Base: entity.Base{ID: "01HP7DVBGVHMSA4VHWXW9B76CM"}, Nama: "hak cipta", SaldoNormal: "DEBIT", Deskripsi: "Hak cipta dari suatu karya atau lainnya"},
 	},
 	// Aset Tidak Lancar Lainnya
 	{
-		{Base: entity.Base{ID: "01HN592DA7QWCV1SFMXWBEQR81"}, Nama: "aset tidak lancar lainnya", SaldoNormal: "DEBIT", Deskripsi: "Aset tidak lancar lainnya"},
+		{Base: entity.Base{ID: "01HP7DVBGVHMSA4VHWXX1XTCG1"}, Nama: "aset tidak lancar lainnya", SaldoNormal: "DEBIT", Deskripsi: "Aset tidak lancar lainnya"},
 	},
 	// Hutang
 	{
-		{Base: entity.Base{ID: "01HN592DA7QWCV1SFMY04Y7H4W"}, Nama: "hutang usaha", SaldoNormal: "KREDIT", Deskripsi: "Hutang dari pembelian barang atau jasa yang belum dibayar"},
+		{Base: entity.Base{ID: "01HP7DVBGVHMSA4VHWXZR27J7C"}, Nama: "hutang usaha", SaldoNormal: "KREDIT", Deskripsi: "Hutang dari pembelian barang atau jasa yang belum dibayar"},
 	},
 	// Kewajiban Lancar Lainnya
 	{
-		{Base: entity.Base{ID: "01HN592DA7QWCV1SFMY29AFFR3"}, Nama: "hutang sewa", SaldoNormal: "KREDIT", Deskripsi: "Hutang sewa yang merupakan kewajiban lancar"},
-		{Base: entity.Base{ID: "01HN592DA7QWCV1SFMY4Z6BSAA"}, Nama: "hutang gaji", SaldoNormal: "KREDIT", Deskripsi: "Hutang gaji kepada karyawan yang belum dibayar"},
-		{Base: entity.Base{ID: "01HN592DA7QWCV1SFMY8S1KX96"}, Nama: "hutang pajak", SaldoNormal: "KREDIT", Deskripsi: "Hutang pajak yang harus dibayar dalam waktu dekat"},
+		{Base: entity.Base{ID: "01HP7DVBGVHMSA4VHWY0RN5RJ6"}, Nama: "hutang sewa", SaldoNormal: "KREDIT", Deskripsi: "Hutang sewa yang merupakan kewajiban lancar"},
+		{Base: entity.Base{ID: "01HP7DVBGVHMSA4VHWY1DQW3JK"}, Nama: "hutang gaji", SaldoNormal: "KREDIT", Deskripsi: "Hutang gaji kepada karyawan yang belum dibayar"},
+		{Base: entity.Base{ID: "01HP7DVBGWR5ZR6C13R8HM48D5"}, Nama: "hutang pajak", SaldoNormal: "KREDIT", Deskripsi: "Hutang pajak yang harus dibayar dalam waktu dekat"},
 	},
 	// Kewajiban Jangka Panjang
 	{
-		{Base: entity.Base{ID: "01HN592DA7QWCV1SFMYB48T5H1"}, Nama: "hutang bank", SaldoNormal: "KREDIT", Deskripsi: "Hutang kepada bank yang jatuh tempo dalam waktu lebih dari satu tahun"},
-		{Base: entity.Base{ID: "01HN592DA7QWCV1SFMYEGQQFGW"}, Nama: "hutang obligasi", SaldoNormal: "KREDIT", Deskripsi: "Hutang berupa obligasi yang jatuh tempo dalam waktu lebih dari satu tahun"},
+		{Base: entity.Base{ID: "01HP7DVBGWR5ZR6C13RBFX5S8K"}, Nama: "hutang bank", SaldoNormal: "KREDIT", Deskripsi: "Hutang kepada bank yang jatuh tempo dalam waktu lebih dari satu tahun"},
+		{Base: entity.Base{ID: "01HP7DVBGWR5ZR6C13RDW0Z9H6"}, Nama: "hutang obligasi", SaldoNormal: "KREDIT", Deskripsi: "Hutang berupa obligasi yang jatuh tempo dalam waktu lebih dari satu tahun"},
 	},
 	// Modal
 	{
-		{Base: entity.Base{ID: "01HN592DA7QWCV1SFMYHH0FBDA"}, Nama: "modal pribadi", SaldoNormal: "KREDIT", Deskripsi: "Modal yang ditanamkan oleh pemilik secara pribadi"},
-		{Base: entity.Base{ID: "01HN592DA7QWCV1SFMYHVFHV2D"}, Nama: "modal saham", SaldoNormal: "KREDIT", Deskripsi: "Modal yang didapat dari pendapatan usaha"},
-		{Base: entity.Base{ID: "01HN592DA7QWCV1SFMYK2WKWPD"}, Nama: "prive", SaldoNormal: "DEBIT", Deskripsi: "Pengambilan uang oleh pemilik untuk keperluan pribadi"},
+		{Base: entity.Base{ID: "01HP7DVBGWR5ZR6C13RF3VG3XF"}, Nama: "modal pribadi", SaldoNormal: "KREDIT", Deskripsi: "Modal yang ditanamkan oleh pemilik secara pribadi"},
+		{Base: entity.Base{ID: "01HP7DVBGWR5ZR6C13RFG776Z0"}, Nama: "modal saham", SaldoNormal: "KREDIT", Deskripsi: "Modal yang didapat dari pendapatan usaha"},
+		{Base: entity.Base{ID: "01HP7DVBGWR5ZR6C13RFMCTDG1"}, Nama: "prive", SaldoNormal: "DEBIT", Deskripsi: "Pengambilan uang oleh pemilik untuk keperluan pribadi"},
 	},
 	// Pendapatan Usaha
 	{
-		{Base: entity.Base{ID: "01HN592DA7QWCV1SFMYKJ8YQ1M"}, Nama: "pendapatan jasa", SaldoNormal: "KREDIT", Deskripsi: "Pendapatan dari jasa yang diberikan"},
+		{Base: entity.Base{ID: "01HP7DVBGWR5ZR6C13RFQKQ2A0"}, Nama: "pendapatan jasa", SaldoNormal: "KREDIT", Deskripsi: "Pendapatan dari jasa yang diberikan"},
 	},
 	// Pendapatan Diluar Usaha
 	{
-		{Base: entity.Base{ID: "01HN592DA7QWCV1SFMYQ0EMTYV"}, Nama: "pendapatan bunga", SaldoNormal: "KREDIT", Deskripsi: "Pendapatan dari bunga yang diterima"},
+		{Base: entity.Base{ID: "01HP7DVBGWR5ZR6C13RJE693S0"}, Nama: "pendapatan bunga", SaldoNormal: "KREDIT", Deskripsi: "Pendapatan dari bunga yang diterima"},
 	},
 	// Harga Pokok Penjualan
 	{
-		{Base: entity.Base{ID: "01HN592DA7QWCV1SFMYSCADKDZ"}, Nama: "harga pokok pendapatan", SaldoNormal: "DEBIT", Deskripsi: "Harga pokok pendapatan usaha"},
+		{Base: entity.Base{ID: "01HP7DVBGX4JR0KETMEFRXQARB"}, Nama: "harga pokok pendapatan", SaldoNormal: "DEBIT", Deskripsi: "Harga pokok pendapatan usaha"},
 	},
 	// Beban Usaha Lainnya
 	{
-		{Base: entity.Base{ID: "01HN592DA7QWCV1SFMYWK9P4WK"}, Nama: "beban gaji", SaldoNormal: "DEBIT", Deskripsi: "Beban untuk membayar gaji karyawan"},
-		{Base: entity.Base{ID: "01HN592DA7QWCV1SFMYZ0QR6R6"}, Nama: "beban sewa", SaldoNormal: "DEBIT", Deskripsi: "Beban untuk sewa tempat atau fasilitas"},
-		{Base: entity.Base{ID: "01HN592DA7QWCV1SFMYZYC1866"}, Nama: "beban asuransi", SaldoNormal: "DEBIT", Deskripsi: "Beban asuransi yang dibayarkan"},
-		{Base: entity.Base{ID: "01HN592DA7QWCV1SFMZ3AEMKJ4"}, Nama: "beban air, listrik dan telepon", SaldoNormal: "DEBIT", Deskripsi: "Beban untuk utilitas"},
-		{Base: entity.Base{ID: "01HN592DA7QWCV1SFMZ6QX9BP4"}, Nama: "beban perlengkapan", SaldoNormal: "DEBIT", Deskripsi: "Beban untuk membeli perlengkapan"},
-		{Base: entity.Base{ID: "01HN592DA7QWCV1SFMZ962N99Q"}, Nama: "beban penyusutan bangunan", SaldoNormal: "DEBIT", Deskripsi: "Beban penyusutan bangunan"},
-		{Base: entity.Base{ID: "01HN592DA7QWCV1SFMXGPC0KSP"}, Nama: "beban penyusutan kendaraan", SaldoNormal: "DEBIT", Deskripsi: "Beban penyusutan kendaraan"},
-		{Base: entity.Base{ID: "01HN592DA7QWCV1SFMXKJAR066"}, Nama: "beban penyusutan peralatan", SaldoNormal: "DEBIT", Deskripsi: "Beban penyusutan peralatan"},
-		{Base: entity.Base{ID: "01HN592DA7QWCV1SFMXMGHHDYC"}, Nama: "beban administrasi lainnya", SaldoNormal: "DEBIT", Deskripsi: "Beban administrasi lainnya"},
-		{Base: entity.Base{ID: "01HN592DA7QWCV1SFMXNF1JSDW"}, Nama: "beban iklan", SaldoNormal: "DEBIT", Deskripsi: "Beban untuk biaya iklan"},
-		{Base: entity.Base{ID: "01HN592DA7QWCV1SFMXNF6PZNS"}, Nama: "pajak penghasilan", SaldoNormal: "DEBIT", Deskripsi: "Beban pajak penghasilan yang harus dibayar"},
+		{Base: entity.Base{ID: "01HP7DVBGX4JR0KETMEJXMZCMF"}, Nama: "beban gaji", SaldoNormal: "DEBIT", Deskripsi: "Beban untuk membayar gaji karyawan"},
+		{Base: entity.Base{ID: "01HP7DVBGX4JR0KETMEKJ1VJ5J"}, Nama: "beban sewa", SaldoNormal: "DEBIT", Deskripsi: "Beban untuk sewa tempat atau fasilitas"},
+		{Base: entity.Base{ID: "01HP7DVBGX4JR0KETMEKZ1SXFH"}, Nama: "beban asuransi", SaldoNormal: "DEBIT", Deskripsi: "Beban asuransi yang dibayarkan"},
+		{Base: entity.Base{ID: "01HP7DVBGX4JR0KETMEQTSH53Y"}, Nama: "beban air, listrik dan telepon", SaldoNormal: "DEBIT", Deskripsi: "Beban untuk utilitas"},
+		{Base: entity.Base{ID: "01HP7DVBGX4JR0KETMER295ZPJ"}, Nama: "beban perlengkapan", SaldoNormal: "DEBIT", Deskripsi: "Beban untuk membeli perlengkapan"},
+		{Base: entity.Base{ID: "01HP7DVBGYA7XXS371H7YKKFEG"}, Nama: "beban penyusutan bangunan", SaldoNormal: "DEBIT", Deskripsi: "Beban penyusutan bangunan"},
+		{Base: entity.Base{ID: "01HP7DVBGYA7XXS371HAH90EXW"}, Nama: "beban penyusutan kendaraan", SaldoNormal: "DEBIT", Deskripsi: "Beban penyusutan kendaraan"},
+		{Base: entity.Base{ID: "01HP7DVBGYA7XXS371HE8QG3VE"}, Nama: "beban penyusutan peralatan", SaldoNormal: "DEBIT", Deskripsi: "Beban penyusutan peralatan"},
+		{Base: entity.Base{ID: "01HP7DVBGZH26AQAGYEHS9FD91"}, Nama: "beban administrasi lainnya", SaldoNormal: "DEBIT", Deskripsi: "Beban administrasi lainnya"},
+		{Base: entity.Base{ID: "01HP7DVBGZH26AQAGYEJQ4AWDB"}, Nama: "beban iklan", SaldoNormal: "DEBIT", Deskripsi: "Beban untuk biaya iklan"},
+		{Base: entity.Base{ID: "01HP7DVBGZH26AQAGYENCBQDD5"}, Nama: "pajak penghasilan", SaldoNormal: "DEBIT", Deskripsi: "Beban pajak penghasilan yang harus dibayar"},
 	},
 	// Beban Diluar Usaha Lainnya
 	{
-		{Base: entity.Base{ID: "01HN592DA7QWCV1SFMXSAWKPPX"}, Nama: "beban bunga", SaldoNormal: "DEBIT", Deskripsi: "Beban bunga yang harus dibayar"},
+		{Base: entity.Base{ID: "01HP7DVBGZH26AQAGYESCA4Z7M"}, Nama: "beban bunga", SaldoNormal: "DEBIT", Deskripsi: "Beban bunga yang harus dibayar"},
 	},
 }
 
@@ -135,7 +135,6 @@ var (
 	Akuns = func(kelompokAkuns []entity.KelompokAkun, ulid pkg.UlidPkg) (datas []entity.Akun) {
 
 		datas = make([]entity.Akun, 0, 34)
-
 		for i, kelompokAkun := range kelompokAkuns {
 			for j, akun := range DataAkun[i] {
 				kode := fmt.Sprintf("%s%d", kelompokAkun.Kode, j+1)
