@@ -100,7 +100,6 @@ func handleErr(err error, errMsg string) error {
 	return nil
 }
 
-// TODO: buat pengecekan ProdukID, BordirID, SablonID
 func (u *invoiceUsecase) Create(ctx context.Context, reqInvoice req.Create) error {
 	tanggalDeadline, err := time.Parse(time.RFC3339, reqInvoice.TanggalDeadline)
 	if err != nil {
@@ -248,7 +247,6 @@ func (u *invoiceUsecase) Create(ctx context.Context, reqInvoice req.Create) erro
 		StatusProduksi:  reqInvoice.StatusProduksi,
 		BuktiPembayaran: reqInvoice.BuktiPembayaran,
 		UserID:          reqInvoice.UserID,
-		KontakID:        kontakID,
 		Keterangan:      reqInvoice.Keterangan,
 		TanggalDeadline: &tanggalDeadline,
 		TanggalKirim:    &tanggalKirim,

@@ -4,7 +4,7 @@ import "github.com/be-sistem-informasi-konveksi/entity"
 
 type ResDataHutangPiutang struct {
 	ID          string  `json:"id"`
-	InvoiceSlug string  `json:"invoice_slug,omitempty"`
+	InvoiceID   string  `json:"invoice_id,omitempty"`
 	Jenis       string  `json:"jenis"`
 	TransaksiID string  `json:"transaksi_id"`
 	Status      string  `json:"status"`

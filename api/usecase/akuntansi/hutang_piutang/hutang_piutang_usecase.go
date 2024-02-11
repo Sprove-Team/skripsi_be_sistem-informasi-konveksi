@@ -268,10 +268,9 @@ func (u *hutangPiutangUsecase) GetAll(ctx context.Context, reqHutangPiutang req.
 					Nama: data.Transaksi.Kontak.Nama,
 				}
 			}
-
 			dataHp := res.ResDataHutangPiutang{
 				ID:          data.ID,
-				InvoiceSlug: data.InvoiceSlug,
+				InvoiceID:   data.InvoiceID,
 				Jenis:       data.Jenis,
 				TransaksiID: data.TransaksiID,
 				Status:      data.Status,
@@ -348,7 +347,6 @@ func (u *hutangPiutangUsecase) CreateBayar(ctx context.Context, reqHutangPiutang
 			kodeKlompokAkun := ay.Akun.Kode[0:2]
 			if (kodeKlompokAkun == "12" && hp.Jenis == "PIUTANG") ||
 				(kodeKlompokAkun == "27" && hp.Jenis == "HUTANG") {
-
 				ayTagihan.AkunID = ay.AkunID
 				ayTagihan.Saldo = -reqHutangPiutang.Total
 

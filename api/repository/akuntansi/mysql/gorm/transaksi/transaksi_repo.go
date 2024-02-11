@@ -107,14 +107,6 @@ func (r *transaksiRepo) Update(ctx context.Context, param UpdateParam) error {
 			}
 		}
 
-		// update multiple lines with duplicate IDs in the 'akun' table.
-		// the SQL query uses INSERT INTO ... ON DUPLICATE KEY UPDATE to efficiently handle duplicates.
-
-		// newValueAkun := strings.Join(param.NewSaldoAkunValues, ",")
-		// query2 := fmt.Sprintf("INSERT INTO akun (id, saldo, kelompok_akun_id, nama, kode) VALUES %s ON DUPLICATE KEY UPDATE saldo = VALUES(saldo)", newValueAkun)
-		// if err := tx.Exec(query2).Error; err != nil {
-		// 	return err
-		// }
 		return nil
 	})
 	if err != nil {
