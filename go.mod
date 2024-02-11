@@ -13,7 +13,6 @@ require (
 	github.com/google/uuid v1.5.0
 	github.com/h2non/filetype v1.1.3
 	github.com/joho/godotenv v1.5.1
-	github.com/leekchan/accounting v1.0.0
 	github.com/oklog/ulid/v2 v2.1.0
 	golang.org/x/crypto v0.14.0
 	golang.org/x/net v0.17.0
@@ -25,7 +24,6 @@ require (
 require (
 	github.com/MicahParks/keyfunc/v2 v2.1.0 // indirect
 	github.com/andybalholm/brotli v1.0.6 // indirect
-	github.com/cockroachdb/apd v1.1.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.3 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
@@ -34,10 +32,7 @@ require (
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-runewidth v0.0.15 // indirect
-	github.com/mitchellh/mapstructure v1.5.0 // indirect
-	github.com/pkg/errors v0.8.1 // indirect
 	github.com/rivo/uniseg v0.4.4 // indirect
-	github.com/shopspring/decimal v0.0.0-20180709203117-cd690d0c9e24 // indirect
 	github.com/stretchr/testify v1.8.4 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasthttp v1.51.0 // indirect

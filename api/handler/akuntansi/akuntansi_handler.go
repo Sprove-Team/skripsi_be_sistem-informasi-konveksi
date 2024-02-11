@@ -90,8 +90,6 @@ func (h *akuntansiHandler) GetAllNC(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusRequestTimeout).JSON(response.ErrorRes(fiber.ErrRequestTimeout.Code, fiber.ErrRequestTimeout.Message, nil))
 	}
 
-	// fmt.Println(datasNC)
-
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(response.ErrorRes(fiber.ErrInternalServerError.Code, fiber.ErrInternalServerError.Message, nil))
 	}
