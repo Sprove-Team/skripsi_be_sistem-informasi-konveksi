@@ -7,10 +7,11 @@ import (
 type Transaksi struct {
 	Base
 	Keterangan             string                  `gorm:"type:longtext" json:"keterangan,omitempty"`
-	BuktiPembayaran        BuktiPembayaran         `gorm:"serializer:json" json:"bukti_pembayaran"`
+	BuktiPembayaran        BuktiPembayaran         `gorm:"serializer:json" json:"bukti_pembayaran,omitempty"`
 	Total                  float64                 `gorm:"type:decimal(10,2);default:0" json:"total"`
 	Tanggal                time.Time               `gorm:"type:datetime(3)" json:"tanggal"`
 	KontakID               string                  `gorm:"type:varchar(26);index:idx_kontak_id;default:null" json:"kontak_id,omitempty"`
+	InvoiceID              string                  `gorm:"type:varchar(26);index:idx_invoice_id;default:null" json:"invoice_id,omitempty"`
 	Kontak                 *Kontak                 `json:"kontak,omitempty"`
 	HutangPiutang          *HutangPiutang          `json:"-"`
 	DataBayarHutangPiutang *DataBayarHutangPiutang `json:"-"`
