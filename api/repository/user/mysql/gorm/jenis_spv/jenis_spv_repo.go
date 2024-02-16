@@ -10,10 +10,11 @@ import (
 
 type JenisSpvRepo interface {
 	Create(ctx context.Context, jenisSpv *entity.JenisSpv) error
-	GetById(ctx context.Context, id string) (entity.JenisSpv, error)
+	GetById(ctx context.Context, id string) (*entity.JenisSpv, error)
+	GetByIds(ctx context.Context, ids []string) ([]entity.JenisSpv, error)
 	GetAll(ctx context.Context) ([]entity.JenisSpv, error)
 	Update(ctx context.Context, jenisSpv *entity.JenisSpv) error
-    Delete(ctx context.Context, id string) error
+	Delete(ctx context.Context, id string) error
 }
 
 type jenisSpvRepo struct {
@@ -33,13 +34,23 @@ func (r *jenisSpvRepo) Update(ctx context.Context, jenisSpv *entity.JenisSpv) er
 }
 
 func (r *jenisSpvRepo) Delete(ctx context.Context, id string) error {
-  return r.DB.WithContext(ctx).Delete(&entity.JenisSpv{}, "id = ?", id).Error
+	return r.DB.WithContext(ctx).Delete(&entity.JenisSpv{}, "id = ?", id).Error
 }
 
-func (r *jenisSpvRepo) GetById(ctx context.Context, id string) (entity.JenisSpv, error) {
+func (r *jenisSpvRepo) GetById(ctx context.Context, id string) (*entity.JenisSpv, error) {
 	data := entity.JenisSpv{}
 	err := r.DB.WithContext(ctx).First(&data, "id = ?", id).Error
-	return data, err
+	return &data, err
+}
+
+func (r *jenisSpvRepo) GetByIds(ctx context.Context, ids []string) ([]entity.JenisSpv, error) {
+	datas := make([]entity.JenisSpv, 0, len(ids))
+
+	err := r.DB.WithContext(ctx).Model(&entity.JenisSpv{}).Where("id IN (?)", ids).Find(&datas).Error
+	if err != nil {
+		return nil, err
+	}
+	return datas, nil
 }
 
 func (r *jenisSpvRepo) GetAll(ctx context.Context) ([]entity.JenisSpv, error) {

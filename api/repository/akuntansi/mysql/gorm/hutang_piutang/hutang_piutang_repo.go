@@ -8,10 +8,28 @@ import (
 	"gorm.io/gorm"
 )
 
-// type CreateParam struct {
-// 	Transaksi     *entity.Transaksi
-// 	HutangPiutang *entity.HutangPiutang
-// }
+type (
+	ParamCreate struct {
+		Ctx           context.Context
+		HutangPiutang *entity.HutangPiutang
+	}
+	ParamGetAll struct {
+		Ctx    context.Context
+		Search SearchParam
+	}
+	ParamGetById struct {
+		Ctx context.Context
+		ID  string
+	}
+	ParamGetByTrId struct {
+		Ctx context.Context
+		ID  string
+	}
+	ParamGetHPForBayar struct {
+		Ctx context.Context
+		ID  string
+	}
+)
 
 type SearchParam struct {
 	KontakID string
@@ -20,17 +38,11 @@ type SearchParam struct {
 }
 
 type HutangPiutangRepo interface {
-	Create(ctx context.Context, hutangPiutang *entity.HutangPiutang) error
-	GetAll(ctx context.Context, search SearchParam) ([]entity.HutangPiutang, error)
-	GetById(ctx context.Context, id string) (entity.HutangPiutang, error)
-	GetByTrId(ctx context.Context, id string) (entity.HutangPiutang, error)
-	GetHPForBayar(ctx context.Context, id string) (entity.HutangPiutang, error)
-	// CreateBayarHutangPiutang(ctx context.Context, )
-	// Update(ctx context.Context, param UpdateParam) error
-	// GetHistory(ctx context.Context, param SearchTransaksi) ([]entity.Transaksi, error)
-	// Delete(ctx context.Context, param DeleteParam) error
-	// GetById(ctx context.Context, id string) (entity.Transaksi, error)
-	// Add more methods as needed for your repository operations
+	Create(param ParamCreate) error
+	GetAll(param ParamGetAll) ([]entity.HutangPiutang, error)
+	GetById(param ParamGetById) (*entity.HutangPiutang, error)
+	GetByTrId(param ParamGetByTrId) (*entity.HutangPiutang, error)
+	GetHPForBayar(param ParamGetHPForBayar) (*entity.HutangPiutang, error)
 }
 
 type hutangPiutangRepo struct {
@@ -41,29 +53,27 @@ func NewHutangPiutangRepo(DB *gorm.DB) HutangPiutangRepo {
 	return &hutangPiutangRepo{DB}
 }
 
-func (r *hutangPiutangRepo) Create(ctx context.Context, hutangPiutang *entity.HutangPiutang) error {
-	// fmt.Println()
-	// fmt.Println("kena ->", len(hutangPiutang.DataBayarHutangPiutang))
-	if err := r.DB.WithContext(ctx).Create(hutangPiutang).Error; err != nil {
+func (r *hutangPiutangRepo) Create(param ParamCreate) error {
+	if err := r.DB.WithContext(param.Ctx).Create(param.HutangPiutang).Error; err != nil {
 		return err
 	}
 	return nil
 }
 
-func (r *hutangPiutangRepo) GetAll(ctx context.Context, search SearchParam) ([]entity.HutangPiutang, error) {
+func (r *hutangPiutangRepo) GetAll(param ParamGetAll) ([]entity.HutangPiutang, error) {
 	datas := []entity.HutangPiutang{}
-	tx := r.DB.WithContext(ctx).Model(&entity.HutangPiutang{}).Order("id ASC")
+	tx := r.DB.WithContext(param.Ctx).Model(&entity.HutangPiutang{}).Order("id ASC")
 
-	if search.Jenis != nil {
-		tx = tx.Where("jenis IN (?)", search.Jenis)
+	if param.Search.Jenis != nil {
+		tx = tx.Where("jenis IN (?)", param.Search.Jenis)
 	}
 
-	if search.Status != nil {
-		tx = tx.Where("status IN (?)", search.Status)
+	if param.Search.Status != nil {
+		tx = tx.Where("status IN (?)", param.Search.Status)
 	}
 
-	if search.KontakID != "" {
-		tx = tx.Where("kontak_id = ?", search.KontakID)
+	if param.Search.KontakID != "" {
+		tx = tx.Where("kontak_id = ?", param.Search.KontakID)
 	}
 
 	tx = tx.
@@ -81,29 +91,16 @@ func (r *hutangPiutangRepo) GetAll(ctx context.Context, search SearchParam) ([]e
 
 }
 
-func (r *hutangPiutangRepo) GetHPForBayar(ctx context.Context, id string) (entity.HutangPiutang, error) {
-	data := entity.HutangPiutang{}
-	tx := r.DB.WithContext(ctx).Model(&entity.HutangPiutang{}).Where("id = ?", id)
-	tx = tx.
-		Preload("Transaksi").
-		Preload("Transaksi.AyatJurnals.Akun")
-
-	if err := tx.First(&data).Error; err != nil {
-		return data, err
-	}
-	return data, nil
-}
-
-func (r *hutangPiutangRepo) GetById(ctx context.Context, id string) (entity.HutangPiutang, error) {
-	data := entity.HutangPiutang{}
-	tx := r.DB.WithContext(ctx).Model(&entity.HutangPiutang{}).Where("id = ?", id).Order("id ASC")
+func (r *hutangPiutangRepo) GetById(param ParamGetById) (*entity.HutangPiutang, error) {
+	data := new(entity.HutangPiutang)
+	tx := r.DB.WithContext(param.Ctx).Model(data).Where("id = ?", param.ID).Order("id ASC")
 	tx = tx.
 		Preload("Transaksi").
 		Preload("Transaksi.Kontak").
 		Preload("DataBayarHutangPiutang").
 		Preload("DataBayarHutangPiutang.Transaksi")
 
-	if err := tx.First(&data).Error; err != nil {
+	if err := tx.First(data).Error; err != nil {
 		helper.LogsError(err)
 		return data, err
 	}
@@ -111,14 +108,27 @@ func (r *hutangPiutangRepo) GetById(ctx context.Context, id string) (entity.Huta
 	return data, nil
 }
 
-func (r *hutangPiutangRepo) GetByTrId(ctx context.Context, id string) (entity.HutangPiutang, error) {
-	data := entity.HutangPiutang{}
-	tx := r.DB.WithContext(ctx).Model(&entity.HutangPiutang{}).Where("transaksi_id = ?", id)
+func (r *hutangPiutangRepo) GetByTrId(param ParamGetByTrId) (*entity.HutangPiutang, error) {
+	data := new(entity.HutangPiutang)
+	tx := r.DB.WithContext(param.Ctx).Model(data).Where("transaksi_id = ?", param.ID)
 
-	if err := tx.First(&data).Error; err != nil {
+	if err := tx.First(data).Error; err != nil {
 		helper.LogsError(err)
 		return data, err
 	}
 
+	return data, nil
+}
+
+func (r *hutangPiutangRepo) GetHPForBayar(param ParamGetHPForBayar) (*entity.HutangPiutang, error) {
+	data := new(entity.HutangPiutang)
+	tx := r.DB.WithContext(param.Ctx).Model(data).Where("id = ?", param.ID)
+	tx = tx.
+		Preload("Transaksi").
+		Preload("Transaksi.AyatJurnals.Akun")
+
+	if err := tx.First(data).Error; err != nil {
+		return data, err
+	}
 	return data, nil
 }

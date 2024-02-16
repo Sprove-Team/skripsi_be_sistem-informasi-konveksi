@@ -19,11 +19,18 @@ import (
 	"github.com/be-sistem-informasi-konveksi/entity"
 	"github.com/be-sistem-informasi-konveksi/helper"
 	"github.com/be-sistem-informasi-konveksi/pkg"
-	"golang.org/x/sync/errgroup"
+)
+
+type (
+	ParamCreateDataHp struct {
+		Ctx context.Context
+		Req req.Create
+	}
 )
 
 type HutangPiutangUsecase interface {
-	Create(ctx context.Context, reqHutangPiutang req.Create) error
+	CreateDataHP(param ParamCreateDataHp) (*entity.HutangPiutang, error)
+	CreateCommitDB(ctx context.Context, hp *entity.HutangPiutang) error
 	CreateBayar(ctx context.Context, reqHutangPiutang req.CreateBayar) error
 	GetAll(ctx context.Context, reqHutangPiutang req.GetAll) ([]res.GetAll, error)
 }
@@ -40,73 +47,47 @@ func NewHutangPiutangUsecase(repo repo.HutangPiutangRepo, repoBayarHP repoBayarH
 	return &hutangPiutangUsecase{repo, repoBayarHP, repoAkun, repoKontak, ulid}
 }
 
-func (u *hutangPiutangUsecase) Create(ctx context.Context, reqHutangPiutang req.Create) error {
-
-	g := &errgroup.Group{}
-	g.SetLimit(10)
-	// check kontak is founded
-	var kontak entity.Kontak
-	g.Go(func() error {
-		data, err := u.repoKontak.GetById(ctx, reqHutangPiutang.KontakID)
-		if err != nil {
-			if err.Error() == "record not found" {
-				return errors.New(message.KontakNotFound)
-			}
-			return err
-		}
-		kontak = data
-		return nil
-	})
-
+func (u *hutangPiutangUsecase) CreateDataHP(param ParamCreateDataHp) (*entity.HutangPiutang, error) {
 	hutangPiutangID := u.ulid.MakeUlid().String()
-	repoParam := &entity.HutangPiutang{
+	dataHP := &entity.HutangPiutang{
 		Base: entity.Base{
 			ID: hutangPiutangID,
 		},
-		Jenis: reqHutangPiutang.Jenis,
+		Jenis: param.Req.Jenis,
 	}
 
 	ayHP1 := entity.AyatJurnal{
 		Base: entity.Base{
 			ID: u.ulid.MakeUlid().String(),
 		},
-		AkunID: reqHutangPiutang.Transaksi.AyatJurnal[0].AkunID,
-		Debit:  reqHutangPiutang.Transaksi.AyatJurnal[0].Debit,
-		Kredit: reqHutangPiutang.Transaksi.AyatJurnal[0].Kredit,
+		AkunID: param.Req.Transaksi.AyatJurnal[0].AkunID,
+		Debit:  param.Req.Transaksi.AyatJurnal[0].Debit,
+		Kredit: param.Req.Transaksi.AyatJurnal[0].Kredit,
 	}
 	ayHP2 := entity.AyatJurnal{
 		Base: entity.Base{
 			ID: u.ulid.MakeUlid().String(),
 		},
-		AkunID: reqHutangPiutang.Transaksi.AyatJurnal[1].AkunID,
-		Debit:  reqHutangPiutang.Transaksi.AyatJurnal[1].Debit,
-		Kredit: reqHutangPiutang.Transaksi.AyatJurnal[1].Kredit,
+		AkunID: param.Req.Transaksi.AyatJurnal[1].AkunID,
+		Debit:  param.Req.Transaksi.AyatJurnal[1].Debit,
+		Kredit: param.Req.Transaksi.AyatJurnal[1].Kredit,
 	}
 
-	lengthAyByr := len(reqHutangPiutang.BayarAwal)
+	lengthAyByr := len(param.Req.BayarAwal)
 	akunIds := make([]string, 2+lengthAyByr)
 	akunIds[0] = ayHP1.AkunID
 	akunIds[1] = ayHP2.AkunID
 
-	for i, akunByr := range reqHutangPiutang.BayarAwal {
+	for i, akunByr := range param.Req.BayarAwal {
 		akunIds[i+2] = akunByr.AkunBayarID
 	}
 
-	var akuns []entity.Akun
-	g.Go(func() error {
-		datas, err := u.repoAkun.GetByIds(ctx, akunIds)
-		if err != nil {
-			if len(datas) != 3 {
-				return errors.New(message.AkunNotFound)
-			}
-			return err
+	akuns, err := u.repoAkun.GetByIds(param.Ctx, akunIds)
+	if err != nil {
+		if len(akuns) != 3 {
+			return nil, errors.New(message.AkunNotFound)
 		}
-		akuns = datas
-		return nil
-	})
-
-	if err := g.Wait(); err != nil {
-		return err
+		return nil, err
 	}
 
 	akunMap := map[string]entity.Akun{}
@@ -116,14 +97,14 @@ func (u *hutangPiutangUsecase) Create(ctx context.Context, reqHutangPiutang req.
 	akunTagihan := entity.Akun{}
 	for _, akun := range akuns {
 		if err := pkgAkuntansiLogic.IsValidAkunHutangPiutang(akun.KelompokAkun.Nama); err != nil {
-			return err
+			return nil, err
 		}
 
 		// pasti ada 1 saldo debit jika jenis piutang, jika tidak error, begitu sebaliknya untuk hutang
 		switch akun.ID {
 		case ayHP1.AkunID:
 			pkgAkuntansiLogic.UpdateSaldo(&ayHP1.Saldo, ayHP1.Kredit, ayHP1.Debit, akun.SaldoNormal)
-			if reqHutangPiutang.Jenis == "PIUTANG" {
+			if param.Req.Jenis == "PIUTANG" {
 				if akun.SaldoNormal == "DEBIT" {
 					ayTagihan = ayHP2
 					akunTagihan = akun
@@ -137,7 +118,7 @@ func (u *hutangPiutangUsecase) Create(ctx context.Context, reqHutangPiutang req.
 
 		case ayHP2.AkunID:
 			pkgAkuntansiLogic.UpdateSaldo(&ayHP2.Saldo, ayHP2.Kredit, ayHP2.Debit, akun.SaldoNormal)
-			if reqHutangPiutang.Jenis == "PIUTANG" {
+			if param.Req.Jenis == "PIUTANG" {
 				if akun.SaldoNormal == "DEBIT" {
 					ayTagihan = ayHP2
 					akunTagihan = akun
@@ -155,25 +136,25 @@ func (u *hutangPiutangUsecase) Create(ctx context.Context, reqHutangPiutang req.
 
 	// cek kelompok akun sesuai dengan jenis hutang/piutang
 	if akunTagihan.KelompokAkun == nil {
-		return errors.New(message.AkunNotMatchWithJenisHP)
+		return nil, errors.New(message.AkunNotMatchWithJenisHP)
 	}
-	if !strings.EqualFold(akunTagihan.KelompokAkun.Nama, reqHutangPiutang.Jenis) {
-		return errors.New(message.AkunNotMatchWithJenisHP)
+	if !strings.EqualFold(akunTagihan.KelompokAkun.Nama, param.Req.Jenis) {
+		return nil, errors.New(message.AkunNotMatchWithJenisHP)
 	}
 
 	// validate credit, debit hp is equal
 	if ayHP1.Saldo < 0 || ayHP2.Saldo < 0 {
-		return errors.New(message.IncorrectPlacementOfCreditAndDebit)
+		return nil, errors.New(message.IncorrectPlacementOfCreditAndDebit)
 	}
 	if ayHP1.Saldo-ayHP2.Saldo != 0 {
-		return errors.New(message.CreditDebitNotSame)
+		return nil, errors.New(message.CreditDebitNotSame)
 	}
 
 	// parse tanggal
-	tanggalTrHp, err := time.Parse(time.RFC3339, reqHutangPiutang.Transaksi.Tanggal)
+	tanggalTrHp, err := time.Parse(time.RFC3339, param.Req.Transaksi.Tanggal)
 	if err != nil {
 		helper.LogsError(err)
-		return err
+		return nil, err
 	}
 
 	// create transaksi HP, based on ay1 and ay2 variable
@@ -182,11 +163,11 @@ func (u *hutangPiutangUsecase) Create(ctx context.Context, reqHutangPiutang req.
 		Base: entity.Base{
 			ID: transaksiHpID,
 		},
-		Keterangan:      reqHutangPiutang.Keterangan,
-		BuktiPembayaran: reqHutangPiutang.Transaksi.BuktiPembayaran,
+		Keterangan:      param.Req.Keterangan,
+		BuktiPembayaran: param.Req.Transaksi.BuktiPembayaran,
 		Total:           math.Abs(ayHP1.Saldo),
 		Tanggal:         tanggalTrHp,
-		KontakID:        reqHutangPiutang.KontakID,
+		KontakID:        param.Req.KontakID,
 		AyatJurnals:     []entity.AyatJurnal{ayHP1, ayHP2},
 	}
 
@@ -194,37 +175,50 @@ func (u *hutangPiutangUsecase) Create(ctx context.Context, reqHutangPiutang req.
 	dataByrHutangPiutang := make([]entity.DataBayarHutangPiutang, lengthAyByr)
 	var totalAllTrBayar float64
 	if lengthAyByr > 0 {
-		for i, trByr := range reqHutangPiutang.BayarAwal {
+		for i, trByr := range param.Req.BayarAwal {
 			totalAllTrBayar += trByr.Total
 			akun := akunMap[trByr.AkunBayarID]
 			if akun.KelompokAkun.Nama != "kas & bank" {
-				return errors.New(message.InvalidAkunBayar)
+				return nil, errors.New(message.InvalidAkunBayar)
 			}
-			keterangan := kontak.Nama + " melakukan pembayaran dengan akun " + akun.Nama
-			byrHP, err := pkgAkuntansiLogic.CreateDataBayarHP(trByr, ayTagihan, reqHutangPiutang.KontakID, keterangan, u.ulid)
+			byrHP, err := pkgAkuntansiLogic.CreateDataBayarHP(trByr, ayTagihan, param.Req.KontakID, trByr.Keterangan, u.ulid)
 			if err != nil {
-				return err
+				return nil, err
 			}
 			dataByrHutangPiutang[i] = *byrHP
 		}
 	}
 
 	if totalAllTrBayar > ayTagihan.Debit {
-		return errors.New(message.BayarMustLessThanSisaTagihan)
+		return nil, errors.New(message.BayarMustLessThanSisaTagihan)
 	}
 
-	repoParam.Total = transaksiHP.Total
-	repoParam.Sisa = transaksiHP.Total - totalAllTrBayar
-	if repoParam.Sisa <= 0 {
-		repoParam.Status = "LUNAS"
+	dataHP.Total = transaksiHP.Total
+	dataHP.Sisa = transaksiHP.Total - totalAllTrBayar
+	if dataHP.Sisa <= 0 {
+		dataHP.Status = "LUNAS"
 	}
-	repoParam.DataBayarHutangPiutang = dataByrHutangPiutang
-	repoParam.Transaksi = transaksiHP
+	dataHP.DataBayarHutangPiutang = dataByrHutangPiutang
+	dataHP.Transaksi = transaksiHP
 
-	if err := u.repo.Create(ctx, repoParam); err != nil {
+	return dataHP, nil
+}
+
+func (u *hutangPiutangUsecase) CreateCommitDB(ctx context.Context, hp *entity.HutangPiutang) error {
+	_, err := u.repoKontak.GetById(repoKontak.ParamGetById{
+		Ctx: ctx,
+		ID:  hp.Transaksi.KontakID,
+	})
+	if err != nil {
+		if err.Error() == "record not found" {
+			return errors.New(message.KontakNotFound)
+		}
 		return err
 	}
-	return nil
+	return u.repo.Create(repo.ParamCreate{
+		Ctx:           ctx,
+		HutangPiutang: hp,
+	})
 }
 
 func (u *hutangPiutangUsecase) GetAll(ctx context.Context, reqHutangPiutang req.GetAll) ([]res.GetAll, error) {
@@ -241,7 +235,10 @@ func (u *hutangPiutangUsecase) GetAll(ctx context.Context, reqHutangPiutang req.
 		repoSearch.Status = []string{"BELUM_LUNAS", "LUNAS"}
 	}
 
-	datas, err := u.repo.GetAll(ctx, repoSearch)
+	datas, err := u.repo.GetAll(repo.ParamGetAll{
+		Ctx:    ctx,
+		Search: repoSearch,
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -307,7 +304,10 @@ func (u *hutangPiutangUsecase) CreateBayar(ctx context.Context, reqHutangPiutang
 	hpChan := make(chan entity.HutangPiutang, 1)
 	errChan := make(chan error, 1)
 	go func() {
-		hp, err := u.repo.GetHPForBayar(ctx, reqHutangPiutang.HutangPiutangID)
+		hp, err := u.repo.GetHPForBayar(repo.ParamGetHPForBayar{
+			Ctx: ctx,
+			ID:  reqHutangPiutang.HutangPiutangID,
+		})
 		if err != nil {
 			if err.Error() == "record not found" {
 				errChan <- errors.New(message.HutangPiutangNotFound)
@@ -320,7 +320,7 @@ func (u *hutangPiutangUsecase) CreateBayar(ctx context.Context, reqHutangPiutang
 			errChan <- errors.New(message.BayarMustLessThanSisaTagihan)
 			return
 		}
-		hpChan <- hp
+		hpChan <- *hp
 	}()
 	go func() {
 		akun, err := u.repoAkun.GetById(ctx, reqHutangPiutang.AkunBayarID)

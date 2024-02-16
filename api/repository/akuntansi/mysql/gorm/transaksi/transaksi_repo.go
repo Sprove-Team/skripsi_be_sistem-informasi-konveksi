@@ -93,9 +93,8 @@ func (r *transaksiRepo) Update(ctx context.Context, param UpdateParam) error {
 				return err
 			}
 		}
-
 		// update ayat jurnals
-		if param.NewAyatJurnals != nil {
+		if len(param.NewAyatJurnals) > 0 {
 			if err := tx.Unscoped().Where("transaksi_id IN (?)", param.UpdateTr.ID).Delete(&entity.AyatJurnal{}).Error; err != nil {
 				helper.LogsError(err)
 				return err

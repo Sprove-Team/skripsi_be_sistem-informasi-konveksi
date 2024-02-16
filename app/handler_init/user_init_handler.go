@@ -31,8 +31,7 @@ func NewUserHandlerInit(DB *gorm.DB, validator pkg.Validator, ulid pkg.UlidPkg, 
 
 func (d *userHandlerInit) UserHandler() userHandler.UserHandler {
 	r := userRepo.NewUserRepo(d.DB)
-	rJenisSpv := jenisSpvRepo.NewJenisSpvRepo(d.DB)
-	uc := userUsecase.NewUserUsecase(r, rJenisSpv, d.ulid, d.encryptor)
+	uc := userUsecase.NewUserUsecase(r, d.ulid, d.encryptor)
 	h := userHandler.NewUserHandler(uc, d.validator)
 	return h
 }

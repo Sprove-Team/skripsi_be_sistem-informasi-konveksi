@@ -9,7 +9,7 @@ import (
 	"github.com/be-sistem-informasi-konveksi/api/middleware/auth"
 	corsMid "github.com/be-sistem-informasi-konveksi/api/middleware/cors"
 	timeoutMid "github.com/be-sistem-informasi-konveksi/api/middleware/timeout"
-	user "github.com/be-sistem-informasi-konveksi/api/repository/user/mysql/gorm"
+	userRepo "github.com/be-sistem-informasi-konveksi/api/repository/user/mysql/gorm"
 	"github.com/be-sistem-informasi-konveksi/app/config"
 	"github.com/be-sistem-informasi-konveksi/app/handler_init"
 	"github.com/be-sistem-informasi-konveksi/app/route"
@@ -36,7 +36,7 @@ func main() {
 	encryptor := helper.NewEncryptor()
 
 	// middleware
-	userRepo := user.NewUserRepo(dbGorm)
+	userRepo := userRepo.NewUserRepo(dbGorm)
 	authMid := auth.NewAuthMiddleware(userRepo)
 	timeoutMid := timeoutMid.NewTimeoutMiddleware()
 	corsMid := corsMid.NewCorsMiddleware()
@@ -94,13 +94,14 @@ func main() {
 		{
 			akuntansiGroup.Route("", akuntansiRoute.Akuntansi) // pelaporan akuntansi
 			akuntansiGroup.Route("/akun", akuntansiRoute.Akun)
+			akuntansiGroup.Route("/kontak", akuntansiRoute.Kontak)
 			akuntansiGroup.Route("/kelompok_akun", akuntansiRoute.KelompokAkun)
 			akuntansiGroup.Route("/transaksi", akuntansiRoute.Transaksi)
 			akuntansiGroup.Route("/hutang_piutang", akuntansiRoute.HutangPiutang)
 		}
 
 		// invoice
-		invoiceHandler := handler_init.NewInvoiceHandlerInit(dbGorm, validator, ulidPkg)
+		invoiceHandler := handler_init.NewInvoiceHandlerInit(dbGorm, validator, ulidPkg, encryptor)
 		invoiceRoute := route.NewInvoiceRoute(invoiceHandler, authMid)
 		invoiceGroup := v1.Group("/invoice")
 		{

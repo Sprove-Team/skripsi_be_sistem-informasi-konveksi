@@ -47,7 +47,10 @@ func (a *authMidleware) Authorization(roles []string) fiber.Handler {
 				return c.Status(fiber.StatusUnauthorized).JSON(response.ErrorRes(fiber.ErrUnauthorized.Code, fiber.ErrUnauthorized.Message, nil))
 			}
 			ctx := c.UserContext()
-			_, err := a.userRepo.GetById(ctx, user.ID)
+			_, err := a.userRepo.GetById(userRepo.ParamGetById{
+				Ctx: ctx,
+				ID:  user.ID,
+			})
 			if err != nil {
 				if err.Error() == "record not found" {
 					return c.Status(fiber.StatusUnauthorized).JSON(response.ErrorRes(fiber.ErrUnauthorized.Code, fiber.ErrUnauthorized.Message, nil))

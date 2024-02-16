@@ -14,7 +14,6 @@ type Create struct {
 	Keterangan      string                 `json:"keterangan" validate:"required"`
 	KontakID        string                 `json:"kontak_id" validate:"omitempty,ulid"`
 	AyatJurnal      []ReqAyatJurnal        `json:"ayat_jurnal" validate:"required,min=2,dive"`
-	// Jenis           string                 `json:"jenis" validate:"required,oneof=GENERAL PIUTANG HUTANG"`
 }
 
 type Update struct {

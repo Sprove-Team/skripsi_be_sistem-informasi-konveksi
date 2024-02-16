@@ -12,6 +12,7 @@ type AkuntansiRoute interface {
 	KelompokAkun(router fiber.Router)
 	Transaksi(router fiber.Router)
 	HutangPiutang(router fiber.Router)
+	Kontak(router fiber.Router)
 	Akuntansi(router fiber.Router)
 }
 
@@ -27,19 +28,19 @@ func NewAkuntansiRoute(h handler_init.AkuntansiHandlerInit, auth auth.AuthMidlew
 func (ro *akuntansiRoute) Akun(router fiber.Router) {
 	// this is how to use the authorization function
 	// ~ router.Get("", ro.auth.Authorization([]string{"direktur", "bendahara"}), ro.h.AkunHandler().GetAll)
-	router.Get("", ro.h.AkunHandler().GetAll)
-	router.Get("/:id", ro.h.AkunHandler().GetById)
-	router.Post("", ro.h.AkunHandler().Create)
-	router.Put("/:id", ro.h.AkunHandler().Update)
-	router.Delete("/:id", ro.h.AkunHandler().Delete)
+	router.Get("", ro.h.Akun().GetAll)
+	router.Get("/:id", ro.h.Akun().GetById)
+	router.Post("", ro.h.Akun().Create)
+	router.Put("/:id", ro.h.Akun().Update)
+	router.Delete("/:id", ro.h.Akun().Delete)
 }
 
 func (ro *akuntansiRoute) KelompokAkun(router fiber.Router) {
-	router.Post("", ro.h.KelompokAkunHandler().Create)
-	router.Get("", ro.h.KelompokAkunHandler().GetAll)
-	router.Get("/:id", ro.h.KelompokAkunHandler().GetById)
-	router.Put("/:id", ro.h.KelompokAkunHandler().Update)
-	router.Delete("/:id", ro.h.KelompokAkunHandler().Delete)
+	router.Post("", ro.h.KelompokAkun().Create)
+	router.Get("", ro.h.KelompokAkun().GetAll)
+	router.Get("/:id", ro.h.KelompokAkun().GetById)
+	router.Put("/:id", ro.h.KelompokAkun().Update)
+	router.Delete("/:id", ro.h.KelompokAkun().Delete)
 }
 
 func (ro *akuntansiRoute) Transaksi(router fiber.Router) {
@@ -55,6 +56,13 @@ func (ro *akuntansiRoute) HutangPiutang(router fiber.Router) {
 	router.Post("", ro.h.HutangPiutang().Create)
 	router.Post("/bayar/:hutang_piutang_id", ro.h.HutangPiutang().CreateBayar)
 	router.Get("", ro.h.HutangPiutang().GetAll)
+}
+
+func (ro *akuntansiRoute) Kontak(router fiber.Router) {
+	router.Post("", ro.h.Kontak().Create)
+	router.Put("/:id", ro.h.Kontak().Update)
+	router.Get("", ro.h.Kontak().GetAll)
+	router.Get("/:id", ro.h.Kontak().GetById)
 }
 
 func (ro *akuntansiRoute) Akuntansi(router fiber.Router) {

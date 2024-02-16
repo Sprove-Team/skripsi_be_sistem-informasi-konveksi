@@ -50,7 +50,11 @@ func (u *transaksiUsecase) Delete(ctx context.Context, id string) error {
 
 func (u *transaksiUsecase) Update(ctx context.Context, reqTransaksi req.Update) error {
 
-	hp, err := u.repoHutangPiutang.GetByTrId(ctx, reqTransaksi.ID)
+	hp, err := u.repoHutangPiutang.GetByTrId(repoHutangPiutang.ParamGetByTrId{
+		Ctx: ctx,
+		ID:  reqTransaksi.ID,
+	})
+
 	if err != nil {
 		if err.Error() != "record not found" {
 			return err
@@ -69,6 +73,7 @@ func (u *transaksiUsecase) Update(ctx context.Context, reqTransaksi req.Update) 
 			return err
 		}
 	}
+
 	lengthReqAyatJurnals := len(reqTransaksi.AyatJurnal)
 
 	var wg sync.WaitGroup
@@ -126,6 +131,15 @@ func (u *transaksiUsecase) Update(ctx context.Context, reqTransaksi req.Update) 
 		},
 	}
 
+	// update tr tanggal
+	if reqTransaksi.Tanggal != "" {
+		tanggalTr, err := time.Parse(time.RFC3339, reqTransaksi.Tanggal)
+		if err != nil {
+			return err
+		}
+		repoParam.UpdateTr.Tanggal = tanggalTr
+	}
+
 	// change the saldo ayat jurnal if the ayat jurnals is difference
 	isSameAy := pkgAkuntansiLogic.IsSameReqAyJurnals(oldAy, reqAy)
 	if !isSameAy {
@@ -180,10 +194,6 @@ func (u *transaksiUsecase) Update(ctx context.Context, reqTransaksi req.Update) 
 
 		// validate total bayar with total tr hp
 		if hp.ID != "" {
-			// dont update
-			// if hp.Total == totalTransaksi {
-			// 	return nil
-			// }
 			totalByr := hp.Total - hp.Sisa
 			if totalTransaksi < totalByr {
 				return errors.New(message.TotalHPMustGeOrEqToTotalByr)
@@ -206,7 +216,7 @@ func (u *transaksiUsecase) Update(ctx context.Context, reqTransaksi req.Update) 
 		for i, ay := range reqTransaksi.AyatJurnal {
 			akun := akunsMap[ay.AkunID]
 
-			if err := pkgAkuntansiLogic.IsValidAkunHp(&hp, &akun, &ay); err != nil {
+			if err := pkgAkuntansiLogic.IsValidAkunHp(hp, &akun, &ay); err != nil {
 				return err
 			}
 			if err := pkgAkuntansiLogic.IsValidAkunByrHP(&hpFromByr, &akun, &ay); err != nil {
@@ -236,7 +246,7 @@ func (u *transaksiUsecase) Update(ctx context.Context, reqTransaksi req.Update) 
 		if hp.Total != totalTransaksi {
 			// set data hutang piutang
 			if hp.ID != "" {
-				repoParam.UpdateHutangPiutang = &hp
+				repoParam.UpdateHutangPiutang = hp
 				repoParam.UpdateHutangPiutang.Total = repoParam.UpdateTr.Total
 				// total baru - total dibayar didapat dari old total - old sisa
 				repoParam.UpdateHutangPiutang.Sisa = repoParam.UpdateTr.Total - (oldTr.Total - hp.Sisa)

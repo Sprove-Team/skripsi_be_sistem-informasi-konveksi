@@ -15,8 +15,6 @@ type HutangPiutangHandler interface {
 	Create(c *fiber.Ctx) error
 	CreateBayar(c *fiber.Ctx) error
 	GetAll(c *fiber.Ctx) error
-	// GetById(c *fiber.Ctx) error
-	// GetHistory(c *fiber.Ctx) error
 }
 
 type hutangPiutangHandler struct {
@@ -39,7 +37,17 @@ func (h *hutangPiutangHandler) Create(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(errValidate)
 	}
 	ctx := c.UserContext()
-	err := h.uc.Create(ctx, *req)
+
+	dataHP, err := h.uc.CreateDataHP(usecase.ParamCreateDataHp{
+		Ctx: ctx,
+		Req: *req,
+	})
+
+	if err != nil {
+		return h.errHP(c, err)
+	}
+
+	err = h.uc.CreateCommitDB(ctx, dataHP)
 	// Handle errors
 	if err != nil {
 		return h.errHP(c, err)

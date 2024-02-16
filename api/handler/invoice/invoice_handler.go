@@ -3,12 +3,19 @@ package invoice
 import (
 	"context"
 
+	ucHutangPiutang "github.com/be-sistem-informasi-konveksi/api/usecase/akuntansi/hutang_piutang"
+	ucKontak "github.com/be-sistem-informasi-konveksi/api/usecase/akuntansi/kontak"
 	usecase "github.com/be-sistem-informasi-konveksi/api/usecase/invoice"
+	ucUser "github.com/be-sistem-informasi-konveksi/api/usecase/user"
 	"github.com/be-sistem-informasi-konveksi/common/message"
+	reqHP "github.com/be-sistem-informasi-konveksi/common/request/akuntansi/hutang_piutang"
+	reqKontak "github.com/be-sistem-informasi-konveksi/common/request/akuntansi/kontak"
 	req "github.com/be-sistem-informasi-konveksi/common/request/invoice"
 	"github.com/be-sistem-informasi-konveksi/common/response"
+	"github.com/be-sistem-informasi-konveksi/entity"
 	"github.com/be-sistem-informasi-konveksi/pkg"
 	"github.com/gofiber/fiber/v2"
+	"golang.org/x/sync/errgroup"
 )
 
 type InvoiceHandler interface {
@@ -17,12 +24,21 @@ type InvoiceHandler interface {
 }
 
 type invoiceHandler struct {
-	uc        usecase.InvoiceUsecase
-	validator pkg.Validator
+	uc              usecase.InvoiceUsecase
+	ucUser          ucUser.UserUsecase
+	ucKontak        ucKontak.KontakUsecase
+	ucHutangPiutang ucHutangPiutang.HutangPiutangUsecase
+	validator       pkg.Validator
 }
 
-func NewInvoiceHandler(uc usecase.InvoiceUsecase, validator pkg.Validator) InvoiceHandler {
-	return &invoiceHandler{uc, validator}
+func NewInvoiceHandler(
+	uc usecase.InvoiceUsecase,
+	ucUser ucUser.UserUsecase,
+	ucKontak ucKontak.KontakUsecase,
+	ucHutangPiutang ucHutangPiutang.HutangPiutangUsecase,
+	validator pkg.Validator,
+) InvoiceHandler {
+	return &invoiceHandler{uc, ucUser, ucKontak, ucHutangPiutang, validator}
 }
 
 func errResponse(c *fiber.Ctx, err error) error {
@@ -43,11 +59,8 @@ func errResponse(c *fiber.Ctx, err error) error {
 
 	switch err.Error() {
 	case message.UserNotFound,
-		message.AkunNotFound,
-		message.BordirNotFound,
-		message.ProdukNotFound,
-		message.SablonNotFound,
-		message.HargaDetailProdukNotFoundOrNotAddedYet:
+		message.KontakNotFound,
+		message.AkunNotFound:
 		badRequest = append(badRequest, err.Error())
 	}
 
@@ -68,8 +81,10 @@ func (h *invoiceHandler) GetAll(c *fiber.Ctx) error {
 	}
 
 	ctx := c.UserContext()
-	// Call usecase to create KelompokAkun
-	datas, err := h.uc.GetAll(ctx, *req)
+	datas, err := h.uc.GetAll(usecase.ParamGetAll{
+		Ctx: ctx,
+		Req: *req,
+	})
 	// Handle errors
 	if err != nil {
 		return errResponse(c, err)
@@ -90,9 +105,74 @@ func (h *invoiceHandler) Create(c *fiber.Ctx) error {
 	}
 
 	ctx := c.UserContext()
-	// Call usecase to create KelompokAkun
-	err := h.uc.Create(ctx, *req)
-	// Handle errors
+
+	g := new(errgroup.Group)
+
+	var dataKontak *entity.Kontak
+
+	g.Go(func() error {
+		var err error
+		if req.KontakID == "" {
+			dataKontak, err = h.ucKontak.CreateDataKontak(ucKontak.ParamCreateDataKontak{
+				Ctx: ctx,
+				Req: reqKontak.Create{
+					Nama:       req.NewKontak.Nama,
+					NoTelp:     req.NewKontak.NoTelp,
+					Alamat:     req.NewKontak.Alamat,
+					Keterangan: req.Keterangan,
+					Email:      req.NewKontak.Email,
+				},
+			})
+
+			if err != nil {
+				return errResponse(c, err)
+			}
+		}
+		return nil
+	})
+
+	var dataInvoice *entity.Invoice
+	var dataReqHp *reqHP.Create
+	g.Go(func() error {
+		var err error
+		dataInvoice, dataReqHp, err = h.uc.CreateDataInvoice(usecase.ParamCreateDataInvoice{
+			Ctx: ctx,
+			Req: *req,
+		})
+
+		if err != nil {
+			return errResponse(c, err)
+		}
+		return nil
+	})
+
+	if err := g.Wait(); err != nil {
+		return err
+	}
+
+	dataHp, err := h.ucHutangPiutang.CreateDataHP(ucHutangPiutang.ParamCreateDataHp{
+		Ctx: ctx,
+		Req: *dataReqHp,
+	})
+	if err != nil {
+		return errResponse(c, err)
+	}
+
+	// set data hp into invoice
+	dataInvoice.HutangPiutang = *dataHp
+
+	// set kontak into invoice
+	if req.KontakID == "" {
+		dataInvoice.Kontak = dataKontak
+	} else {
+		dataInvoice.KontakID = req.KontakID
+	}
+
+	err = h.uc.CreateCommitDB(usecase.ParamCreateCommitDB{
+		Ctx:     ctx,
+		Invoice: dataInvoice,
+	})
+
 	if err != nil {
 		return errResponse(c, err)
 	}

@@ -1,8 +1,8 @@
 package auth
 
 type Login struct {
-	Username string `json:"username" validate:"required,printascii"`
-	Password string `json:"password" validate:"required,printascii"`
+	Username string `json:"username" validate:"required"`
+	Password string `json:"password" validate:"required"`
 }
 
 type GetNewAccessToken struct {

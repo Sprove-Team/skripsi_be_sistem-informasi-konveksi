@@ -11,27 +11,27 @@ import (
 	"gorm.io/gorm"
 )
 
-type CreateParam struct {
-	Invoice       *entity.Invoice
-	Kontak        *entity.Kontak
-	Transaksi     *entity.Transaksi
-	DetailInvoice []entity.DetailInvoice
-}
-
-type SearchFilter struct {
-	StatusProduksi  string
-	Kepada          string
-	TanggalDeadline time.Time
-	TanggalKirim    time.Time
-	Order           string
-	Next            string
-	Limit           int
-}
+type (
+	CreateParam struct {
+		Ctx     context.Context
+		Invoice *entity.Invoice
+	}
+	ParamGetAll struct {
+		Ctx             context.Context
+		StatusProduksi  string
+		KontakID        string
+		TanggalDeadline time.Time
+		TanggalKirim    time.Time
+		Order           string
+		Next            string
+		Limit           int
+	}
+)
 
 type InvoiceRepo interface {
-	Create(ctx context.Context, param CreateParam) error
+	Create(param CreateParam) error
 	GetLastInvoiceCrrYear(ctx context.Context) (entity.Invoice, error)
-	GetAll(ctx context.Context, filter SearchFilter) ([]entity.Invoice, error)
+	GetAll(param ParamGetAll) ([]entity.Invoice, error)
 }
 
 type invoiceRepo struct {
@@ -42,22 +42,8 @@ func NewInvoiceRepo(DB *gorm.DB) InvoiceRepo {
 	return &invoiceRepo{DB}
 }
 
-func (r *invoiceRepo) Create(ctx context.Context, param CreateParam) error {
-	err := r.DB.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		if err := tx.Create(param.Kontak).Error; err != nil {
-			return err
-		}
-		if err := tx.Create(param.Transaksi).Error; err != nil {
-			return err
-		}
-		if err := tx.Create(param.Invoice).Error; err != nil {
-			return err
-		}
-		if err := tx.Create(&param.DetailInvoice).Error; err != nil {
-			return err
-		}
-		return nil
-	})
+func (r *invoiceRepo) Create(param CreateParam) error {
+	err := r.DB.WithContext(param.Ctx).Create(param.Invoice).Error
 	if err != nil {
 		helper.LogsError(err)
 		return err
@@ -76,17 +62,17 @@ func (r *invoiceRepo) GetLastInvoiceCrrYear(ctx context.Context) (entity.Invoice
 	return *invoice, err
 }
 
-func (r *invoiceRepo) GetAll(ctx context.Context, filter SearchFilter) ([]entity.Invoice, error) {
-	tx := r.DB.WithContext(ctx).Model(&entity.Invoice{})
+func (r *invoiceRepo) GetAll(param ParamGetAll) ([]entity.Invoice, error) {
+	tx := r.DB.WithContext(param.Ctx).Model(&entity.Invoice{})
 
-	if filter.Order == "" {
+	if param.Order == "" {
 		tx = tx.Order("id ASC")
+		param.Order = "id ASC"
 	}
 
-	s := reflect.ValueOf(filter)
-	orderBy := strings.Split(filter.Order, " ")[1]
+	s := reflect.ValueOf(param)
+	orderBy := strings.Split(param.Order, " ")[1]
 	for i := 0; i < s.NumField(); i++ {
-		// kind := s.Field(i).Kind()
 		key := s.Type().Field(i).Name
 		value := s.Field(i).Interface()
 
@@ -102,8 +88,8 @@ func (r *invoiceRepo) GetAll(ctx context.Context, filter SearchFilter) ([]entity
 					}
 				case "Order":
 					tx = tx.Order(value)
-				case "Kepada":
-					tx = tx.Where("kepada LIKE ?", "%"+value.(string)+"%")
+				case "KontakID":
+					tx = tx.Where("kontak_id = ?", value)
 				case "StatusProduksi":
 					tx = tx.Where("status_produksi = ?", value)
 				}
@@ -120,9 +106,9 @@ func (r *invoiceRepo) GetAll(ctx context.Context, filter SearchFilter) ([]entity
 		}
 	}
 
-	invoices := make([]entity.Invoice, filter.Limit)
+	invoices := make([]entity.Invoice, param.Limit)
 
-	if err := tx.Limit(filter.Limit).Find(&invoices).Error; err != nil {
+	if err := tx.Limit(param.Limit).Preload("Kontak").Preload("User").Find(&invoices).Error; err != nil {
 		return nil, err
 	}
 

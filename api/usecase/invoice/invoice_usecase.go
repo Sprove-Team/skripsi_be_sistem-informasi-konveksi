@@ -4,56 +4,60 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"math"
 	"strconv"
 	"strings"
 	"time"
 
-	akuntansi "github.com/be-sistem-informasi-konveksi/api/repository/akuntansi/mysql/gorm/akun"
-	bordir "github.com/be-sistem-informasi-konveksi/api/repository/bordir/mysql/gorm"
-	invoice "github.com/be-sistem-informasi-konveksi/api/repository/invoice/mysql/gorm"
-	produk "github.com/be-sistem-informasi-konveksi/api/repository/produk/mysql/gorm"
-	sablon "github.com/be-sistem-informasi-konveksi/api/repository/sablon/mysql/gorm"
-	user "github.com/be-sistem-informasi-konveksi/api/repository/user/mysql/gorm"
+	akunRepo "github.com/be-sistem-informasi-konveksi/api/repository/akuntansi/mysql/gorm/akun"
+	kontakRepo "github.com/be-sistem-informasi-konveksi/api/repository/akuntansi/mysql/gorm/kontak"
+	repo "github.com/be-sistem-informasi-konveksi/api/repository/invoice/mysql/gorm"
+	userRepo "github.com/be-sistem-informasi-konveksi/api/repository/user/mysql/gorm"
 	"github.com/be-sistem-informasi-konveksi/common/message"
+	reqHP "github.com/be-sistem-informasi-konveksi/common/request/akuntansi/hutang_piutang"
 	req "github.com/be-sistem-informasi-konveksi/common/request/invoice"
 	"github.com/be-sistem-informasi-konveksi/entity"
 	"github.com/be-sistem-informasi-konveksi/helper"
 	"github.com/be-sistem-informasi-konveksi/pkg"
 )
 
+type (
+	ParamCreateDataInvoice struct {
+		Ctx context.Context
+		Req req.Create
+	}
+	ParamCreateCommitDB struct {
+		Ctx     context.Context
+		Invoice *entity.Invoice
+	}
+	ParamGetAll struct {
+		Ctx context.Context
+		Req req.GetAll
+	}
+)
+
 type InvoiceUsecase interface {
-	GetAll(ctx context.Context, reqFilter req.GetAll) ([]entity.Invoice, error)
-	Create(ctx context.Context, reqInvoice req.Create) error
+	CreateDataInvoice(param ParamCreateDataInvoice) (*entity.Invoice, *reqHP.Create, error)
+	CreateCommitDB(param ParamCreateCommitDB) error
+	GetAll(param ParamGetAll) ([]entity.Invoice, error)
 }
 
 type invoiceUsecase struct {
-	repo       invoice.InvoiceRepo
-	repoAkun   akuntansi.AkunRepo
-	repoUser   user.UserRepo
-	repoBordir bordir.BordirRepo
-	repoSablon sablon.SablonRepo
-	repoProduk produk.ProdukRepo
+	repo       repo.InvoiceRepo
+	repoAkun   akunRepo.AkunRepo
+	repoUser   userRepo.UserRepo
+	repoKontak kontakRepo.KontakRepo
 	ulid       pkg.UlidPkg
 }
 
 func NewInvoiceUsecase(
-	repo invoice.InvoiceRepo,
-	repoAkun akuntansi.AkunRepo,
-	repoUser user.UserRepo,
-	repoBordir bordir.BordirRepo,
-	repoSablon sablon.SablonRepo,
-	repoProduk produk.ProdukRepo,
+	repo repo.InvoiceRepo,
+	repoAkun akunRepo.AkunRepo,
+	repoUser userRepo.UserRepo,
+	repoKontak kontakRepo.KontakRepo,
 	ulid pkg.UlidPkg,
 ) InvoiceUsecase {
-	return &invoiceUsecase{repo, repoAkun, repoUser, repoBordir, repoSablon, repoProduk, ulid}
+	return &invoiceUsecase{repo, repoAkun, repoUser, repoKontak, ulid}
 }
-
-// var invPool = sync.Pool{
-// 	New: func() any {
-// 		return &entity.Invoice{}
-// 	},
-// }
 
 func convertRefNum2Uint(refNum string) (uint64, error) {
 	var refNumUint uint64
@@ -71,7 +75,7 @@ func convertRefNum2Uint(refNum string) (uint64, error) {
 	return refNumUint, nil
 }
 
-func createRefNumber(repo invoice.InvoiceRepo, ctx context.Context) (string, error) {
+func createRefNumber(repo repo.InvoiceRepo, ctx context.Context) (string, error) {
 	data, err := repo.GetLastInvoiceCrrYear(ctx)
 	if err != nil && err.Error() == "record not found" {
 		return fmt.Sprintf("%04d", 1), nil
@@ -89,40 +93,26 @@ func createRefNumber(repo invoice.InvoiceRepo, ctx context.Context) (string, err
 	return fmt.Sprintf("%04d", nextID), nil
 }
 
-func handleErr(err error, errMsg string) error {
+func (u *invoiceUsecase) CreateDataInvoice(param ParamCreateDataInvoice) (*entity.Invoice, *reqHP.Create, error) {
+	tanggalDeadline, err := time.Parse(time.RFC3339, param.Req.TanggalDeadline)
 	if err != nil {
 		helper.LogsError(err)
-		if err.Error() == "record not found" {
-			return errors.New(errMsg)
-		}
-		return err
+		return nil, nil, err
 	}
-	return nil
-}
-
-func (u *invoiceUsecase) Create(ctx context.Context, reqInvoice req.Create) error {
-	tanggalDeadline, err := time.Parse(time.RFC3339, reqInvoice.TanggalDeadline)
+	tanggalKirim, err := time.Parse(time.RFC3339, param.Req.TanggalKirim)
 	if err != nil {
 		helper.LogsError(err)
-		return err
-	}
-	tanggalKirim, err := time.Parse(time.RFC3339, reqInvoice.TanggalKirim)
-	if err != nil {
-		helper.LogsError(err)
-		return err
+		return nil, nil, err
 	}
 
-	lengthDetail := len(reqInvoice.DetailInvoice)
-	detailInvoices := make([]entity.DetailInvoice, lengthDetail)
+	lengthDetail := len(param.Req.DetailInvoice)
 
-	var paramRepo invoice.CreateParam
+	var dataInvoice *entity.Invoice
+
 	invoiceID := u.ulid.MakeUlid().String()
 
-	if _, err := u.repoUser.GetById(ctx, reqInvoice.UserID); err != nil {
-		return handleErr(err, message.UserNotFound)
-	}
-
-	for i, v := range reqInvoice.DetailInvoice {
+	detailInvoices := make([]entity.DetailInvoice, lengthDetail)
+	for i, v := range param.Req.DetailInvoice {
 		detailInvoices[i] = entity.DetailInvoice{
 			Base: entity.Base{
 				ID: u.ulid.MakeUlid().String(),
@@ -137,169 +127,154 @@ func (u *invoiceUsecase) Create(ctx context.Context, reqInvoice req.Create) erro
 		}
 	}
 
-	paramRepo.DetailInvoice = detailInvoices
-
-	ref, err := createRefNumber(u.repo, ctx)
+	ref, err := createRefNumber(u.repo, param.Ctx)
 	if err != nil {
-		return err
-	}
-
-	// setup entity invoice
-	statusBayar := "BELUM_LUNAS"
-	sisaTagihan := reqInvoice.Bayar - reqInvoice.TotalHarga
-	sisaTagihanABS := math.Abs(sisaTagihan)
-	if sisaTagihan >= 0 {
-		statusBayar = "LUNAS"
-	}
-
-	// case in akuntansi
-	// create kontak
-	var kontakID string
-	if reqInvoice.KontakID != "" {
-		kontakID = reqInvoice.KontakID
-	} else {
-		kontakID = u.ulid.MakeUlid().String()
-		paramRepo.Kontak = &entity.Kontak{
-			Base: entity.Base{
-				ID: kontakID,
-			},
-			Nama:       reqInvoice.NewKontak.Nama,
-			NoTelp:     reqInvoice.NewKontak.NoTelp,
-			Alamat:     reqInvoice.NewKontak.Alamat,
-			Keterangan: reqInvoice.Keterangan,
-			Email:      reqInvoice.NewKontak.Email,
-		}
-	}
-
-	// create transaksi
-	var transaksi_id = u.ulid.MakeUlid().String()
-
-	// currentDate := time.Now()
-	paramRepo.Transaksi = &entity.Transaksi{
-		Base: entity.Base{
-			ID: transaksi_id,
-		},
-		Tanggal:         time.Now(),
-		KontakID:        kontakID,
-		Total:           reqInvoice.TotalHarga,
-		Keterangan:      reqInvoice.Keterangan,
-		BuktiPembayaran: reqInvoice.BuktiPembayaran,
+		return nil, nil, err
 	}
 
 	// ayat jurnals
-	akunPembayaran, err := u.repoAkun.GetById(ctx, reqInvoice.AkunID)
+	akunPembayaran, err := u.repoAkun.GetById(param.Ctx, param.Req.Bayar.AkunBayarID)
 	if err != nil {
-		return errors.New(message.AkunNotFound)
-	} else {
-		// check akun is ASET LANCAR
-		if akunPembayaran.Kode[0:2] != "11" {
-			return errors.New(message.AkunNotFound)
-		}
+		return nil, nil, errors.New(message.AkunNotFound)
 	}
-	akuns, err := u.repoAkun.GetAkunByNames(ctx, []string{"piutang usaha", "pendapatan jasa"})
+
+	akuns, err := u.repoAkun.GetAkunByNames(param.Ctx, []string{"piutang usaha", "pendapatan jasa"})
 	if err != nil {
-		return err
+		return nil, nil, err
 	}
+
+	tanggalTr := time.Now().Format(time.RFC3339)
+
+	reqHpUC := reqHP.Create{
+		KontakID:   param.Req.KontakID,
+		InvoiceID:  invoiceID,
+		Jenis:      "PIUTANG",
+		Keterangan: param.Req.Keterangan,
+		Transaksi: reqHP.ReqTransaksi{
+			Tanggal:         tanggalTr,
+			BuktiPembayaran: param.Req.Bayar.BuktiPembayaran,
+			AyatJurnal:      make([]reqHP.ReqAyatJurnal, 0, 2),
+		},
+		BayarAwal: make([]reqHP.ReqBayar, 0, 1),
+	}
+
 	akuns = append(akuns, akunPembayaran)
 
-	ayatJurnals := make([]entity.AyatJurnal, len(akuns))
+	for _, akun := range akuns {
 
-	for i, akun := range akuns {
-		ayatJurnal := entity.AyatJurnal{
-			Base: entity.Base{
-				ID: u.ulid.MakeUlid().String(),
-			},
-			AkunID: akun.ID,
-		}
-
-		if akun.ID == reqInvoice.AkunID {
-			if statusBayar == "LUNAS" {
-				ayatJurnal.Debit, ayatJurnal.Saldo = reqInvoice.Bayar, reqInvoice.Bayar
-			} else {
-				ayatJurnal.Debit, ayatJurnal.Saldo = reqInvoice.Bayar, reqInvoice.Bayar
+		if akun.ID == param.Req.Bayar.AkunBayarID {
+			reqHpUC.BayarAwal = append(reqHpUC.BayarAwal, reqHP.ReqBayar{
+				Tanggal:         tanggalTr,
+				BuktiPembayaran: param.Req.Bayar.BuktiPembayaran,
+				Keterangan:      param.Req.Bayar.Keterangan,
+				AkunBayarID:     param.Req.Bayar.AkunBayarID,
+				Total:           param.Req.Bayar.Total,
+			})
+		} else {
+			ayatJurnal := reqHP.ReqAyatJurnal{
+				AkunID: akun.ID,
 			}
-		}
-
-		switch akun.Nama {
-		case "pendapatan jasa":
-			ayatJurnal.Kredit, ayatJurnal.Saldo = reqInvoice.TotalHarga, reqInvoice.TotalHarga
-		case "piutang usaha":
-			if statusBayar == "BELUM_LUNAS" {
-				ayatJurnal.Debit, ayatJurnal.Saldo = sisaTagihanABS, sisaTagihanABS
+			switch akun.Nama {
+			case "pendapatan jasa":
+				ayatJurnal.Kredit = param.Req.TotalHarga
+			case "piutang usaha":
+				ayatJurnal.Debit = param.Req.TotalHarga
 			}
+			reqHpUC.Transaksi.AyatJurnal = append(reqHpUC.Transaksi.AyatJurnal, ayatJurnal)
 		}
 
-		if ayatJurnal.Saldo != 0 {
-			ayatJurnals[i] = ayatJurnal
-		}
 	}
 
-	paramRepo.Transaksi.AyatJurnals = ayatJurnals
-
 	// end ayat jurnals
-
-	paramRepo.Invoice = &entity.Invoice{
+	dataInvoice = &entity.Invoice{
 		Base: entity.Base{
 			ID: invoiceID,
 		},
-		TotalQty:        reqInvoice.TotalQty,
-		TotalHarga:      reqInvoice.TotalHarga,
-		StatusProduksi:  reqInvoice.StatusProduksi,
-		BuktiPembayaran: reqInvoice.BuktiPembayaran,
-		UserID:          reqInvoice.UserID,
-		Keterangan:      reqInvoice.Keterangan,
+		KontakID:        param.Req.KontakID,
+		TotalQty:        param.Req.TotalQty,
+		TotalHarga:      param.Req.TotalHarga,
+		StatusProduksi:  param.Req.StatusProduksi,
+		UserID:          param.Req.UserID,
+		Keterangan:      param.Req.Keterangan,
 		TanggalDeadline: &tanggalDeadline,
 		TanggalKirim:    &tanggalKirim,
 		NomorReferensi:  ref,
-		StatusBayar:     statusBayar,
-		SisaTagihan:     sisaTagihanABS,
+		DetailInvoices:  detailInvoices,
 	}
 
-	if err := u.repo.Create(ctx, paramRepo); err != nil {
-		return err
-	}
-	return nil
+	return dataInvoice, &reqHpUC, nil
 }
 
-func (u *invoiceUsecase) GetAll(ctx context.Context, reqFilter req.GetAll) ([]entity.Invoice, error) {
+func (u *invoiceUsecase) CreateCommitDB(param ParamCreateCommitDB) error {
+	_, err := u.repoUser.GetById(userRepo.ParamGetById{
+		Ctx: param.Ctx,
+		ID:  param.Invoice.UserID,
+	})
+	if err != nil {
+		if err.Error() == "record not found" {
+			return errors.New(message.UserNotFound)
+		}
+		return err
+	}
+
+	if param.Invoice.KontakID != "" {
+		_, err := u.repoKontak.GetById(kontakRepo.ParamGetById{
+			Ctx: param.Ctx,
+			ID:  param.Invoice.KontakID,
+		})
+		if err != nil {
+			if err.Error() == "record not found" {
+				return errors.New(message.KontakNotFound)
+			}
+			return err
+		}
+	}
+	// param.Kontak
+
+	return u.repo.Create(repo.CreateParam(param))
+}
+
+func (u *invoiceUsecase) GetAll(param ParamGetAll) ([]entity.Invoice, error) {
 	var tglDeadline, tglKirim time.Time
 	var err error
-	if reqFilter.TanggalDeadline != "" {
-		tglDeadline, err = time.Parse(time.RFC3339, reqFilter.TanggalDeadline)
+	if param.Req.TanggalDeadline != "" {
+		tglDeadline, err = time.Parse(time.RFC3339, param.Req.TanggalDeadline)
 		if err != nil {
 			return nil, err
 		}
 	}
-	if reqFilter.TanggalKirim != "" {
-		tglKirim, err = time.Parse(time.RFC3339, reqFilter.TanggalKirim)
+	if param.Req.TanggalKirim != "" {
+		tglKirim, err = time.Parse(time.RFC3339, param.Req.TanggalKirim)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	filter := invoice.SearchFilter{
-		StatusProduksi:  reqFilter.StatusProduksi,
+	paramRepo := repo.ParamGetAll{
+		Ctx:             param.Ctx,
+		StatusProduksi:  param.Req.StatusProduksi,
 		TanggalDeadline: tglDeadline,
 		TanggalKirim:    tglKirim,
-		Kepada:          reqFilter.Kepada,
-		Limit:           reqFilter.Limit,
-		Next:            reqFilter.Next,
+		KontakID:        param.Req.KontakID,
+		Limit:           param.Req.Limit,
+		Next:            param.Req.Next,
+		Order:           param.Req.OrderBy,
 	}
 
-	if reqFilter.SortBy != "" {
-		filter.Order += strings.ToLower(reqFilter.SortBy)
-		if reqFilter.OrderBy != "" {
-			filter.Order += " " + reqFilter.OrderBy
+	if param.Req.SortBy != "" {
+		paramRepo.Order += strings.ToLower(param.Req.SortBy)
+		if param.Req.OrderBy != "" {
+			paramRepo.Order += " " + param.Req.OrderBy
 		} else {
-			filter.Order += " ASC"
+			paramRepo.Order += " ASC"
 		}
 	}
 
-	if reqFilter.Limit <= 0 {
-		filter.Limit = 10
+	if param.Req.Limit <= 0 {
+		paramRepo.Limit = 10
 	}
 
-	invoices, err := u.repo.GetAll(ctx, filter)
+	invoices, err := u.repo.GetAll(paramRepo)
 	if err != nil {
 		return nil, err
 	}

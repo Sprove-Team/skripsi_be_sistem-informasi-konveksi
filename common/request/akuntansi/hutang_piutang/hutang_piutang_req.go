@@ -18,7 +18,8 @@ type ReqTransaksi struct {
 
 type ReqBayar struct {
 	Tanggal         string                 `json:"tanggal" validate:"required,datetime=2006-01-02T15:04:05Z07:00"`
-	BuktiPembayaran entity.BuktiPembayaran `json:"bukti_pembayaran" validate:"omitempty,dive,url"`
+	BuktiPembayaran entity.BuktiPembayaran `json:"bukti_pembayaran" validate:"required,dive,url"`
+	Keterangan      string                 `json:"keterangan" validate:"required"`
 	AkunBayarID     string                 `json:"akun_bayar_id" validate:"required,ulid"`
 	Total           float64                `json:"total" validate:"required,number,gt=0"`
 }
