@@ -2,12 +2,12 @@ package akuntansi
 
 type (
 	DataAyatJurnalJU struct {
-		AyatJurnalID string  `json:"ayat_jurnal_id"`
-		AkunID       string  `json:"akun_id"`
-		KodeAkun     string  `json:"kode_akun"`
-		NamaAkun     string  `json:"nama_akun"`
-		Debit        float64 `json:"debit"`
-		Kredit       float64 `json:"kredit"`
+		ID       string  `json:"id"`
+		AkunID   string  `json:"akun_id"`
+		KodeAkun string  `json:"kode_akun"`
+		NamaAkun string  `json:"nama_akun"`
+		Debit    float64 `json:"debit"`
+		Kredit   float64 `json:"kredit"`
 	}
 	DataTransaksiJU struct {
 		Tanggal     string             `json:"tanggal"`
@@ -39,7 +39,7 @@ type (
 		TotalSaldo  float64            `json:"total_saldo"`
 		TotalDebit  float64            `json:"total_debit"`
 		TotalKredit float64            `json:"total_kredit"`
-		AyatJurnals []DataAyatJurnalBB `json:"ayat_jurnal"`
+		AyatJurnal  []DataAyatJurnalBB `json:"ayat_jurnal"`
 	}
 )
 

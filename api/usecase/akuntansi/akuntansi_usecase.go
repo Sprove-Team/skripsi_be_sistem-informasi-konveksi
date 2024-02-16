@@ -68,12 +68,12 @@ func (u *akuntansiUsecase) GetAllJU(ctx context.Context, reqGetAllJU req.GetAllJ
 	for _, v := range dataJU {
 		dataTr, exist := dataTransaksisMap[v.TransaksiID]
 		ayatJurnalJU := res.DataAyatJurnalJU{
-			AyatJurnalID: v.AyatJurnalID,
-			AkunID:       v.AkunID,
-			KodeAkun:     v.KodeAkun,
-			NamaAkun:     v.NamaAkun,
-			Debit:        v.Debit,
-			Kredit:       v.Kredit,
+			ID:       v.AyatJurnalID,
+			AkunID:   v.AkunID,
+			KodeAkun: v.KodeAkun,
+			NamaAkun: v.NamaAkun,
+			Debit:    v.Debit,
+			Kredit:   v.Kredit,
 		}
 		if !exist {
 			dataTr = res.DataTransaksiJU{
@@ -157,7 +157,7 @@ func (u *akuntansiUsecase) GetAllBB(ctx context.Context, reqGetAllBB req.GetAllB
 			}
 		}
 		dataAkun.TotalSaldo += v.Saldo
-		dataAkun.AyatJurnals = append(dataAkun.AyatJurnals, ayatSaldoAwal)
+		dataAkun.AyatJurnal = append(dataAkun.AyatJurnal, ayatSaldoAwal)
 		akunDataMap[v.AkunID] = dataAkun
 	}
 
@@ -185,7 +185,7 @@ func (u *akuntansiUsecase) GetAllBB(ctx context.Context, reqGetAllBB req.GetAllB
 		dataAkun.TotalSaldo += ay.Saldo
 		ayatJurnal.Saldo = dataAkun.TotalSaldo
 
-		dataAkun.AyatJurnals = append(dataAkun.AyatJurnals, ayatJurnal)
+		dataAkun.AyatJurnal = append(dataAkun.AyatJurnal, ayatJurnal)
 
 		akunDataMap[ay.AkunID] = dataAkun
 
