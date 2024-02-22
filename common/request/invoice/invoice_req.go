@@ -19,16 +19,16 @@ type ReqNewKontak struct {
 }
 
 type ReqBayar struct {
-	BuktiPembayaran entity.BuktiPembayaran `json:"bukti_pembayaran" validate:"omitempty,dive,url"`
+	BuktiPembayaran entity.BuktiPembayaran `json:"bukti_pembayaran" validate:"required,dive,url"`
 	Keterangan      string                 `json:"keterangan" validate:"required"`
-	AkunBayarID     string                 `json:"akun_bayar_id" validate:"required,ulid"`
+	AkunID          string                 `json:"akun_id" validate:"required,ulid"`
 	Total           float64                `json:"total" validate:"required,number,gt=0"`
 }
 
 type Create struct {
 	UserID          string             `json:"user_id" validate:"required,ulid"`
 	StatusProduksi  string             `json:"status_produksi" validate:"omitempty,oneof=BELUM_DIKERJAKAN DIPROSES SELESAI"`
-	KontakID        string             `json:"kontak_id" validate:"required_without=NewKontak"`
+	KontakID        string             `json:"kontak_id" validate:"required_without=NewKontak,excluded_with=NewKontak"`
 	NewKontak       ReqNewKontak       `json:"new_kontak" validate:"omitempty"`
 	Bayar           ReqBayar           `json:"bayar" validate:"required"`
 	TotalHarga      float64            `json:"total_harga" validate:"required,number"`
@@ -37,6 +37,18 @@ type Create struct {
 	TanggalKirim    string             `json:"tanggal_kirim" validate:"required,datetime=2006-01-02T15:04:05Z07:00"`
 	Keterangan      string             `json:"keterangan" validate:"required"`
 	DetailInvoice   []ReqDetailInvoice `json:"detail_invoice" validate:"gt=0,dive,required"`
+}
+
+type Update struct {
+	ID              string             `params:"id" validate:"required"`
+	StatusProduksi  string             `json:"status_produksi" validate:"omitempty,oneof=BELUM_DIKERJAKAN DIPROSES SELESAI"`
+	KontakID        string             `json:"kontak_id" validate:"omitempty"`
+	TotalHarga      float64            `json:"total_harga" validate:"required_with=DetailInvoice,number"`
+	TotalQty        int                `json:"total_qty" validate:"required_with=DetailInvoice,number,min=1"`
+	TanggalDeadline string             `json:"tanggal_deadline" validate:"omitempty,datetime=2006-01-02T15:04:05Z07:00"`
+	TanggalKirim    string             `json:"tanggal_kirim" validate:"omitempty,datetime=2006-01-02T15:04:05Z07:00"`
+	Keterangan      string             `json:"keterangan" validate:"omitempty"`
+	DetailInvoice   []ReqDetailInvoice `json:"detail_invoice" validate:"gt=0,dive,omitempty"`
 }
 
 type GetAll struct {

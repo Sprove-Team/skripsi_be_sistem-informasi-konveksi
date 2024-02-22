@@ -7,7 +7,10 @@ import (
 	repoHP "github.com/be-sistem-informasi-konveksi/api/repository/akuntansi/mysql/gorm/hutang_piutang"
 	repoKelompokAkun "github.com/be-sistem-informasi-konveksi/api/repository/akuntansi/mysql/gorm/kelompok_akun"
 	repoKontak "github.com/be-sistem-informasi-konveksi/api/repository/akuntansi/mysql/gorm/kontak"
+	repoBordir "github.com/be-sistem-informasi-konveksi/api/repository/bordir/mysql/gorm"
 	repo "github.com/be-sistem-informasi-konveksi/api/repository/invoice/mysql/gorm"
+	repoProduk "github.com/be-sistem-informasi-konveksi/api/repository/produk/mysql/gorm"
+	repoSablon "github.com/be-sistem-informasi-konveksi/api/repository/sablon/mysql/gorm"
 	repoUser "github.com/be-sistem-informasi-konveksi/api/repository/user/mysql/gorm"
 	ucAkun "github.com/be-sistem-informasi-konveksi/api/usecase/akuntansi/akun"
 	ucHP "github.com/be-sistem-informasi-konveksi/api/usecase/akuntansi/hutang_piutang"
@@ -47,9 +50,12 @@ func NewInvoiceHandlerInit(DB *gorm.DB, validator pkg.Validator, ulid pkg.UlidPk
 	kontakRepo := repoKontak.NewKontakRepo(DB)
 	hpRepo := repoHP.NewHutangPiutangRepo(DB)
 	bayarRepo := repoBayarHP.NewDataBayarHutangPiutangRepo(DB)
+	produkRepo := repoProduk.NewProdukRepo(DB)
+	bordirRepo := repoBordir.NewBordirRepo(DB)
+	sablonRepo := repoSablon.NewSablonRepo(DB)
 
 	uc := ucInvoiceInit{
-		uc:       uc.NewInvoiceUsecase(repo, akunRepo, userRepo, kontakRepo, ulid),
+		uc:       uc.NewInvoiceUsecase(repo, akunRepo, kontakRepo, produkRepo, bordirRepo, sablonRepo, ulid),
 		ucAkun:   ucAkun.NewAkunUsecase(akunRepo, ulid, kelompokAkunRepo),
 		ucUser:   ucUser.NewUserUsecase(userRepo, ulid, encryptor),
 		ucKontak: ucKontak.NewKontakUsecase(kontakRepo, ulid),

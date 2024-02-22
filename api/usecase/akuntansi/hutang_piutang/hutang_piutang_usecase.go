@@ -74,7 +74,8 @@ func (u *hutangPiutangUsecase) CreateDataHP(param ParamCreateDataHp) (*entity.Hu
 	}
 
 	lengthAyByr := len(param.Req.BayarAwal)
-	akunIds := make([]string, 2+lengthAyByr)
+	lengthAkuns := 2 + lengthAyByr
+	akunIds := make([]string, lengthAkuns)
 	akunIds[0] = ayHP1.AkunID
 	akunIds[1] = ayHP2.AkunID
 
@@ -84,10 +85,11 @@ func (u *hutangPiutangUsecase) CreateDataHP(param ParamCreateDataHp) (*entity.Hu
 
 	akuns, err := u.repoAkun.GetByIds(param.Ctx, akunIds)
 	if err != nil {
-		if len(akuns) != 3 {
-			return nil, errors.New(message.AkunNotFound)
-		}
 		return nil, err
+	}
+
+	if len(akuns) != lengthAkuns {
+		return nil, errors.New(message.AkunNotFound)
 	}
 
 	akunMap := map[string]entity.Akun{}

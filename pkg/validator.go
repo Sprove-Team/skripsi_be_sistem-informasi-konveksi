@@ -187,7 +187,6 @@ var strPool = sync.Pool{
 }
 
 func (x *xValidator) Validate(d interface{}) *response.BaseFormatError {
-	// validatorErrors := map[string][]string{} // Use a map for validation errors
 
 	errs := x.validator.Struct(d)
 
@@ -206,5 +205,5 @@ func (x *xValidator) Validate(d interface{}) *response.BaseFormatError {
 
 	}
 
-	return nil // No validation errors
+	return nil
 }

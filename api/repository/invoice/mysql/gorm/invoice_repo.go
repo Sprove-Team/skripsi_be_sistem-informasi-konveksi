@@ -12,7 +12,7 @@ import (
 )
 
 type (
-	CreateParam struct {
+	ParamCreate struct {
 		Ctx     context.Context
 		Invoice *entity.Invoice
 	}
@@ -26,11 +26,22 @@ type (
 		Next            string
 		Limit           int
 	}
+	ParamGetById struct {
+		Ctx context.Context
+		ID  string
+	}
+	ParamSave struct {
+		Ctx     context.Context
+		Invoice *entity.Invoice
+	}
 )
 
 type InvoiceRepo interface {
-	Create(param CreateParam) error
+	Create(param ParamCreate) error
+	Save(param ParamSave) error
 	GetLastInvoiceCrrYear(ctx context.Context) (entity.Invoice, error)
+	GetById(param ParamGetById) (*entity.Invoice, error)
+	GetByIdFullAssoc(param ParamGetById) (*entity.Invoice, error)
 	GetAll(param ParamGetAll) ([]entity.Invoice, error)
 }
 
@@ -42,8 +53,17 @@ func NewInvoiceRepo(DB *gorm.DB) InvoiceRepo {
 	return &invoiceRepo{DB}
 }
 
-func (r *invoiceRepo) Create(param CreateParam) error {
+func (r *invoiceRepo) Create(param ParamCreate) error {
 	err := r.DB.WithContext(param.Ctx).Create(param.Invoice).Error
+	if err != nil {
+		helper.LogsError(err)
+		return err
+	}
+	return nil
+}
+
+func (r *invoiceRepo) Save(param ParamSave) error {
+	err := r.DB.WithContext(param.Ctx).Save(param.Invoice).Error
 	if err != nil {
 		helper.LogsError(err)
 		return err
@@ -60,6 +80,39 @@ func (r *invoiceRepo) GetLastInvoiceCrrYear(ctx context.Context) (entity.Invoice
 		return *invoice, err
 	}
 	return *invoice, err
+}
+
+func (r *invoiceRepo) GetById(param ParamGetById) (*entity.Invoice, error) {
+	data := new(entity.Invoice)
+	tx := r.DB.WithContext(param.Ctx).
+		Preload("DataBayarInvoice").
+		Preload("Kontak").
+		Preload("User").
+		First(data, "id = ?", param.ID)
+
+	if err := tx.Error; err != nil {
+		helper.LogsError(err)
+		return nil, err
+	}
+	return data, nil
+}
+
+func (r *invoiceRepo) GetByIdFullAssoc(param ParamGetById) (*entity.Invoice, error) {
+	data := new(entity.Invoice)
+	tx := r.DB.WithContext(param.Ctx).
+		Preload("HutangPiutang").
+		Preload("DataBayarInvoice").
+		Preload("DataBayarInvoice.Akun").
+		Preload("HutangPiutang.Transaksi").
+		Preload("Kontak").
+		Preload("User").
+		First(data, "id = ?", param.ID)
+
+	if err := tx.Error; err != nil {
+		helper.LogsError(err)
+		return nil, err
+	}
+	return data, nil
 }
 
 func (r *invoiceRepo) GetAll(param ParamGetAll) ([]entity.Invoice, error) {

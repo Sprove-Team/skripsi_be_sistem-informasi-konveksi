@@ -70,7 +70,7 @@ func (dbgc *DBGorm) InitDBGorm(ulid pkg.UlidPkg) *gorm.DB {
 		return nil
 	})
 
-	// bordir
+	// bordir & sablon
 	g.Go(func() error {
 		autoMigrateEntities(db, &entity.Bordir{}, &entity.Sablon{})
 		return nil
@@ -82,17 +82,13 @@ func (dbgc *DBGorm) InitDBGorm(ulid pkg.UlidPkg) *gorm.DB {
 		return nil
 	})
 
-	// g.Go(func() error {
-	// 	autoMigrateEntities(db, &entity.KelompokAkun{}, &entity.Akun{}, &entity.Kontak{}, &entity.Transaksi{}, &entity.AyatJurnal{})
-	// 	return nil
-	// })
-
-	// invoice & akuntansi
-	//  &entity.StatusProduksi{},
+	//  akuntansi & invoice
 	g.Go(func() error {
+		// akuntansi
 		autoMigrateEntities(db, &entity.KelompokAkun{}, &entity.Akun{}, &entity.Transaksi{}, &entity.AyatJurnal{})
 		autoMigrateEntities(db, &entity.Kontak{}, &entity.HutangPiutang{}, &entity.DataBayarHutangPiutang{})
-		autoMigrateEntities(db, &entity.Invoice{}, &entity.DetailInvoice{})
+		// invoice
+		autoMigrateEntities(db, &entity.Invoice{}, &entity.DetailInvoice{}, &entity.DataBayarInvoice{})
 		return nil
 	})
 
@@ -127,8 +123,11 @@ func (dbgc *DBGorm) InitDBGorm(ulid pkg.UlidPkg) *gorm.DB {
 
 func autoMigrateEntities(db *gorm.DB, entities ...interface{}) {
 	for _, entity := range entities {
-		// if !db.Migrator().HasTable(entity) {
-		// }
+		if os.Getenv("ENVIRONMENT") == "PRODUCTION" {
+			if db.Migrator().HasTable(entity) {
+				continue
+			}
+		}
 		if err := db.AutoMigrate(entity); err != nil {
 			panic(err)
 		}

@@ -2,6 +2,7 @@ package akuntansi
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/be-sistem-informasi-konveksi/entity"
 	"github.com/be-sistem-informasi-konveksi/helper"
@@ -39,6 +40,7 @@ func NewAkunRepo(DB *gorm.DB) AkunRepo {
 }
 
 func (r *akunRepo) GetById(ctx context.Context, id string) (entity.Akun, error) {
+	fmt.Println("Repo id ->", id)
 	data := entity.Akun{}
 	err := r.DB.WithContext(ctx).Omit("created_at", "updated_at", "deleted_at").Preload("KelompokAkun", func(db *gorm.DB) *gorm.DB {
 		return db.Select("id", "nama", "kode")

@@ -80,3 +80,9 @@ var (
 	BayarMustLessThanSisaTagihan = "jumlah yang dibayar harus kurang atau sama dengan sisa tagihan"
 	InvalidAkunBayar             = "akun untuk bayar hutang piutang tidak valid"
 )
+
+var (
+	TotalBayarMustGeOrEqToTotalByr     = "total bayar invoice harus lebih besar atau sama dengan total yang telah di bayar"
+	BayarMustLessThanTotalHargaInvoice = "jumlah yang dibayar harus kurang atau sama dengan total harga invoice"
+	InvoiceNotFound                    = "invoice tidak ditemukan"
+)

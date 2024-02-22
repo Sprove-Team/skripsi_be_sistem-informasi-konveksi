@@ -14,6 +14,7 @@ type ProdukRepo interface {
 	Delete(ctx context.Context, id string) error
 	Update(ctx context.Context, produk *entity.Produk) error
 	GetById(ctx context.Context, id string) (entity.Produk, error)
+	GetByIds(ctx context.Context, ids []string) ([]entity.Produk, error)
 	GetAll(ctx context.Context, param SearchProduk) ([]entity.Produk, error)
 }
 
@@ -43,6 +44,16 @@ func (r *produkRepo) GetById(ctx context.Context, id string) (entity.Produk, err
 		return db.Order("qty ASC")
 	}).First(&data).Error
 	return data, err
+}
+
+func (r *produkRepo) GetByIds(ctx context.Context, ids []string) ([]entity.Produk, error) {
+	datas := make([]entity.Produk, 0, len(ids))
+	err := r.DB.WithContext(ctx).Where("id IN (?)", ids).Find(&datas).Error
+	if err != nil {
+		helper.LogsError(err)
+		return nil, err
+	}
+	return datas, nil
 }
 
 type SearchProduk struct {

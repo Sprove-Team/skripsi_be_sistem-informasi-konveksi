@@ -28,9 +28,11 @@ func NewHutangPiutangHandler(uc usecase.HutangPiutangUsecase, validator pkg.Vali
 }
 
 func (h *hutangPiutangHandler) Create(c *fiber.Ctx) error {
+
 	req := new(req.Create)
 
 	c.BodyParser(req)
+	// fmt.Println("ket -> ", req.Keterangan)
 
 	errValidate := h.validator.Validate(req)
 	if errValidate != nil {

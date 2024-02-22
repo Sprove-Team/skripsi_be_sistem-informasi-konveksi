@@ -12,6 +12,7 @@ import (
 type BordirRepo interface {
 	GetAll(ctx context.Context, param SearchBordir) ([]entity.Bordir, error)
 	GetById(ctx context.Context, id string) (entity.Bordir, error)
+	GetByIds(ctx context.Context, ids []string) ([]entity.Bordir, error)
 	Create(ctx context.Context, bordir *entity.Bordir) error
 	Update(ctx context.Context, bordir *entity.Bordir) error
 	Delete(ctx context.Context, id string) error
@@ -45,6 +46,15 @@ func (r *bordirRepo) GetById(ctx context.Context, id string) (entity.Bordir, err
 		return entity.Bordir{}, err
 	}
 	return data, err
+}
+
+func (r *bordirRepo) GetByIds(ctx context.Context, ids []string) ([]entity.Bordir, error) {
+	datas := make([]entity.Bordir, 0, len(ids))
+	err := r.DB.WithContext(ctx).Where("id IN (?)", ids).Find(&datas).Error
+	if err != nil {
+		return nil, err
+	}
+	return datas, nil
 }
 
 type SearchBordir struct {

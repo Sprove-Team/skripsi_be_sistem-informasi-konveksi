@@ -14,6 +14,7 @@ type SablonRepo interface {
 	Delete(ctx context.Context, id string) error
 	Update(ctx context.Context, sablon *entity.Sablon) error
 	GetById(ctx context.Context, id string) (entity.Sablon, error)
+	GetByIds(ctx context.Context, ids []string) ([]entity.Sablon, error)
 	GetAll(ctx context.Context, param SearchSablon) ([]entity.Sablon, error)
 }
 
@@ -60,6 +61,15 @@ func (r *sablonRepo) GetById(ctx context.Context, id string) (entity.Sablon, err
 		return data, err
 	}
 	return data, nil
+}
+
+func (r *sablonRepo) GetByIds(ctx context.Context, ids []string) ([]entity.Sablon, error) {
+	datas := make([]entity.Sablon, 0, len(ids))
+	err := r.DB.WithContext(ctx).Where("id IN (?)", ids).Find(&datas).Error
+	if err != nil {
+		return nil, err
+	}
+	return datas, nil
 }
 
 type SearchSablon struct {

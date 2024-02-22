@@ -2,6 +2,7 @@ package invoice
 
 import (
 	"context"
+	"fmt"
 
 	ucHutangPiutang "github.com/be-sistem-informasi-konveksi/api/usecase/akuntansi/hutang_piutang"
 	ucKontak "github.com/be-sistem-informasi-konveksi/api/usecase/akuntansi/kontak"
@@ -21,6 +22,7 @@ import (
 type InvoiceHandler interface {
 	GetAll(c *fiber.Ctx) error
 	Create(c *fiber.Ctx) error
+	Update(c *fiber.Ctx) error
 }
 
 type invoiceHandler struct {
@@ -36,13 +38,14 @@ func NewInvoiceHandler(
 	ucUser ucUser.UserUsecase,
 	ucKontak ucKontak.KontakUsecase,
 	ucHutangPiutang ucHutangPiutang.HutangPiutangUsecase,
+	// ucDetailInvoice ucDetailInvoice.DetailInvoiceUsecase,
 	validator pkg.Validator,
 ) InvoiceHandler {
 	return &invoiceHandler{uc, ucUser, ucKontak, ucHutangPiutang, validator}
 }
 
 func errResponse(c *fiber.Ctx, err error) error {
-	// fmt.Println(err)
+	fmt.Println(err)
 	if err == context.DeadlineExceeded {
 		return c.Status(fiber.StatusRequestTimeout).JSON(response.ErrorRes(fiber.ErrRequestTimeout.Code, fiber.ErrRequestTimeout.Message, nil))
 	}
@@ -60,6 +63,10 @@ func errResponse(c *fiber.Ctx, err error) error {
 	switch err.Error() {
 	case message.UserNotFound,
 		message.KontakNotFound,
+		message.SablonNotFound,
+		message.ProdukNotFound,
+		message.BordirNotFound,
+		message.BayarMustLessThanTotalHargaInvoice,
 		message.AkunNotFound:
 		badRequest = append(badRequest, err.Error())
 	}
@@ -125,7 +132,7 @@ func (h *invoiceHandler) Create(c *fiber.Ctx) error {
 			})
 
 			if err != nil {
-				return errResponse(c, err)
+				return err
 			}
 		}
 		return nil
@@ -141,13 +148,13 @@ func (h *invoiceHandler) Create(c *fiber.Ctx) error {
 		})
 
 		if err != nil {
-			return errResponse(c, err)
+			return err
 		}
 		return nil
 	})
 
 	if err := g.Wait(); err != nil {
-		return err
+		return errResponse(c, err)
 	}
 
 	dataHp, err := h.ucHutangPiutang.CreateDataHP(ucHutangPiutang.ParamCreateDataHp{
@@ -168,7 +175,7 @@ func (h *invoiceHandler) Create(c *fiber.Ctx) error {
 		dataInvoice.KontakID = req.KontakID
 	}
 
-	err = h.uc.CreateCommitDB(usecase.ParamCreateCommitDB{
+	err = h.uc.CreateCommitDB(usecase.ParamCommitDB{
 		Ctx:     ctx,
 		Invoice: dataInvoice,
 	})
@@ -179,4 +186,37 @@ func (h *invoiceHandler) Create(c *fiber.Ctx) error {
 
 	// Respond with success status
 	return c.Status(fiber.StatusCreated).JSON(response.SuccessRes(fiber.StatusCreated, message.Created, nil))
+}
+
+func (h *invoiceHandler) Update(c *fiber.Ctx) error {
+	req := new(req.Update)
+
+	c.ParamsParser(req)
+	c.BodyParser(req)
+
+	errValidate := h.validator.Validate(req)
+	if errValidate != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(errValidate)
+	}
+
+	ctx := c.UserContext()
+	dataInvoice, err := h.uc.UpdateDataInvoice(usecase.ParamUpdateDataInvoice{
+		Ctx: ctx,
+		Req: *req,
+	})
+
+	if err != nil {
+		return errResponse(c, err)
+	}
+
+	err = h.uc.SaveCommitDB(usecase.ParamCommitDB{
+		Ctx:     ctx,
+		Invoice: dataInvoice,
+	})
+
+	if err != nil {
+		return errResponse(c, err)
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.SuccessRes(fiber.StatusOK, message.OK, nil))
 }
