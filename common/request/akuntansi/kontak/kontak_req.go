@@ -2,8 +2,8 @@ package akuntansi
 
 type GetAll struct {
 	Nama   string `query:"nama" validate:"omitempty,printascii"`
-	NoTelp string `query:"no_telp" validate:"omitempty,e164"`
-	Email  string `query:"email" validate:"omitempty,email"`
+	NoTelp string `query:"no_telp" validate:"omitempty"`
+	Email  string `query:"email" validate:"omitempty"`
 	Next   string `query:"next" validate:"omitempty,ulid"`
 	Limit  int    `query:"limit" validate:"omitempty,number"`
 }

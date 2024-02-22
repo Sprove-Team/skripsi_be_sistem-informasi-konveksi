@@ -63,6 +63,7 @@ func (ro *akuntansiRoute) Kontak(router fiber.Router) {
 	router.Put("/:id", ro.h.Kontak().Update)
 	router.Get("", ro.h.Kontak().GetAll)
 	router.Get("/:id", ro.h.Kontak().GetById)
+	router.Delete("/:id", ro.h.Kontak().Delete)
 }
 
 func (ro *akuntansiRoute) Akuntansi(router fiber.Router) {
