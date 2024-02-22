@@ -42,7 +42,7 @@ func (r *produkRepo) GetById(ctx context.Context, id string) (entity.Produk, err
 	data := entity.Produk{}
 	err := r.DB.WithContext(ctx).Where("id = ?", id).Preload("HargaDetails", func(db *gorm.DB) *gorm.DB {
 		return db.Order("qty ASC")
-	}).First(&data).Error
+	}).Preload("KategoriProduk").First(&data).Error
 	return data, err
 }
 
@@ -59,7 +59,7 @@ func (r *produkRepo) GetByIds(ctx context.Context, ids []string) ([]entity.Produ
 type SearchProduk struct {
 	Nama             string
 	KategoriProdukId string
-	HasHargaDetail   bool
+	HasHargaDetail   int
 	Next             string
 	Limit            int
 }
@@ -79,17 +79,16 @@ func (r *produkRepo) GetAll(ctx context.Context, param SearchProduk) ([]entity.P
 		tx = tx.Where("kategori_produk_id = ?", param.KategoriProdukId)
 	}
 
-	if param.HasHargaDetail {
-		tx = tx.Preload("HargaDetails", func(db *gorm.DB) *gorm.DB {
-			return db.Order("qty ASC")
-		}).Joins("JOIN harga_detail_produk hd on hd.produk_id = produk.id")
-	} else {
-		tx = tx.Joins("LEFT JOIN harga_detail_produk hd on hd.produk_id = produk.id").Where("hd.id IS NULL")
+	switch param.HasHargaDetail {
+	case 0:
+		tx = tx.Joins("LEFT JOIN harga_detail_produk hd on hd.produk_id = produk.id")
+	case 1:
+		tx = tx.Joins("JOIN harga_detail_produk hd on hd.produk_id = produk.id")
 	}
 
 	tx = tx.Group("produk.id")
 
-	err := tx.Limit(param.Limit).Find(&datas).Error
+	err := tx.Limit(param.Limit).Preload("HargaDetails").Preload("KategoriProduk").Find(&datas).Error
 	if err != nil {
 		helper.LogsError(err)
 		return nil, err

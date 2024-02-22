@@ -1,9 +1,8 @@
 package produk
 
 type Create struct {
-	Nama       string  `json:"nama" validate:"required"`
-	KategoriID string  `json:"kategori_id" validate:"required,ulid"`
-	Harga      float64 `json:"harga" validate:"required,number"`
+	Nama       string `json:"nama" validate:"required"`
+	KategoriID string `json:"kategori_id" validate:"required,ulid"`
 }
 
 type Update struct {

@@ -50,7 +50,6 @@ func (u *produkUsecase) Create(ctx context.Context, produk req.Create) error {
 			ID: id,
 		},
 		Nama:             produk.Nama,
-		Harga:            produk.Harga,
 		KategoriProdukID: produk.KategoriID,
 	}
 
@@ -63,10 +62,22 @@ func (u *produkUsecase) Create(ctx context.Context, produk req.Create) error {
 }
 
 func (u *produkUsecase) GetAll(ctx context.Context, reqProduk req.GetAll) ([]entity.Produk, error) {
-	hasHargaDetail := reqProduk.HargaDetail != "EMPTY"
+
+	var hasHargaDetail int
+
+	switch reqProduk.HargaDetail {
+	case "EMPTY":
+		hasHargaDetail = 0
+	case "NOT_EMPTY":
+		hasHargaDetail = 1
+	default:
+		hasHargaDetail = -1
+	}
+
 	if reqProduk.Limit <= 0 {
 		reqProduk.Limit = 10
 	}
+
 	datas, err := u.repo.GetAll(ctx, repo.SearchProduk{
 		Nama:             reqProduk.Nama,
 		KategoriProdukId: reqProduk.KategoriID,
@@ -74,6 +85,7 @@ func (u *produkUsecase) GetAll(ctx context.Context, reqProduk req.GetAll) ([]ent
 		Next:             reqProduk.Next,
 		Limit:            reqProduk.Limit,
 	})
+
 	if err != nil {
 		return nil, err
 	}
