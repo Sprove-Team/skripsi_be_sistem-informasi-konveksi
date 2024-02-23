@@ -1,7 +1,7 @@
 package produk
 
 type HargaDetail struct {
-	QTY   uint    `json:"qty" validate:"required,number,gt=1"`
+	QTY   uint    `json:"qty" validate:"required,number,gt=0"`
 	Harga float64 `json:"harga" validate:"required,number"`
 }
 
