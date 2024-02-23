@@ -9,6 +9,7 @@ import (
 	"github.com/be-sistem-informasi-konveksi/entity"
 	"github.com/be-sistem-informasi-konveksi/helper"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type (
@@ -30,7 +31,11 @@ type (
 		Ctx context.Context
 		ID  string
 	}
-	ParamSave struct {
+	ParamUpdateFullAssoc struct {
+		Ctx     context.Context
+		Invoice *entity.Invoice
+	}
+	ParamDelete struct {
 		Ctx     context.Context
 		Invoice *entity.Invoice
 	}
@@ -38,11 +43,13 @@ type (
 
 type InvoiceRepo interface {
 	Create(param ParamCreate) error
-	Save(param ParamSave) error
+	UpdateFullAssoc(param ParamUpdateFullAssoc) error
 	GetLastInvoiceCrrYear(ctx context.Context) (entity.Invoice, error)
 	GetById(param ParamGetById) (*entity.Invoice, error)
+	CheckInvoice(param ParamGetById) error
 	GetByIdFullAssoc(param ParamGetById) (*entity.Invoice, error)
 	GetAll(param ParamGetAll) ([]entity.Invoice, error)
+	Delete(param ParamDelete) error
 }
 
 type invoiceRepo struct {
@@ -62,8 +69,9 @@ func (r *invoiceRepo) Create(param ParamCreate) error {
 	return nil
 }
 
-func (r *invoiceRepo) Save(param ParamSave) error {
-	err := r.DB.WithContext(param.Ctx).Save(param.Invoice).Error
+func (r *invoiceRepo) UpdateFullAssoc(param ParamUpdateFullAssoc) error {
+	err := r.DB.WithContext(param.Ctx).Session(&gorm.Session{FullSaveAssociations: true}).Updates(param.Invoice).Error
+	// err := r.DB.WithContext(param.Ctx).Session(&gorm.Session{FullSaveAssociations: true}).Updates(param.Invoice).Error
 	if err != nil {
 		helper.LogsError(err)
 		return err
@@ -80,6 +88,15 @@ func (r *invoiceRepo) GetLastInvoiceCrrYear(ctx context.Context) (entity.Invoice
 		return *invoice, err
 	}
 	return *invoice, err
+}
+
+func (r *invoiceRepo) CheckInvoice(param ParamGetById) error {
+	err := r.DB.WithContext(param.Ctx).First(&entity.Invoice{}, "id = ?", param.ID).Error
+	if err != nil {
+		helper.LogsError(err)
+		return err
+	}
+	return nil
 }
 
 func (r *invoiceRepo) GetById(param ParamGetById) (*entity.Invoice, error) {
@@ -101,9 +118,9 @@ func (r *invoiceRepo) GetByIdFullAssoc(param ParamGetById) (*entity.Invoice, err
 	data := new(entity.Invoice)
 	tx := r.DB.WithContext(param.Ctx).
 		Preload("HutangPiutang").
-		Preload("DataBayarInvoice").
-		Preload("DataBayarInvoice.Akun").
+		Preload("DetailInvoice").
 		Preload("HutangPiutang.Transaksi").
+		Preload("HutangPiutang.Transaksi.AyatJurnals").
 		Preload("Kontak").
 		Preload("User").
 		First(data, "id = ?", param.ID)
@@ -166,4 +183,13 @@ func (r *invoiceRepo) GetAll(param ParamGetAll) ([]entity.Invoice, error) {
 	}
 
 	return invoices, nil
+}
+
+func (r *invoiceRepo) Delete(param ParamDelete) error {
+	err := r.DB.WithContext(param.Ctx).Select(clause.Associations).Delete(param.Invoice).Error
+	if err != nil {
+		helper.LogsError(err)
+		return err
+	}
+	return nil
 }

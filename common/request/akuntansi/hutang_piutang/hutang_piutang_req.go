@@ -35,7 +35,6 @@ type Create struct {
 
 type CreateBayar struct {
 	HutangPiutangID string `params:"hutang_piutang_id" validate:"required,ulid"`
-	Keterangan      string `json:"keterangan" validate:"required"`
 	ReqBayar
 }
 

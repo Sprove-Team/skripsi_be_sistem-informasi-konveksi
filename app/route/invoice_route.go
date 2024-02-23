@@ -24,6 +24,7 @@ func (ro *invoiceRoute) Invoice(router fiber.Router) {
 	router.Get("", ro.h.InvoiceHandler().GetAll)
 	router.Post("", ro.h.InvoiceHandler().Create)
 	router.Put("/:id", ro.h.InvoiceHandler().Update)
+	router.Delete("/:id", ro.h.InvoiceHandler().Delete)
 }
 
 // func (ro *invoiceRoute) StatusProduksi(router fiber.Router) {

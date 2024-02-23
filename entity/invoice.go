@@ -16,6 +16,6 @@ type Invoice struct {
 	HutangPiutang    HutangPiutang      `gorm:"foreignKey:InvoiceID;references:ID;constraint:OnUpdate:CASCADE;OnDelete:CASCADE" json:"-"`
 	Kontak           *Kontak            `json:"kontak"`
 	User             *User              `json:"user_editor"`
-	DetailInvoices   []DetailInvoice    `gorm:"foreignKey:InvoiceID;references:ID;constraint:OnUpdate:CASCADE;OnDelete:CASCADE" json:"detail_invoice,omitempty"`
+	DetailInvoice    []DetailInvoice    `gorm:"foreignKey:InvoiceID;references:ID;constraint:OnUpdate:CASCADE;OnDelete:CASCADE" json:"detail_invoice,omitempty"`
 	DataBayarInvoice []DataBayarInvoice `gorm:"foreignKey:InvoiceID;references:ID;constraint:OnUpdate:CASCADE;OnDelete:CASCADE" json:"data_bayar,omitempty"`
 }

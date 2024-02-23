@@ -11,6 +11,7 @@ import (
 	"github.com/be-sistem-informasi-konveksi/common/message"
 	reqHP "github.com/be-sistem-informasi-konveksi/common/request/akuntansi/hutang_piutang"
 	reqKontak "github.com/be-sistem-informasi-konveksi/common/request/akuntansi/kontak"
+	reqGlobal "github.com/be-sistem-informasi-konveksi/common/request/global"
 	req "github.com/be-sistem-informasi-konveksi/common/request/invoice"
 	"github.com/be-sistem-informasi-konveksi/common/response"
 	"github.com/be-sistem-informasi-konveksi/entity"
@@ -23,6 +24,7 @@ type InvoiceHandler interface {
 	GetAll(c *fiber.Ctx) error
 	Create(c *fiber.Ctx) error
 	Update(c *fiber.Ctx) error
+	Delete(c *fiber.Ctx) error
 }
 
 type invoiceHandler struct {
@@ -38,7 +40,6 @@ func NewInvoiceHandler(
 	ucUser ucUser.UserUsecase,
 	ucKontak ucKontak.KontakUsecase,
 	ucHutangPiutang ucHutangPiutang.HutangPiutangUsecase,
-	// ucDetailInvoice ucDetailInvoice.DetailInvoiceUsecase,
 	validator pkg.Validator,
 ) InvoiceHandler {
 	return &invoiceHandler{uc, ucUser, ucKontak, ucHutangPiutang, validator}
@@ -213,6 +214,27 @@ func (h *invoiceHandler) Update(c *fiber.Ctx) error {
 		Ctx:     ctx,
 		Invoice: dataInvoice,
 	})
+
+	if err != nil {
+		return errResponse(c, err)
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.SuccessRes(fiber.StatusOK, message.OK, nil))
+}
+
+func (h *invoiceHandler) Delete(c *fiber.Ctx) error {
+	req := new(reqGlobal.ParamByID)
+
+	c.ParamsParser(req)
+	c.BodyParser(req)
+
+	errValidate := h.validator.Validate(req)
+	if errValidate != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(errValidate)
+	}
+
+	ctx := c.UserContext()
+	err := h.uc.Delete(usecase.ParamDelete{Ctx: ctx, ID: req.ID})
 
 	if err != nil {
 		return errResponse(c, err)

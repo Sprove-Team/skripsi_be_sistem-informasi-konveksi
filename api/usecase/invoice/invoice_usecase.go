@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -54,6 +55,10 @@ type (
 		BordirIds []string
 		SablonIds []string
 	}
+	ParamDelete struct {
+		Ctx context.Context
+		ID  string
+	}
 )
 
 type InvoiceUsecase interface {
@@ -62,6 +67,7 @@ type InvoiceUsecase interface {
 	UpdateDataInvoice(param ParamUpdateDataInvoice) (*entity.Invoice, error)
 	SaveCommitDB(param ParamCommitDB) error
 	CheckDataDetails(param ParamCheckDataDetails) error
+	Delete(param ParamDelete) error
 	GetAll(param ParamGetAll) ([]entity.Invoice, error)
 	GetById(param ParamGetById) (*entity.Invoice, error)
 }
@@ -168,7 +174,7 @@ func (u *invoiceUsecase) CheckDataDetails(param ParamCheckDataDetails) error {
 }
 
 func (u *invoiceUsecase) CreateDataInvoice(param ParamCreateDataInvoice) (*entity.Invoice, *reqHP.Create, error) {
-	fmt.Println("akun_id -> ", param.Req.Bayar.AkunID)
+	// fmt.Println("akun_id -> ", param.Req.Bayar.AkunID)
 	tanggalDeadline, err := time.Parse(time.RFC3339, param.Req.TanggalDeadline)
 	if err != nil {
 		helper.LogsError(err)
@@ -186,13 +192,15 @@ func (u *invoiceUsecase) CreateDataInvoice(param ParamCreateDataInvoice) (*entit
 
 	invoiceID := u.ulid.MakeUlid().String()
 
-	detailInvoices := make([]entity.DetailInvoice, lengthDetail)
+	detailInvoice := make([]entity.DetailInvoice, lengthDetail)
 	var produkIds = make([]string, lengthDetail)
 	var bordirIds = make([]string, lengthDetail)
 	var sablonIds = make([]string, lengthDetail)
 
+	var totalHarga float64
+	var totalQty int
 	for i, v := range param.Req.DetailInvoice {
-		detailInvoices[i] = entity.DetailInvoice{
+		detailInvoice[i] = entity.DetailInvoice{
 			Base: entity.Base{
 				ID: u.ulid.MakeUlid().String(),
 			},
@@ -207,6 +215,8 @@ func (u *invoiceUsecase) CreateDataInvoice(param ParamCreateDataInvoice) (*entit
 		produkIds[i] = v.ProdukID
 		bordirIds[i] = v.BordirID
 		sablonIds[i] = v.SablonID
+		totalHarga += v.Total
+		totalQty += v.Qty
 	}
 
 	g := new(errgroup.Group)
@@ -258,7 +268,7 @@ func (u *invoiceUsecase) CreateDataInvoice(param ParamCreateDataInvoice) (*entit
 
 	tanggalTr := time.Now().Format(time.RFC3339)
 
-	sisa := param.Req.TotalHarga - param.Req.Bayar.Total
+	sisa := totalHarga - param.Req.Bayar.Total
 
 	if sisa < 0 {
 		return nil, nil, errors.New(message.BayarMustLessThanTotalHargaInvoice)
@@ -281,9 +291,9 @@ func (u *invoiceUsecase) CreateDataInvoice(param ParamCreateDataInvoice) (*entit
 		}
 		switch akun.Nama {
 		case "pendapatan jasa":
-			ayatJurnal.Kredit = param.Req.TotalHarga
+			ayatJurnal.Kredit = totalHarga
 		case "piutang usaha":
-			ayatJurnal.Debit = param.Req.TotalHarga
+			ayatJurnal.Debit = totalHarga
 		}
 		reqHpUC.Transaksi.AyatJurnal = append(reqHpUC.Transaksi.AyatJurnal, ayatJurnal)
 	}
@@ -303,15 +313,15 @@ func (u *invoiceUsecase) CreateDataInvoice(param ParamCreateDataInvoice) (*entit
 			ID: invoiceID,
 		},
 		KontakID:         param.Req.KontakID,
-		TotalQty:         param.Req.TotalQty,
-		TotalHarga:       param.Req.TotalHarga,
+		TotalQty:         totalQty,
+		TotalHarga:       totalHarga,
 		StatusProduksi:   param.Req.StatusProduksi,
 		UserID:           param.Req.UserID,
 		Keterangan:       param.Req.Keterangan,
 		TanggalDeadline:  &tanggalDeadline,
 		TanggalKirim:     &tanggalKirim,
 		NomorReferensi:   ref,
-		DetailInvoices:   detailInvoices,
+		DetailInvoice:    detailInvoice,
 		DataBayarInvoice: []entity.DataBayarInvoice{dataBayar},
 	}
 
@@ -345,11 +355,16 @@ func (u *invoiceUsecase) UpdateDataInvoice(param ParamUpdateDataInvoice) (*entit
 		return nil, err
 	}
 
+	oldData.Base = entity.Base{
+		ID: oldData.ID,
+	}
+	oldData.UserID = param.Req.UserID
 	oldData.Keterangan = param.Req.Keterangan
 	oldData.KontakID = param.Req.KontakID
 	oldData.StatusProduksi = param.Req.StatusProduksi
-	oldData.TotalHarga = param.Req.TotalHarga
-	oldData.TotalQty = param.Req.TotalQty
+
+	// oldData.TotalHarga = param.Req.TotalHarga
+	// oldData.TotalQty = param.Req.TotalQty
 
 	if param.Req.TanggalKirim != "" {
 		tanggalKirim, err := time.Parse(time.RFC3339, param.Req.TanggalKirim)
@@ -367,22 +382,70 @@ func (u *invoiceUsecase) UpdateDataInvoice(param ParamUpdateDataInvoice) (*entit
 		oldData.TanggalDeadline = &tanggalDeadline
 	}
 
-	var oldTotalBayar = oldData.TotalHarga - oldData.HutangPiutang.Sisa
-	if param.Req.TotalHarga != 0 {
-		if param.Req.TotalHarga < oldTotalBayar {
+	lengthDetail := len(param.Req.DetailInvoice)
+
+	if lengthDetail > 0 {
+
+		sort.Slice(oldData.DetailInvoice, func(i, j int) bool {
+			return oldData.DetailInvoice[i].ID < oldData.DetailInvoice[j].ID
+		})
+
+		for _, detail := range param.Req.DetailInvoice {
+			idx := sort.Search(len(oldData.DetailInvoice), func(i int) bool {
+				return oldData.DetailInvoice[i].ID >= detail.ID
+			})
+
+			if idx < len(oldData.DetailInvoice) && oldData.DetailInvoice[idx].ID == detail.ID {
+
+				oldData.TotalHarga = (oldData.TotalHarga - oldData.DetailInvoice[idx].Total) + detail.Total
+				oldData.TotalQty = (oldData.TotalQty - oldData.DetailInvoice[idx].Qty) + detail.Qty
+
+				oldData.DetailInvoice[idx].BordirID = detail.BordirID
+				oldData.DetailInvoice[idx].ProdukID = detail.ProdukID
+				oldData.DetailInvoice[idx].SablonID = detail.SablonID
+				oldData.DetailInvoice[idx].Qty = detail.Qty
+				oldData.DetailInvoice[idx].Total = detail.Total
+				oldData.DetailInvoice[idx].GambarDesign = detail.GambarDesign
+			} else {
+				return nil, errors.New(message.DetailInvoiceNotFound)
+			}
+		}
+
+		// update oldData total harga & qty
+		var oldTotalBayar = oldData.HutangPiutang.Total - oldData.HutangPiutang.Sisa
+
+		if oldData.TotalHarga < oldTotalBayar {
 			return nil, errors.New(message.TotalBayarMustGeOrEqToTotalByr)
 		}
-		oldData.HutangPiutang.Sisa = param.Req.TotalHarga - oldTotalBayar
-		oldData.HutangPiutang.Total = param.Req.TotalHarga
 
-		if oldData.HutangPiutang.Sisa >= 0 {
+		oldData.HutangPiutang.Sisa = oldData.TotalHarga - oldTotalBayar
+		oldData.HutangPiutang.Total = oldData.TotalHarga
+
+		if oldData.HutangPiutang.Sisa <= 0 {
 			oldData.HutangPiutang.Status = "LUNAS"
+		}
+
+		// update tr
+		oldData.HutangPiutang.Transaksi.Total = oldData.TotalHarga
+		for i, ay := range oldData.HutangPiutang.Transaksi.AyatJurnals {
+			// update debit kredit
+			if ay.Debit != 0 {
+				ay.Debit = oldData.TotalHarga
+			} else {
+				ay.Kredit = oldData.TotalHarga
+			}
+			// update saldo
+			if ay.Saldo > 0 {
+				ay.Saldo = oldData.TotalHarga
+			} else {
+				ay.Saldo = -oldData.TotalHarga
+			}
+			oldData.HutangPiutang.Transaksi.AyatJurnals[i] = ay
 		}
 	}
 
 	// update transaksi hutang piutang
 	oldData.HutangPiutang.Transaksi.Keterangan = param.Req.Keterangan
-	oldData.HutangPiutang.Transaksi.Total = param.Req.TotalHarga
 	oldData.HutangPiutang.Transaksi.KontakID = param.Req.KontakID
 
 	return oldData, nil
@@ -391,22 +454,24 @@ func (u *invoiceUsecase) UpdateDataInvoice(param ParamUpdateDataInvoice) (*entit
 func (u *invoiceUsecase) SaveCommitDB(param ParamCommitDB) error {
 	g := new(errgroup.Group)
 
-	g.Go(func() error {
-		_, err := u.repoKontak.GetById(kontakRepo.ParamGetById{
-			Ctx: param.Ctx,
-			ID:  param.Invoice.KontakID,
-		})
-		if err != nil {
-			if err.Error() == "record not found" {
-				return errors.New(message.KontakNotFound)
+	if param.Invoice.KontakID != "" {
+		g.Go(func() error {
+			_, err := u.repoKontak.GetById(kontakRepo.ParamGetById{
+				Ctx: param.Ctx,
+				ID:  param.Invoice.KontakID,
+			})
+			if err != nil {
+				if err.Error() == "record not found" {
+					return errors.New(message.KontakNotFound)
+				}
+				return err
 			}
-			return err
-		}
-		return nil
-	})
+			return nil
+		})
+	}
 
 	g.Go(func() error {
-		_, err := u.repo.GetById(repo.ParamGetById{
+		err := u.repo.CheckInvoice(repo.ParamGetById{
 			Ctx: param.Ctx,
 			ID:  param.Invoice.ID,
 		})
@@ -420,7 +485,19 @@ func (u *invoiceUsecase) SaveCommitDB(param ParamCommitDB) error {
 		return err
 	}
 
-	return u.repo.Save(repo.ParamSave(param))
+	return u.repo.UpdateFullAssoc(repo.ParamUpdateFullAssoc(param))
+}
+
+func (u *invoiceUsecase) Delete(param ParamDelete) error {
+	data, err := u.repo.GetByIdFullAssoc(repo.ParamGetById(param))
+	if err != nil {
+		return err
+	}
+
+	if err := u.repo.Delete(repo.ParamDelete{Ctx: param.Ctx, Invoice: data}); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (u *invoiceUsecase) GetAll(param ParamGetAll) ([]entity.Invoice, error) {
@@ -472,5 +549,5 @@ func (u *invoiceUsecase) GetAll(param ParamGetAll) ([]entity.Invoice, error) {
 }
 
 func (u *invoiceUsecase) GetById(param ParamGetById) (*entity.Invoice, error) {
-	return u.repo.GetByIdFullAssoc(repo.ParamGetById(param))
+	return u.repo.GetById(repo.ParamGetById(param))
 }

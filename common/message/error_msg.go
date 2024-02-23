@@ -81,8 +81,12 @@ var (
 	InvalidAkunBayar             = "akun untuk bayar hutang piutang tidak valid"
 )
 
+// invoice
 var (
 	TotalBayarMustGeOrEqToTotalByr     = "total bayar invoice harus lebih besar atau sama dengan total yang telah di bayar"
 	BayarMustLessThanTotalHargaInvoice = "jumlah yang dibayar harus kurang atau sama dengan total harga invoice"
 	InvoiceNotFound                    = "invoice tidak ditemukan"
+	DetailInvoiceNotFound              = "detail invoice tidak ditemukan"
+	//data bayar
+	CannotModifiedTerkonfirmasiDataBayar = "tidak bisa mengubah atau menghapus data bayar invoice yang berstatus `TERKONFIRMASI`"
 )

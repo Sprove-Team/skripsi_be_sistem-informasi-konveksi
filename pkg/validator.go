@@ -89,6 +89,27 @@ func NewValidator() Validator {
 		return t
 	})
 
+	validate.RegisterTranslation("required_with", trans, func(ut ut.Translator) error {
+		return ut.Add("required_with", "{0} wajib diisi jika {1} diisi", true)
+	}, func(ut ut.Translator, fe validator.FieldError) string {
+		data := strings.Split(fe.Param(), " ")
+		length := len(data)
+		var param string = convToReadAble(data[0])
+		if length > 1 {
+			param += " atau "
+			for i := 1; i < length; i++ {
+				dat := convToReadAble(data[i])
+				if i+1 == length {
+					param += dat
+					continue
+				}
+				param += dat + " atau "
+			}
+		}
+		t, _ := ut.T("required_with", fe.Field(), param)
+		return t
+	})
+
 	validate.RegisterTranslation("excluded_with", trans, func(ut ut.Translator) error {
 		return ut.Add("excluded_with", "jika {0} diisi maka {1} harus kosong", true)
 	}, func(ut ut.Translator, fe validator.FieldError) string {
@@ -126,29 +147,6 @@ func validateULID(fl validator.FieldLevel) bool {
 	_, err := ulidPkg.ParseStrict(ulid)
 	return err == nil
 }
-
-// func camelToSnake(s string) string {
-// 	var buf bytes.Buffer
-// 	var prevIsUpper bool
-// 	for _, r := range s {
-// 		if unicode.IsUpper(r) {
-// 			if prevIsUpper {
-// 				buf.WriteRune(unicode.ToLower(r))
-// 			} else {
-// 				if buf.Len() > 0 {
-// 					buf.WriteRune('_')
-// 				}
-// 				buf.WriteRune(unicode.ToLower(r))
-// 				prevIsUpper = true
-// 			}
-// 		} else {
-// 			buf.WriteRune(r)
-// 			prevIsUpper = false
-// 		}
-// 	}
-
-// 	return buf.String()
-// }
 
 func convToReadAble(s string) string {
 	var buf bytes.Buffer
