@@ -64,7 +64,7 @@ type SearchKelompokAkun struct {
 func (r *kelompokAkunRepo) GetAll(ctx context.Context, searchKelompokAkun SearchKelompokAkun) ([]entity.KelompokAkun, error) {
 	datas := []entity.KelompokAkun{}
 
-	tx := r.DB.WithContext(ctx).Model(&entity.KelompokAkun{}).Order("id ASC").Omit("created_at", "deleted_at", "updated_at")
+	tx := r.DB.WithContext(ctx).Model(&entity.KelompokAkun{}).Order("id ASC").Omit("deleted_at", "updated_at")
 
 	conditions := map[string]interface{}{
 		"id > ?":            searchKelompokAkun.Next,

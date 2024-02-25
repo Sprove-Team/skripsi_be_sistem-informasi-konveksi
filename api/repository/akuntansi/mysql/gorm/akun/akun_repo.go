@@ -42,7 +42,7 @@ func NewAkunRepo(DB *gorm.DB) AkunRepo {
 func (r *akunRepo) GetById(ctx context.Context, id string) (entity.Akun, error) {
 	fmt.Println("Repo id ->", id)
 	data := entity.Akun{}
-	err := r.DB.WithContext(ctx).Omit("created_at", "updated_at", "deleted_at").Preload("KelompokAkun", func(db *gorm.DB) *gorm.DB {
+	err := r.DB.WithContext(ctx).Omit("updated_at", "deleted_at").Preload("KelompokAkun", func(db *gorm.DB) *gorm.DB {
 		return db.Select("id", "nama", "kode")
 	}).First(&data, "id = ?", id).Error
 	if err != nil {
@@ -116,7 +116,7 @@ type SearchAkun struct {
 func (r *akunRepo) GetAll(ctx context.Context, searchAkun SearchAkun) ([]entity.Akun, error) {
 	datas := []entity.Akun{}
 
-	tx := r.DB.WithContext(ctx).Model(&entity.Akun{}).Order("id ASC").Omit("created_at", "deleted_at", "updated_at")
+	tx := r.DB.WithContext(ctx).Model(&entity.Akun{}).Order("id ASC").Omit("deleted_at", "updated_at")
 
 	conditions := map[string]interface{}{
 		"id > ?":      searchAkun.Next,

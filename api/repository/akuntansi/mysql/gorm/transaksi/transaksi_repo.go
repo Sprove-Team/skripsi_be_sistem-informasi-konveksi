@@ -155,7 +155,7 @@ func (r *transaksiRepo) Delete(ctx context.Context, id string) error {
 func (r *transaksiRepo) GetAll(ctx context.Context, param SearchTransaksi) ([]entity.Transaksi, error) {
 	datas := []entity.Transaksi{}
 
-	tx := r.DB.WithContext(ctx).Model(&datas).Order("tanggal DESC").Omit("created_at", "deleted_at", "updated_at", "bukti_pembayaran")
+	tx := r.DB.WithContext(ctx).Model(&datas).Order("tanggal DESC").Omit("deleted_at", "updated_at", "bukti_pembayaran")
 
 	err := tx.Where("DATE(tanggal) >= ? AND DATE(tanggal) <= ?", param.StartDate, param.EndDate).Find(&datas).Error
 	if err != nil {
@@ -168,7 +168,7 @@ func (r *transaksiRepo) GetAll(ctx context.Context, param SearchTransaksi) ([]en
 func (r *transaksiRepo) GetHistory(ctx context.Context, param SearchTransaksi) ([]entity.Transaksi, error) {
 	datas := []entity.Transaksi{}
 
-	tx := r.DB.WithContext(ctx).Model(&datas).Unscoped().Order("tanggal DESC").Omit("created_at", "deleted_at", "updated_at", "bukti_pembayaran")
+	tx := r.DB.WithContext(ctx).Model(&datas).Unscoped().Order("tanggal DESC").Omit("deleted_at", "updated_at", "bukti_pembayaran")
 
 	err := tx.Where("DATE(tanggal) >= ? AND DATE(tanggal) <= ?", param.StartDate, param.EndDate).Find(&datas).Error
 	if err != nil {
@@ -180,10 +180,10 @@ func (r *transaksiRepo) GetHistory(ctx context.Context, param SearchTransaksi) (
 
 func (r *transaksiRepo) GetById(ctx context.Context, id string) (entity.Transaksi, error) {
 	data := entity.Transaksi{}
-	err := r.DB.WithContext(ctx).Model(&entity.Transaksi{}).Omit("created_at", "deleted_at", "updated_at").
+	err := r.DB.WithContext(ctx).Model(&entity.Transaksi{}).Omit("deleted_at", "updated_at").
 		Where("id = ?", id).
 		Preload("AyatJurnals", func(db *gorm.DB) *gorm.DB {
-			return db.Omit("created_at", "deleted_at", "updated_at").Preload("Akun", func(db2 *gorm.DB) *gorm.DB {
+			return db.Omit("deleted_at", "updated_at").Preload("Akun", func(db2 *gorm.DB) *gorm.DB {
 				return db2.Select("nama", "id", "saldo_normal", "kode", "kelompok_akun_id")
 			})
 		}).First(&data).Error
