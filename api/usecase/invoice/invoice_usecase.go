@@ -33,6 +33,10 @@ type (
 		Ctx context.Context
 		Req req.Update
 	}
+	ParamUpdateStatusProduksi struct {
+		Ctx context.Context
+		Req req.UpdateStatusProduksi
+	}
 	ParamCommitDB struct {
 		Ctx     context.Context
 		Invoice *entity.Invoice
@@ -65,6 +69,7 @@ type InvoiceUsecase interface {
 	CreateDataInvoice(param ParamCreateDataInvoice) (*entity.Invoice, *reqHP.Create, error)
 	CreateCommitDB(param ParamCommitDB) error
 	UpdateDataInvoice(param ParamUpdateDataInvoice) (*entity.Invoice, error)
+	UpdateStatusProduksi(param ParamUpdateStatusProduksi) error
 	SaveCommitDB(param ParamCommitDB) error
 	CheckDataDetails(param ParamCheckDataDetails) error
 	Delete(param ParamDelete) error
@@ -361,10 +366,6 @@ func (u *invoiceUsecase) UpdateDataInvoice(param ParamUpdateDataInvoice) (*entit
 	oldData.UserID = param.Req.UserID
 	oldData.Keterangan = param.Req.Keterangan
 	oldData.KontakID = param.Req.KontakID
-	oldData.StatusProduksi = param.Req.StatusProduksi
-
-	// oldData.TotalHarga = param.Req.TotalHarga
-	// oldData.TotalQty = param.Req.TotalQty
 
 	if param.Req.TanggalKirim != "" {
 		tanggalKirim, err := time.Parse(time.RFC3339, param.Req.TanggalKirim)
@@ -449,6 +450,14 @@ func (u *invoiceUsecase) UpdateDataInvoice(param ParamUpdateDataInvoice) (*entit
 	oldData.HutangPiutang.Transaksi.KontakID = param.Req.KontakID
 
 	return oldData, nil
+}
+
+func (u *invoiceUsecase) UpdateStatusProduksi(param ParamUpdateStatusProduksi) error {
+	err := u.repo.UpdateStatusProduksi(repo.ParamUpdateStatusProduksi{Ctx: param.Ctx, ID: param.Req.ID, Status: param.Req.StatusProduksi})
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (u *invoiceUsecase) SaveCommitDB(param ParamCommitDB) error {

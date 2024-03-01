@@ -25,6 +25,7 @@ type InvoiceHandler interface {
 	Create(c *fiber.Ctx) error
 	Update(c *fiber.Ctx) error
 	Delete(c *fiber.Ctx) error
+	UpdateStatusProduksi(c *fiber.Ctx) error
 }
 
 type invoiceHandler struct {
@@ -213,6 +214,30 @@ func (h *invoiceHandler) Update(c *fiber.Ctx) error {
 	err = h.uc.SaveCommitDB(usecase.ParamCommitDB{
 		Ctx:     ctx,
 		Invoice: dataInvoice,
+	})
+
+	if err != nil {
+		return errResponse(c, err)
+	}
+
+	return c.Status(fiber.StatusOK).JSON(response.SuccessRes(fiber.StatusOK, message.OK, nil))
+}
+
+func (h *invoiceHandler) UpdateStatusProduksi(c *fiber.Ctx) error {
+	req := new(req.UpdateStatusProduksi)
+
+	c.ParamsParser(req)
+	c.BodyParser(req)
+
+	errValidate := h.validator.Validate(req)
+	if errValidate != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(errValidate)
+	}
+
+	ctx := c.UserContext()
+	err := h.uc.UpdateStatusProduksi(usecase.ParamUpdateStatusProduksi{
+		Ctx: ctx,
+		Req: *req,
 	})
 
 	if err != nil {
