@@ -1,4 +1,4 @@
-package user
+package repo_user_jenis_spv
 
 import (
 	"context"

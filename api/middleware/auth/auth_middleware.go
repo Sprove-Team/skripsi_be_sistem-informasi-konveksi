@@ -1,4 +1,4 @@
-package auth
+package middleware_auth
 
 import (
 	"os"

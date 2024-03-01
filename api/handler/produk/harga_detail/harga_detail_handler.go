@@ -1,4 +1,4 @@
-package produk
+package handler_produk_harga_detail
 
 import (
 	"context"

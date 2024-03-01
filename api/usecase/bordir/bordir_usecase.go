@@ -1,4 +1,4 @@
-package bordir
+package uc_bordir
 
 import (
 	"context"

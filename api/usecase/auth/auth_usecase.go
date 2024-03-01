@@ -1,4 +1,4 @@
-package auth
+package uc_auth
 
 import (
 	userRepo "github.com/be-sistem-informasi-konveksi/api/repository/user/mysql/gorm"

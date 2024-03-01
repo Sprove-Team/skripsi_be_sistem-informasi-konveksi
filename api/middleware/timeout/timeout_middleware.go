@@ -1,4 +1,4 @@
-package global
+package middleware_timeout
 
 import (
 	"errors"

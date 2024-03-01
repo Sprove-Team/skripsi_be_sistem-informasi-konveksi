@@ -1,10 +1,9 @@
 package route
 
 import (
-	"github.com/gofiber/fiber/v2"
-
-	"github.com/be-sistem-informasi-konveksi/api/middleware/auth"
+	middleware_auth "github.com/be-sistem-informasi-konveksi/api/middleware/auth"
 	"github.com/be-sistem-informasi-konveksi/app/handler_init"
+	"github.com/gofiber/fiber/v2"
 )
 
 type AkuntansiRoute interface {
@@ -18,10 +17,10 @@ type AkuntansiRoute interface {
 
 type akuntansiRoute struct {
 	h    handler_init.AkuntansiHandlerInit
-	auth auth.AuthMidleware
+	auth middleware_auth.AuthMidleware
 }
 
-func NewAkuntansiRoute(h handler_init.AkuntansiHandlerInit, auth auth.AuthMidleware) AkuntansiRoute {
+func NewAkuntansiRoute(h handler_init.AkuntansiHandlerInit, auth middleware_auth.AuthMidleware) AkuntansiRoute {
 	return &akuntansiRoute{h, auth}
 }
 

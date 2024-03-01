@@ -1,4 +1,4 @@
-package akuntansi
+package handler_akuntansi
 
 import (
 	"context"

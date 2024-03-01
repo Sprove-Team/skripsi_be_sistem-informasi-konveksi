@@ -1,4 +1,4 @@
-package invoice
+package uc_invoice
 
 import (
 	"context"

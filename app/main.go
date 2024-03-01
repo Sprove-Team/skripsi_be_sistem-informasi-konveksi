@@ -6,7 +6,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	_ "github.com/joho/godotenv/autoload"
 
-	"github.com/be-sistem-informasi-konveksi/api/middleware/auth"
+	middleware_auth "github.com/be-sistem-informasi-konveksi/api/middleware/auth"
 	corsMid "github.com/be-sistem-informasi-konveksi/api/middleware/cors"
 	timeoutMid "github.com/be-sistem-informasi-konveksi/api/middleware/timeout"
 	userRepo "github.com/be-sistem-informasi-konveksi/api/repository/user/mysql/gorm"
@@ -37,7 +37,7 @@ func main() {
 
 	// middleware
 	userRepo := userRepo.NewUserRepo(dbGorm)
-	authMid := auth.NewAuthMiddleware(userRepo)
+	authMid := middleware_auth.NewAuthMiddleware(userRepo)
 	timeoutMid := timeoutMid.NewTimeoutMiddleware()
 	corsMid := corsMid.NewCorsMiddleware()
 

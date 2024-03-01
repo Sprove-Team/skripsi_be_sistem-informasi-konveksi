@@ -1,4 +1,4 @@
-package produk
+package uc_produk_kategori
 
 import (
 	"context"

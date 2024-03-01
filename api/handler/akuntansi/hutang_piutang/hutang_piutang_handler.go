@@ -1,4 +1,4 @@
-package akuntansi
+package handler_akuntansi_hutang_piutang
 
 import (
 	"fmt"

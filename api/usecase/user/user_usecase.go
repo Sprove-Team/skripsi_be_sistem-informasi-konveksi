@@ -1,4 +1,4 @@
-package user
+package uc_user
 
 import (
 	"context"

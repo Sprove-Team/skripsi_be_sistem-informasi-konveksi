@@ -1,4 +1,4 @@
-package produk
+package repo_produk_harga_detail
 
 import (
 	"context"

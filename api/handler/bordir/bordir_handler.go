@@ -1,4 +1,4 @@
-package bordir
+package handler_bordir
 
 import (
 	"context"

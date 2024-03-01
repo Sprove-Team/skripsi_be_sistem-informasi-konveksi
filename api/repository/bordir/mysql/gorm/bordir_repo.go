@@ -1,4 +1,4 @@
-package bordir
+package repo_bordir
 
 import (
 	"context"

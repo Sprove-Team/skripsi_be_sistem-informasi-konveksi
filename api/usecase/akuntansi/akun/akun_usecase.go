@@ -1,4 +1,4 @@
-package akuntansi
+package uc_akuntansi_akun
 
 import (
 	"context"

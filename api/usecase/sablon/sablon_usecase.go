@@ -1,4 +1,4 @@
-package sablon
+package uc_sablon
 
 import (
 	"context"

@@ -1,4 +1,4 @@
-package sablon
+package handler_sablon
 
 import (
 	"context"

@@ -1,4 +1,4 @@
-package sablon
+package repo_sablon
 
 import (
 	"context"

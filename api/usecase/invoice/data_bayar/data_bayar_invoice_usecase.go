@@ -1,4 +1,4 @@
-package invoice
+package uc_invoice_data_bayar
 
 import (
 	"context"

@@ -3,7 +3,7 @@ package route
 import (
 	"github.com/gofiber/fiber/v2"
 
-	"github.com/be-sistem-informasi-konveksi/api/middleware/auth"
+	middleware_auth "github.com/be-sistem-informasi-konveksi/api/middleware/auth"
 	"github.com/be-sistem-informasi-konveksi/app/handler_init"
 )
 
@@ -13,10 +13,10 @@ type BordirRoute interface {
 
 type bordirRoute struct {
 	h    handler_init.BordirHandlerInit
-	auth auth.AuthMidleware
+	auth middleware_auth.AuthMidleware
 }
 
-func NewBordirRoute(h handler_init.BordirHandlerInit, auth auth.AuthMidleware) BordirRoute {
+func NewBordirRoute(h handler_init.BordirHandlerInit, auth middleware_auth.AuthMidleware) BordirRoute {
 	return &bordirRoute{h, auth}
 }
 

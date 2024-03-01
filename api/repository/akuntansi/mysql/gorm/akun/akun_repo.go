@@ -1,4 +1,4 @@
-package akuntansi
+package repo_akuntansi_akun
 
 import (
 	"context"

@@ -1,4 +1,4 @@
-package invoice
+package repo_invoice
 
 import (
 	"context"

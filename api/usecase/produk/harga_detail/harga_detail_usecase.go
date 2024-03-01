@@ -1,4 +1,4 @@
-package produk
+package uc_produk_harga_detail
 
 import (
 	"context"

@@ -1,4 +1,4 @@
-package produk
+package repo_produk
 
 import (
 	"context"

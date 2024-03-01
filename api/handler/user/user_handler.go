@@ -1,4 +1,4 @@
-package user
+package handler_user
 
 import (
 	"context"
