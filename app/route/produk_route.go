@@ -40,8 +40,7 @@ func (ro *produkRoute) KategoriProduk(router fiber.Router) {
 
 func (ro *produkRoute) HargaDetailProduk(router fiber.Router) {
 	router.Get("/:produk_id", ro.h.HargaDetailProdukHandler().GetByProdukId)
-	router.Post("/:produk_id", ro.h.HargaDetailProdukHandler().CreateByProdukId)
-	router.Put("/:produk_id", ro.h.HargaDetailProdukHandler().UpdateByProdukId)
+	router.Post("", ro.h.HargaDetailProdukHandler().Create)
+	router.Put("/:id", ro.h.HargaDetailProdukHandler().Update)
 	router.Delete("/:id", ro.h.HargaDetailProdukHandler().Delete)
-	router.Delete("/:produk_id", ro.h.HargaDetailProdukHandler().DeleteByProdukId)
 }

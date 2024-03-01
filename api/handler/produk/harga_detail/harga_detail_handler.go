@@ -14,9 +14,8 @@ import (
 )
 
 type HargaDetailProdukHandler interface {
-	CreateByProdukId(c *fiber.Ctx) error
-	UpdateByProdukId(c *fiber.Ctx) error
-	DeleteByProdukId(c *fiber.Ctx) error
+	Create(c *fiber.Ctx) error
+	Update(c *fiber.Ctx) error
 	Delete(c *fiber.Ctx) error
 	GetByProdukId(c *fiber.Ctx) error
 }
@@ -56,9 +55,9 @@ func errResponse(c *fiber.Ctx, err error) error {
 	return c.Status(fiber.StatusInternalServerError).JSON(response.ErrorRes(fiber.ErrInternalServerError.Code, fiber.ErrInternalServerError.Message, nil))
 }
 
-func (h *hargaDetailProdukHandler) CreateByProdukId(c *fiber.Ctx) error {
+func (h *hargaDetailProdukHandler) Create(c *fiber.Ctx) error {
 	// c.Accepts("application/json")
-	req := new(req.CreateByProdukId)
+	req := new(req.Create)
 	c.BodyParser(req)
 	c.ParamsParser(req)
 
@@ -67,7 +66,7 @@ func (h *hargaDetailProdukHandler) CreateByProdukId(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(errValidate)
 	}
 	ctx := c.UserContext()
-	err := h.uc.CreateByProdukId(ctx, *req)
+	err := h.uc.Create(ctx, *req)
 
 	if err != nil {
 		return errResponse(c, err)
@@ -75,31 +74,19 @@ func (h *hargaDetailProdukHandler) CreateByProdukId(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusCreated).JSON(response.SuccessRes(fiber.StatusCreated, message.Created, nil))
 }
 
-func (h *hargaDetailProdukHandler) UpdateByProdukId(c *fiber.Ctx) error {
-	req := new(req.UpdateByProdukId)
+func (h *hargaDetailProdukHandler) Update(c *fiber.Ctx) error {
+	req := new(req.Update)
 	c.ParamsParser(req)
 	c.BodyParser(req)
-	errValidate := h.validator.Validate(req)
-	if errValidate != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(errValidate)
-	}
-	ctx := c.UserContext()
-	err := h.uc.UpdateByProdukId(ctx, *req)
-	if err != nil {
-		return errResponse(c, err)
-	}
-	return c.Status(fiber.StatusOK).JSON(response.SuccessRes(fiber.StatusOK, message.OK, nil))
-}
 
-func (h *hargaDetailProdukHandler) DeleteByProdukId(c *fiber.Ctx) error {
-	req := new(req.DeleteByProdukId)
-	c.ParamsParser(req)
 	errValidate := h.validator.Validate(req)
 	if errValidate != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(errValidate)
 	}
+
 	ctx := c.UserContext()
-	err := h.uc.DeleteByProdukId(ctx, req.ProdukId)
+	err := h.uc.Update(ctx, *req)
+
 	if err != nil {
 		return errResponse(c, err)
 	}

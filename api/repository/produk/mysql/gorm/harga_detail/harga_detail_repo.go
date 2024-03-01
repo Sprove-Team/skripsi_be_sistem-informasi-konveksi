@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
 
 	"github.com/be-sistem-informasi-konveksi/entity"
 	"github.com/be-sistem-informasi-konveksi/helper"
@@ -15,11 +14,9 @@ type HargaDetailProdukRepo interface {
 	GetByInQtyProdukId(ctx context.Context, qty []uint, produkId string) ([]entity.HargaDetailProduk, error)
 	GetById(ctx context.Context, id string) (entity.HargaDetailProduk, error)
 	Delete(ctx context.Context, id string) error
-	DeleteByProdukId(ctx context.Context, produk_id string) error
-	UpdateById(ctx context.Context, hargaDetailProduk *entity.HargaDetailProduk) error
-	UpdateByProdukId(ctx context.Context, produkId string, hargaDetails []entity.HargaDetailProduk) error
+	Update(ctx context.Context, hargaDetailProduk *entity.HargaDetailProduk) error
 	GetByProdukId(ctx context.Context, id string) ([]entity.HargaDetailProduk, error)
-	Create(ctx context.Context, hargaDetailProduk []*entity.HargaDetailProduk) error
+	Create(ctx context.Context, hargaDetailProduk *entity.HargaDetailProduk) error
 }
 
 type hargaDetailProdukRepo struct {
@@ -30,13 +27,8 @@ func NewHargaDetailProdukRepo(DB *gorm.DB) HargaDetailProdukRepo {
 	return &hargaDetailProdukRepo{DB}
 }
 
-func (r *hargaDetailProdukRepo) Create(ctx context.Context, hargaDetailProduk []*entity.HargaDetailProduk) error {
-
-	clauses := clause.OnConflict{
-		Columns:   []clause.Column{{Name: "produk_id"}, {Name: "qty"}},
-		DoUpdates: clause.AssignmentColumns([]string{"harga"}),
-	}
-	err := r.DB.WithContext(ctx).Clauses(clauses).Create(hargaDetailProduk).Error
+func (r *hargaDetailProdukRepo) Create(ctx context.Context, hargaDetailProduk *entity.HargaDetailProduk) error {
+	err := r.DB.WithContext(ctx).Create(hargaDetailProduk).Error
 	if err != nil {
 		helper.LogsError(err)
 		return err
@@ -53,30 +45,8 @@ func (r *hargaDetailProdukRepo) Delete(ctx context.Context, id string) error {
 	return nil
 }
 
-func (r *hargaDetailProdukRepo) DeleteByProdukId(ctx context.Context, produk_id string) error {
-	err := r.DB.WithContext(ctx).Model(&entity.HargaDetailProduk{}).Where("produk_id = ?", produk_id).Delete(&entity.HargaDetailProduk{}).Error
-	if err != nil {
-		helper.LogsError(err)
-		return err
-	}
-	return nil
-}
-
-func (r *hargaDetailProdukRepo) UpdateById(ctx context.Context, hargaDetailProduk *entity.HargaDetailProduk) error {
-	err := r.DB.WithContext(ctx).Omit("id").Updates(hargaDetailProduk).Error
-	if err != nil {
-		helper.LogsError(err)
-		return err
-	}
-	return nil
-}
-
-func (r *hargaDetailProdukRepo) UpdateByProdukId(ctx context.Context, produkId string, hargaDetails []entity.HargaDetailProduk) error {
-	clauses := clause.OnConflict{
-		Columns:   []clause.Column{{Name: "id"}},
-		DoUpdates: clause.AssignmentColumns([]string{"harga", "qty"}),
-	}
-	err := r.DB.WithContext(ctx).Where("produk_id = ?", produkId).Clauses(clauses).Create(&hargaDetails).Error
+func (r *hargaDetailProdukRepo) Update(ctx context.Context, hargaDetailProduk *entity.HargaDetailProduk) error {
+	err := r.DB.WithContext(ctx).Omit("id", "produk_id").Updates(hargaDetailProduk).Error
 	if err != nil {
 		helper.LogsError(err)
 		return err
