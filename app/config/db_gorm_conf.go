@@ -21,16 +21,21 @@ import (
 type DBGorm struct {
 	DB_Username string
 	DB_Password string
+	DB_HOST     string
 	DB_Port     string
 	DB_Name     string
+	DB_Test     bool
 }
 
 func (dbgc *DBGorm) InitDBGorm(ulid pkg.UlidPkg) *gorm.DB {
 	host := "localhost"
 	logLevel := logger.Info
 	if os.Getenv("ENVIRONMENT") == "PRODUCTION" {
-		host = "db"
-		logLevel = logger.Silent
+		host = dbgc.DB_HOST
+		if !dbgc.DB_Test {
+			logLevel = logger.Silent
+		}
+
 	}
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8&parseTime=True&loc=Local",
 		dbgc.DB_Username,
@@ -60,7 +65,6 @@ func (dbgc *DBGorm) InitDBGorm(ulid pkg.UlidPkg) *gorm.DB {
 		helper.LogsError(err)
 		os.Exit(1)
 	}
-	// defaultValueChan := make(chan struct{}, 2)
 
 	g := &errgroup.Group{}
 	g.SetLimit(10)

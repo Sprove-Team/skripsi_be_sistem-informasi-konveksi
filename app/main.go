@@ -4,7 +4,6 @@ import (
 	"os"
 
 	"github.com/gofiber/fiber/v2"
-	_ "github.com/joho/godotenv/autoload"
 
 	middleware_auth "github.com/be-sistem-informasi-konveksi/api/middleware/auth"
 	corsMid "github.com/be-sistem-informasi-konveksi/api/middleware/cors"
@@ -22,10 +21,12 @@ func main() {
 	validator := pkg.NewValidator()
 	ulidPkg := pkg.NewUlidPkg()
 
+	config.LoadEnv()
 	dbGormConf := config.DBGorm{
 		DB_Username: os.Getenv("DB_USERNAME"),
 		DB_Password: os.Getenv("DB_PASSWORD"),
 		DB_Name:     os.Getenv("DB_NAME"),
+		DB_HOST:     os.Getenv("DB_HOST"),
 		DB_Port:     os.Getenv("DB_PORT"),
 	}
 
