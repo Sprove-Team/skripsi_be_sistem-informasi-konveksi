@@ -42,15 +42,16 @@ func errResponse(c *fiber.Ctx, err error) error {
 		return c.Status(fiber.StatusConflict).JSON(response.ErrorRes(fiber.ErrConflict.Code, fiber.ErrConflict.Message, nil))
 	}
 
-	// badRequest := map[string][]string{}
+	badRequest := []string{}
 
-	// if err.Error() == message.ProdukNotFound {
-	// 	badRequest["produk_id"] = []string{err.Error()}
-	// }
+	switch err.Error() {
+	case message.ProdukNotFound:
+		badRequest = append(badRequest, err.Error())
+	}
 
-	// if len(badRequest) > 0 {
-	// 	return c.Status(fiber.StatusBadRequest).JSON(response.ErrorRes(fiber.ErrBadRequest.Code, fiber.ErrBadRequest.Message, badRequest))
-	// }
+	if len(badRequest) > 0 {
+		return c.Status(fiber.StatusBadRequest).JSON(response.ErrorRes(fiber.ErrBadRequest.Code, fiber.ErrBadRequest.Message, badRequest))
+	}
 
 	return c.Status(fiber.StatusInternalServerError).JSON(response.ErrorRes(fiber.ErrInternalServerError.Code, fiber.ErrInternalServerError.Message, nil))
 }
