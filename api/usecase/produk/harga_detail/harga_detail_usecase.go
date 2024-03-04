@@ -2,9 +2,11 @@ package uc_produk_harga_detail
 
 import (
 	"context"
+	"errors"
 
 	produkRepo "github.com/be-sistem-informasi-konveksi/api/repository/produk/mysql/gorm"
 	repo "github.com/be-sistem-informasi-konveksi/api/repository/produk/mysql/gorm/harga_detail"
+	"github.com/be-sistem-informasi-konveksi/common/message"
 	req "github.com/be-sistem-informasi-konveksi/common/request/produk/harga_detail"
 	"github.com/be-sistem-informasi-konveksi/entity"
 	"github.com/be-sistem-informasi-konveksi/pkg"
@@ -30,6 +32,9 @@ func NewHargaDetailProdukUsecase(repo repo.HargaDetailProdukRepo, produkR produk
 func (u *hargaDetailProdukUsecase) Create(ctx context.Context, reqHargaDetailProduk req.Create) error {
 	_, err := u.produkR.GetById(ctx, reqHargaDetailProduk.ProdukId)
 	if err != nil {
+		if err.Error() == "record not found" {
+			return errors.New(message.ProdukNotFound)
+		}
 		return err
 	}
 
