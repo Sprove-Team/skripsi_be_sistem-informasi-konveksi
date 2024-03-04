@@ -24,7 +24,6 @@ type DBGorm struct {
 	DB_HOST     string
 	DB_Port     string
 	DB_Name     string
-	DB_Test     bool
 }
 
 func (dbgc *DBGorm) InitDBGorm(ulid pkg.UlidPkg) *gorm.DB {
@@ -32,10 +31,7 @@ func (dbgc *DBGorm) InitDBGorm(ulid pkg.UlidPkg) *gorm.DB {
 	logLevel := logger.Info
 	if os.Getenv("ENVIRONMENT") == "PRODUCTION" {
 		host = dbgc.DB_HOST
-		if !dbgc.DB_Test {
-			logLevel = logger.Silent
-		}
-
+		logLevel = logger.Silent
 	}
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8&parseTime=True&loc=Local",
 		dbgc.DB_Username,
