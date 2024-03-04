@@ -2,26 +2,22 @@ package handler_invoice
 
 import (
 	"context"
-	"fmt"
 
 	ucHutangPiutang "github.com/be-sistem-informasi-konveksi/api/usecase/akuntansi/hutang_piutang"
 	ucKontak "github.com/be-sistem-informasi-konveksi/api/usecase/akuntansi/kontak"
 	usecase "github.com/be-sistem-informasi-konveksi/api/usecase/invoice"
 	ucUser "github.com/be-sistem-informasi-konveksi/api/usecase/user"
 	"github.com/be-sistem-informasi-konveksi/common/message"
-	reqHP "github.com/be-sistem-informasi-konveksi/common/request/akuntansi/hutang_piutang"
-	reqKontak "github.com/be-sistem-informasi-konveksi/common/request/akuntansi/kontak"
 	reqGlobal "github.com/be-sistem-informasi-konveksi/common/request/global"
 	req "github.com/be-sistem-informasi-konveksi/common/request/invoice"
 	"github.com/be-sistem-informasi-konveksi/common/response"
-	"github.com/be-sistem-informasi-konveksi/entity"
 	"github.com/be-sistem-informasi-konveksi/pkg"
 	"github.com/gofiber/fiber/v2"
-	"golang.org/x/sync/errgroup"
 )
 
 type InvoiceHandler interface {
 	GetAll(c *fiber.Ctx) error
+	GetById(c *fiber.Ctx) error
 	Create(c *fiber.Ctx) error
 	Update(c *fiber.Ctx) error
 	Delete(c *fiber.Ctx) error
@@ -47,7 +43,6 @@ func NewInvoiceHandler(
 }
 
 func errResponse(c *fiber.Ctx, err error) error {
-	fmt.Println(err)
 	if err == context.DeadlineExceeded {
 		return c.Status(fiber.StatusRequestTimeout).JSON(response.ErrorRes(fiber.ErrRequestTimeout.Code, fiber.ErrRequestTimeout.Message, nil))
 	}
@@ -103,6 +98,30 @@ func (h *invoiceHandler) GetAll(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(response.SuccessRes(fiber.StatusOK, message.OK, datas))
 }
 
+func (h *invoiceHandler) GetById(c *fiber.Ctx) error {
+	req := new(reqGlobal.ParamByID)
+
+	c.ParamsParser(req)
+
+	errValidate := h.validator.Validate(req)
+	if errValidate != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(errValidate)
+	}
+
+	ctx := c.UserContext()
+	datas, err := h.uc.GetById(usecase.ParamGetById{
+		Ctx: ctx,
+		ID:  req.ID,
+	})
+	// Handle errors
+	if err != nil {
+		return errResponse(c, err)
+	}
+
+	// Respond with success status
+	return c.Status(fiber.StatusOK).JSON(response.SuccessRes(fiber.StatusOK, message.OK, datas))
+}
+
 func (h *invoiceHandler) Create(c *fiber.Ctx) error {
 	req := new(req.Create)
 
@@ -115,47 +134,12 @@ func (h *invoiceHandler) Create(c *fiber.Ctx) error {
 
 	ctx := c.UserContext()
 
-	g := new(errgroup.Group)
-
-	var dataKontak *entity.Kontak
-
-	g.Go(func() error {
-		var err error
-		if req.KontakID == "" {
-			dataKontak, err = h.ucKontak.CreateDataKontak(ucKontak.ParamCreateDataKontak{
-				Ctx: ctx,
-				Req: reqKontak.Create{
-					Nama:       req.NewKontak.Nama,
-					NoTelp:     req.NewKontak.NoTelp,
-					Alamat:     req.NewKontak.Alamat,
-					Keterangan: req.Keterangan,
-					Email:      req.NewKontak.Email,
-				},
-			})
-
-			if err != nil {
-				return err
-			}
-		}
-		return nil
+	dataInvoice, dataReqHp, err := h.uc.CreateDataInvoice(usecase.ParamCreateDataInvoice{
+		Ctx: ctx,
+		Req: *req,
 	})
 
-	var dataInvoice *entity.Invoice
-	var dataReqHp *reqHP.Create
-	g.Go(func() error {
-		var err error
-		dataInvoice, dataReqHp, err = h.uc.CreateDataInvoice(usecase.ParamCreateDataInvoice{
-			Ctx: ctx,
-			Req: *req,
-		})
-
-		if err != nil {
-			return err
-		}
-		return nil
-	})
-
-	if err := g.Wait(); err != nil {
+	if err != nil {
 		return errResponse(c, err)
 	}
 
@@ -163,19 +147,13 @@ func (h *invoiceHandler) Create(c *fiber.Ctx) error {
 		Ctx: ctx,
 		Req: *dataReqHp,
 	})
+
 	if err != nil {
 		return errResponse(c, err)
 	}
 
 	// set data hp into invoice
 	dataInvoice.HutangPiutang = *dataHp
-
-	// set kontak into invoice
-	if req.KontakID == "" {
-		dataInvoice.Kontak = dataKontak
-	} else {
-		dataInvoice.KontakID = req.KontakID
-	}
 
 	err = h.uc.CreateCommitDB(usecase.ParamCommitDB{
 		Ctx:     ctx,

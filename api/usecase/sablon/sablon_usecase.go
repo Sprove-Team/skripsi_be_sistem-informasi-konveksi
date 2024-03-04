@@ -29,7 +29,9 @@ func NewSablonUsecase(repo repo.SablonRepo, ulid pkg.UlidPkg) SablonUsecase {
 func (u *sablonUsecase) Create(ctx context.Context, sablon req.Create) error {
 	id := u.ulid.MakeUlid().String()
 	data := entity.Sablon{
-		ID:    id,
+		Base: entity.Base{
+			ID: id,
+		},
 		Nama:  sablon.Nama,
 		Harga: sablon.Harga,
 	}
@@ -42,7 +44,9 @@ func (u *sablonUsecase) Update(ctx context.Context, reqSablon req.Update) error 
 		return err
 	}
 	data := entity.Sablon{
-		ID:    reqSablon.ID,
+		Base: entity.Base{
+			ID: reqSablon.ID,
+		},
 		Nama:  reqSablon.Nama,
 		Harga: reqSablon.Harga,
 	}

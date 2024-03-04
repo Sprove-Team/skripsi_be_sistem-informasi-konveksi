@@ -26,13 +26,11 @@ type ReqBayar struct {
 }
 
 type Create struct {
-	UserID         string       `json:"user_id" validate:"required,ulid"` //ganti menggunakan jwt data nantinya
-	StatusProduksi string       `json:"status_produksi" validate:"omitempty,oneof=BELUM_DIKERJAKAN DIPROSES SELESAI"`
-	KontakID       string       `json:"kontak_id" validate:"required_without=NewKontak,excluded_with=NewKontak,ulid"`
-	NewKontak      ReqNewKontak `json:"new_kontak" validate:"omitempty"`
-	Bayar          ReqBayar     `json:"bayar" validate:"required"`
-	// TotalHarga      float64            `json:"total_harga" validate:"required,number"`
-	// TotalQty        int                `json:"total_qty" validate:"required,number,min=1"`
+	UserID          string             `json:"user_id" validate:"required,ulid"` //ganti menggunakan jwt data nantinya
+	StatusProduksi  string             `json:"status_produksi" validate:"omitempty,oneof=BELUM_DIKERJAKAN DIPROSES SELESAI"`
+	KontakID        string             `json:"kontak_id" validate:"required_without=NewKontak,excluded_with=NewKontak,ulid"`
+	NewKontak       ReqNewKontak       `json:"new_kontak" validate:"omitempty"`
+	Bayar           ReqBayar           `json:"bayar" validate:"required"`
 	TanggalDeadline string             `json:"tanggal_deadline" validate:"required,datetime=2006-01-02T15:04:05Z07:00"`
 	TanggalKirim    string             `json:"tanggal_kirim" validate:"required,datetime=2006-01-02T15:04:05Z07:00"`
 	Keterangan      string             `json:"keterangan" validate:"required"`

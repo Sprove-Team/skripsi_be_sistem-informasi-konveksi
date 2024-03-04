@@ -134,38 +134,55 @@ func createRefNumber(repo repo.InvoiceRepo, ctx context.Context) (string, error)
 	return fmt.Sprintf("%04d", nextID), nil
 }
 
+func countUniqueElements(slice []string) int {
+	uniqueMap := make(map[string]bool)
+
+	// Iterate over the slice and add each element to the map
+	for _, element := range slice {
+		uniqueMap[element] = true
+	}
+
+	// Return the number of unique elements (length of the map)
+	return len(uniqueMap)
+}
+
 func (u *invoiceUsecase) CheckDataDetails(param ParamCheckDataDetails) error {
 
 	g := new(errgroup.Group)
 
 	g.Go(func() error {
+		count := countUniqueElements(param.ProdukIds)
+
 		d, err := u.repoProduk.GetByIds(param.Ctx, param.ProdukIds)
 		if err != nil {
 			return err
 		}
-		if len(d) != len(param.ProdukIds) {
+
+		if len(d) != count {
 			return errors.New(message.ProdukNotFound)
 		}
 		return nil
 	})
 
 	g.Go(func() error {
+		count := countUniqueElements(param.BordirIds)
 		d, err := u.repoBordir.GetByIds(param.Ctx, param.BordirIds)
 		if err != nil {
 			return err
 		}
-		if len(d) != len(param.BordirIds) {
+		if len(d) != count {
 			return errors.New(message.BordirNotFound)
 		}
 		return nil
 	})
 
 	g.Go(func() error {
+		count := countUniqueElements(param.BordirIds)
 		d, err := u.repoSablon.GetByIds(param.Ctx, param.SablonIds)
 		if err != nil {
 			return err
 		}
-		if len(d) != len(param.SablonIds) {
+		if len(d) != count {
 			return errors.New(message.SablonNotFound)
 		}
 		return nil
@@ -320,7 +337,6 @@ func (u *invoiceUsecase) CreateDataInvoice(param ParamCreateDataInvoice) (*entit
 		KontakID:         param.Req.KontakID,
 		TotalQty:         totalQty,
 		TotalHarga:       totalHarga,
-		StatusProduksi:   param.Req.StatusProduksi,
 		UserID:           param.Req.UserID,
 		Keterangan:       param.Req.Keterangan,
 		TanggalDeadline:  &tanggalDeadline,
@@ -351,6 +367,7 @@ func (u *invoiceUsecase) CreateCommitDB(param ParamCommitDB) error {
 }
 
 func (u *invoiceUsecase) UpdateDataInvoice(param ParamUpdateDataInvoice) (*entity.Invoice, error) {
+
 	oldData, err := u.repo.GetByIdFullAssoc(repo.ParamGetById{
 		Ctx: param.Ctx,
 		ID:  param.Req.ID,
@@ -391,6 +408,10 @@ func (u *invoiceUsecase) UpdateDataInvoice(param ParamUpdateDataInvoice) (*entit
 			return oldData.DetailInvoice[i].ID < oldData.DetailInvoice[j].ID
 		})
 
+		var produkIds = make([]string, 0, lengthDetail)
+		var bordirIds = make([]string, 0, lengthDetail)
+		var sablonIds = make([]string, 0, lengthDetail)
+
 		for _, detail := range param.Req.DetailInvoice {
 			idx := sort.Search(len(oldData.DetailInvoice), func(i int) bool {
 				return oldData.DetailInvoice[i].ID >= detail.ID
@@ -407,9 +428,24 @@ func (u *invoiceUsecase) UpdateDataInvoice(param ParamUpdateDataInvoice) (*entit
 				oldData.DetailInvoice[idx].Qty = detail.Qty
 				oldData.DetailInvoice[idx].Total = detail.Total
 				oldData.DetailInvoice[idx].GambarDesign = detail.GambarDesign
+
+				produkIds = append(produkIds, detail.ProdukID)
+				bordirIds = append(bordirIds, detail.BordirID)
+				sablonIds = append(sablonIds, detail.SablonID)
 			} else {
 				return nil, errors.New(message.DetailInvoiceNotFound)
 			}
+		}
+
+		err := u.CheckDataDetails(ParamCheckDataDetails{
+			Ctx:       param.Ctx,
+			ProdukIds: produkIds,
+			BordirIds: bordirIds,
+			SablonIds: sablonIds,
+		})
+
+		if err != nil {
+			return nil, err
 		}
 
 		// update oldData total harga & qty
@@ -449,11 +485,19 @@ func (u *invoiceUsecase) UpdateDataInvoice(param ParamUpdateDataInvoice) (*entit
 	oldData.HutangPiutang.Transaksi.Keterangan = param.Req.Keterangan
 	oldData.HutangPiutang.Transaksi.KontakID = param.Req.KontakID
 
+	fmt.Println(oldData)
 	return oldData, nil
 }
 
 func (u *invoiceUsecase) UpdateStatusProduksi(param ParamUpdateStatusProduksi) error {
-	err := u.repo.UpdateStatusProduksi(repo.ParamUpdateStatusProduksi{Ctx: param.Ctx, ID: param.Req.ID, Status: param.Req.StatusProduksi})
+	err := u.repo.CheckInvoice(repo.ParamGetById{
+		Ctx: param.Ctx,
+		ID:  param.Req.ID,
+	})
+	if err != nil {
+		return err
+	}
+	err = u.repo.UpdateStatusProduksi(repo.ParamUpdateStatusProduksi{Ctx: param.Ctx, ID: param.Req.ID, Status: param.Req.StatusProduksi})
 	if err != nil {
 		return err
 	}

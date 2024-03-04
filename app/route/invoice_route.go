@@ -22,6 +22,7 @@ func NewInvoiceRoute(h handler_init.InvoiceHandlerInit, auth middleware_auth.Aut
 
 func (ro *invoiceRoute) Invoice(router fiber.Router) {
 	router.Get("", ro.h.InvoiceHandler().GetAll)
+	router.Get("/:id", ro.h.InvoiceHandler().GetById)
 	router.Post("", ro.h.InvoiceHandler().Create)
 	router.Put("/:id", ro.h.InvoiceHandler().Update)
 	router.Put("/:id/status_produksi", ro.h.InvoiceHandler().UpdateStatusProduksi)

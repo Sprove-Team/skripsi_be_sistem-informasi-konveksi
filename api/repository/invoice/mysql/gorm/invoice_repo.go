@@ -117,6 +117,8 @@ func (r *invoiceRepo) GetById(param ParamGetById) (*entity.Invoice, error) {
 	data := new(entity.Invoice)
 	tx := r.DB.WithContext(param.Ctx).
 		Preload("DataBayarInvoice").
+		Preload("DataBayarInvoice.Akun").
+		Preload("DetailInvoice").
 		Preload("Kontak").
 		Preload("User").
 		First(data, "id = ?", param.ID)
