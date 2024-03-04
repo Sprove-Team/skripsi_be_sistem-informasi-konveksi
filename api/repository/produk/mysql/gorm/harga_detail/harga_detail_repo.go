@@ -28,7 +28,15 @@ func NewHargaDetailProdukRepo(DB *gorm.DB) HargaDetailProdukRepo {
 }
 
 func (r *hargaDetailProdukRepo) Create(ctx context.Context, hargaDetailProduk *entity.HargaDetailProduk) error {
-	err := r.DB.WithContext(ctx).Create(hargaDetailProduk).Error
+	var count int64
+	err := r.DB.WithContext(ctx).Model(&entity.HargaDetailProduk{}).Where("produk_id = ? AND qty = ?", hargaDetailProduk.ProdukID, hargaDetailProduk.QTY).Count(&count).Error
+	if err != nil {
+		return err
+	}
+	if count > 0 {
+		return gorm.ErrDuplicatedKey
+	}
+	err = r.DB.WithContext(ctx).Create(hargaDetailProduk).Error
 	if err != nil {
 		helper.LogsError(err)
 		return err
