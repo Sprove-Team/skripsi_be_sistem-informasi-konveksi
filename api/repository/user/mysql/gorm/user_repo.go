@@ -117,11 +117,14 @@ func (r *userRepo) GetAll(param ParamGetAll) ([]entity.User, error) {
 		tx = tx.Where("alamat LIKE ?", "%"+param.Search.Alamat+"%")
 	}
 
+	tx = tx.Limit(param.Search.Limit).Preload("JenisSpv")
+
 	if param.Search.Next != "" {
 		tx = tx.Where("id > ?", param.Search.Next)
 	}
 
-	err := tx.Limit(param.Search.Limit).Preload("JenisSpv").Find(&datas, "role != ?", "DIREKTUR").Error
+	err := tx.Find(&datas).Error
+
 	if err != nil {
 		helper.LogsError(err)
 		return nil, err
