@@ -110,7 +110,7 @@ func (r *userRepo) GetAll(param ParamGetAll) ([]entity.User, error) {
 	}
 
 	if param.Search.NoTelp != "" {
-		tx = tx.Where("no_telp LIKE ?", "%"+param.Search.NoTelp+"%")
+		tx = tx.Where("no_telp LIKE ?", param.Search.NoTelp+"%")
 	}
 
 	if param.Search.Alamat != "" {

@@ -180,35 +180,7 @@ func (u *userUsecase) GetAll(param ParamGetAll) ([]entity.User, error) {
 	if err != nil {
 		return nil, err
 	}
-	// datasRes := make([]res.DataGetAllUserRes, len(datas))
-	// datasJenisSpv, err :=
-	// for i, d := range datas {
-	// 	g.Go(func() error {
-	// jenisSpv, err := u.jenisSpvRepo.GetById(ctx, d.JenisSpvID)
-	// 		if err != nil && err.Error() != "record not found" {
-	// 			return err
-	// 		}
 
-	// 		datasRes[i] = res.DataGetAllUserRes{
-	// 			ID:       d.ID,
-	// 			Nama:     d.Nama,
-	// 			Alamat:   d.Alamat,
-	// 			Username: d.Username,
-	// 			NoTelp:   d.NoTelp,
-	// 			Role:     d.Role,
-	// 		}
-
-	// 		if jenisSpv.Nama != "" {
-	// 			datasRes[i].JenisSpv = jenisSpv
-	// 		}
-
-	// 		return nil
-	// 	})
-	// }
-
-	// if err := g.Wait(); err != nil {
-	// 	return nil, err
-	// }
 	return datas, err
 }
 

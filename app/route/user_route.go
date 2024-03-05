@@ -22,6 +22,7 @@ func NewUserRoute(h handler_init.UserHandlerInit, auth middleware_auth.AuthMidle
 
 func (ro *userRoute) User(router fiber.Router) {
 	router.Get("", ro.h.UserHandler().GetAll)
+	router.Get("/:id", ro.h.UserHandler().GetById)
 	router.Post("", ro.h.UserHandler().Create)
 	router.Put("/:id", ro.h.UserHandler().Update)
 	router.Delete("/:id", ro.h.UserHandler().Delete)

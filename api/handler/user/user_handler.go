@@ -2,7 +2,6 @@ package handler_user
 
 import (
 	"context"
-	"fmt"
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
@@ -16,9 +15,9 @@ import (
 )
 
 type UserHandler interface {
-	// GetById(c *fiber.Ctx) error
 	Create(c *fiber.Ctx) error
 	GetAll(c *fiber.Ctx) error
+	GetById(c *fiber.Ctx) error
 	Update(c *fiber.Ctx) error
 	Delete(c *fiber.Ctx) error
 }
@@ -85,8 +84,6 @@ func (h *userHandler) GetAll(c *fiber.Ctx) error {
 	req := new(req.GetAll)
 	c.QueryParser(req)
 
-	fmt.Println(req.Search)
-
 	req.Search.Role = strings.ToUpper(req.Search.Role)
 	errValidate := h.validator.Validate(req)
 	if errValidate != nil {
@@ -96,6 +93,25 @@ func (h *userHandler) GetAll(c *fiber.Ctx) error {
 	data, err := h.uc.GetAll(usecase.ParamGetAll{
 		Ctx: ctx,
 		Req: *req,
+	})
+	if err != nil {
+		return errResponse(c, err)
+	}
+	return c.Status(fiber.StatusOK).JSON(response.SuccessRes(fiber.StatusOK, message.OK, data))
+}
+
+func (h *userHandler) GetById(c *fiber.Ctx) error {
+	req := new(reqGlobal.ParamByID)
+	c.ParamsParser(req)
+
+	errValidate := h.validator.Validate(req)
+	if errValidate != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(errValidate)
+	}
+	ctx := c.UserContext()
+	data, err := h.uc.GetById(usecase.ParamGetById{
+		Ctx: ctx,
+		ID:  req.ID,
 	})
 	if err != nil {
 		return errResponse(c, err)

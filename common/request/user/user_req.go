@@ -22,13 +22,12 @@ type Update struct {
 }
 
 type SearchFilter struct {
-	Nama        string `query:"nama" validate:"omitempty"`
-	Role        string `query:"role" validate:"omitempty,oneof=DIREKTUR ADMIN BENDAHARA MANAJER_PRODUKSI SUPERVISOR"`
-	Username    string `query:"username" validate:"omitempty"`
-	Alamat      string `query:"alamat" validate:"omitempty"`
-	NoTelp      string `query:"no_telp" validate:"omitempty,e164"`
-	JenisSpvID  string `query:"jenis_spv_id" validate:"required_if=AllJenisSpv false,omitempty,ulid"`
-	AllJenisSpv bool   `query:"all_jenis_spv" validate:"omitempty,boolean"`
+	Nama       string `query:"nama" validate:"omitempty"`
+	Role       string `query:"role" validate:"omitempty,oneof=DIREKTUR ADMIN BENDAHARA MANAJER_PRODUKSI SUPERVISOR"`
+	Username   string `query:"username" validate:"omitempty"`
+	Alamat     string `query:"alamat" validate:"omitempty"`
+	NoTelp     string `query:"no_telp" validate:"omitempty,e164"`
+	JenisSpvID string `query:"jenis_spv_id" validate:"omitempty,ulid"`
 }
 
 type GetAll struct {

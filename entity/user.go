@@ -16,7 +16,7 @@ type User struct {
 	Password   string    `gorm:"type:varchar(100);not null" json:"-"`
 	NoTelp     string    `gorm:"type:varchar(20)" json:"no_telp"`
 	Alamat     string    `gorm:"type:varchar(150)" json:"alamat"`
-	JenisSpvID string    `gorm:"type:varchar(26);index:idx_jenis_spv_id;default:null" json:"jenis_spv_id"`
+	JenisSpvID string    `gorm:"type:varchar(26);index:idx_jenis_spv_id;default:null" json:"-"`
 	JenisSpv   *JenisSpv `json:"jenis_spv,omitempty"`
 }
 
