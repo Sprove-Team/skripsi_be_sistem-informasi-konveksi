@@ -32,6 +32,6 @@ type SearchFilter struct {
 
 type GetAll struct {
 	Search SearchFilter `query:"search" validate:"omitempty"`
-	Next   string       `query:"page" validate:"omitempty"`
+	Next   string       `query:"next" validate:"omitempty"`
 	Limit  int          `query:"limit" validate:"omitempty,number"`
 }
