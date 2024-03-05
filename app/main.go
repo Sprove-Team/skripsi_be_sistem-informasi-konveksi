@@ -14,6 +14,7 @@ import (
 	"github.com/be-sistem-informasi-konveksi/app/route"
 	helper "github.com/be-sistem-informasi-konveksi/helper"
 	"github.com/be-sistem-informasi-konveksi/pkg"
+	_ "github.com/joho/godotenv/autoload"
 )
 
 func main() {
@@ -21,7 +22,6 @@ func main() {
 	validator := pkg.NewValidator()
 	ulidPkg := pkg.NewUlidPkg()
 
-	config.LoadEnv()
 	dbGormConf := config.DBGorm{
 		DB_Username: os.Getenv("DB_USERNAME"),
 		DB_Password: os.Getenv("DB_PASSWORD"),
