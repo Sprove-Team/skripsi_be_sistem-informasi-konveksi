@@ -29,10 +29,11 @@ func (a *authMidleware) Authorization(roles []string) fiber.Handler {
 	if len(roles) <= 0 {
 		roles = []string{"DIREKTUR", "BENDAHARA", "ADMIN", "MANAJER_PRODUKSI", "SUPERVISOR"}
 	}
+
 	return jwtware.New(jwtware.Config{
 		Claims: new(pkg.Claims),
 		SigningKey: jwtware.SigningKey{
-			Key: []byte(os.Getenv("TOKEN")),
+			Key: []byte(os.Getenv("JWT_TOKEN")),
 		},
 		SuccessHandler: func(c *fiber.Ctx) error {
 			user := c.Locals("user").(*jwt.Token).Claims.(*pkg.Claims)
@@ -43,13 +44,14 @@ func (a *authMidleware) Authorization(roles []string) fiber.Handler {
 					break
 				}
 			}
+
 			if !pass {
 				return c.Status(fiber.StatusUnauthorized).JSON(response.ErrorRes(fiber.ErrUnauthorized.Code, fiber.ErrUnauthorized.Message, nil))
 			}
 			ctx := c.UserContext()
-			_, err := a.userRepo.GetById(userRepo.ParamGetById{
-				Ctx: ctx,
-				ID:  user.ID,
+			userData, err := a.userRepo.GetByUsername(userRepo.ParamGetByUsername{
+				Ctx:      ctx,
+				Username: user.Username,
 			})
 			if err != nil {
 				if err.Error() == "record not found" {
@@ -58,7 +60,7 @@ func (a *authMidleware) Authorization(roles []string) fiber.Handler {
 				return c.Status(fiber.StatusInternalServerError).JSON(response.ErrorRes(fiber.ErrInternalServerError.Code, fiber.ErrInternalServerError.Message, nil))
 			}
 
-			c.Locals("user", user)
+			c.Locals("user", userData)
 			return c.Next()
 		},
 		ErrorHandler: func(c *fiber.Ctx, err error) error {

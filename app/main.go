@@ -21,7 +21,7 @@ func main() {
 	// pkg
 	validator := pkg.NewValidator()
 	ulidPkg := pkg.NewUlidPkg()
-
+	jwtPkg := pkg.NewJwt(os.Getenv("JWT_TOKEN"), os.Getenv("JWT_REFTOKEN"))
 	dbGormConf := config.DBGorm{
 		DB_Username: os.Getenv("DB_USERNAME"),
 		DB_Password: os.Getenv("DB_PASSWORD"),
@@ -53,6 +53,13 @@ func main() {
 	// v1.Get("/metrics", monitor.New(monitor.Config{Title: "MyService Metrics Page"}))
 
 	{
+		// auth
+		authHandler := handler_init.NewAuthHandlerInit(dbGorm, jwtPkg, validator, encryptor)
+		authRoute := route.NewAuthRoute(authHandler)
+		authGroup := v1.Group("/auth")
+		{
+			authGroup.Route("", authRoute.Auth)
+		}
 		// produk
 		produkHandler := handler_init.NewProdukHandlerInit(dbGorm, validator, ulidPkg)
 		produkRoute := route.NewProdukRoute(produkHandler, authMid)
@@ -107,6 +114,7 @@ func main() {
 		invoiceGroup := v1.Group("/invoice")
 		{
 			invoiceGroup.Route("", invoiceRoute.Invoice)
+			invoiceGroup.Route("/data_bayar", invoiceRoute.DataBayarInvoice)
 		}
 
 	}

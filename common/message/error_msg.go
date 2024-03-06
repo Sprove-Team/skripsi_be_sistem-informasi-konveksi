@@ -18,6 +18,15 @@ var (
 	UnauthUserNotFound   = "pengguna telah dihapus atau hubungi direktur"
 )
 
+// auth
+
+var (
+	InvalidUsernameOrPassword = "username atau password tidak valid"
+	RefreshTokenExpired       = "refresh token telah kadaluarsa"
+	InvalidRefreshToken       = "refresh token tidak valid"
+	UserNotFoundOrDeleted     = "user tidak ditemukan atau telah dihapus"
+)
+
 // misc
 var InvalidImageFormat = "format gambar tidak valid"
 

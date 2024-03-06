@@ -8,29 +8,40 @@ import (
 
 type Claims struct {
 	jwt.RegisteredClaims
-	Name  string `json:"name"`
-	Email string `json:"email"`
-	Role  string `json:"role"`
-	ID    string   `json:"id"`
+	Username string `json:"username"`
+	Role     string `json:"role"`
 }
 
 type JwtC interface {
-	CreateTokenUser(key string, claims *Claims, expiresAt time.Time) (string, error)
-	ParseToken(key, token string, claims *Claims) (*jwt.Token, error)
+	CreateToken(refresh bool, claims *Claims, expiresAt time.Time) (string, error)
+	ParseToken(refresh bool, token string, claims *Claims) (*jwt.Token, error)
 }
 
-type jwtC struct{}
+type jwtC struct {
+	Key        string
+	RefreshKey string
+}
 
-func (j *jwtC) CreateTokenUser(key string, claims *Claims, expiresAt time.Time) (string, error) {
+func NewJwt(key string, refreshKey string) JwtC {
+	return &jwtC{key, refreshKey}
+}
+
+func (j *jwtC) CreateToken(refresh bool, claims *Claims, expiresAt time.Time) (string, error) {
 	claims.RegisteredClaims = jwt.RegisteredClaims{
 		ExpiresAt: jwt.NewNumericDate(expiresAt),
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString([]byte(key))
+	if refresh {
+		return token.SignedString([]byte(j.RefreshKey))
+	}
+	return token.SignedString([]byte(j.Key))
 }
 
-func (j *jwtC) ParseToken(key, token string, claims *Claims) (*jwt.Token, error) {
+func (j *jwtC) ParseToken(refresh bool, token string, claims *Claims) (*jwt.Token, error) {
 	return jwt.ParseWithClaims(token, claims, func(t *jwt.Token) (interface{}, error) {
-		return []byte(key), nil
+		if refresh {
+			return []byte(j.RefreshKey), nil
+		}
+		return []byte(j.Key), nil
 	})
 }

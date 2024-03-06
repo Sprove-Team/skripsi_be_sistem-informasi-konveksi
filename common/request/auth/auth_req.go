@@ -5,6 +5,6 @@ type Login struct {
 	Password string `json:"password" validate:"required"`
 }
 
-type GetNewAccessToken struct {
+type GetNewToken struct {
 	RefreshToken string `json:"refresh_token" validate:"required,jwt"`
 }

@@ -1,21 +1,125 @@
 package uc_auth
 
 import (
+	"context"
+	"errors"
+	"strings"
+	"time"
+
 	userRepo "github.com/be-sistem-informasi-konveksi/api/repository/user/mysql/gorm"
+	"github.com/be-sistem-informasi-konveksi/common/message"
 	req "github.com/be-sistem-informasi-konveksi/common/request/auth"
+	"github.com/be-sistem-informasi-konveksi/helper"
+	"github.com/be-sistem-informasi-konveksi/pkg"
+	"golang.org/x/sync/errgroup"
+)
+
+type (
+	ParamLogin struct {
+		Ctx context.Context
+		Req req.Login
+	}
+	ParamRefreshToken struct {
+		Ctx context.Context
+		Req req.GetNewToken
+	}
 )
 
 type AuthUsecase interface {
-	Login(reqLogin req.Login) error
+	Login(param ParamLogin) (token *string, refreshToken *string, err error)
+	RefreshToken(param ParamRefreshToken) (newToken *string, err error)
 }
 
 type authUsecase struct {
-	userRepo userRepo.UserRepo
+	userRepo  userRepo.UserRepo
+	encryptor helper.Encryptor
+	jwt       pkg.JwtC
 }
 
-// func NewAuthUsecase(userRepo userRepo.UserRepo) AuthUsecase {
-// 	return &authUsecase{userRepo}
-// }
+func NewAuthUsecase(userRepo userRepo.UserRepo, encryptor helper.Encryptor, jwt pkg.JwtC) AuthUsecase {
+	return &authUsecase{userRepo, encryptor, jwt}
+}
 
-// func (u *authUsecase) Login(reqLogin req.Login) error {
-// }
+func (u *authUsecase) Login(param ParamLogin) (token *string, refreshToken *string, err error) {
+	userData, err := u.userRepo.GetByUsername(userRepo.ParamGetByUsername{
+		Ctx:      param.Ctx,
+		Username: param.Req.Username,
+	})
+
+	if err != nil {
+		if err.Error() == "record not found" {
+			return nil, nil, errors.New(message.UserNotFound)
+		}
+		return nil, nil, err
+	}
+
+	if !u.encryptor.CheckPasswordHash(param.Req.Password, userData.Password) {
+		return nil, nil, errors.New(message.InvalidUsernameOrPassword)
+	}
+
+	g := new(errgroup.Group)
+
+	claims := new(pkg.Claims)
+	claims.Subject = "auth"
+	claims.Username = userData.Username
+	claims.Role = userData.Role
+
+	g.Go(func() error {
+		tokenData, err := u.jwt.CreateToken(false, claims, time.Now().Add(time.Hour*24))
+		if err != nil {
+			return err
+		}
+		token = &tokenData
+		return nil
+	})
+
+	g.Go(func() error {
+		refTokenData, err := u.jwt.CreateToken(true, claims, time.Now().Add(time.Hour*24*7))
+		if err != nil {
+			return err
+		}
+		refreshToken = &refTokenData
+		return nil
+	})
+
+	if err := g.Wait(); err != nil {
+		return nil, nil, err
+	}
+	return
+}
+
+func (u *authUsecase) RefreshToken(param ParamRefreshToken) (newToken *string, err error) {
+	parse, err := u.jwt.ParseToken(true, param.Req.RefreshToken, &pkg.Claims{})
+	if err != nil {
+		if strings.Contains(err.Error(), "token is expired") {
+			return nil, errors.New(message.RefreshTokenExpired)
+		}
+		return nil, errors.New(message.InvalidRefreshToken)
+	}
+
+	if !parse.Valid {
+		return nil, errors.New(message.InvalidRefreshToken)
+	}
+
+	claims := parse.Claims.(*pkg.Claims)
+
+	userData, err := u.userRepo.GetByUsername(userRepo.ParamGetByUsername{
+		Ctx:      param.Ctx,
+		Username: claims.Username,
+	})
+
+	if err != nil {
+		if err.Error() == "record not found" {
+			return nil, errors.New(message.UserNotFoundOrDeleted)
+		}
+		return nil, err
+	}
+	claims.Username = userData.Username
+	claims.Role = userData.Role
+
+	newTokenData, err := u.jwt.CreateToken(false, claims, time.Now().Add(time.Hour*24))
+	if err != nil {
+		return nil, err
+	}
+	return &newTokenData, nil
+}
