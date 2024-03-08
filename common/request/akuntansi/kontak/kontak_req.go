@@ -12,8 +12,8 @@ type Create struct {
 	Nama       string `json:"nama" validate:"required,printascii"`
 	NoTelp     string `json:"no_telp" validate:"required,e164"`
 	Alamat     string `json:"alamat" validate:"required"`
-	Keterangan string `json:"keterangan" validate:"required"`
-	Email      string `json:"email" validate:"required,email"`
+	Keterangan string `json:"keterangan" validate:"omitempty"`
+	Email      string `json:"email" validate:"omitempty,email"`
 }
 
 type Update struct {
