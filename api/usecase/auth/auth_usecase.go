@@ -61,6 +61,7 @@ func (u *authUsecase) Login(param ParamLogin) (token *string, refreshToken *stri
 
 	claims := new(pkg.Claims)
 	claims.Subject = "auth"
+	claims.Nama = userData.Nama
 	claims.Username = userData.Username
 	claims.Role = userData.Role
 
@@ -114,6 +115,8 @@ func (u *authUsecase) RefreshToken(param ParamRefreshToken) (newToken *string, e
 		}
 		return nil, err
 	}
+
+	claims.Nama = userData.Nama
 	claims.Username = userData.Username
 	claims.Role = userData.Role
 
