@@ -10,6 +10,7 @@ import (
 
 	userRepo "github.com/be-sistem-informasi-konveksi/api/repository/user/mysql/gorm"
 	"github.com/be-sistem-informasi-konveksi/common/response"
+	"github.com/be-sistem-informasi-konveksi/helper"
 	"github.com/be-sistem-informasi-konveksi/pkg"
 )
 
@@ -54,16 +55,22 @@ func (a *authMidleware) Authorization(roles []string) fiber.Handler {
 				Username: user.Username,
 			})
 			if err != nil {
+				helper.LogsError(err)
 				if err.Error() == "record not found" {
 					return c.Status(fiber.StatusUnauthorized).JSON(response.ErrorRes(fiber.ErrUnauthorized.Code, fiber.ErrUnauthorized.Message, nil))
 				}
 				return c.Status(fiber.StatusInternalServerError).JSON(response.ErrorRes(fiber.ErrInternalServerError.Code, fiber.ErrInternalServerError.Message, nil))
 			}
 
+			if userData.Username != user.Username || userData.Role != user.Role || userData.Nama != user.Nama {
+				return c.Status(fiber.StatusUnauthorized).JSON(response.ErrorRes(fiber.ErrUnauthorized.Code, fiber.ErrUnauthorized.Message, nil))
+			}
+
 			c.Locals("user", userData)
 			return c.Next()
 		},
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
+			helper.LogsError(err)
 			return c.Status(fiber.StatusUnauthorized).JSON(response.ErrorRes(fiber.ErrUnauthorized.Code, fiber.ErrUnauthorized.Message, nil))
 		},
 	})
