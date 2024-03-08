@@ -11,6 +11,7 @@ import (
 	reqGlobal "github.com/be-sistem-informasi-konveksi/common/request/global"
 	req "github.com/be-sistem-informasi-konveksi/common/request/invoice"
 	"github.com/be-sistem-informasi-konveksi/common/response"
+	"github.com/be-sistem-informasi-konveksi/entity"
 	"github.com/be-sistem-informasi-konveksi/pkg"
 	"github.com/gofiber/fiber/v2"
 )
@@ -21,7 +22,6 @@ type InvoiceHandler interface {
 	Create(c *fiber.Ctx) error
 	Update(c *fiber.Ctx) error
 	Delete(c *fiber.Ctx) error
-	UpdateStatusProduksi(c *fiber.Ctx) error
 }
 
 type invoiceHandler struct {
@@ -133,10 +133,11 @@ func (h *invoiceHandler) Create(c *fiber.Ctx) error {
 	}
 
 	ctx := c.UserContext()
-
+	userData := c.Locals("user").(*entity.User)
 	dataInvoice, dataReqHp, err := h.uc.CreateDataInvoice(usecase.ParamCreateDataInvoice{
-		Ctx: ctx,
-		Req: *req,
+		Ctx:  ctx,
+		Req:  *req,
+		User: userData,
 	})
 
 	if err != nil {
@@ -180,9 +181,12 @@ func (h *invoiceHandler) Update(c *fiber.Ctx) error {
 	}
 
 	ctx := c.UserContext()
+	userData := c.Locals("user").(*entity.User)
+
 	dataInvoice, err := h.uc.UpdateDataInvoice(usecase.ParamUpdateDataInvoice{
-		Ctx: ctx,
-		Req: *req,
+		Ctx:  ctx,
+		Req:  *req,
+		User: userData,
 	})
 
 	if err != nil {
@@ -192,30 +196,6 @@ func (h *invoiceHandler) Update(c *fiber.Ctx) error {
 	err = h.uc.SaveCommitDB(usecase.ParamCommitDB{
 		Ctx:     ctx,
 		Invoice: dataInvoice,
-	})
-
-	if err != nil {
-		return errResponse(c, err)
-	}
-
-	return c.Status(fiber.StatusOK).JSON(response.SuccessRes(fiber.StatusOK, message.OK, nil))
-}
-
-func (h *invoiceHandler) UpdateStatusProduksi(c *fiber.Ctx) error {
-	req := new(req.UpdateStatusProduksi)
-
-	c.ParamsParser(req)
-	c.BodyParser(req)
-
-	errValidate := h.validator.Validate(req)
-	if errValidate != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(errValidate)
-	}
-
-	ctx := c.UserContext()
-	err := h.uc.UpdateStatusProduksi(usecase.ParamUpdateStatusProduksi{
-		Ctx: ctx,
-		Req: *req,
 	})
 
 	if err != nil {

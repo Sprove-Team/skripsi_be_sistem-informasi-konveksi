@@ -26,16 +26,14 @@ import (
 
 type (
 	ParamCreateDataInvoice struct {
-		Ctx context.Context
-		Req req.Create
+		Ctx  context.Context
+		User *entity.User
+		Req  req.Create
 	}
 	ParamUpdateDataInvoice struct {
-		Ctx context.Context
-		Req req.Update
-	}
-	ParamUpdateStatusProduksi struct {
-		Ctx context.Context
-		Req req.UpdateStatusProduksi
+		Ctx  context.Context
+		User *entity.User
+		Req  req.Update
 	}
 	ParamCommitDB struct {
 		Ctx     context.Context
@@ -69,7 +67,6 @@ type InvoiceUsecase interface {
 	CreateDataInvoice(param ParamCreateDataInvoice) (*entity.Invoice, *reqHP.Create, error)
 	CreateCommitDB(param ParamCommitDB) error
 	UpdateDataInvoice(param ParamUpdateDataInvoice) (*entity.Invoice, error)
-	UpdateStatusProduksi(param ParamUpdateStatusProduksi) error
 	SaveCommitDB(param ParamCommitDB) error
 	CheckDataDetails(param ParamCheckDataDetails) error
 	Delete(param ParamDelete) error
@@ -337,7 +334,7 @@ func (u *invoiceUsecase) CreateDataInvoice(param ParamCreateDataInvoice) (*entit
 		KontakID:         param.Req.KontakID,
 		TotalQty:         totalQty,
 		TotalHarga:       totalHarga,
-		UserID:           param.Req.UserID,
+		UserID:           param.User.ID,
 		Keterangan:       param.Req.Keterangan,
 		TanggalDeadline:  &tanggalDeadline,
 		TanggalKirim:     &tanggalKirim,
@@ -380,7 +377,19 @@ func (u *invoiceUsecase) UpdateDataInvoice(param ParamUpdateDataInvoice) (*entit
 	oldData.Base = entity.Base{
 		ID: oldData.ID,
 	}
-	oldData.UserID = param.Req.UserID
+	switch param.User.Role {
+	case "MANAJER_PRODUKSI":
+		return &entity.Invoice{
+			Base:           oldData.Base,
+			UserID:         param.User.ID,
+			KontakID:       oldData.KontakID,
+			StatusProduksi: param.Req.StatusProduksi,
+		}, nil
+	case "DIREKTUR":
+		oldData.StatusProduksi = param.Req.StatusProduksi
+	}
+
+	oldData.UserID = param.User.ID
 	oldData.Keterangan = param.Req.Keterangan
 	oldData.KontakID = param.Req.KontakID
 
@@ -485,54 +494,22 @@ func (u *invoiceUsecase) UpdateDataInvoice(param ParamUpdateDataInvoice) (*entit
 	oldData.HutangPiutang.Transaksi.Keterangan = param.Req.Keterangan
 	oldData.HutangPiutang.Transaksi.KontakID = param.Req.KontakID
 
-	fmt.Println(oldData)
 	return oldData, nil
-}
-
-func (u *invoiceUsecase) UpdateStatusProduksi(param ParamUpdateStatusProduksi) error {
-	err := u.repo.CheckInvoice(repo.ParamGetById{
-		Ctx: param.Ctx,
-		ID:  param.Req.ID,
-	})
-	if err != nil {
-		return err
-	}
-	err = u.repo.UpdateStatusProduksi(repo.ParamUpdateStatusProduksi{Ctx: param.Ctx, ID: param.Req.ID, Status: param.Req.StatusProduksi})
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 func (u *invoiceUsecase) SaveCommitDB(param ParamCommitDB) error {
 	g := new(errgroup.Group)
 
-	if param.Invoice.KontakID != "" {
-		g.Go(func() error {
-			_, err := u.repoKontak.GetById(kontakRepo.ParamGetById{
-				Ctx: param.Ctx,
-				ID:  param.Invoice.KontakID,
-			})
-			if err != nil {
-				if err.Error() == "record not found" {
-					return errors.New(message.KontakNotFound)
-				}
-				return err
-			}
-			return nil
-		})
-	}
-
-	g.Go(func() error {
-		err := u.repo.CheckInvoice(repo.ParamGetById{
-			Ctx: param.Ctx,
-			ID:  param.Invoice.ID,
-		})
-		if err != nil {
-			return err
-		}
-		return nil
+	_, err := u.repoKontak.GetById(kontakRepo.ParamGetById{
+		Ctx: param.Ctx,
+		ID:  param.Invoice.KontakID,
 	})
+	if err != nil {
+		if err.Error() == "record not found" {
+			return errors.New(message.KontakNotFound)
+		}
+		return err
+	}
 
 	if err := g.Wait(); err != nil {
 		return err

@@ -21,6 +21,10 @@ type (
 		Ctx context.Context
 		ID  string
 	}
+	ParamGetByInvoiceId struct {
+		Ctx context.Context
+		ID  string
+	}
 	ParamGetByTrId struct {
 		Ctx context.Context
 		ID  string
@@ -41,6 +45,7 @@ type HutangPiutangRepo interface {
 	Create(param ParamCreate) error
 	GetAll(param ParamGetAll) ([]entity.HutangPiutang, error)
 	GetById(param ParamGetById) (*entity.HutangPiutang, error)
+	GetByInvoiceId(param ParamGetByInvoiceId) (*entity.HutangPiutang, error)
 	GetByTrId(param ParamGetByTrId) (*entity.HutangPiutang, error)
 	GetHPForBayar(param ParamGetHPForBayar) (*entity.HutangPiutang, error)
 }
@@ -105,6 +110,17 @@ func (r *hutangPiutangRepo) GetById(param ParamGetById) (*entity.HutangPiutang, 
 		return data, err
 	}
 
+	return data, nil
+}
+
+func (r *hutangPiutangRepo) GetByInvoiceId(param ParamGetByInvoiceId) (*entity.HutangPiutang, error) {
+	data := new(entity.HutangPiutang)
+	tx := r.DB.WithContext(param.Ctx).Model(data).Where("invoice_id = ?", param.ID).Order("id ASC")
+
+	if err := tx.First(data).Error; err != nil {
+		helper.LogsError(err)
+		return data, err
+	}
 	return data, nil
 }
 

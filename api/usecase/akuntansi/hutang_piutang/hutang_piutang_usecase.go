@@ -31,8 +31,10 @@ type (
 type HutangPiutangUsecase interface {
 	CreateDataHP(param ParamCreateDataHp) (*entity.HutangPiutang, error)
 	CreateCommitDB(ctx context.Context, hp *entity.HutangPiutang) error
-	CreateBayar(ctx context.Context, reqHutangPiutang req.CreateBayar) error
+	CreateDataBayar(ctx context.Context, reqHutangPiutang req.CreateBayar) (*entity.DataBayarHutangPiutang, error)
+	CreateBayarCommitDB(ctx context.Context, byrHP *entity.DataBayarHutangPiutang) error
 	GetAll(ctx context.Context, reqHutangPiutang req.GetAll) ([]res.GetAll, error)
+	GetHPByInvoiceID(ctx context.Context, id string) (*entity.HutangPiutang, error)
 }
 
 type hutangPiutangUsecase struct {
@@ -301,7 +303,18 @@ func (u *hutangPiutangUsecase) GetAll(ctx context.Context, reqHutangPiutang req.
 	return resData, nil
 }
 
-func (u *hutangPiutangUsecase) CreateBayar(ctx context.Context, reqHutangPiutang req.CreateBayar) error {
+func (u *hutangPiutangUsecase) GetHPByInvoiceID(ctx context.Context, id string) (*entity.HutangPiutang, error) {
+	dataHp, err := u.repo.GetByInvoiceId(repo.ParamGetByInvoiceId{
+		Ctx: ctx,
+		ID:  id,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return dataHp, nil
+}
+
+func (u *hutangPiutangUsecase) CreateDataBayar(ctx context.Context, reqHutangPiutang req.CreateBayar) (*entity.DataBayarHutangPiutang, error) {
 
 	hpChan := make(chan entity.HutangPiutang, 1)
 	errChan := make(chan error, 1)
@@ -366,7 +379,7 @@ func (u *hutangPiutangUsecase) CreateBayar(ctx context.Context, reqHutangPiutang
 		byrHP, err = pkgAkuntansiLogic.CreateDataBayarHP(reqHutangPiutang.ReqBayar, ayTagihan, hp.Transaksi.KontakID, reqHutangPiutang.Keterangan, u.ulid)
 
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		byrHP.HutangPiutang = hp
@@ -376,12 +389,15 @@ func (u *hutangPiutangUsecase) CreateBayar(ctx context.Context, reqHutangPiutang
 		}
 
 	case err := <-errChan:
-		return err
+		return nil, err
 	}
+	return byrHP, nil
 
+}
+
+func (u *hutangPiutangUsecase) CreateBayarCommitDB(ctx context.Context, byrHP *entity.DataBayarHutangPiutang) error {
 	if err := u.repoBayarHP.Create(ctx, byrHP); err != nil {
 		return err
 	}
-
 	return nil
 }

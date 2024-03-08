@@ -26,7 +26,6 @@ type ReqBayar struct {
 }
 
 type Create struct {
-	UserID          string             `json:"user_id" validate:"required,ulid"` //ganti menggunakan jwt data nantinya
 	StatusProduksi  string             `json:"status_produksi" validate:"omitempty,oneof=BELUM_DIKERJAKAN DIPROSES SELESAI"`
 	KontakID        string             `json:"kontak_id" validate:"required_without=NewKontak,excluded_with=NewKontak,ulid"`
 	NewKontak       ReqNewKontak       `json:"new_kontak" validate:"omitempty"`
@@ -48,18 +47,12 @@ type ReqUpdateDetailInvoice struct {
 }
 type Update struct {
 	ID              string                   `params:"id" validate:"required"`
-	UserID          string                   `json:"user_id" validate:"required,ulid"` // ganti menggunakan jwt data nantinya
+	StatusProduksi  string                   `json:"status_produksi" validate:"required,oneof=BELUM_DIKERJAKAN DIPROSES SELESAI"`
 	KontakID        string                   `json:"kontak_id" validate:"omitempty,ulid"`
 	TanggalDeadline string                   `json:"tanggal_deadline" validate:"omitempty,datetime=2006-01-02T15:04:05Z07:00"`
 	TanggalKirim    string                   `json:"tanggal_kirim" validate:"omitempty,datetime=2006-01-02T15:04:05Z07:00"`
 	Keterangan      string                   `json:"keterangan" validate:"omitempty"`
 	DetailInvoice   []ReqUpdateDetailInvoice `json:"detail_invoice" validate:"omitempty,gt=0,dive"`
-}
-
-type UpdateStatusProduksi struct {
-	ID             string `params:"id" validate:"required"`
-	UserID         string `json:"user_id" validate:"required,ulid"` // ganti menggunakan jwt data nantinya
-	StatusProduksi string `json:"status_produksi" validate:"required,oneof=BELUM_DIKERJAKAN DIPROSES SELESAI"`
 }
 
 type GetAll struct {

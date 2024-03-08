@@ -35,11 +35,7 @@ type (
 		Ctx     context.Context
 		Invoice *entity.Invoice
 	}
-	ParamUpdateStatusProduksi struct {
-		Ctx    context.Context
-		ID     string
-		Status string
-	}
+
 	ParamDelete struct {
 		Ctx     context.Context
 		Invoice *entity.Invoice
@@ -49,7 +45,6 @@ type (
 type InvoiceRepo interface {
 	Create(param ParamCreate) error
 	UpdateFullAssoc(param ParamUpdateFullAssoc) error
-	UpdateStatusProduksi(param ParamUpdateStatusProduksi) error
 	GetLastInvoiceCrrYear(ctx context.Context) (entity.Invoice, error)
 	GetById(param ParamGetById) (*entity.Invoice, error)
 	CheckInvoice(param ParamGetById) error
@@ -76,16 +71,7 @@ func (r *invoiceRepo) Create(param ParamCreate) error {
 }
 
 func (r *invoiceRepo) UpdateFullAssoc(param ParamUpdateFullAssoc) error {
-	err := r.DB.WithContext(param.Ctx).Session(&gorm.Session{FullSaveAssociations: true}).Omit("status_produksi").Updates(param.Invoice).Error
-	if err != nil {
-		helper.LogsError(err)
-		return err
-	}
-	return nil
-}
-
-func (r *invoiceRepo) UpdateStatusProduksi(param ParamUpdateStatusProduksi) error {
-	err := r.DB.WithContext(param.Ctx).Model(&entity.Invoice{}).Where("id = ?", param.ID).Update("status_produksi", param.Status).Error
+	err := r.DB.WithContext(param.Ctx).Session(&gorm.Session{FullSaveAssociations: true}).Updates(param.Invoice).Error
 	if err != nil {
 		helper.LogsError(err)
 		return err

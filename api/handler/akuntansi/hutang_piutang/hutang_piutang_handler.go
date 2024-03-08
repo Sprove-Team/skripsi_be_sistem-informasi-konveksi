@@ -72,9 +72,13 @@ func (h *hutangPiutangHandler) CreateBayar(c *fiber.Ctx) error {
 	}
 	fmt.Println(req.HutangPiutangID)
 	ctx := c.UserContext()
-	err := h.uc.CreateBayar(ctx, *req)
+	dataBayr, err := h.uc.CreateDataBayar(ctx, *req)
 	// Handle errors
 	if err != nil {
+		return h.errBayar(c, err)
+	}
+
+	if err := h.uc.CreateBayarCommitDB(ctx, dataBayr); err != nil {
 		return h.errBayar(c, err)
 	}
 

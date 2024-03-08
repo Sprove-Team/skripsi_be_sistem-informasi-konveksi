@@ -18,9 +18,15 @@ type (
 		Ctx context.Context
 		Req req.Create
 	}
-	ParamUpdate struct {
-		Ctx context.Context
-		Req req.Update
+	ParamUpdateDataBayarInvoice struct {
+		Ctx  context.Context
+		User *entity.User
+		Req  req.Update
+	}
+	ParamUpdateCommitDB struct {
+		Ctx         context.Context
+		DataBayar   *entity.DataBayarInvoice
+		DataBayarHP *entity.DataBayarHutangPiutang
 	}
 	ParamDelete struct {
 		Ctx context.Context
@@ -34,7 +40,8 @@ type (
 
 type DataBayarInvoice interface {
 	CreateByInvoiceID(param ParamCreateByInvoiceID) error
-	Update(param ParamUpdate) error
+	UpdateDataBayarInvoice(param ParamUpdateDataBayarInvoice) (*entity.DataBayarInvoice, error)
+	UpdateCommitDB(param ParamUpdateCommitDB) error
 	Delete(param ParamDelete) error
 	GetByInvoiceID(param ParamGetByInvoiceID) ([]entity.DataBayarInvoice, error)
 }
@@ -100,22 +107,38 @@ func (u *dataBayarInvoice) CreateByInvoiceID(param ParamCreateByInvoiceID) error
 	return nil
 }
 
-func (u *dataBayarInvoice) Update(param ParamUpdate) error {
-	if err := u.IsStatusTerkonfirmasi(param.Ctx, param.Req.ID); err != nil {
-		return err
+func (u *dataBayarInvoice) UpdateDataBayarInvoice(param ParamUpdateDataBayarInvoice) (*entity.DataBayarInvoice, error) {
+
+	if param.User == nil {
+		return nil, errors.New(message.InternalServerError)
 	}
-	err := u.repo.Update(repo.ParamUpdate{
-		Ctx: param.Ctx,
-		DataBayar: &entity.DataBayarInvoice{
-			Base: entity.Base{
-				ID: param.Req.ID,
-			},
-			Keterangan:      param.Req.Keterangan,
-			AkunID:          param.Req.AkunID,
-			BuktiPembayaran: param.Req.BuktiPembayaran,
-			Total:           param.Req.Total,
+
+	dataBayarInvoice := &entity.DataBayarInvoice{
+		Base: entity.Base{
+			ID: param.Req.ID,
 		},
-	})
+		Keterangan:      param.Req.Keterangan,
+		AkunID:          param.Req.AkunID,
+		BuktiPembayaran: param.Req.BuktiPembayaran,
+		Total:           param.Req.Total,
+	}
+
+	switch param.User.Role {
+	case "BENDAHARA", "DIREKTUR":
+		dataBayarInvoice.Status = param.Req.Status
+	default:
+		if err := u.IsStatusTerkonfirmasi(param.Ctx, param.Req.ID); err != nil {
+			return nil, err
+		}
+	}
+
+	return dataBayarInvoice, nil
+
+}
+
+func (u *dataBayarInvoice) UpdateCommitDB(param ParamUpdateCommitDB) error {
+	err := u.repo.Update(repo.ParamUpdate(param))
+
 	if err != nil {
 		return err
 	}

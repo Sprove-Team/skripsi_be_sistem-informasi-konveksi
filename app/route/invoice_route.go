@@ -9,6 +9,7 @@ import (
 
 type InvoiceRoute interface {
 	Invoice(router fiber.Router)
+	DataBayarInvoice(router fiber.Router)
 }
 
 type invoiceRoute struct {
@@ -21,14 +22,14 @@ func NewInvoiceRoute(h handler_init.InvoiceHandlerInit, auth middleware_auth.Aut
 }
 
 func (ro *invoiceRoute) Invoice(router fiber.Router) {
+	router.Use(ro.auth.Authorization([]string{"DIREKTUR", "ADMIN", "MANAJER_PRODUKSI"}))
 	router.Get("", ro.h.InvoiceHandler().GetAll)
 	router.Get("/:id", ro.h.InvoiceHandler().GetById)
 	router.Post("", ro.h.InvoiceHandler().Create)
 	router.Put("/:id", ro.h.InvoiceHandler().Update)
-	router.Put("/:id/status_produksi", ro.h.InvoiceHandler().UpdateStatusProduksi)
 	router.Delete("/:id", ro.h.InvoiceHandler().Delete)
 }
 
-// func (ro *invoiceRoute) StatusProduksi(router fiber.Router) {
-
-// }
+func (ro *invoiceRoute) DataBayarInvoice(router fiber.Router) {
+	router.Get("/:invoice_id", ro.h.DataBayarInvoiceHandler().GetByInvoiceId)
+}

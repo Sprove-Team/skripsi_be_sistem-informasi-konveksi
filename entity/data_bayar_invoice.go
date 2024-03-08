@@ -8,7 +8,7 @@ type DataBayarInvoice struct {
 	Keterangan      string          `gorm:"type:longtext" json:"keterangan"`
 	BuktiPembayaran BuktiPembayaran `gorm:"serializer:json" json:"bukti_pembayaran"`
 	Total           float64         `gorm:"type:decimal(10,2);default:0" json:"total"`
-	Status          string          `gorm:"type('TERKONFIRMASI','BELUM_TERKONFIRMASI');default:'BELUM_TERKONFIRMASI'" json:"status"`
+	Status          string          `gorm:"type:enum('TERKONFIRMASI','BELUM_TERKONFIRMASI');default:'BELUM_TERKONFIRMASI'" json:"status"`
 }
 
 func (DataBayarInvoice) TableName() string {

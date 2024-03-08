@@ -14,8 +14,9 @@ type (
 		DataBayar *entity.DataBayarInvoice
 	}
 	ParamUpdate struct {
-		Ctx       context.Context
-		DataBayar *entity.DataBayarInvoice
+		Ctx         context.Context
+		DataBayar   *entity.DataBayarInvoice
+		DataBayarHP *entity.DataBayarHutangPiutang
 	}
 	ParamDelete struct {
 		Ctx context.Context
@@ -59,7 +60,21 @@ func (r *dataBayarInvoiceRepo) Create(param ParamCreate) error {
 }
 
 func (r *dataBayarInvoiceRepo) Update(param ParamUpdate) error {
-	err := r.DB.WithContext(param.Ctx).Updates(param.DataBayar).Error
+	err := r.DB.WithContext(param.Ctx).Transaction(func(tx *gorm.DB) error {
+		if err := tx.Updates(param.DataBayar).Error; err != nil {
+			return nil
+		}
+
+		if err := tx.Create(param.DataBayarHP).Error; err != nil {
+			return err
+		}
+
+		if err := tx.Select("sisa", "status").Updates(&param.DataBayarHP.HutangPiutang).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
 	if err != nil {
 		helper.LogsError(err)
 		return err
@@ -99,7 +114,7 @@ func (r *dataBayarInvoiceRepo) GetByInvoiceID(param ParamGetByInvoiceID) ([]enti
 		tx = tx.Where("status = ?", param.Status)
 	}
 
-	if err := tx.Find(&datas).Error; err != nil {
+	if err := tx.Preload("Akun").Find(&datas).Error; err != nil {
 		return nil, err
 	}
 
