@@ -51,16 +51,11 @@ func errResponse(c *fiber.Ctx, err error) error {
 
 	badRequest := make([]string, 0, 1)
 
-	// switch err.Error() {
-	// case message.UserNotFound,
-	// 	message.KontakNotFound,
-	// 	message.SablonNotFound,
-	// 	message.ProdukNotFound,
-	// 	message.BordirNotFound,
-	// 	message.BayarMustLessThanTotalHargaInvoice,
-	// 	message.AkunNotFound:
-	// 	badRequest = append(badRequest, err.Error())
-	// }
+	switch err.Error() {
+	case
+		message.CannotModifiedTerkonfirmasiDataBayar:
+		badRequest = append(badRequest, err.Error())
+	}
 
 	if len(badRequest) > 0 {
 		return c.Status(fiber.StatusBadRequest).JSON(response.ErrorRes(fiber.ErrBadRequest.Code, fiber.ErrBadRequest.Message, badRequest))
@@ -191,7 +186,7 @@ func (h *dataBayarInvoiceHandler) Update(c *fiber.Ctx) error {
 		DataBayarHP: nil,
 	}
 
-	if dataByrInvoice.Status != "" {
+	if dataByrInvoice.Status == "TERKONFIRMASI" {
 		dataHp, err := h.uc_hp.GetHPByInvoiceID(ctx, dataByrInvoice.InvoiceID)
 		if err != nil {
 			return errResponse(c, err)

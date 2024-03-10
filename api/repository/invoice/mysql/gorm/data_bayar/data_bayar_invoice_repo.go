@@ -64,13 +64,14 @@ func (r *dataBayarInvoiceRepo) Update(param ParamUpdate) error {
 		if err := tx.Updates(param.DataBayar).Error; err != nil {
 			return nil
 		}
+		if param.DataBayarHP != nil {
+			if err := tx.Create(param.DataBayarHP).Error; err != nil {
+				return err
+			}
 
-		if err := tx.Create(param.DataBayarHP).Error; err != nil {
-			return err
-		}
-
-		if err := tx.Select("sisa", "status").Updates(&param.DataBayarHP.HutangPiutang).Error; err != nil {
-			return err
+			if err := tx.Select("sisa", "status").Updates(&param.DataBayarHP.HutangPiutang).Error; err != nil {
+				return err
+			}
 		}
 
 		return nil

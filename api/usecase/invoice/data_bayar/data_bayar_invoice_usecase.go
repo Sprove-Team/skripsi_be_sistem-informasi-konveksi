@@ -113,23 +113,46 @@ func (u *dataBayarInvoice) UpdateDataBayarInvoice(param ParamUpdateDataBayarInvo
 		return nil, errors.New(message.InternalServerError)
 	}
 
+	if err := u.IsStatusTerkonfirmasi(param.Ctx, param.Req.ID); err != nil {
+		return nil, err
+	}
+
+	oldDataByrInvoice, err := u.repo.GetByID(repo.ParamGetById{
+		Ctx: param.Ctx,
+		ID:  param.Req.ID,
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
 	dataBayarInvoice := &entity.DataBayarInvoice{
 		Base: entity.Base{
 			ID: param.Req.ID,
 		},
-		Keterangan:      param.Req.Keterangan,
-		AkunID:          param.Req.AkunID,
-		BuktiPembayaran: param.Req.BuktiPembayaran,
-		Total:           param.Req.Total,
+		InvoiceID:       oldDataByrInvoice.InvoiceID,
+		Keterangan:      oldDataByrInvoice.Keterangan,
+		AkunID:          oldDataByrInvoice.AkunID,
+		BuktiPembayaran: oldDataByrInvoice.BuktiPembayaran,
+		Total:           oldDataByrInvoice.Total,
 	}
 
 	switch param.User.Role {
 	case "BENDAHARA", "DIREKTUR":
 		dataBayarInvoice.Status = param.Req.Status
-	default:
-		if err := u.IsStatusTerkonfirmasi(param.Ctx, param.Req.ID); err != nil {
-			return nil, err
-		}
+	}
+
+	if param.Req.Keterangan != "" {
+		dataBayarInvoice.Keterangan = param.Req.Keterangan
+	}
+	if param.Req.AkunID != "" {
+		dataBayarInvoice.AkunID = param.Req.AkunID
+	}
+	if len(param.Req.BuktiPembayaran) > 0 {
+		dataBayarInvoice.BuktiPembayaran = param.Req.BuktiPembayaran
+	}
+	if param.Req.Total != 0 {
+		dataBayarInvoice.Total = param.Req.Total
 	}
 
 	return dataBayarInvoice, nil
