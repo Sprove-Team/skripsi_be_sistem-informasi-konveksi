@@ -10,7 +10,7 @@ import (
 	"github.com/be-sistem-informasi-konveksi/common/message"
 	reqGlobal "github.com/be-sistem-informasi-konveksi/common/request/global"
 	req "github.com/be-sistem-informasi-konveksi/common/request/produk"
-	"github.com/be-sistem-informasi-konveksi/common/response"
+	res_global "github.com/be-sistem-informasi-konveksi/common/response"
 	"github.com/be-sistem-informasi-konveksi/pkg"
 )
 
@@ -33,15 +33,15 @@ func NewProdukHandler(uc usecase.ProdukUsecase, validator pkg.Validator) ProdukH
 
 func errResponse(c *fiber.Ctx, err error) error {
 	if err == context.DeadlineExceeded {
-		return c.Status(fiber.StatusRequestTimeout).JSON(response.ErrorRes(fiber.ErrRequestTimeout.Code, fiber.ErrRequestTimeout.Message, nil))
+		return c.Status(fiber.StatusRequestTimeout).JSON(res_global.ErrorRes(fiber.ErrRequestTimeout.Code, fiber.ErrRequestTimeout.Message, nil))
 	}
 
 	if err.Error() == "record not found" {
-		return c.Status(fiber.StatusNotFound).JSON(response.ErrorRes(fiber.ErrNotFound.Code, fiber.ErrNotFound.Message, nil))
+		return c.Status(fiber.StatusNotFound).JSON(res_global.ErrorRes(fiber.ErrNotFound.Code, fiber.ErrNotFound.Message, nil))
 	}
 
 	if err.Error() == "duplicated key not allowed" {
-		return c.Status(fiber.StatusConflict).JSON(response.ErrorRes(fiber.ErrConflict.Code, fiber.ErrConflict.Message, nil))
+		return c.Status(fiber.StatusConflict).JSON(res_global.ErrorRes(fiber.ErrConflict.Code, fiber.ErrConflict.Message, nil))
 	}
 
 	badRequest := make([]string, 0, 1)
@@ -52,9 +52,9 @@ func errResponse(c *fiber.Ctx, err error) error {
 	}
 
 	if len(badRequest) > 0 {
-		return c.Status(fiber.StatusBadRequest).JSON(response.ErrorRes(fiber.ErrBadRequest.Code, fiber.ErrBadRequest.Message, badRequest))
+		return c.Status(fiber.StatusBadRequest).JSON(res_global.ErrorRes(fiber.ErrBadRequest.Code, fiber.ErrBadRequest.Message, badRequest))
 	}
-	return c.Status(fiber.StatusInternalServerError).JSON(response.ErrorRes(fiber.ErrInternalServerError.Code, fiber.ErrInternalServerError.Message, nil))
+	return c.Status(fiber.StatusInternalServerError).JSON(res_global.ErrorRes(fiber.ErrInternalServerError.Code, fiber.ErrInternalServerError.Message, nil))
 }
 
 func (h *produkHandler) Create(c *fiber.Ctx) error {
@@ -72,7 +72,7 @@ func (h *produkHandler) Create(c *fiber.Ctx) error {
 	if err != nil {
 		return errResponse(c, err)
 	}
-	return c.Status(fiber.StatusCreated).JSON(response.SuccessRes(fiber.StatusCreated, message.Created, nil))
+	return c.Status(fiber.StatusCreated).JSON(res_global.SuccessRes(fiber.StatusCreated, message.Created, nil))
 }
 
 func (h *produkHandler) Update(c *fiber.Ctx) error {
@@ -93,7 +93,7 @@ func (h *produkHandler) Update(c *fiber.Ctx) error {
 		return errResponse(c, err)
 	}
 
-	return c.Status(fiber.StatusOK).JSON(response.SuccessRes(fiber.StatusOK, message.OK, nil))
+	return c.Status(fiber.StatusOK).JSON(res_global.SuccessRes(fiber.StatusOK, message.OK, nil))
 }
 
 func (h *produkHandler) Delete(c *fiber.Ctx) error {
@@ -112,7 +112,7 @@ func (h *produkHandler) Delete(c *fiber.Ctx) error {
 		return errResponse(c, err)
 	}
 
-	return c.Status(fiber.StatusOK).JSON(response.SuccessRes(fiber.StatusOK, message.OK, nil))
+	return c.Status(fiber.StatusOK).JSON(res_global.SuccessRes(fiber.StatusOK, message.OK, nil))
 }
 
 func (h *produkHandler) GetById(c *fiber.Ctx) error {
@@ -129,7 +129,7 @@ func (h *produkHandler) GetById(c *fiber.Ctx) error {
 		return errResponse(c, err)
 	}
 
-	return c.Status(fiber.StatusOK).JSON(response.SuccessRes(fiber.StatusOK, message.OK, data))
+	return c.Status(fiber.StatusOK).JSON(res_global.SuccessRes(fiber.StatusOK, message.OK, data))
 }
 
 func (h *produkHandler) GetAll(c *fiber.Ctx) error {
@@ -151,5 +151,5 @@ func (h *produkHandler) GetAll(c *fiber.Ctx) error {
 		return errResponse(c, err)
 	}
 
-	return c.Status(fiber.StatusOK).JSON(response.SuccessRes(fiber.StatusOK, message.OK, datas))
+	return c.Status(fiber.StatusOK).JSON(res_global.SuccessRes(fiber.StatusOK, message.OK, datas))
 }

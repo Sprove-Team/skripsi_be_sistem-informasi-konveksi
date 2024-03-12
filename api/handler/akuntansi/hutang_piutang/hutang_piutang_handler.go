@@ -6,7 +6,7 @@ import (
 	usecase "github.com/be-sistem-informasi-konveksi/api/usecase/akuntansi/hutang_piutang"
 	"github.com/be-sistem-informasi-konveksi/common/message"
 	req "github.com/be-sistem-informasi-konveksi/common/request/akuntansi/hutang_piutang"
-	"github.com/be-sistem-informasi-konveksi/common/response"
+	res_global "github.com/be-sistem-informasi-konveksi/common/response"
 	"github.com/be-sistem-informasi-konveksi/pkg"
 	"github.com/gofiber/fiber/v2"
 )
@@ -56,7 +56,7 @@ func (h *hutangPiutangHandler) Create(c *fiber.Ctx) error {
 	}
 
 	// Respond with success status
-	return c.Status(fiber.StatusCreated).JSON(response.SuccessRes(fiber.StatusCreated, message.Created, nil))
+	return c.Status(fiber.StatusCreated).JSON(res_global.SuccessRes(fiber.StatusCreated, message.Created, nil))
 }
 
 func (h *hutangPiutangHandler) CreateBayar(c *fiber.Ctx) error {
@@ -83,7 +83,7 @@ func (h *hutangPiutangHandler) CreateBayar(c *fiber.Ctx) error {
 	}
 
 	// Respond with success status
-	return c.Status(fiber.StatusCreated).JSON(response.SuccessRes(fiber.StatusCreated, message.Created, nil))
+	return c.Status(fiber.StatusCreated).JSON(res_global.SuccessRes(fiber.StatusCreated, message.Created, nil))
 }
 func (h *hutangPiutangHandler) GetAll(c *fiber.Ctx) error {
 	req := new(req.GetAll)
@@ -102,5 +102,5 @@ func (h *hutangPiutangHandler) GetAll(c *fiber.Ctx) error {
 	}
 
 	// Respond with success status
-	return c.Status(fiber.StatusOK).JSON(response.SuccessRes(fiber.StatusOK, message.OK, data))
+	return c.Status(fiber.StatusOK).JSON(res_global.SuccessRes(fiber.StatusOK, message.OK, data))
 }

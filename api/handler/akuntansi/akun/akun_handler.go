@@ -5,8 +5,8 @@ import (
 
 	"github.com/be-sistem-informasi-konveksi/common/message"
 	req "github.com/be-sistem-informasi-konveksi/common/request/akuntansi/akun"
-	"github.com/be-sistem-informasi-konveksi/common/request/global"
-	"github.com/be-sistem-informasi-konveksi/common/response"
+	req_global "github.com/be-sistem-informasi-konveksi/common/request/global"
+	res_global "github.com/be-sistem-informasi-konveksi/common/response"
 
 	usecase "github.com/be-sistem-informasi-konveksi/api/usecase/akuntansi/akun"
 	"github.com/be-sistem-informasi-konveksi/pkg"
@@ -34,15 +34,15 @@ func NewAkunHandler(uc usecase.AkunUsecase, validator pkg.Validator) AkunHandler
 
 func errResponse(c *fiber.Ctx, err error) error {
 	if err == context.DeadlineExceeded {
-		return c.Status(fiber.StatusRequestTimeout).JSON(response.ErrorRes(fiber.ErrRequestTimeout.Code, fiber.ErrRequestTimeout.Message, nil))
+		return c.Status(fiber.StatusRequestTimeout).JSON(res_global.ErrorRes(fiber.ErrRequestTimeout.Code, fiber.ErrRequestTimeout.Message, nil))
 	}
 
 	if err.Error() == "record not found" {
-		return c.Status(fiber.StatusNotFound).JSON(response.ErrorRes(fiber.ErrNotFound.Code, fiber.ErrNotFound.Message, nil))
+		return c.Status(fiber.StatusNotFound).JSON(res_global.ErrorRes(fiber.ErrNotFound.Code, fiber.ErrNotFound.Message, nil))
 	}
 
 	if err.Error() == "duplicated key not allowed" {
-		return c.Status(fiber.StatusConflict).JSON(response.ErrorRes(fiber.ErrConflict.Code, fiber.ErrConflict.Message, nil))
+		return c.Status(fiber.StatusConflict).JSON(res_global.ErrorRes(fiber.ErrConflict.Code, fiber.ErrConflict.Message, nil))
 	}
 
 	badRequest := make([]string, 0, 1)
@@ -53,14 +53,14 @@ func errResponse(c *fiber.Ctx, err error) error {
 	}
 
 	if len(badRequest) > 0 {
-		return c.Status(fiber.StatusBadRequest).JSON(response.ErrorRes(fiber.ErrBadRequest.Code, fiber.ErrBadRequest.Message, badRequest))
+		return c.Status(fiber.StatusBadRequest).JSON(res_global.ErrorRes(fiber.ErrBadRequest.Code, fiber.ErrBadRequest.Message, badRequest))
 	}
 
 	if err.Error() == message.AkunCannotDeleted {
-		return c.Status(fiber.StatusInternalServerError).JSON(response.ErrorInterWithMessageRes(fiber.ErrInternalServerError.Code, fiber.ErrInternalServerError.Message, err.Error()))
+		return c.Status(fiber.StatusInternalServerError).JSON(res_global.ErrorInterWithMessageRes(fiber.ErrInternalServerError.Code, fiber.ErrInternalServerError.Message, err.Error()))
 	}
 
-	return c.Status(fiber.StatusInternalServerError).JSON(response.ErrorRes(fiber.ErrInternalServerError.Code, fiber.ErrInternalServerError.Message, nil))
+	return c.Status(fiber.StatusInternalServerError).JSON(res_global.ErrorRes(fiber.ErrInternalServerError.Code, fiber.ErrInternalServerError.Message, nil))
 }
 
 func (h *akunHandler) Create(c *fiber.Ctx) error {
@@ -84,7 +84,7 @@ func (h *akunHandler) Create(c *fiber.Ctx) error {
 	}
 
 	// Respond with success status
-	return c.Status(fiber.StatusCreated).JSON(response.SuccessRes(fiber.StatusCreated, message.Created, nil))
+	return c.Status(fiber.StatusCreated).JSON(res_global.SuccessRes(fiber.StatusCreated, message.Created, nil))
 }
 
 func (h *akunHandler) Update(c *fiber.Ctx) error {
@@ -108,12 +108,12 @@ func (h *akunHandler) Update(c *fiber.Ctx) error {
 		return errResponse(c, err)
 	}
 
-	return c.Status(fiber.StatusOK).JSON(response.SuccessRes(fiber.StatusOK, message.OK, nil))
+	return c.Status(fiber.StatusOK).JSON(res_global.SuccessRes(fiber.StatusOK, message.OK, nil))
 }
 
 func (h *akunHandler) Delete(c *fiber.Ctx) error {
 	// Parse request body
-	req := new(global.ParamByID)
+	req := new(req_global.ParamByID)
 	c.ParamsParser(req)
 
 	// Validate request
@@ -131,7 +131,7 @@ func (h *akunHandler) Delete(c *fiber.Ctx) error {
 		return errResponse(c, err)
 	}
 
-	return c.Status(fiber.StatusOK).JSON(response.SuccessRes(fiber.StatusOK, message.OK, nil))
+	return c.Status(fiber.StatusOK).JSON(res_global.SuccessRes(fiber.StatusOK, message.OK, nil))
 }
 
 func (h *akunHandler) GetAll(c *fiber.Ctx) error {
@@ -145,12 +145,12 @@ func (h *akunHandler) GetAll(c *fiber.Ctx) error {
 		return errResponse(c, err)
 	}
 
-	return c.Status(fiber.StatusOK).JSON(response.SuccessRes(fiber.StatusOK, message.OK, data))
+	return c.Status(fiber.StatusOK).JSON(res_global.SuccessRes(fiber.StatusOK, message.OK, data))
 }
 
 func (h *akunHandler) GetById(c *fiber.Ctx) error {
 	// Parse request body
-	req := new(global.ParamByID)
+	req := new(req_global.ParamByID)
 	c.ParamsParser(req)
 
 	// Validate request
@@ -168,5 +168,5 @@ func (h *akunHandler) GetById(c *fiber.Ctx) error {
 		return errResponse(c, err)
 	}
 
-	return c.Status(fiber.StatusOK).JSON(response.SuccessRes(fiber.StatusOK, message.OK, data))
+	return c.Status(fiber.StatusOK).JSON(res_global.SuccessRes(fiber.StatusOK, message.OK, data))
 }

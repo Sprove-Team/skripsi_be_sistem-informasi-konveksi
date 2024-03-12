@@ -6,7 +6,7 @@ import (
 	usecase "github.com/be-sistem-informasi-konveksi/api/usecase/akuntansi"
 	"github.com/be-sistem-informasi-konveksi/common/message"
 	req "github.com/be-sistem-informasi-konveksi/common/request/akuntansi"
-	"github.com/be-sistem-informasi-konveksi/common/response"
+	res_global "github.com/be-sistem-informasi-konveksi/common/response"
 	"github.com/be-sistem-informasi-konveksi/pkg"
 	"github.com/gofiber/fiber/v2"
 )
@@ -41,13 +41,13 @@ func (h *akuntansiHandler) GetAllJU(c *fiber.Ctx) error {
 	datasJU, err := h.uc.GetAllJU(ctx, *reqU)
 
 	if ctx.Err() == context.DeadlineExceeded {
-		return c.Status(fiber.StatusRequestTimeout).JSON(response.ErrorRes(fiber.ErrRequestTimeout.Code, fiber.ErrRequestTimeout.Message, nil))
+		return c.Status(fiber.StatusRequestTimeout).JSON(res_global.ErrorRes(fiber.ErrRequestTimeout.Code, fiber.ErrRequestTimeout.Message, nil))
 	}
 
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(response.ErrorRes(fiber.ErrInternalServerError.Code, fiber.ErrInternalServerError.Message, nil))
+		return c.Status(fiber.StatusInternalServerError).JSON(res_global.ErrorRes(fiber.ErrInternalServerError.Code, fiber.ErrInternalServerError.Message, nil))
 	}
-	return c.Status(fiber.StatusOK).JSON(response.SuccessRes(fiber.StatusOK, message.OK, datasJU))
+	return c.Status(fiber.StatusOK).JSON(res_global.SuccessRes(fiber.StatusOK, message.OK, datasJU))
 }
 
 func (h *akuntansiHandler) GetAllBB(c *fiber.Ctx) error {
@@ -64,13 +64,13 @@ func (h *akuntansiHandler) GetAllBB(c *fiber.Ctx) error {
 	datasBB, err := h.uc.GetAllBB(ctx, *reqU)
 
 	if ctx.Err() == context.DeadlineExceeded {
-		return c.Status(fiber.StatusRequestTimeout).JSON(response.ErrorRes(fiber.ErrRequestTimeout.Code, fiber.ErrRequestTimeout.Message, nil))
+		return c.Status(fiber.StatusRequestTimeout).JSON(res_global.ErrorRes(fiber.ErrRequestTimeout.Code, fiber.ErrRequestTimeout.Message, nil))
 	}
 
 	if err != nil {
-		return c.Status(fiber.StatusRequestTimeout).JSON(response.ErrorRes(fiber.ErrRequestTimeout.Code, fiber.ErrRequestTimeout.Message, nil))
+		return c.Status(fiber.StatusRequestTimeout).JSON(res_global.ErrorRes(fiber.ErrRequestTimeout.Code, fiber.ErrRequestTimeout.Message, nil))
 	}
-	return c.Status(fiber.StatusOK).JSON(response.SuccessRes(fiber.StatusOK, message.OK, datasBB))
+	return c.Status(fiber.StatusOK).JSON(res_global.SuccessRes(fiber.StatusOK, message.OK, datasBB))
 }
 
 func (h *akuntansiHandler) GetAllNC(c *fiber.Ctx) error {
@@ -87,13 +87,13 @@ func (h *akuntansiHandler) GetAllNC(c *fiber.Ctx) error {
 	datasNC, err := h.uc.GetAllNC(ctx, *reqU)
 
 	if ctx.Err() == context.DeadlineExceeded {
-		return c.Status(fiber.StatusRequestTimeout).JSON(response.ErrorRes(fiber.ErrRequestTimeout.Code, fiber.ErrRequestTimeout.Message, nil))
+		return c.Status(fiber.StatusRequestTimeout).JSON(res_global.ErrorRes(fiber.ErrRequestTimeout.Code, fiber.ErrRequestTimeout.Message, nil))
 	}
 
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(response.ErrorRes(fiber.ErrInternalServerError.Code, fiber.ErrInternalServerError.Message, nil))
+		return c.Status(fiber.StatusInternalServerError).JSON(res_global.ErrorRes(fiber.ErrInternalServerError.Code, fiber.ErrInternalServerError.Message, nil))
 	}
-	return c.Status(fiber.StatusOK).JSON(response.SuccessRes(fiber.StatusOK, message.OK, datasNC))
+	return c.Status(fiber.StatusOK).JSON(res_global.SuccessRes(fiber.StatusOK, message.OK, datasNC))
 }
 
 func (h *akuntansiHandler) GetAllLBR(c *fiber.Ctx) error {
@@ -110,11 +110,11 @@ func (h *akuntansiHandler) GetAllLBR(c *fiber.Ctx) error {
 	datasJU, err := h.uc.GetAllLBR(ctx, *reqU)
 
 	if ctx.Err() == context.DeadlineExceeded {
-		return c.Status(fiber.StatusRequestTimeout).JSON(response.ErrorRes(fiber.ErrRequestTimeout.Code, fiber.ErrRequestTimeout.Message, nil))
+		return c.Status(fiber.StatusRequestTimeout).JSON(res_global.ErrorRes(fiber.ErrRequestTimeout.Code, fiber.ErrRequestTimeout.Message, nil))
 	}
 
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(response.ErrorRes(fiber.ErrInternalServerError.Code, fiber.ErrInternalServerError.Message, nil))
+		return c.Status(fiber.StatusInternalServerError).JSON(res_global.ErrorRes(fiber.ErrInternalServerError.Code, fiber.ErrInternalServerError.Message, nil))
 	}
-	return c.Status(fiber.StatusOK).JSON(response.SuccessRes(fiber.StatusOK, message.OK, datasJU))
+	return c.Status(fiber.StatusOK).JSON(res_global.SuccessRes(fiber.StatusOK, message.OK, datasJU))
 }
