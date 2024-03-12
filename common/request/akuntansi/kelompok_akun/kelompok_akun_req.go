@@ -1,4 +1,4 @@
-package akuntansi
+package req_akuntansi_kelompok_akun
 
 type GetAll struct {
 	Nama         string `query:"nama" validate:"omitempty"`

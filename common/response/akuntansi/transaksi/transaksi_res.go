@@ -1,4 +1,4 @@
-package akuntansi
+package res_akuntansi_transaksi
 
 type (
 	DataAyatJurnalTR struct {

@@ -1,4 +1,4 @@
-package invoice
+package req_invoice
 
 import "github.com/be-sistem-informasi-konveksi/entity"
 

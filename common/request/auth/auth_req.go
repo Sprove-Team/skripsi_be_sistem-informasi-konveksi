@@ -1,4 +1,4 @@
-package auth
+package req_auth
 
 type Login struct {
 	Username string `json:"username" validate:"required"`

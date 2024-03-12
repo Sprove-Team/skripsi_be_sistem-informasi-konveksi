@@ -1,4 +1,4 @@
-package user
+package req_user
 
 type Create struct {
 	Nama       string `json:"nama" validate:"required"`

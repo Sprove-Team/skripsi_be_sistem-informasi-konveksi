@@ -1,4 +1,4 @@
-package akuntansi
+package req_akuntansi_akun
 
 type Create struct {
 	KelompokAkunID string `json:"kelompok_akun_id" validate:"required,ulid"`

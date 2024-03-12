@@ -1,4 +1,4 @@
-package akuntansi
+package res_akuntansi
 
 type (
 	DataAyatJurnalJU struct {

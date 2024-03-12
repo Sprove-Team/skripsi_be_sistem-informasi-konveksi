@@ -1,4 +1,4 @@
-package bordir
+package req_bordir
 
 type Create struct {
 	Nama  string  `json:"nama" validate:"required"`

@@ -1,4 +1,4 @@
-package produk
+package req_produk_harga_detail
 
 type Create struct {
 	ProdukId string  `json:"produk_id" validate:"required,ulid"`

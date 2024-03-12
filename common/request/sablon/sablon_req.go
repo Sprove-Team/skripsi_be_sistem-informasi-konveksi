@@ -1,4 +1,4 @@
-package sablon
+package req_sablon
 
 type Create struct {
 	Nama  string  `json:"nama" validate:"required"`

@@ -1,4 +1,4 @@
-package response
+package res_global
 
 // type Erro
 

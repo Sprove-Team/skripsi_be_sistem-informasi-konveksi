@@ -1,4 +1,4 @@
-package produk
+package req_produk
 
 type Create struct {
 	Nama       string `json:"nama" validate:"required"`

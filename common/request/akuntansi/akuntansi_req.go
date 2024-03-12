@@ -1,4 +1,4 @@
-package akuntansi
+package req_akuntansi
 
 type GetAllJU struct {
 	StartDate string `query:"start_date" validate:"required,datetime=2006-01-02"`

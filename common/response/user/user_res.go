@@ -1,4 +1,4 @@
-package user
+package res_user
 
 type DataGetAllUserRes struct {
 	ID       string      `json:"id"`

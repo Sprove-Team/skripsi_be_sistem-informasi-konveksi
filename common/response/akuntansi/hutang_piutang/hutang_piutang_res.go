@@ -1,4 +1,4 @@
-package akuntansi
+package res_akuntansi_hp
 
 import "github.com/be-sistem-informasi-konveksi/entity"
 
