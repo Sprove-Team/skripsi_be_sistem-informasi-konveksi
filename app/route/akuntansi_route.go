@@ -66,6 +66,7 @@ func (ro *akuntansiRoute) Kontak(router fiber.Router) {
 }
 
 func (ro *akuntansiRoute) Akuntansi(router fiber.Router) {
+	router.Use(ro.auth.Authorization([]string{"DIREKTUR", "BENDAHARA"}))
 	router.Get("/jurnal_umum", ro.h.Akuntansi().GetAllJU)
 	router.Get("/buku_besar", ro.h.Akuntansi().GetAllBB)
 	router.Get("/neraca_saldo", ro.h.Akuntansi().GetAllNC)

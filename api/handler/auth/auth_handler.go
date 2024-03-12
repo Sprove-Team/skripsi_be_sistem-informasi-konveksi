@@ -12,6 +12,7 @@ import (
 )
 
 type AuthHandler interface {
+	WhoAmI(c *fiber.Ctx) error
 	Login(c *fiber.Ctx) error
 	RefreshToken(c *fiber.Ctx) error
 }
@@ -53,6 +54,11 @@ func errResponse(c *fiber.Ctx, err error) error {
 		return c.Status(fiber.StatusBadRequest).JSON(response.ErrorRes(fiber.ErrBadRequest.Code, fiber.ErrBadRequest.Message, badRequest))
 	}
 	return c.Status(fiber.StatusInternalServerError).JSON(response.ErrorRes(fiber.ErrInternalServerError.Code, fiber.ErrInternalServerError.Message, nil))
+}
+
+func (h *authHandler) WhoAmI(c *fiber.Ctx) error {
+	claims := c.Locals("user").(*pkg.Claims)
+	return c.Status(fiber.StatusOK).JSON(response.SuccessRes(fiber.StatusOK, message.OK, claims))
 }
 
 func (h *authHandler) Login(c *fiber.Ctx) error {

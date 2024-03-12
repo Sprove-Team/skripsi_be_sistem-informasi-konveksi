@@ -23,6 +23,7 @@ func NewProdukRoute(h handler_init.ProdukHandlerInit, auth middleware_auth.AuthM
 }
 
 func (ro *produkRoute) Produk(router fiber.Router) {
+	router.Use(ro.auth.Authorization([]string{"DIREKTUR"}))
 	router.Get("", ro.h.ProdukHandler().GetAll)
 	router.Get("/:id", ro.h.ProdukHandler().GetById)
 	router.Post("", ro.h.ProdukHandler().Create)

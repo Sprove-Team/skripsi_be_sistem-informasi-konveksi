@@ -8,7 +8,6 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
 
-	userRepo "github.com/be-sistem-informasi-konveksi/api/repository/user/mysql/gorm"
 	"github.com/be-sistem-informasi-konveksi/common/response"
 	"github.com/be-sistem-informasi-konveksi/helper"
 	"github.com/be-sistem-informasi-konveksi/pkg"
@@ -18,12 +17,10 @@ type AuthMidleware interface {
 	Authorization(roles []string) fiber.Handler
 }
 
-type authMidleware struct {
-	userRepo userRepo.UserRepo
-}
+type authMidleware struct{}
 
-func NewAuthMiddleware(userRepo userRepo.UserRepo) AuthMidleware {
-	return &authMidleware{userRepo}
+func NewAuthMiddleware() AuthMidleware {
+	return &authMidleware{}
 }
 
 func (a *authMidleware) Authorization(roles []string) fiber.Handler {
@@ -49,24 +46,8 @@ func (a *authMidleware) Authorization(roles []string) fiber.Handler {
 			if !pass {
 				return c.Status(fiber.StatusUnauthorized).JSON(response.ErrorRes(fiber.ErrUnauthorized.Code, fiber.ErrUnauthorized.Message, nil))
 			}
-			ctx := c.UserContext()
-			userData, err := a.userRepo.GetByUsername(userRepo.ParamGetByUsername{
-				Ctx:      ctx,
-				Username: user.Username,
-			})
-			if err != nil {
-				helper.LogsError(err)
-				if err.Error() == "record not found" {
-					return c.Status(fiber.StatusUnauthorized).JSON(response.ErrorRes(fiber.ErrUnauthorized.Code, fiber.ErrUnauthorized.Message, nil))
-				}
-				return c.Status(fiber.StatusInternalServerError).JSON(response.ErrorRes(fiber.ErrInternalServerError.Code, fiber.ErrInternalServerError.Message, nil))
-			}
 
-			if userData.Username != user.Username || userData.Role != user.Role || userData.Nama != user.Nama {
-				return c.Status(fiber.StatusUnauthorized).JSON(response.ErrorRes(fiber.ErrUnauthorized.Code, fiber.ErrUnauthorized.Message, nil))
-			}
-
-			c.Locals("user", userData)
+			c.Locals("user", user)
 			return c.Next()
 		},
 		ErrorHandler: func(c *fiber.Ctx, err error) error {

@@ -21,6 +21,7 @@ func NewBordirRoute(h handler_init.BordirHandlerInit, auth middleware_auth.AuthM
 }
 
 func (ro *bordirRoute) Bordir(router fiber.Router) {
+	router.Use(ro.auth.Authorization([]string{"DIREKTUR"}))
 	router.Get("", ro.h.BordirHandler().GetAll)
 	router.Get("/:id", ro.h.BordirHandler().GetById)
 	router.Post("", ro.h.BordirHandler().Create)

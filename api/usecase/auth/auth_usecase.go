@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"strings"
+	"sync"
 	"time"
 
 	userRepo "github.com/be-sistem-informasi-konveksi/api/repository/user/mysql/gorm"
@@ -58,15 +59,18 @@ func (u *authUsecase) Login(param ParamLogin) (token *string, refreshToken *stri
 	}
 
 	g := new(errgroup.Group)
-
+	m := new(sync.Mutex)
 	claims := new(pkg.Claims)
-	claims.Subject = "auth"
+	claims.ID = userData.ID
 	claims.Nama = userData.Nama
 	claims.Username = userData.Username
 	claims.Role = userData.Role
 
 	g.Go(func() error {
-		tokenData, err := u.jwt.CreateToken(false, claims, time.Now().Add(time.Hour*24))
+		m.Lock()
+		claims.Subject = "access_token"
+		m.Unlock()
+		tokenData, err := u.jwt.CreateToken(false, claims, time.Now().Add(time.Hour*8))
 		if err != nil {
 			return err
 		}
@@ -75,6 +79,9 @@ func (u *authUsecase) Login(param ParamLogin) (token *string, refreshToken *stri
 	})
 
 	g.Go(func() error {
+		m.Lock()
+		claims.Subject = "refresh_token"
+		m.Unlock()
 		refTokenData, err := u.jwt.CreateToken(true, claims, time.Now().Add(time.Hour*24*7))
 		if err != nil {
 			return err
@@ -104,9 +111,9 @@ func (u *authUsecase) RefreshToken(param ParamRefreshToken) (newToken *string, e
 
 	claims := parse.Claims.(*pkg.Claims)
 
-	userData, err := u.userRepo.GetByUsername(userRepo.ParamGetByUsername{
-		Ctx:      param.Ctx,
-		Username: claims.Username,
+	userData, err := u.userRepo.GetById(userRepo.ParamGetById{
+		Ctx: param.Ctx,
+		ID:  claims.ID,
 	})
 
 	if err != nil {
@@ -116,6 +123,14 @@ func (u *authUsecase) RefreshToken(param ParamRefreshToken) (newToken *string, e
 		return nil, err
 	}
 
+	if userData.ID != claims.ID ||
+		userData.Username != claims.Username ||
+		userData.Nama != claims.Nama ||
+		userData.Role != claims.Role {
+		return nil, errors.New(message.InvalidRefreshToken)
+	}
+
+	claims.ID = userData.ID
 	claims.Nama = userData.Nama
 	claims.Username = userData.Username
 	claims.Role = userData.Role

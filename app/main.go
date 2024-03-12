@@ -8,7 +8,6 @@ import (
 	middleware_auth "github.com/be-sistem-informasi-konveksi/api/middleware/auth"
 	corsMid "github.com/be-sistem-informasi-konveksi/api/middleware/cors"
 	timeoutMid "github.com/be-sistem-informasi-konveksi/api/middleware/timeout"
-	userRepo "github.com/be-sistem-informasi-konveksi/api/repository/user/mysql/gorm"
 	"github.com/be-sistem-informasi-konveksi/app/config"
 	"github.com/be-sistem-informasi-konveksi/app/handler_init"
 	"github.com/be-sistem-informasi-konveksi/app/route"
@@ -37,8 +36,7 @@ func main() {
 	encryptor := helper.NewEncryptor()
 
 	// middleware
-	userRepo := userRepo.NewUserRepo(dbGorm)
-	authMid := middleware_auth.NewAuthMiddleware(userRepo)
+	authMid := middleware_auth.NewAuthMiddleware()
 	timeoutMid := timeoutMid.NewTimeoutMiddleware()
 	corsMid := corsMid.NewCorsMiddleware()
 
@@ -55,7 +53,7 @@ func main() {
 	{
 		// auth
 		authHandler := handler_init.NewAuthHandlerInit(dbGorm, jwtPkg, validator, encryptor)
-		authRoute := route.NewAuthRoute(authHandler)
+		authRoute := route.NewAuthRoute(authHandler, authMid)
 		authGroup := v1.Group("/auth")
 		{
 			authGroup.Route("", authRoute.Auth)

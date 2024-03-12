@@ -22,15 +22,19 @@ func NewInvoiceRoute(h handler_init.InvoiceHandlerInit, auth middleware_auth.Aut
 }
 
 func (ro *invoiceRoute) Invoice(router fiber.Router) {
-	router.Use(ro.auth.Authorization([]string{"DIREKTUR", "ADMIN", "MANAJER_PRODUKSI"}))
-	router.Get("", ro.h.InvoiceHandler().GetAll)
-	router.Get("/:id", ro.h.InvoiceHandler().GetById)
-	router.Post("", ro.h.InvoiceHandler().Create)
-	router.Put("/:id", ro.h.InvoiceHandler().Update)
-	router.Delete("/:id", ro.h.InvoiceHandler().Delete)
+	auth1 := ro.auth.Authorization([]string{"DIREKTUR", "ADMIN"})
+	auth2 := ro.auth.Authorization([]string{"DIREKTUR", "ADMIN", "MANAJER_PRODUKSI"})
+	router.Get("", auth2, ro.h.InvoiceHandler().GetAll)
+	router.Get("/:id", auth2, ro.h.InvoiceHandler().GetById)
+	router.Post("", auth1, ro.h.InvoiceHandler().Create)
+	router.Put("/:id", auth2, ro.h.InvoiceHandler().Update)
+	router.Delete("/:id", auth2, ro.h.InvoiceHandler().Delete)
 }
 
 func (ro *invoiceRoute) DataBayarInvoice(router fiber.Router) {
-	router.Get("/:invoice_id", ro.h.DataBayarInvoiceHandler().GetByInvoiceId)
-	router.Put("/:id", ro.h.DataBayarInvoiceHandler().Update)
+	auth := ro.auth.Authorization([]string{"DIREKTUR", "ADMIN", "BENDAHARA"})
+	router.Get("/:invoice_id", auth, ro.h.DataBayarInvoiceHandler().GetByInvoiceId)
+	router.Put("/:invoice_id", auth, ro.h.DataBayarInvoiceHandler().Create)
+	router.Put("/:id", auth, ro.h.DataBayarInvoiceHandler().Update)
+	router.Put("/:id", auth, ro.h.DataBayarInvoiceHandler().Delete)
 }

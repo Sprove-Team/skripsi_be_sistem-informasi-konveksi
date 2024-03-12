@@ -19,9 +19,9 @@ type (
 		Req req.Create
 	}
 	ParamUpdateDataBayarInvoice struct {
-		Ctx  context.Context
-		User *entity.User
-		Req  req.Update
+		Ctx    context.Context
+		Claims *pkg.Claims
+		Req    req.Update
 	}
 	ParamUpdateCommitDB struct {
 		Ctx         context.Context
@@ -109,7 +109,7 @@ func (u *dataBayarInvoice) CreateByInvoiceID(param ParamCreateByInvoiceID) error
 
 func (u *dataBayarInvoice) UpdateDataBayarInvoice(param ParamUpdateDataBayarInvoice) (*entity.DataBayarInvoice, error) {
 
-	if param.User == nil {
+	if param.Claims == nil {
 		return nil, errors.New(message.InternalServerError)
 	}
 
@@ -137,7 +137,7 @@ func (u *dataBayarInvoice) UpdateDataBayarInvoice(param ParamUpdateDataBayarInvo
 		Total:           oldDataByrInvoice.Total,
 	}
 
-	switch param.User.Role {
+	switch param.Claims.Role {
 	case "BENDAHARA", "DIREKTUR":
 		dataBayarInvoice.Status = param.Req.Status
 	}

@@ -2,24 +2,25 @@ package handler_invoice_data_bayar
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	uc_akuntansi_hp "github.com/be-sistem-informasi-konveksi/api/usecase/akuntansi/hutang_piutang"
 	uc_invoice_data_bayar "github.com/be-sistem-informasi-konveksi/api/usecase/invoice/data_bayar"
 	"github.com/be-sistem-informasi-konveksi/common/message"
 	akuntansi "github.com/be-sistem-informasi-konveksi/common/request/akuntansi/hutang_piutang"
+	"github.com/be-sistem-informasi-konveksi/common/request/global"
 	req "github.com/be-sistem-informasi-konveksi/common/request/invoice/data_bayar"
 	"github.com/be-sistem-informasi-konveksi/common/response"
-	"github.com/be-sistem-informasi-konveksi/entity"
 	"github.com/be-sistem-informasi-konveksi/pkg"
 	"github.com/gofiber/fiber/v2"
 )
 
 type DataBayarInvoiceHandler interface {
 	GetByInvoiceId(c *fiber.Ctx) error
-	// Create(c *fiber.Ctx) error
+	Create(c *fiber.Ctx) error
 	Update(c *fiber.Ctx) error
-	// Delete(c *fiber.Ctx) error
+	Delete(c *fiber.Ctx) error
 }
 
 type dataBayarInvoiceHandler struct {
@@ -75,6 +76,8 @@ func (h *dataBayarInvoiceHandler) GetByInvoiceId(c *fiber.Ctx) error {
 	}
 
 	ctx := c.UserContext()
+	claims := c.Locals("user").(*pkg.Claims)
+	fmt.Println("ID -> ", claims.ID)
 	datas, err := h.uc.GetByInvoiceID(uc_invoice_data_bayar.ParamGetByInvoiceID{
 		Ctx: ctx,
 		Req: *req,
@@ -112,51 +115,30 @@ func (h *dataBayarInvoiceHandler) GetByInvoiceId(c *fiber.Ctx) error {
 // 	return c.Status(fiber.StatusOK).JSON(response.SuccessRes(fiber.StatusOK, message.OK, datas))
 // }
 
-// func (h *dataBayarInvoiceHandler) Create(c *fiber.Ctx) error {
-// 	req := new(req.Create)
+func (h *dataBayarInvoiceHandler) Create(c *fiber.Ctx) error {
+	req := new(req.Create)
 
-// 	c.BodyParser(req)
+	c.BodyParser(req)
 
-// 	errValidate := h.validator.Validate(req)
-// 	if errValidate != nil {
-// 		return c.Status(fiber.StatusBadRequest).JSON(errValidate)
-// 	}
+	errValidate := h.validator.Validate(req)
+	if errValidate != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(errValidate)
+	}
 
-// 	ctx := c.UserContext()
+	ctx := c.UserContext()
 
-// 	dataInvoice, dataReqHp, err := h.uc.CreateDataInvoice(usecase.ParamCreateDataInvoice{
-// 		Ctx: ctx,
-// 		Req: *req,
-// 	})
+	err := h.uc.CreateByInvoiceID(uc_invoice_data_bayar.ParamCreateByInvoiceID{
+		Ctx: ctx,
+		Req: *req,
+	})
 
-// 	if err != nil {
-// 		return errResponse(c, err)
-// 	}
+	if err != nil {
+		return errResponse(c, err)
+	}
 
-// 	dataHp, err := h.ucHutangPiutang.CreateDataHP(ucHutangPiutang.ParamCreateDataHp{
-// 		Ctx: ctx,
-// 		Req: *dataReqHp,
-// 	})
-
-// 	if err != nil {
-// 		return errResponse(c, err)
-// 	}
-
-// 	// set data hp into invoice
-// 	dataInvoice.HutangPiutang = *dataHp
-
-// 	err = h.uc.CreateCommitDB(usecase.ParamCommitDB{
-// 		Ctx:     ctx,
-// 		Invoice: dataInvoice,
-// 	})
-
-// 	if err != nil {
-// 		return errResponse(c, err)
-// 	}
-
-// 	// Respond with success status
-// 	return c.Status(fiber.StatusCreated).JSON(response.SuccessRes(fiber.StatusCreated, message.Created, nil))
-// }
+	// Respond with success status
+	return c.Status(fiber.StatusCreated).JSON(response.SuccessRes(fiber.StatusCreated, message.Created, nil))
+}
 
 func (h *dataBayarInvoiceHandler) Update(c *fiber.Ctx) error {
 	req := new(req.Update)
@@ -170,11 +152,11 @@ func (h *dataBayarInvoiceHandler) Update(c *fiber.Ctx) error {
 	}
 
 	ctx := c.UserContext()
-	userData := c.Locals("user").(*entity.User)
+	claims := c.Locals("user").(*pkg.Claims)
 	dataByrInvoice, err := h.uc.UpdateDataBayarInvoice(uc_invoice_data_bayar.ParamUpdateDataBayarInvoice{
-		Ctx:  ctx,
-		User: userData,
-		Req:  *req,
+		Ctx:    ctx,
+		Claims: claims,
+		Req:    *req,
 	})
 
 	if err != nil {
@@ -216,47 +198,25 @@ func (h *dataBayarInvoiceHandler) Update(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(response.SuccessRes(fiber.StatusOK, message.OK, nil))
 }
 
-// func (h *dataBayarInvoiceHandler) UpdateStatusProduksi(c *fiber.Ctx) error {
-// 	req := new(req.UpdateStatusProduksi)
+func (h *dataBayarInvoiceHandler) Delete(c *fiber.Ctx) error {
+	req := new(global.ParamByID)
 
-// 	c.ParamsParser(req)
-// 	c.BodyParser(req)
+	c.ParamsParser(req)
 
-// 	errValidate := h.validator.Validate(req)
-// 	if errValidate != nil {
-// 		return c.Status(fiber.StatusBadRequest).JSON(errValidate)
-// 	}
+	errValidate := h.validator.Validate(req)
+	if errValidate != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(errValidate)
+	}
 
-// 	ctx := c.UserContext()
-// 	err := h.uc.UpdateStatusProduksi(usecase.ParamUpdateStatusProduksi{
-// 		Ctx: ctx,
-// 		Req: *req,
-// 	})
+	ctx := c.UserContext()
+	err := h.uc.Delete(uc_invoice_data_bayar.ParamDelete{
+		Ctx: ctx,
+		Req: *req,
+	})
 
-// 	if err != nil {
-// 		return errResponse(c, err)
-// 	}
+	if err != nil {
+		return errResponse(c, err)
+	}
 
-// 	return c.Status(fiber.StatusOK).JSON(response.SuccessRes(fiber.StatusOK, message.OK, nil))
-// }
-
-// func (h *dataBayarInvoiceHandler) Delete(c *fiber.Ctx) error {
-// 	req := new(reqGlobal.ParamByID)
-
-// 	c.ParamsParser(req)
-// 	c.BodyParser(req)
-
-// 	errValidate := h.validator.Validate(req)
-// 	if errValidate != nil {
-// 		return c.Status(fiber.StatusBadRequest).JSON(errValidate)
-// 	}
-
-// 	ctx := c.UserContext()
-// 	err := h.uc.Delete(usecase.ParamDelete{Ctx: ctx, ID: req.ID})
-
-// 	if err != nil {
-// 		return errResponse(c, err)
-// 	}
-
-// 	return c.Status(fiber.StatusOK).JSON(response.SuccessRes(fiber.StatusOK, message.OK, nil))
-// }
+	return c.Status(fiber.StatusOK).JSON(response.SuccessRes(fiber.StatusOK, message.OK, nil))
+}

@@ -8,6 +8,7 @@ import (
 
 type Claims struct {
 	jwt.RegisteredClaims
+	ID       string `json:"id"`
 	Nama     string `json:"nama"`
 	Username string `json:"username"`
 	Role     string `json:"role"`
@@ -30,6 +31,7 @@ func NewJwt(key string, refreshKey string) JwtC {
 func (j *jwtC) CreateToken(refresh bool, claims *Claims, expiresAt time.Time) (string, error) {
 	claims.RegisteredClaims = jwt.RegisteredClaims{
 		ExpiresAt: jwt.NewNumericDate(expiresAt),
+		Subject:   claims.Subject,
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	if refresh {

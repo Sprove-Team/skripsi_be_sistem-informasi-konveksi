@@ -26,14 +26,14 @@ import (
 
 type (
 	ParamCreateDataInvoice struct {
-		Ctx  context.Context
-		User *entity.User
-		Req  req.Create
+		Ctx    context.Context
+		Claims *pkg.Claims
+		Req    req.Create
 	}
 	ParamUpdateDataInvoice struct {
-		Ctx  context.Context
-		User *entity.User
-		Req  req.Update
+		Ctx    context.Context
+		Claims *pkg.Claims
+		Req    req.Update
 	}
 	ParamCommitDB struct {
 		Ctx     context.Context
@@ -334,7 +334,7 @@ func (u *invoiceUsecase) CreateDataInvoice(param ParamCreateDataInvoice) (*entit
 		KontakID:         param.Req.KontakID,
 		TotalQty:         totalQty,
 		TotalHarga:       totalHarga,
-		UserID:           param.User.ID,
+		UserID:           param.Claims.ID,
 		Keterangan:       param.Req.Keterangan,
 		TanggalDeadline:  &tanggalDeadline,
 		TanggalKirim:     &tanggalKirim,
@@ -377,11 +377,11 @@ func (u *invoiceUsecase) UpdateDataInvoice(param ParamUpdateDataInvoice) (*entit
 	oldData.Base = entity.Base{
 		ID: oldData.ID,
 	}
-	switch param.User.Role {
+	switch param.Claims.Role {
 	case "MANAJER_PRODUKSI":
 		return &entity.Invoice{
 			Base:           oldData.Base,
-			UserID:         param.User.ID,
+			UserID:         param.Claims.ID,
 			KontakID:       oldData.KontakID,
 			StatusProduksi: param.Req.StatusProduksi,
 		}, nil
@@ -389,7 +389,7 @@ func (u *invoiceUsecase) UpdateDataInvoice(param ParamUpdateDataInvoice) (*entit
 		oldData.StatusProduksi = param.Req.StatusProduksi
 	}
 
-	oldData.UserID = param.User.ID
+	oldData.UserID = param.Claims.ID
 	oldData.Keterangan = param.Req.Keterangan
 	oldData.KontakID = param.Req.KontakID
 

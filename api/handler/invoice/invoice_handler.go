@@ -11,7 +11,6 @@ import (
 	reqGlobal "github.com/be-sistem-informasi-konveksi/common/request/global"
 	req "github.com/be-sistem-informasi-konveksi/common/request/invoice"
 	"github.com/be-sistem-informasi-konveksi/common/response"
-	"github.com/be-sistem-informasi-konveksi/entity"
 	"github.com/be-sistem-informasi-konveksi/pkg"
 	"github.com/gofiber/fiber/v2"
 )
@@ -133,11 +132,11 @@ func (h *invoiceHandler) Create(c *fiber.Ctx) error {
 	}
 
 	ctx := c.UserContext()
-	userData := c.Locals("user").(*entity.User)
+	claims := c.Locals("user").(*pkg.Claims)
 	dataInvoice, dataReqHp, err := h.uc.CreateDataInvoice(usecase.ParamCreateDataInvoice{
-		Ctx:  ctx,
-		Req:  *req,
-		User: userData,
+		Ctx:    ctx,
+		Req:    *req,
+		Claims: claims,
 	})
 
 	if err != nil {
@@ -181,12 +180,12 @@ func (h *invoiceHandler) Update(c *fiber.Ctx) error {
 	}
 
 	ctx := c.UserContext()
-	userData := c.Locals("user").(*entity.User)
+	claims := c.Locals("user").(*pkg.Claims)
 
 	dataInvoice, err := h.uc.UpdateDataInvoice(usecase.ParamUpdateDataInvoice{
-		Ctx:  ctx,
-		Req:  *req,
-		User: userData,
+		Ctx:    ctx,
+		Req:    *req,
+		Claims: claims,
 	})
 
 	if err != nil {
