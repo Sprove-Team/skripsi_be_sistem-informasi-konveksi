@@ -82,13 +82,15 @@ func (dbgc *DBGorm) InitDBGorm(ulid pkg.UlidPkg) *gorm.DB {
 		return nil
 	})
 
-	//  akuntansi & invoice
+	//  akuntansi, invoice & tugas
 	g.Go(func() error {
 		// akuntansi
 		autoMigrateEntities(db, &entity.KelompokAkun{}, &entity.Akun{}, &entity.Transaksi{}, &entity.AyatJurnal{})
 		autoMigrateEntities(db, &entity.Kontak{}, &entity.HutangPiutang{}, &entity.DataBayarHutangPiutang{})
 		// invoice
 		autoMigrateEntities(db, &entity.Invoice{}, &entity.DetailInvoice{}, &entity.DataBayarInvoice{})
+		// tugas
+		autoMigrateEntities(db, &entity.Tugas{}, &entity.SubTugas{})
 		return nil
 	})
 

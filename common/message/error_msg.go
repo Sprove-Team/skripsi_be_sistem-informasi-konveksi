@@ -10,7 +10,6 @@ var (
 )
 
 // middleware auth
-
 var (
 	UnauthInvalidToken   = "token tidak valid"
 	UnauthTokenExpired   = "token telah kadaluarsa"
@@ -19,7 +18,6 @@ var (
 )
 
 // auth
-
 var (
 	InvalidUsernameOrPassword = "username atau password tidak valid"
 	RefreshTokenExpired       = "refresh token telah kadaluarsa"
@@ -56,6 +54,11 @@ var (
 var (
 	PasswordIsNotStrong = "password setidaknya harus berisi angka dan huruf besar"
 	UserNotFound        = "user tidak ditemukan"
+)
+
+// tugas
+var (
+	Tugas = ""
 )
 
 // misc
