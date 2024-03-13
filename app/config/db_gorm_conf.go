@@ -125,11 +125,11 @@ func (dbgc *DBGorm) InitDBGorm(ulid pkg.UlidPkg) *gorm.DB {
 
 func autoMigrateEntities(db *gorm.DB, entities ...interface{}) {
 	for _, entity := range entities {
-		if os.Getenv("ENVIRONMENT") == "PRODUCTION" {
-			if db.Migrator().HasTable(entity) {
-				continue
-			}
+		if db.Migrator().HasTable(entity) {
+			continue
 		}
+		// if os.Getenv("ENVIRONMENT") == "PRODUCTION" {
+		// }
 		if err := db.AutoMigrate(entity); err != nil {
 			panic(err)
 		}

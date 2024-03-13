@@ -105,6 +105,9 @@ func (r *invoiceRepo) GetById(param ParamGetById) (*entity.Invoice, error) {
 		Preload("DataBayarInvoice").
 		Preload("DataBayarInvoice.Akun").
 		Preload("DetailInvoice").
+		Preload("DetailInvoice.Produk").
+		Preload("DetailInvoice.Bordir").
+		Preload("DetailInvoice.Sablon").
 		Preload("Kontak").
 		Preload("User").
 		First(data, "id = ?", param.ID)

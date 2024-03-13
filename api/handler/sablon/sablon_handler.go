@@ -43,16 +43,6 @@ func errResponse(c *fiber.Ctx, err error) error {
 		return c.Status(fiber.StatusConflict).JSON(res_global.ErrorRes(fiber.ErrConflict.Code, fiber.ErrConflict.Message, nil))
 	}
 
-	// badRequest := map[string][]string{}
-
-	// if err.Error() == message.KelompokAkunIdNotFound {
-	// 	badRequest[""] = []string{err.Error()}
-	// }
-
-	// if len(badRequest) > 0 {
-	// 	return c.Status(fiber.StatusBadRequest).JSON(response.ErrorRes(fiber.ErrBadRequest.Code, fiber.ErrBadRequest.Message, badRequest))
-	// }
-
 	if err.Error() == message.AkunCannotDeleted {
 		return c.Status(fiber.StatusInternalServerError).JSON(res_global.ErrorInterWithMessageRes(fiber.ErrInternalServerError.Code, fiber.ErrInternalServerError.Message, err.Error()))
 	}

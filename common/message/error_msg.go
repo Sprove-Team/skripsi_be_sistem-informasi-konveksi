@@ -58,7 +58,7 @@ var (
 
 // tugas
 var (
-	UserNotFoundOrNotSpv = "user tidak ditemukan atau user bukan supervisor"
+	UserNotFoundOrNotSpv = "user tidak ditemukan atau jenis supervisor tidak sesuai dengan user"
 )
 
 // misc

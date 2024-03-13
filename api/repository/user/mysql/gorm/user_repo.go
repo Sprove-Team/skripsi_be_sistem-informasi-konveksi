@@ -2,6 +2,7 @@ package repo_user
 
 import (
 	"context"
+	"fmt"
 
 	"gorm.io/gorm"
 
@@ -50,9 +51,10 @@ type (
 		Ctx context.Context
 		ID  string
 	}
-	ParamGetByIds struct {
-		Ctx context.Context
-		IDs []string
+	ParamGetUserSpvByIds struct {
+		Ctx        context.Context
+		JenisSpvID string
+		IDs        []string
 	}
 )
 
@@ -74,7 +76,7 @@ type UserRepo interface {
 	GetByJenisSpvId(param ParamGetByJenisSpvId) (*entity.User, error)
 	GetByUsername(param ParamGetByUsername) (*entity.User, error)
 	GetById(param ParamGetById) (*entity.User, error)
-	GetUserSpvByIds(param ParamGetByIds) ([]entity.User, error)
+	GetUserSpvByIds(param ParamGetUserSpvByIds) ([]entity.User, error)
 }
 
 type userRepo struct {
@@ -194,12 +196,18 @@ func (r *userRepo) GetByUsername(param ParamGetByUsername) (*entity.User, error)
 	return &data, err
 }
 
-func (r *userRepo) GetUserSpvByIds(param ParamGetByIds) ([]entity.User, error) {
+func (r *userRepo) GetUserSpvByIds(param ParamGetUserSpvByIds) ([]entity.User, error) {
 	datas := make([]entity.User, 0, len(param.IDs))
-	err := r.DB.WithContext(param.Ctx).Model(&entity.User{}).Where("id IN (?) AND role = 'SUPERVISOR'", param.IDs).Find(&datas).Error
+
+	tx := r.DB.WithContext(param.Ctx).Model(&entity.User{}).Where("id IN (?) AND role = 'SUPERVISOR'", param.IDs)
+	if param.JenisSpvID != "" {
+		tx = tx.Where("jenis_spv_id = ?", param.JenisSpvID)
+	}
+	err := tx.Find(&datas).Error
 	if err != nil {
 		helper.LogsError(err)
 		return nil, err
 	}
+	fmt.Println(datas)
 	return datas, nil
 }

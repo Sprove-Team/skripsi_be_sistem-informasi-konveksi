@@ -115,6 +115,14 @@ func main() {
 			invoiceGroup.Route("/data_bayar", invoiceRoute.DataBayarInvoice)
 		}
 
+		// tugas
+		tugasHandler := handler_init.NewTugasHandlerInit(dbGorm, validator, ulidPkg)
+		tugasRoute := route.NewTugasRoute(tugasHandler, authMid)
+		tugasGroup := v1.Group("/tugas")
+		{
+			tugasGroup.Route("", tugasRoute.Tugas)
+		}
+
 	}
 
 	app.Listen(":" + os.Getenv("APP_PORT"))

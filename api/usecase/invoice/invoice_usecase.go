@@ -131,24 +131,12 @@ func createRefNumber(repo repo.InvoiceRepo, ctx context.Context) (string, error)
 	return fmt.Sprintf("%04d", nextID), nil
 }
 
-func countUniqueElements(slice []string) int {
-	uniqueMap := make(map[string]bool)
-
-	// Iterate over the slice and add each element to the map
-	for _, element := range slice {
-		uniqueMap[element] = true
-	}
-
-	// Return the number of unique elements (length of the map)
-	return len(uniqueMap)
-}
-
 func (u *invoiceUsecase) CheckDataDetails(param ParamCheckDataDetails) error {
 
 	g := new(errgroup.Group)
 
 	g.Go(func() error {
-		count := countUniqueElements(param.ProdukIds)
+		count := helper.CountUniqueElements(param.ProdukIds)
 
 		d, err := u.repoProduk.GetByIds(param.Ctx, param.ProdukIds)
 		if err != nil {
@@ -162,7 +150,7 @@ func (u *invoiceUsecase) CheckDataDetails(param ParamCheckDataDetails) error {
 	})
 
 	g.Go(func() error {
-		count := countUniqueElements(param.BordirIds)
+		count := helper.CountUniqueElements(param.BordirIds)
 		d, err := u.repoBordir.GetByIds(param.Ctx, param.BordirIds)
 		if err != nil {
 			return err
@@ -174,7 +162,7 @@ func (u *invoiceUsecase) CheckDataDetails(param ParamCheckDataDetails) error {
 	})
 
 	g.Go(func() error {
-		count := countUniqueElements(param.BordirIds)
+		count := helper.CountUniqueElements(param.BordirIds)
 		d, err := u.repoSablon.GetByIds(param.Ctx, param.SablonIds)
 		if err != nil {
 			return err

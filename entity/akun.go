@@ -11,7 +11,3 @@ type Akun struct {
 	AyatJurnal       []AyatJurnal       `gorm:"foreignKey:AkunID;references:ID" json:"ayat_jurnal,omitempty"`
 	DataBayarInvoice []DataBayarInvoice `gorm:"foreignKey:AkunID;references:ID" json:"data_bayar_invoice,omitempty"`
 }
-
-func (Akun) TableName() string {
-	return "akun"
-}

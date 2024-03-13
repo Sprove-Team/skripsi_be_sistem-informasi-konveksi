@@ -8,6 +8,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
 
+	"github.com/be-sistem-informasi-konveksi/common/message"
 	res_global "github.com/be-sistem-informasi-konveksi/common/response"
 	"github.com/be-sistem-informasi-konveksi/helper"
 	"github.com/be-sistem-informasi-konveksi/pkg"
@@ -52,7 +53,10 @@ func (a *authMidleware) Authorization(roles []string) fiber.Handler {
 		},
 		ErrorHandler: func(c *fiber.Ctx, err error) error {
 			helper.LogsError(err)
-			return c.Status(fiber.StatusUnauthorized).JSON(res_global.ErrorRes(fiber.ErrUnauthorized.Code, fiber.ErrUnauthorized.Message, nil))
+			if strings.Contains(err.Error(), "token is expired") {
+				return c.Status(fiber.StatusUnauthorized).JSON(res_global.ErrorRes(fiber.ErrUnauthorized.Code, fiber.ErrUnauthorized.Message, []string{message.UnauthTokenExpired}))
+			}
+			return c.Status(fiber.StatusUnauthorized).JSON(res_global.ErrorRes(fiber.ErrUnauthorized.Code, fiber.ErrUnauthorized.Message, []string{message.UnauthInvalidToken}))
 		},
 	})
 }

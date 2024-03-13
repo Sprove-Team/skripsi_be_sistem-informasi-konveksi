@@ -9,5 +9,6 @@ type Tugas struct {
 	Invoice         *Invoice   `json:"invoice,omitempty"`
 	JenisSpv        *JenisSpv  `json:"jenis_spv"`
 	TanggalDeadline *time.Time `gorm:"type:datetime(3)" json:"tanggal_deadline"`
-	Users           []User     `gorm:"many2many:user_tugas" json:"users"`
+	Users           []User     `gorm:"many2many:user_tugas;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"users"`
+	SubTugas        []SubTugas `gorm:"foreignKey:TugasID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"sub_tugas,omitempty"`
 }
