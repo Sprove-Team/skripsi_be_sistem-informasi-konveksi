@@ -112,6 +112,14 @@ func (dbgc *DBGorm) InitDBGorm(ulid pkg.UlidPkg) *gorm.DB {
 		}
 		return nil
 	})
+	// default value for users
+	g.Go(func() error {
+		err = addDefultValues(db, static_data.DefaultUserDirektur)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
 
 	if err := g.Wait(); err != nil {
 		if err.Error() != "duplicated key not allowed" {

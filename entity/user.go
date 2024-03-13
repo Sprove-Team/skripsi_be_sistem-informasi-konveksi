@@ -7,6 +7,13 @@ var Roles = map[string]bool{
 	"MANAJER_PRODUKSI": true,
 	"SUPERVISOR":       true,
 }
+var RolesById = map[int]string{
+	1: "DIREKTUR",
+	2: "BENDAHARA",
+	3: "ADMIN",
+	4: "MANAJER_PRODUKSI",
+	5: "SUPERVISOR",
+}
 
 type User struct {
 	Base

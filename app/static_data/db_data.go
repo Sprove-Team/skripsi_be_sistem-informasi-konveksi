@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/be-sistem-informasi-konveksi/entity"
+	"github.com/be-sistem-informasi-konveksi/helper"
 	"github.com/be-sistem-informasi-konveksi/pkg"
 )
 
@@ -155,3 +156,20 @@ var (
 		return datas
 	}
 )
+
+// user
+
+var DefaultUserDirektur = &entity.User{
+	Base: entity.Base{
+		ID: "01HR4MEJQVFC6WD6RTJQC1TPSJ",
+	},
+	Nama:     "akun_direktur",
+	Role:     entity.RolesById[1],
+	Username: "direktur",
+	Password: func() string {
+		pass, _ := helper.NewEncryptor().HashPassword("direktur123456")
+		return pass
+	}(),
+	NoTelp: "+62895397290606",
+	Alamat: "angantaka",
+}
