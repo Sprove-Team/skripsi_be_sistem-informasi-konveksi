@@ -10,7 +10,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	id_translations "github.com/go-playground/validator/v10/translations/id"
 
-	"github.com/be-sistem-informasi-konveksi/common/response"
+	res_global "github.com/be-sistem-informasi-konveksi/common/response"
 )
 
 type (
@@ -21,7 +21,7 @@ type (
 )
 
 type Validator interface {
-	Validate(d interface{}) *response.BaseFormatError
+	Validate(d interface{}) *res_global.BaseFormatError
 }
 
 func NewValidator() Validator {
@@ -184,7 +184,7 @@ var strPool = sync.Pool{
 	},
 }
 
-func (x *xValidator) Validate(d interface{}) *response.BaseFormatError {
+func (x *xValidator) Validate(d interface{}) *res_global.BaseFormatError {
 
 	errs := x.validator.Struct(d)
 
@@ -199,7 +199,7 @@ func (x *xValidator) Validate(d interface{}) *response.BaseFormatError {
 			strPool.Put(field)
 			strPool.Put(message)
 		}
-		return response.ErrorRes(400, "Bad Request", errosMsg)
+		return res_global.ErrorRes(400, "Bad Request", errosMsg)
 
 	}
 

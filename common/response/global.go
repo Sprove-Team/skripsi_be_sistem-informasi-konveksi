@@ -1,7 +1,5 @@
 package res_global
 
-// type Erro
-
 type BaseFormat struct {
 	Status string `json:"status"`
 	Code   int    `json:"code"`
