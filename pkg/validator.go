@@ -75,10 +75,6 @@ func NewValidator() Validator {
 			format = "RFC3999"
 		case "2006-01-02":
 			format = "Tahun-Bulan-Tanggal"
-		case "2006-01":
-			format = "Tahun-Bulan"
-		case "2006":
-			format = "Tahun"
 		default:
 			format = fe.Param()
 		}
@@ -118,6 +114,13 @@ func NewValidator() Validator {
 		return ut.Add("excluded_with", "jika {0} diisi maka {1} harus kosong", true)
 	}, func(ut ut.Translator, fe validator.FieldError) string {
 		t, _ := ut.T("excluded_with", fe.Field(), convToReadAble(fe.Param()))
+		return t
+	})
+
+	validate.RegisterTranslation("min", trans, func(ut ut.Translator) error {
+		return ut.Add("min", "{0} harus {1} atau lebih besar", true)
+	}, func(ut ut.Translator, fe validator.FieldError) string {
+		t, _ := ut.T("min", fe.Field(), fe.Param())
 		return t
 	})
 

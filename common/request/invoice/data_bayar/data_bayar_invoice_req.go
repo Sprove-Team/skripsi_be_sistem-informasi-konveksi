@@ -4,7 +4,7 @@ import (
 	"github.com/be-sistem-informasi-konveksi/entity"
 )
 
-type Create struct {
+type CreateByInvoiceId struct {
 	InvoiceID       string                 `params:"invoice_id" validate:"required,ulid"`
 	BuktiPembayaran entity.BuktiPembayaran `json:"bukti_pembayaran" validate:"required,dive,url"`
 	Keterangan      string                 `json:"keterangan" validate:"required"`

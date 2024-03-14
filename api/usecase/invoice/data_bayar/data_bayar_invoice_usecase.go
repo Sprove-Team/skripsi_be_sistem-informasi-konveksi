@@ -16,7 +16,7 @@ import (
 type (
 	ParamCreateByInvoiceID struct {
 		Ctx context.Context
-		Req req.Create
+		Req req.CreateByInvoiceId
 	}
 	ParamUpdateDataBayarInvoice struct {
 		Ctx    context.Context
@@ -86,8 +86,12 @@ func (u *dataBayarInvoice) IsStatusTerkonfirmasi(ctx context.Context, id string)
 
 func (u *dataBayarInvoice) CreateByInvoiceID(param ParamCreateByInvoiceID) error {
 	if err := u.IsInvoiceExist(param.Ctx, param.Req.InvoiceID); err != nil {
+		if err.Error() == "record not found" {
+			return errors.New(message.InvoiceNotFound)
+		}
 		return err
 	}
+
 	dataBayar := entity.DataBayarInvoice{
 		Base: entity.Base{
 			ID: u.ulid.MakeUlid().String(),
@@ -98,6 +102,7 @@ func (u *dataBayarInvoice) CreateByInvoiceID(param ParamCreateByInvoiceID) error
 		BuktiPembayaran: param.Req.BuktiPembayaran,
 		Total:           param.Req.Total,
 	}
+
 	if err := u.repo.Create(repo.ParamCreate{
 		Ctx:       param.Ctx,
 		DataBayar: &dataBayar,

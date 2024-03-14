@@ -6,5 +6,5 @@ type SubTugas struct {
 	Tugas     *Tugas `json:"tugas,omitempty"`
 	Nama      string `gorm:"type:varchar(150)" json:"nama,omitempty"`
 	Deskripsi string `gorm:"type:TEXT;default:null" json:"deskripsi,omitempty"`
-	Status    string `gorm:"type:enum('menunggu','diproses','selesai')" json:"status,omitempty"`
+	Status    string `gorm:"type:enum('BELUM_DIKERJAKAN','DIPROSES','SELESAI');default:'BELUM_DIKERJAKAN'" json:"status,omitempty"`
 }

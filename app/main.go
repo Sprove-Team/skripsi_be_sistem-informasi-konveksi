@@ -121,6 +121,7 @@ func main() {
 		tugasGroup := v1.Group("/tugas")
 		{
 			tugasGroup.Route("", tugasRoute.Tugas)
+			tugasGroup.Route("/sub_tugas", tugasRoute.SubTugas)
 		}
 
 	}

@@ -2,7 +2,6 @@ package handler_invoice_data_bayar
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	uc_akuntansi_hp "github.com/be-sistem-informasi-konveksi/api/usecase/akuntansi/hutang_piutang"
@@ -18,7 +17,7 @@ import (
 
 type DataBayarInvoiceHandler interface {
 	GetByInvoiceId(c *fiber.Ctx) error
-	Create(c *fiber.Ctx) error
+	CreateByInvoiceId(c *fiber.Ctx) error
 	Update(c *fiber.Ctx) error
 	Delete(c *fiber.Ctx) error
 }
@@ -54,6 +53,7 @@ func errResponse(c *fiber.Ctx, err error) error {
 
 	switch err.Error() {
 	case
+		message.InvoiceNotFound,
 		message.CannotModifiedTerkonfirmasiDataBayar:
 		badRequest = append(badRequest, err.Error())
 	}
@@ -76,8 +76,6 @@ func (h *dataBayarInvoiceHandler) GetByInvoiceId(c *fiber.Ctx) error {
 	}
 
 	ctx := c.UserContext()
-	claims := c.Locals("user").(*pkg.Claims)
-	fmt.Println("ID -> ", claims.ID)
 	datas, err := h.uc.GetByInvoiceID(uc_invoice_data_bayar.ParamGetByInvoiceID{
 		Ctx: ctx,
 		Req: *req,
@@ -115,9 +113,10 @@ func (h *dataBayarInvoiceHandler) GetByInvoiceId(c *fiber.Ctx) error {
 // 	return c.Status(fiber.StatusOK).JSON(response.SuccessRes(fiber.StatusOK, message.OK, datas))
 // }
 
-func (h *dataBayarInvoiceHandler) Create(c *fiber.Ctx) error {
-	req := new(req.Create)
+func (h *dataBayarInvoiceHandler) CreateByInvoiceId(c *fiber.Ctx) error {
+	req := new(req.CreateByInvoiceId)
 
+	c.ParamsParser(req)
 	c.BodyParser(req)
 
 	errValidate := h.validator.Validate(req)

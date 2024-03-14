@@ -34,7 +34,7 @@ func (ro *invoiceRoute) Invoice(router fiber.Router) {
 func (ro *invoiceRoute) DataBayarInvoice(router fiber.Router) {
 	auth := ro.auth.Authorization([]string{"DIREKTUR", "ADMIN", "BENDAHARA"})
 	router.Get("/:invoice_id", auth, ro.h.DataBayarInvoiceHandler().GetByInvoiceId)
-	router.Put("/:invoice_id", auth, ro.h.DataBayarInvoiceHandler().Create)
+	router.Post("/:invoice_id", auth, ro.h.DataBayarInvoiceHandler().CreateByInvoiceId)
 	router.Put("/:id", auth, ro.h.DataBayarInvoiceHandler().Update)
 	router.Put("/:id", auth, ro.h.DataBayarInvoiceHandler().Delete)
 }

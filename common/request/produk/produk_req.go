@@ -15,6 +15,6 @@ type GetAll struct {
 	Nama        string `query:"nama" validate:"omitempty"`
 	KategoriID  string `query:"kategori_id" validate:"omitempty,ulid"`
 	HargaDetail string `query:"harga_detail" validate:"omitempty,oneof=EMPTY NOT_EMPTY"`
-	Next        string `query:"next" validate:"omitempty"`
+	Next        string `query:"next" validate:"omitempty,ulid"`
 	Limit       int    `query:"limit" validate:"omitempty,number"`
 }
