@@ -8,10 +8,10 @@ import (
 
 type Claims struct {
 	jwt.RegisteredClaims
-	ID       string `json:"id"`
-	Nama     string `json:"nama"`
-	Username string `json:"username"`
-	Role     string `json:"role"`
+	ID       string `json:"id,omitempty"`
+	Nama     string `json:"nama,omitempty"`
+	Username string `json:"username,omitempty"`
+	Role     string `json:"role,omitempty"`
 }
 
 type JwtC interface {

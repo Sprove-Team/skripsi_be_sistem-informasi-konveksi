@@ -8,6 +8,7 @@ import (
 	middleware_auth "github.com/be-sistem-informasi-konveksi/api/middleware/auth"
 	corsMid "github.com/be-sistem-informasi-konveksi/api/middleware/cors"
 	timeoutMid "github.com/be-sistem-informasi-konveksi/api/middleware/timeout"
+	repo_user "github.com/be-sistem-informasi-konveksi/api/repository/user/mysql/gorm"
 	"github.com/be-sistem-informasi-konveksi/app/config"
 	"github.com/be-sistem-informasi-konveksi/app/handler_init"
 	"github.com/be-sistem-informasi-konveksi/app/route"
@@ -36,7 +37,8 @@ func main() {
 	encryptor := helper.NewEncryptor()
 
 	// middleware
-	authMid := middleware_auth.NewAuthMiddleware()
+	repoUser := repo_user.NewUserRepo(dbGorm)
+	authMid := middleware_auth.NewAuthMiddleware(repoUser)
 	timeoutMid := timeoutMid.NewTimeoutMiddleware()
 	corsMid := corsMid.NewCorsMiddleware()
 
@@ -52,7 +54,7 @@ func main() {
 
 	{
 		// auth
-		authHandler := handler_init.NewAuthHandlerInit(dbGorm, jwtPkg, validator, encryptor)
+		authHandler := handler_init.NewAuthHandlerInit(dbGorm, jwtPkg, validator, ulidPkg, encryptor)
 		authRoute := route.NewAuthRoute(authHandler, authMid)
 		authGroup := v1.Group("/auth")
 		{
@@ -122,6 +124,14 @@ func main() {
 		{
 			tugasGroup.Route("", tugasRoute.Tugas)
 			tugasGroup.Route("/sub_tugas", tugasRoute.SubTugas)
+		}
+
+		// profile
+		profileHandler := handler_init.NewProfileHandlerInit(dbGorm, validator, ulidPkg, encryptor, jwtPkg)
+		profileRoute := route.NewProfileRoute(profileHandler, authMid)
+		profileGroup := v1.Group("/profile")
+		{
+			profileGroup.Route("", profileRoute.Profile)
 		}
 
 	}

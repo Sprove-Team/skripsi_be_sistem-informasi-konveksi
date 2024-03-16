@@ -196,14 +196,20 @@ func (x *xValidator) Validate(d interface{}) *res_global.BaseFormatError {
 	errs := x.validator.Struct(d)
 
 	field := strPool.Get().(*str)
+	param := strPool.Get().(*str)
 	message := strPool.Get().(*str)
 	if errs != nil {
 		errosMsg := make([]string, len(errs.(validator.ValidationErrors)))
 		for i, err := range errs.(validator.ValidationErrors) {
 			field.value = convToReadAble(err.Field())
 			message.value = strings.ReplaceAll(err.Translate(x.trans), err.Field(), field.value)
+			if err.Param() != "" {
+				param.value = convToReadAble(err.Param())
+				message.value = strings.ReplaceAll(message.value, err.Param(), param.value)
+			}
 			errosMsg[i] = message.value
 			strPool.Put(field)
+			strPool.Put(param)
 			strPool.Put(message)
 		}
 		return res_global.ErrorRes(400, "Bad Request", errosMsg)

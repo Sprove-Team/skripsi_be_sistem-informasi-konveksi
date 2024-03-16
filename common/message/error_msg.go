@@ -56,6 +56,12 @@ var (
 	UserNotFound        = "user tidak ditemukan"
 )
 
+// profile
+var (
+	NotFitOldPassword = "old password tidak cocok"
+	UsernameConflict  = "username telah digunakan"
+)
+
 // tugas
 var (
 	UserNotFoundOrNotSpv = "user tidak ditemukan atau jenis supervisor tidak sesuai dengan user"

@@ -156,7 +156,7 @@ func (h *userHandler) Delete(c *fiber.Ctx) error {
 	c.ParamsParser(req)
 	errValidate := h.validator.Validate(req)
 	if errValidate != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(res_global.ErrorRes(fiber.ErrBadRequest.Code, fiber.ErrBadRequest.Message, nil))
+		return c.Status(fiber.StatusBadRequest).JSON(errValidate)
 	}
 	ctx := c.UserContext()
 	err := h.uc.Delete(usecase.ParamDelete{

@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"strings"
-	"sync"
 	"time"
 
 	userRepo "github.com/be-sistem-informasi-konveksi/api/repository/user/mysql/gorm"
@@ -49,7 +48,7 @@ func (u *authUsecase) Login(param ParamLogin) (token *string, refreshToken *stri
 
 	if err != nil {
 		if err.Error() == "record not found" {
-			return nil, nil, errors.New(message.UserNotFound)
+			return nil, nil, errors.New(message.InvalidUsernameOrPassword)
 		}
 		return nil, nil, err
 	}
@@ -59,17 +58,14 @@ func (u *authUsecase) Login(param ParamLogin) (token *string, refreshToken *stri
 	}
 
 	g := new(errgroup.Group)
-	m := new(sync.Mutex)
-	claims := new(pkg.Claims)
-	claims.ID = userData.ID
-	claims.Nama = userData.Nama
-	claims.Username = userData.Username
-	claims.Role = userData.Role
 
 	g.Go(func() error {
-		m.Lock()
+		claims := new(pkg.Claims)
+		claims.ID = userData.ID
+		claims.Nama = userData.Nama
+		claims.Username = userData.Username
+		claims.Role = userData.Role
 		claims.Subject = "access_token"
-		m.Unlock()
 		tokenData, err := u.jwt.CreateToken(false, claims, time.Now().Add(time.Hour*8))
 		if err != nil {
 			return err
@@ -79,9 +75,9 @@ func (u *authUsecase) Login(param ParamLogin) (token *string, refreshToken *stri
 	})
 
 	g.Go(func() error {
-		m.Lock()
+		claims := new(pkg.Claims)
+		claims.ID = userData.ID
 		claims.Subject = "refresh_token"
-		m.Unlock()
 		refTokenData, err := u.jwt.CreateToken(true, claims, time.Now().Add(time.Hour*24*7))
 		if err != nil {
 			return err
@@ -118,24 +114,19 @@ func (u *authUsecase) RefreshToken(param ParamRefreshToken) (newToken *string, e
 
 	if err != nil {
 		if err.Error() == "record not found" {
-			return nil, errors.New(message.UserNotFoundOrDeleted)
+			return nil, errors.New(message.InvalidRefreshToken)
 		}
 		return nil, err
 	}
 
-	if userData.ID != claims.ID ||
-		userData.Username != claims.Username ||
-		userData.Nama != claims.Nama ||
-		userData.Role != claims.Role {
-		return nil, errors.New(message.InvalidRefreshToken)
-	}
-
+	claims.Subject = "access_token"
 	claims.ID = userData.ID
 	claims.Nama = userData.Nama
 	claims.Username = userData.Username
 	claims.Role = userData.Role
 
-	newTokenData, err := u.jwt.CreateToken(false, claims, time.Now().Add(time.Hour*24))
+	newTokenData, err := u.jwt.CreateToken(false, claims, time.Now().Add(time.Hour*8))
+
 	if err != nil {
 		return nil, err
 	}

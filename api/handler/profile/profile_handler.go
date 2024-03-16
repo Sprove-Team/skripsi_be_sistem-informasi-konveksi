@@ -1,31 +1,28 @@
-package handler_auth
+package handler_profile
 
 import (
 	"context"
 
 	uc_auth "github.com/be-sistem-informasi-konveksi/api/usecase/auth"
+	uc_profile "github.com/be-sistem-informasi-konveksi/api/usecase/profile"
 	uc_user "github.com/be-sistem-informasi-konveksi/api/usecase/user"
 	"github.com/be-sistem-informasi-konveksi/common/message"
-	req_auth "github.com/be-sistem-informasi-konveksi/common/request/auth"
+	req_profile "github.com/be-sistem-informasi-konveksi/common/request/profile"
 	res_global "github.com/be-sistem-informasi-konveksi/common/response"
 	"github.com/be-sistem-informasi-konveksi/pkg"
 	"github.com/gofiber/fiber/v2"
 )
 
-type AuthHandler interface {
-	WhoAmI(c *fiber.Ctx) error
-	Login(c *fiber.Ctx) error
-	RefreshToken(c *fiber.Ctx) error
+type ProfileHandler interface {
+	GetProfile(c *fiber.Ctx) error
+	Update(c *fiber.Ctx) error
 }
 
-type authHandler struct {
-	uc        uc_auth.AuthUsecase
+type profileHandler struct {
+	uc        uc_profile.ProfileUsecase
 	ucUser    uc_user.UserUsecase
+	ucAuth    uc_auth.AuthUsecase
 	validator pkg.Validator
-}
-
-func NewAuthHandler(uc uc_auth.AuthUsecase, ucUser uc_user.UserUsecase, validator pkg.Validator) AuthHandler {
-	return &authHandler{uc, ucUser, validator}
 }
 
 func errResponse(c *fiber.Ctx, err error) error {
@@ -44,27 +41,44 @@ func errResponse(c *fiber.Ctx, err error) error {
 	badRequest := make([]string, 0, 1)
 
 	switch err.Error() {
-	case
-		message.UserNotFoundOrDeleted,
-		message.RefreshTokenExpired,
-		message.InvalidRefreshToken,
-		message.InvalidUsernameOrPassword:
+	case message.UsernameConflict,
+		message.NotFitOldPassword:
 		badRequest = append(badRequest, err.Error())
 	}
 
 	if len(badRequest) > 0 {
 		return c.Status(fiber.StatusBadRequest).JSON(res_global.ErrorRes(fiber.ErrBadRequest.Code, fiber.ErrBadRequest.Message, badRequest))
 	}
+
 	return c.Status(fiber.StatusInternalServerError).JSON(res_global.ErrorRes(fiber.ErrInternalServerError.Code, fiber.ErrInternalServerError.Message, nil))
 }
 
-func (h *authHandler) WhoAmI(c *fiber.Ctx) error {
-	claims := c.Locals("user").(*pkg.Claims)
-	return c.Status(fiber.StatusOK).JSON(res_global.SuccessRes(fiber.StatusOK, message.OK, claims))
+func NewProfileHandler(uc uc_profile.ProfileUsecase, ucUser uc_user.UserUsecase, ucAuth uc_auth.AuthUsecase, validator pkg.Validator) ProfileHandler {
+	return &profileHandler{uc, ucUser, ucAuth, validator}
 }
 
-func (h *authHandler) Login(c *fiber.Ctx) error {
-	req := new(req_auth.Login)
+func (h *profileHandler) GetProfile(c *fiber.Ctx) error {
+
+	ctx := c.UserContext()
+	claims, ok := c.Locals("user").(*pkg.Claims)
+	if !ok {
+		return c.Status(fiber.StatusInternalServerError).JSON(res_global.ErrorRes(fiber.ErrInternalServerError.Code, fiber.ErrInternalServerError.Message, nil))
+	}
+
+	data, err := h.ucUser.GetById(uc_user.ParamGetById{
+		Ctx: ctx,
+		ID:  claims.ID,
+	})
+
+	if err != nil {
+		return errResponse(c, err)
+	}
+
+	return c.Status(fiber.StatusOK).JSON(res_global.SuccessRes(fiber.StatusOK, message.OK, data))
+}
+
+func (h *profileHandler) Update(c *fiber.Ctx) error {
+	req := new(req_profile.Update)
 
 	c.BodyParser(req)
 	errValidate := h.validator.Validate(req)
@@ -73,46 +87,26 @@ func (h *authHandler) Login(c *fiber.Ctx) error {
 	}
 
 	ctx := c.UserContext()
-	token, refToken, err := h.uc.Login(uc_auth.ParamLogin{
-		Ctx: ctx,
-		Req: *req,
-	})
-	// Handle errors
-	if err != nil {
-		return errResponse(c, err)
-	}
-	data := fiber.Map{
-		"token":         token,
-		"refresh_token": refToken,
-	}
-	// Respond with success status
-	return c.Status(fiber.StatusOK).JSON(res_global.SuccessRes(fiber.StatusOK, message.OK, data))
-}
-
-func (h *authHandler) RefreshToken(c *fiber.Ctx) error {
-	req := new(req_auth.GetNewToken)
-
-	c.BodyParser(req)
-	errValidate := h.validator.Validate(req)
-	if errValidate != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(errValidate)
+	claims, ok := c.Locals("user").(*pkg.Claims)
+	if !ok {
+		return c.Status(fiber.StatusInternalServerError).JSON(res_global.ErrorRes(fiber.ErrInternalServerError.Code, fiber.ErrInternalServerError.Message, nil))
 	}
 
-	ctx := c.UserContext()
-	newToken, err := h.uc.RefreshToken(uc_auth.ParamRefreshToken{
-		Ctx: ctx,
-		Req: *req,
+	err := h.uc.Update(uc_profile.ParamUpdate{
+		Ctx:    ctx,
+		Claims: claims,
+		Req:    *req,
 	})
 
-	// Handle errors
 	if err != nil {
 		return errResponse(c, err)
 	}
 
-	data := fiber.Map{
-		"token": newToken,
-	}
-
-	// Respond with success status
-	return c.Status(fiber.StatusOK).JSON(res_global.SuccessRes(fiber.StatusOK, message.OK, data))
+	// h.ucAuth.Login(uc_auth.ParamLogin{
+	// 	Ctx: ctx,
+	// 	Req: req_auth.Login{
+	// 		Username: ,
+	// 	},
+	// })
+	return c.Status(fiber.StatusOK).JSON(res_global.SuccessRes(fiber.StatusOK, message.OK, nil))
 }
