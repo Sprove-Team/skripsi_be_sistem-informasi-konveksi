@@ -19,7 +19,7 @@ type ReqNewKontak struct {
 }
 
 type ReqBayar struct {
-	BuktiPembayaran entity.BuktiPembayaran `json:"bukti_pembayaran" validate:"required,dive,url"`
+	BuktiPembayaran entity.BuktiPembayaran `json:"bukti_pembayaran" validate:"required"`
 	Keterangan      string                 `json:"keterangan" validate:"required"`
 	AkunID          string                 `json:"akun_id" validate:"required,ulid"`
 	Total           float64                `json:"total" validate:"required,number,gt=0"`
