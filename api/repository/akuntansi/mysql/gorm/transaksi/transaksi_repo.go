@@ -157,7 +157,9 @@ func (r *transaksiRepo) GetAll(ctx context.Context, param SearchTransaksi) ([]en
 
 	tx := r.DB.WithContext(ctx).Model(&datas).Order("tanggal DESC").Omit("deleted_at", "updated_at", "bukti_pembayaran")
 
-	err := tx.Where("DATE(tanggal) >= ? AND DATE(tanggal) <= ?", param.StartDate, param.EndDate).Find(&datas).Error
+	err := tx.Where("DATE(tanggal) >= ? AND DATE(tanggal) <= ?", param.StartDate, param.EndDate).
+		Preload("Kontak").
+		Find(&datas).Error
 	if err != nil {
 		helper.LogsError(err)
 		return datas, err
@@ -182,6 +184,7 @@ func (r *transaksiRepo) GetById(ctx context.Context, id string) (entity.Transaks
 	data := entity.Transaksi{}
 	err := r.DB.WithContext(ctx).Model(&entity.Transaksi{}).Omit("deleted_at", "updated_at").
 		Where("id = ?", id).
+		Preload("Kontak").
 		Preload("AyatJurnals", func(db *gorm.DB) *gorm.DB {
 			return db.Omit("deleted_at", "updated_at").Preload("Akun", func(db2 *gorm.DB) *gorm.DB {
 				return db2.Select("nama", "id", "saldo_normal", "kode", "kelompok_akun_id")
