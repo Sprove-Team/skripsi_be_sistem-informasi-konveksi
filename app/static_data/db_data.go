@@ -158,7 +158,7 @@ var (
 )
 
 // user
-
+var PlainPassword = "direktur123456"
 var DefaultUserDirektur = &entity.User{
 	Base: entity.Base{
 		ID: "01HR4MEJQVFC6WD6RTJQC1TPSJ",
@@ -167,7 +167,7 @@ var DefaultUserDirektur = &entity.User{
 	Role:     entity.RolesById[1],
 	Username: "direktur",
 	Password: func() string {
-		pass, _ := helper.NewEncryptor().HashPassword("direktur123456")
+		pass, _ := helper.NewEncryptor().HashPassword(PlainPassword)
 		return pass
 	}(),
 	NoTelp: "+62895397290606",
