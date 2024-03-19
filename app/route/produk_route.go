@@ -32,6 +32,7 @@ func (ro *produkRoute) Produk(router fiber.Router) {
 }
 
 func (ro *produkRoute) KategoriProduk(router fiber.Router) {
+	router.Use(ro.auth.Authorization([]string{"DIREKTUR"}))
 	router.Get("", ro.h.KategoriProdukHandler().GetAll)
 	router.Get("/:id", ro.h.KategoriProdukHandler().GetById)
 	router.Post("", ro.h.KategoriProdukHandler().Create)
@@ -40,6 +41,7 @@ func (ro *produkRoute) KategoriProduk(router fiber.Router) {
 }
 
 func (ro *produkRoute) HargaDetailProduk(router fiber.Router) {
+	router.Use(ro.auth.Authorization([]string{"DIREKTUR"}))
 	router.Get("/:produk_id", ro.h.HargaDetailProdukHandler().GetByProdukId)
 	router.Post("", ro.h.HargaDetailProdukHandler().Create)
 	router.Put("/:id", ro.h.HargaDetailProdukHandler().Update)

@@ -13,6 +13,6 @@ type Update struct {
 
 type GetAll struct {
 	Nama  string `query:"nama" validate:"omitempty"`
-	Next  string `query:"page" validate:"omitempty"`
+	Next  string `query:"next" validate:"omitempty,ulid"`
 	Limit int    `query:"limit" validate:"omitempty,number"`
 }

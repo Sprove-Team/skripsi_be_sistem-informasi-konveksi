@@ -89,6 +89,13 @@ func NewValidator() Validator {
 		return t
 	})
 
+	validate.RegisterTranslation("oneof", trans, func(ut ut.Translator) error {
+		return ut.Add("oneof", "{0} harus berupa salah satu dari [{1}]", true)
+	}, func(ut ut.Translator, fe validator.FieldError) string {
+		t, _ := ut.T("oneof", fe.Field(), strings.ReplaceAll(fe.Param(), " ", ","))
+		return t
+	})
+
 	validate.RegisterTranslation("required_with", trans, func(ut ut.Translator) error {
 		return ut.Add("required_with", "{0} wajib diisi jika {1} diisi", true)
 	}, func(ut ut.Translator, fe validator.FieldError) string {
@@ -114,13 +121,6 @@ func NewValidator() Validator {
 		return ut.Add("excluded_with", "jika {0} diisi maka {1} harus kosong", true)
 	}, func(ut ut.Translator, fe validator.FieldError) string {
 		t, _ := ut.T("excluded_with", fe.Field(), convToReadAble(fe.Param()))
-		return t
-	})
-
-	validate.RegisterTranslation("min", trans, func(ut ut.Translator) error {
-		return ut.Add("min", "{0} harus {1} atau lebih besar", true)
-	}, func(ut ut.Translator, fe validator.FieldError) string {
-		t, _ := ut.T("min", fe.Field(), fe.Param())
 		return t
 	})
 
@@ -203,9 +203,8 @@ func (x *xValidator) Validate(d interface{}) *res_global.BaseFormatError {
 		for i, err := range errs.(validator.ValidationErrors) {
 			field.value = convToReadAble(err.Field())
 			message.value = strings.ReplaceAll(err.Translate(x.trans), err.Field(), field.value)
-			if err.Param() != "" {
-				param.value = convToReadAble(err.Param())
-				message.value = strings.ReplaceAll(message.value, err.Param(), param.value)
+			if err.Param() != "" && err.Param() == "2006" {
+				message.value = strings.ReplaceAll(message.value, ".", "")
 			}
 			errosMsg[i] = message.value
 			strPool.Put(field)
