@@ -14,6 +14,7 @@ type ProdukRepo interface {
 	Delete(ctx context.Context, id string) error
 	Update(ctx context.Context, produk *entity.Produk) error
 	GetById(ctx context.Context, id string) (entity.Produk, error)
+	CheckProduk(ctx context.Context, id string) error
 	GetByIds(ctx context.Context, ids []string) ([]entity.Produk, error)
 	GetAll(ctx context.Context, param SearchProduk) ([]entity.Produk, error)
 }
@@ -44,6 +45,16 @@ func (r *produkRepo) GetById(ctx context.Context, id string) (entity.Produk, err
 		return db.Order("qty ASC")
 	}).Preload("KategoriProduk").First(&data).Error
 	return data, err
+}
+
+func (r *produkRepo) CheckProduk(ctx context.Context, id string) error {
+	data := entity.Produk{}
+	err := r.DB.WithContext(ctx).First(&data, "id = ?", id).Error
+	if err != nil {
+		helper.LogsError(err)
+		return err
+	}
+	return nil
 }
 
 func (r *produkRepo) GetByIds(ctx context.Context, ids []string) ([]entity.Produk, error) {

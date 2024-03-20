@@ -10,6 +10,7 @@ import (
 	req "github.com/be-sistem-informasi-konveksi/common/request/produk/harga_detail"
 	"github.com/be-sistem-informasi-konveksi/entity"
 	"github.com/be-sistem-informasi-konveksi/pkg"
+	"golang.org/x/sync/errgroup"
 )
 
 type HargaDetailProdukUsecase interface {
@@ -85,8 +86,28 @@ func (u *hargaDetailProdukUsecase) Delete(ctx context.Context, id string) error 
 }
 
 func (u *hargaDetailProdukUsecase) GetByProdukId(ctx context.Context, reqHargaDetailProduk req.GetByProdukId) ([]entity.HargaDetailProduk, error) {
-	datas, err := u.repo.GetByProdukId(ctx, reqHargaDetailProduk.ProdukId)
-	if err != nil {
+	g := new(errgroup.Group)
+	g.SetLimit(3)
+	g.Go(func() error {
+		err := u.produkR.CheckProduk(ctx, reqHargaDetailProduk.ProdukId)
+		if err != nil {
+			if err.Error() == "record not found" {
+				return errors.New(message.ProdukNotFound)
+			}
+			return err
+		}
+		return nil
+	})
+	var datas []entity.HargaDetailProduk
+	g.Go(func() error {
+		var err error
+		datas, err = u.repo.GetByProdukId(ctx, reqHargaDetailProduk.ProdukId)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+	if err := g.Wait(); err != nil {
 		return nil, err
 	}
 	return datas, nil
