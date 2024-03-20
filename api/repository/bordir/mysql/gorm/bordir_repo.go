@@ -42,7 +42,9 @@ func (r *bordirRepo) GetById(ctx context.Context, id string) (entity.Bordir, err
 	data := entity.Bordir{}
 	err := r.DB.WithContext(ctx).Where("id = ?", id).First(&data).Error
 	if err != nil {
-		helper.LogsError(err)
+		if err.Error() != "record not found" {
+			helper.LogsError(err)
+		}
 		return entity.Bordir{}, err
 	}
 	return data, err
