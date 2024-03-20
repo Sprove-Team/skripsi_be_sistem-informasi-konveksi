@@ -38,7 +38,7 @@ func TestMain(m *testing.M) {
 
 	token = test.GetToken(dbt, authMid)
 
-	// app kategori
+	// app
 	app.Use(recover.New())
 	api := app.Group("/api")
 	v1 := api.Group("/v1")
