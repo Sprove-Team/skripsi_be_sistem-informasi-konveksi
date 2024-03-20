@@ -30,6 +30,7 @@ func (ro *userRoute) User(router fiber.Router) {
 }
 
 func (ro *userRoute) JenisSpv(router fiber.Router) {
+	router.Use(ro.auth.Authorization([]string{"DIREKTUR"}))
 	router.Get("", ro.h.JenisSpvHandler().GetAll)
 	router.Post("", ro.h.JenisSpvHandler().Create)
 	router.Put("/:id", ro.h.JenisSpvHandler().Update)

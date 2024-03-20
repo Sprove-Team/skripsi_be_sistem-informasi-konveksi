@@ -41,8 +41,8 @@ func TestMain(m *testing.M) {
 	app.Use(recover.New())
 	api := app.Group("/api")
 	v1 := api.Group("/v1")
-	produkGroup := v1.Group("/bordir")
-	produkGroup.Route("/", bordirRoute.Bordir)
+	bordirGroup := v1.Group("/bordir")
+	bordirGroup.Route("/", bordirRoute.Bordir)
 	// Run tests
 	exitVal := m.Run()
 	dbt.Unscoped().Where("1 = 1").Delete(&entity.Bordir{})
@@ -81,7 +81,7 @@ func TestBordirCreate(t *testing.T) {
 			},
 		},
 		{
-			name: "err: nama wajib diisi",
+			name: "err: wajib diisi",
 			payload: req_bordir.Create{
 				Nama:  "",
 				Harga: 0,

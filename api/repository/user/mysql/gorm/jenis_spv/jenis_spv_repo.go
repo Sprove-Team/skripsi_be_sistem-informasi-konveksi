@@ -6,6 +6,7 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/be-sistem-informasi-konveksi/entity"
+	"github.com/be-sistem-informasi-konveksi/helper"
 )
 
 type JenisSpvRepo interface {
@@ -30,17 +31,32 @@ func (r *jenisSpvRepo) Create(ctx context.Context, jenisSpv *entity.JenisSpv) er
 }
 
 func (r *jenisSpvRepo) Update(ctx context.Context, jenisSpv *entity.JenisSpv) error {
-	return r.DB.WithContext(ctx).Omit("id").Updates(jenisSpv).Error
+	if err := r.DB.WithContext(ctx).Omit("id").Updates(jenisSpv).Error; err != nil {
+		if err != gorm.ErrDuplicatedKey {
+			helper.LogsError(err)
+		}
+		return err
+	}
+	return nil
 }
 
 func (r *jenisSpvRepo) Delete(ctx context.Context, id string) error {
-	return r.DB.WithContext(ctx).Delete(&entity.JenisSpv{}, "id = ?", id).Error
+	if err := r.DB.WithContext(ctx).Delete(&entity.JenisSpv{}, "id = ?", id).Error; err != nil {
+		helper.LogsError(err)
+		return err
+	}
+	return nil
 }
 
 func (r *jenisSpvRepo) GetById(ctx context.Context, id string) (*entity.JenisSpv, error) {
 	data := entity.JenisSpv{}
-	err := r.DB.WithContext(ctx).First(&data, "id = ?", id).Error
-	return &data, err
+	if err := r.DB.WithContext(ctx).First(&data, "id = ?", id).Error; err != nil {
+		if err != gorm.ErrRecordNotFound {
+			helper.LogsError(err)
+		}
+		return nil, err
+	}
+	return &data, nil
 }
 
 func (r *jenisSpvRepo) GetByIds(ctx context.Context, ids []string) ([]entity.JenisSpv, error) {
@@ -48,6 +64,7 @@ func (r *jenisSpvRepo) GetByIds(ctx context.Context, ids []string) ([]entity.Jen
 
 	err := r.DB.WithContext(ctx).Model(&entity.JenisSpv{}).Where("id IN (?)", ids).Find(&datas).Error
 	if err != nil {
+		helper.LogsError(err)
 		return nil, err
 	}
 	return datas, nil
@@ -55,6 +72,9 @@ func (r *jenisSpvRepo) GetByIds(ctx context.Context, ids []string) ([]entity.Jen
 
 func (r *jenisSpvRepo) GetAll(ctx context.Context) ([]entity.JenisSpv, error) {
 	datas := []entity.JenisSpv{}
-	err := r.DB.WithContext(ctx).Find(&datas).Error
-	return datas, err
+	if err := r.DB.WithContext(ctx).Find(&datas).Error; err != nil {
+		helper.LogsError(err)
+		return nil, err
+	}
+	return datas, nil
 }

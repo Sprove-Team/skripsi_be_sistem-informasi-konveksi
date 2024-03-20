@@ -23,7 +23,6 @@ func NewSablonRoute(h handler_init.SablonHandlerInit, auth middleware_auth.AuthM
 func (ro *sablonRoute) Sablon(router fiber.Router) {
 	router.Use(ro.auth.Authorization([]string{"DIREKTUR"}))
 	router.Get("", ro.h.SablonHandler().GetAll)
-	router.Get("/:id", ro.h.SablonHandler().GetById)
 	router.Post("", ro.h.SablonHandler().Create)
 	router.Put("/:id", ro.h.SablonHandler().Update)
 	router.Delete("/:id", ro.h.SablonHandler().Delete)

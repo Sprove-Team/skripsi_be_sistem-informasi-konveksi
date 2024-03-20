@@ -84,7 +84,7 @@ func TestProdukCreateKategori(t *testing.T) {
 			},
 		},
 		{
-			name: "err: nama wajib diisi",
+			name: "err: wajib diisi",
 			payload: produkKategori.Create{
 				Nama: "",
 			},

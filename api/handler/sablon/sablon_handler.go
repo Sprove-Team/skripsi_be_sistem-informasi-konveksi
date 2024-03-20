@@ -18,7 +18,6 @@ type SablonHandler interface {
 	Update(c *fiber.Ctx) error
 	Delete(c *fiber.Ctx) error
 	GetAll(c *fiber.Ctx) error
-	GetById(c *fiber.Ctx) error
 }
 
 type sablonHandler struct {
@@ -102,24 +101,6 @@ func (h *sablonHandler) Delete(c *fiber.Ctx) error {
 	}
 
 	return c.Status(fiber.StatusOK).JSON(res_global.SuccessRes(fiber.StatusOK, message.OK, nil))
-}
-
-func (h *sablonHandler) GetById(c *fiber.Ctx) error {
-	req := new(reqGlobal.ParamByID)
-	c.ParamsParser(req)
-
-	errValidate := h.validator.Validate(req)
-	if errValidate != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(errValidate)
-	}
-	ctx := c.UserContext()
-	data, err := h.uc.GetById(ctx, req.ID)
-
-	if err != nil {
-		return errResponse(c, err)
-	}
-
-	return c.Status(fiber.StatusOK).JSON(res_global.SuccessRes(fiber.StatusOK, message.OK, data))
 }
 
 func (h *sablonHandler) GetAll(c *fiber.Ctx) error {

@@ -2,7 +2,6 @@ package repo_user
 
 import (
 	"context"
-	"fmt"
 
 	"gorm.io/gorm"
 
@@ -90,7 +89,9 @@ func NewUserRepo(DB *gorm.DB) UserRepo {
 func (r *userRepo) Create(param ParamCreate) error {
 	err := r.DB.WithContext(param.Ctx).Create(param.User).Error
 	if err != nil {
-		helper.LogsError(err)
+		if err != gorm.ErrDuplicatedKey {
+			helper.LogsError(err)
+		}
 		return err
 	}
 	return err
@@ -163,7 +164,9 @@ func (r *userRepo) Update(param ParamUpdate) error {
 		}
 		err := tx.Omit("id").Updates(param.User).Error
 		if err != nil {
-			helper.LogsError(err)
+			if err != gorm.ErrDuplicatedKey {
+				helper.LogsError(err)
+			}
 			return err
 		}
 		return nil
@@ -208,6 +211,5 @@ func (r *userRepo) GetUserSpvByIds(param ParamGetUserSpvByIds) ([]entity.User, e
 		helper.LogsError(err)
 		return nil, err
 	}
-	fmt.Println(datas)
 	return datas, nil
 }

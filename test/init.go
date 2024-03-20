@@ -34,6 +34,7 @@ type Response struct {
 
 var Validator = pkg.NewValidator()
 var UlidPkg = pkg.NewUlidPkg()
+var Encryptor = helper.NewEncryptor()
 
 func GetToken(dbt *gorm.DB, authMid middleware_auth.AuthMidleware) (token string) {
 	app := fiber.New()

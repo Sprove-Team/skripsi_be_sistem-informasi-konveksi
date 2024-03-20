@@ -2,12 +2,12 @@ package uc_user_jenis_spv
 
 import (
 	"context"
-	"log"
 
 	repo "github.com/be-sistem-informasi-konveksi/api/repository/user/mysql/gorm/jenis_spv"
 	req "github.com/be-sistem-informasi-konveksi/common/request/user/jenis_spv"
 	"github.com/be-sistem-informasi-konveksi/entity"
 	"github.com/be-sistem-informasi-konveksi/pkg"
+	"golang.org/x/sync/errgroup"
 )
 
 type JenisSpvUsecase interface {
@@ -44,7 +44,6 @@ func (u *jenisSpvUsecase) Delete(ctx context.Context, id string) error {
 	}
 	err = u.repo.Delete(ctx, id)
 	if err != nil {
-		log.Print(err)
 		return err
 	}
 	return nil
@@ -55,11 +54,31 @@ func (u *jenisSpvUsecase) GetAll(ctx context.Context) ([]entity.JenisSpv, error)
 }
 
 func (u *jenisSpvUsecase) Update(ctx context.Context, reqJenisSpv req.Update) error {
-	jenisSpv := entity.JenisSpv{
-		Base: entity.Base{
-			ID: reqJenisSpv.ID,
-		},
-		Nama: reqJenisSpv.Nama,
+	g := new(errgroup.Group)
+	g.SetLimit(3)
+	g.Go(func() error {
+		_, err := u.repo.GetById(ctx, reqJenisSpv.ID)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+
+	g.Go(func() error {
+		jenisSpv := entity.JenisSpv{
+			Base: entity.Base{
+				ID: reqJenisSpv.ID,
+			},
+			Nama: reqJenisSpv.Nama,
+		}
+		err := u.repo.Update(ctx, &jenisSpv)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+	if err := g.Wait(); err != nil {
+		return err
 	}
-	return u.repo.Update(ctx, &jenisSpv)
+	return nil
 }

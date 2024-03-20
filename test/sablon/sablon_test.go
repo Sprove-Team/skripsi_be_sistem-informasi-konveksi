@@ -41,8 +41,8 @@ func TestMain(m *testing.M) {
 	app.Use(recover.New())
 	api := app.Group("/api")
 	v1 := api.Group("/v1")
-	produkGroup := v1.Group("/sablon")
-	produkGroup.Route("/", sablonRoute.Sablon)
+	sablonGroup := v1.Group("/sablon")
+	sablonGroup.Route("/", sablonRoute.Sablon)
 	// Run tests
 	exitVal := m.Run()
 	dbt.Unscoped().Where("1 = 1").Delete(&entity.Sablon{})
@@ -81,7 +81,7 @@ func TestSablonCreate(t *testing.T) {
 			},
 		},
 		{
-			name: "err: nama wajib diisi",
+			name: "err: wajib diisi",
 			payload: req_sablon.Create{
 				Nama:  "",
 				Harga: 0,
@@ -250,8 +250,6 @@ func TestSablonGetAll(t *testing.T) {
 		})
 	}
 }
-
-// TODO: Create TestSablonGet if needed
 
 func TestSablonDelete(t *testing.T) {
 	tests := []struct {
