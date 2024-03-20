@@ -24,30 +24,25 @@ type DBGorm struct {
 	DB_HOST     string
 	DB_Port     string
 	DB_Name     string
+	LogLevel    logger.LogLevel
 }
 
 func (dbgc *DBGorm) InitDBGorm(ulid pkg.UlidPkg) *gorm.DB {
-	host := "localhost"
-	logLevel := logger.Info
-	if os.Getenv("ENVIRONMENT") == "PRODUCTION" {
-		host = dbgc.DB_HOST
-		logLevel = logger.Silent
-	}
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8&parseTime=True&loc=Local",
 		dbgc.DB_Username,
 		dbgc.DB_Password,
-		host,
+		dbgc.DB_HOST,
 		dbgc.DB_Port,
 		dbgc.DB_Name)
 
 	newLogger := logger.New(
 		log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer
 		logger.Config{
-			SlowThreshold:             time.Second, // Slow SQL threshold
-			LogLevel:                  logLevel,    // Log level
-			IgnoreRecordNotFoundError: true,        // Ignore ErrRecordNotFound error for logger
-			ParameterizedQueries:      true,        // Don't include params in the SQL log
-			Colorful:                  false,       // Disable color
+			SlowThreshold:             time.Second,   // Slow SQL threshold
+			LogLevel:                  dbgc.LogLevel, // Log level
+			IgnoreRecordNotFoundError: true,          // Ignore ErrRecordNotFound error for logger
+			ParameterizedQueries:      true,          // Don't include params in the SQL log
+			Colorful:                  false,         // Disable color
 		},
 	)
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
@@ -123,7 +118,6 @@ func (dbgc *DBGorm) InitDBGorm(ulid pkg.UlidPkg) *gorm.DB {
 
 	if err := g.Wait(); err != nil {
 		if err.Error() != "duplicated key not allowed" {
-			helper.LogsError(err)
 			os.Exit(1)
 		}
 	}
@@ -155,7 +149,6 @@ func addDefultValues(db *gorm.DB, values ...interface{}) error {
 		return nil
 	})
 	if err != nil {
-		helper.LogsError(err)
 		return err
 	}
 	return nil

@@ -22,6 +22,7 @@ import (
 	_ "github.com/joho/godotenv/autoload"
 	"github.com/mitchellh/mapstructure"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 type Response struct {
@@ -119,6 +120,10 @@ func GetDB() *gorm.DB {
 		DB_Name:     os.Getenv("DB_NAME_TEST"),
 		DB_HOST:     os.Getenv("DB_HOST_TEST"),
 		DB_Port:     os.Getenv("DB_PORT_TEST"),
+		LogLevel:    logger.Silent,
+	}
+	if os.Getenv("ENVIRONMENT") == "DEVELOPMENT" {
+		dbGormConf.DB_HOST = "localhost"
 	}
 
 	ulidPkg := pkg.NewUlidPkg()

@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"github.com/gofiber/fiber/v2"
+	"gorm.io/gorm/logger"
 
 	middleware_auth "github.com/be-sistem-informasi-konveksi/api/middleware/auth"
 	corsMid "github.com/be-sistem-informasi-konveksi/api/middleware/cors"
@@ -28,8 +29,12 @@ func main() {
 		DB_Name:     os.Getenv("DB_NAME"),
 		DB_HOST:     os.Getenv("DB_HOST"),
 		DB_Port:     os.Getenv("DB_PORT"),
+		LogLevel:    logger.Info,
 	}
-
+	if os.Getenv("ENVIRONMENT") == "DEVELOPMENT" {
+		dbGormConf.DB_HOST = "localhost"
+		dbGormConf.LogLevel = logger.Info
+	}
 	dbGorm := dbGormConf.InitDBGorm(ulidPkg)
 	app := fiber.New()
 

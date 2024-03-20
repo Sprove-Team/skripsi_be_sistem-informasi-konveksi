@@ -97,7 +97,9 @@ func (r *hargaDetailProdukRepo) GetById(ctx context.Context, id string) (entity.
 	var data entity.HargaDetailProduk
 	err := r.DB.WithContext(ctx).First(&data, "id = ?", id).Error
 	if err != nil {
-		helper.LogsError(err)
+		if err.Error() != "record not found" {
+			helper.LogsError(err)
+		}
 		return data, err
 	}
 	return data, nil

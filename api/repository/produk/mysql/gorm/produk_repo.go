@@ -51,7 +51,9 @@ func (r *produkRepo) CheckProduk(ctx context.Context, id string) error {
 	data := entity.Produk{}
 	err := r.DB.WithContext(ctx).First(&data, "id = ?", id).Error
 	if err != nil {
-		helper.LogsError(err)
+		if err.Error() != "record not found" {
+			helper.LogsError(err)
+		}
 		return err
 	}
 	return nil
