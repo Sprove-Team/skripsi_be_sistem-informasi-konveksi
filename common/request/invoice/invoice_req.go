@@ -4,9 +4,9 @@ import "github.com/be-sistem-informasi-konveksi/entity"
 
 type ReqDetailInvoice struct {
 	ProdukID     string  `json:"produk_id" validate:"required,ulid"`
-	BordirID     string  `json:"bordir_id" validate:"required,ulid"`
-	SablonID     string  `json:"sablon_id" validate:"required,ulid"`
-	GambarDesign string  `json:"gambar_design" validate:"omitempty"`
+	BordirID     string  `json:"bordir_id" validate:"omitempty,ulid"`
+	SablonID     string  `json:"sablon_id" validate:"omitempty,ulid"`
+	GambarDesign string  `json:"gambar_design" validate:"required"`
 	Total        float64 `json:"total" validate:"required,number"`
 	Qty          int     `json:"qty" validate:"required,number,min=1"`
 }
