@@ -103,7 +103,14 @@ func TestUserCreateSpv(t *testing.T) {
 			code, body, err := test.GetJsonTestRequestResponse(app, "POST", "/api/v1/user/jenis_spv", tt.payload, &token)
 			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedCode, code)
-			assert.Equal(t, tt.expectedBody, body)
+			if len(tt.expectedBody.ErrorsMessages) > 0 {
+				for _, v := range tt.expectedBody.ErrorsMessages {
+					assert.Contains(t, body.ErrorsMessages, v)
+				}
+				assert.Equal(t, tt.expectedBody.Status, body.Status)
+			} else {
+				assert.Equal(t, tt.expectedBody, body)
+			}
 		})
 	}
 }
@@ -191,7 +198,14 @@ func TestUserUpdateSpv(t *testing.T) {
 			code, body, err := test.GetJsonTestRequestResponse(app, "PUT", "/api/v1/user/jenis_spv/"+tt.payload.ID, tt.payload, &token)
 			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedCode, code)
-			assert.Equal(t, tt.expectedBody, body)
+			if len(tt.expectedBody.ErrorsMessages) > 0 {
+				for _, v := range tt.expectedBody.ErrorsMessages {
+					assert.Contains(t, body.ErrorsMessages, v)
+				}
+				assert.Equal(t, tt.expectedBody.Status, body.Status)
+			} else {
+				assert.Equal(t, tt.expectedBody, body)
+			}
 		})
 	}
 }
@@ -390,7 +404,14 @@ func TestUserCreate(t *testing.T) {
 			code, body, err := test.GetJsonTestRequestResponse(app, "POST", "/api/v1/user", tt.payload, &token)
 			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedCode, code)
-			assert.Equal(t, tt.expectedBody, body)
+			if len(tt.expectedBody.ErrorsMessages) > 0 {
+				for _, v := range tt.expectedBody.ErrorsMessages {
+					assert.Contains(t, body.ErrorsMessages, v)
+				}
+				assert.Equal(t, tt.expectedBody.Status, body.Status)
+			} else {
+				assert.Equal(t, tt.expectedBody, body)
+			}
 		})
 	}
 }
@@ -559,6 +580,25 @@ func TestUserUpdate(t *testing.T) {
 				ErrorsMessages: []string{"jenis spv id wajib diisi ketika role supervisor"},
 			},
 		},
+		{
+			name: "err: ulid tidak valid",
+			payload: req_user.Update{
+				ID:         idUser + "123",
+				Nama:       "supervisorbelanja2",
+				Username:   "supervisorbelanja2",
+				Password:   "supervisorbelanja2",
+				Role:       "SUPERVISOR",
+				Alamat:     "test1234",
+				NoTelp:     "+62895397290606",
+				JenisSpvID: idSpv + "123",
+			},
+			expectedCode: 400,
+			expectedBody: test.Response{
+				Status:         fiber.ErrBadRequest.Message,
+				Code:           400,
+				ErrorsMessages: []string{"id tidak berupa ulid yang valid", "jenis spv id tidak berupa ulid yang valid"},
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -566,7 +606,14 @@ func TestUserUpdate(t *testing.T) {
 			code, body, err := test.GetJsonTestRequestResponse(app, "PUT", "/api/v1/user/"+tt.payload.ID, tt.payload, &token)
 			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedCode, code)
-			assert.Equal(t, tt.expectedBody, body)
+			if len(tt.expectedBody.ErrorsMessages) > 0 {
+				for _, v := range tt.expectedBody.ErrorsMessages {
+					assert.Contains(t, body.ErrorsMessages, v)
+				}
+				assert.Equal(t, tt.expectedBody.Status, body.Status)
+			} else {
+				assert.Equal(t, tt.expectedBody, body)
+			}
 		})
 	}
 }
@@ -596,8 +643,17 @@ func TestUserGetAll(t *testing.T) {
 			},
 		},
 		{
-			name:         "sukses with next & limit",
+			name:         "sukses with next",
 			queryBody:    "?next=" + idUser,
+			expectedCode: 200,
+			expectedBody: test.Response{
+				Status: message.OK,
+				Code:   200,
+			},
+		},
+		{
+			name:         "sukses limit 1",
+			queryBody:    "?limit=1",
 			expectedCode: 200,
 			expectedBody: test.Response{
 				Status: message.OK,
@@ -607,21 +663,31 @@ func TestUserGetAll(t *testing.T) {
 		{
 			name:         "err: ulid tidak valid",
 			expectedCode: 400,
-			queryBody:    "?next=01HQVTTJ1S2606JGTYYZ5NDKNR123",
+			queryBody:    "?next=01HQVTTJ1S2606JGTYYZ5NDKNR123&search[jenis_spv_id]=ABCDSI123124AASDDC",
 			expectedBody: test.Response{
 				Status:         fiber.ErrBadRequest.Message,
 				Code:           400,
-				ErrorsMessages: []string{"next tidak berupa ulid yang valid"},
+				ErrorsMessages: []string{"next tidak berupa ulid yang valid", "jenis spv id tidak berupa ulid yang valid"},
 			},
 		},
 		{
-			name:         "err: ulid tidak valid",
+			name:         "err: role harus berupa [DIREKTUR,ADMIN,BENDAHARA,MANAJER_PRODUKSI,SUPERVISOR]",
 			expectedCode: 400,
-			queryBody:    "?next=01HQVTTJ1S2606JGTYYZ5NDKNR123",
+			queryBody:    "?search[role]=abcd",
 			expectedBody: test.Response{
 				Status:         fiber.ErrBadRequest.Message,
 				Code:           400,
-				ErrorsMessages: []string{"next tidak berupa ulid yang valid"},
+				ErrorsMessages: []string{"role harus berupa salah satu dari [DIREKTUR,ADMIN,BENDAHARA,MANAJER_PRODUKSI,SUPERVISOR]"},
+			},
+		},
+		{
+			name:         "err: no telp harus berformat e164",
+			queryBody:    "?search[no_telp]=08912312313",
+			expectedCode: 400,
+			expectedBody: test.Response{
+				Status:         fiber.ErrBadRequest.Message,
+				Code:           400,
+				ErrorsMessages: []string{"no telp harus berformat e164"},
 			},
 		},
 	}
@@ -661,12 +727,20 @@ func TestUserGetAll(t *testing.T) {
 					assert.NotEmpty(t, jenisSpv["created_at"])
 					assert.NotEmpty(t, jenisSpv["nama"])
 					assert.Equal(t, jenisSpv["id"], v.Get("search[jenis_spv_id]"))
-				case "sukses with next & limit":
+				case "sukses limit 1":
 					assert.Len(t, res, 1)
+				case "sukses with next":
 					assert.NotEqual(t, idUser, res[0]["id"])
 				}
 			} else {
-				assert.Equal(t, tt.expectedBody, body)
+				if len(tt.expectedBody.ErrorsMessages) > 0 {
+					for _, v := range tt.expectedBody.ErrorsMessages {
+						assert.Contains(t, body.ErrorsMessages, v)
+					}
+					assert.Equal(t, tt.expectedBody.Status, body.Status)
+				} else {
+					assert.Equal(t, tt.expectedBody, body)
+				}
 			}
 
 		})
@@ -675,49 +749,110 @@ func TestUserGetAll(t *testing.T) {
 
 // ! ALL DELETE TEST
 
-// func TestSablonDelete(t *testing.T) {
-// 	tests := []struct {
-// 		name         string
-// 		id           string
-// 		expectedBody test.Response
-// 		expectedCode int
-// 	}{
-// 		{
-// 			name:         "sukses",
-// 			id:           idSablon,
-// 			expectedCode: 200,
-// 			expectedBody: test.Response{
-// 				Status: message.OK,
-// 				Code:   200,
-// 			},
-// 		},
-// 		{
-// 			name:         "err: tidak ditemukan",
-// 			id:           "01HM4B8QBH7MWAVAYP10WN6PKA",
-// 			expectedCode: 404,
-// 			expectedBody: test.Response{
-// 				Status: fiber.ErrNotFound.Message,
-// 				Code:   404,
-// 			},
-// 		},
-// 		{
-// 			name:         "err: ulid tidak valid",
-// 			id:           idSablon + "123",
-// 			expectedCode: 400,
-// 			expectedBody: test.Response{
-// 				Status:         fiber.ErrBadRequest.Message,
-// 				Code:           400,
-// 				ErrorsMessages: []string{"id tidak berupa ulid yang valid"},
-// 			},
-// 		},
-// 	}
+func TestUserDeleteSpv(t *testing.T) {
+	tests := []struct {
+		name         string
+		id           string
+		expectedBody test.Response
+		expectedCode int
+	}{
+		{
+			name:         "sukses",
+			id:           idSpv,
+			expectedCode: 200,
+			expectedBody: test.Response{
+				Status: message.OK,
+				Code:   200,
+			},
+		},
+		{
+			name:         "err: tidak ditemukan",
+			id:           "01HM4B8QBH7MWAVAYP10WN6PKA",
+			expectedCode: 404,
+			expectedBody: test.Response{
+				Status: fiber.ErrNotFound.Message,
+				Code:   404,
+			},
+		},
+		{
+			name:         "err: ulid tidak valid",
+			id:           idSpv + "123",
+			expectedCode: 400,
+			expectedBody: test.Response{
+				Status:         fiber.ErrBadRequest.Message,
+				Code:           400,
+				ErrorsMessages: []string{"id tidak berupa ulid yang valid"},
+			},
+		},
+	}
 
-// 	for _, tt := range tests {
-// 		t.Run(tt.name, func(t *testing.T) {
-// 			code, body, err := test.GetJsonTestRequestResponse(app, "DELETE", "/api/v1/sablon/"+tt.id, nil, &token)
-// 			assert.NoError(t, err)
-// 			assert.Equal(t, tt.expectedCode, code)
-// 			assert.Equal(t, tt.expectedBody, body)
-// 		})
-// 	}
-// }
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			code, body, err := test.GetJsonTestRequestResponse(app, "DELETE", "/api/v1/user/jenis_spv/"+tt.id, nil, &token)
+			assert.NoError(t, err)
+			assert.Equal(t, tt.expectedCode, code)
+			if len(tt.expectedBody.ErrorsMessages) > 0 {
+				for _, v := range tt.expectedBody.ErrorsMessages {
+					assert.Contains(t, body.ErrorsMessages, v)
+				}
+				assert.Equal(t, tt.expectedBody.Status, body.Status)
+			} else {
+				assert.Equal(t, tt.expectedBody, body)
+			}
+		})
+	}
+}
+
+func TestUserDelete(t *testing.T) {
+	tests := []struct {
+		name         string
+		id           string
+		expectedBody test.Response
+		expectedCode int
+	}{
+		{
+			name:         "sukses",
+			id:           idUser,
+			expectedCode: 200,
+			expectedBody: test.Response{
+				Status: message.OK,
+				Code:   200,
+			},
+		},
+		{
+			name:         "err: tidak ditemukan",
+			id:           "01HM4B8QBH7MWAVAYP10WN6PKA",
+			expectedCode: 404,
+			expectedBody: test.Response{
+				Status: fiber.ErrNotFound.Message,
+				Code:   404,
+			},
+		},
+		{
+			name:         "err: ulid tidak valid",
+			id:           idUser + "123",
+			expectedCode: 400,
+			expectedBody: test.Response{
+				Status:         fiber.ErrBadRequest.Message,
+				Code:           400,
+				ErrorsMessages: []string{"id tidak berupa ulid yang valid"},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			code, body, err := test.GetJsonTestRequestResponse(app, "DELETE", "/api/v1/user/"+tt.id, nil, &token)
+			assert.NoError(t, err)
+			assert.Equal(t, tt.expectedCode, code)
+			if len(tt.expectedBody.ErrorsMessages) > 0 {
+				for _, v := range tt.expectedBody.ErrorsMessages {
+					assert.Contains(t, body.ErrorsMessages, v)
+				}
+				assert.Equal(t, tt.expectedBody.Status, body.Status)
+			} else {
+				assert.Equal(t, tt.expectedBody, body)
+			}
+		})
+	}
+}
