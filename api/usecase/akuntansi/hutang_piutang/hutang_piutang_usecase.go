@@ -274,6 +274,7 @@ func (u *hutangPiutangUsecase) GetAll(ctx context.Context, reqHutangPiutang req.
 				InvoiceID:   data.InvoiceID,
 				Jenis:       data.Jenis,
 				TransaksiID: data.TransaksiID,
+				Tanggal:     data.Transaksi.Tanggal.Format(time.RFC3339),
 				Status:      data.Status,
 				Total:       data.Total,
 				Sisa:        data.Sisa,
