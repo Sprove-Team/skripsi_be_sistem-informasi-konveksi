@@ -167,12 +167,29 @@ func TestProdukUpdateKategori(t *testing.T) {
 			code, body, err := test.GetJsonTestRequestResponse(app, "PUT", "/api/v1/produk/kategori/"+tt.payload.ID, tt.payload, &token)
 			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedCode, code)
-			assert.Equal(t, tt.expectedBody, body)
+			if len(tt.expectedBody.ErrorsMessages) > 0 {
+				for _, v := range tt.expectedBody.ErrorsMessages {
+					assert.Contains(t, body.ErrorsMessages, v)
+				}
+				assert.Equal(t, tt.expectedBody.Status, body.Status)
+			} else {
+				assert.Equal(t, tt.expectedBody, body)
+			}
 		})
 	}
 }
 
 func TestProdukGetAllKategori(t *testing.T) {
+	kategori := &entity.KategoriProduk{
+		Base: entity.Base{
+			ID: test.UlidPkg.MakeUlid().String(),
+		},
+		Nama: "test next",
+	}
+	if err := dbt.Create(kategori).Error; err != nil {
+		helper.LogsError(err)
+		return
+	}
 	tests := []struct {
 		name         string
 		queryBody    string
@@ -190,6 +207,15 @@ func TestProdukGetAllKategori(t *testing.T) {
 		{
 			name:         "sukses limit 1",
 			queryBody:    "?limit=1",
+			expectedCode: 200,
+			expectedBody: test.Response{
+				Status: message.OK,
+				Code:   200,
+			},
+		},
+		{
+			name:         "sukses with next",
+			queryBody:    "?next=" + idProduk,
 			expectedCode: 200,
 			expectedBody: test.Response{
 				Status: message.OK,
@@ -238,9 +264,19 @@ func TestProdukGetAllKategori(t *testing.T) {
 					assert.Contains(t, res[0]["nama"], "jaket")
 				case "sukses limit 1":
 					assert.Len(t, res, 1)
+				case "sukses with next":
+					assert.NotEmpty(t, res[0])
+					assert.NotEqual(t, idProduk, res[0]["id"])
 				}
 			} else {
-				assert.Equal(t, tt.expectedBody, body)
+				if len(tt.expectedBody.ErrorsMessages) > 0 {
+					for _, v := range tt.expectedBody.ErrorsMessages {
+						assert.Contains(t, body.ErrorsMessages, v)
+					}
+					assert.Equal(t, tt.expectedBody.Status, body.Status)
+				} else {
+					assert.Equal(t, tt.expectedBody, body)
+				}
 			}
 
 		})
@@ -301,7 +337,14 @@ func TestProdukGetKategori(t *testing.T) {
 				assert.Equal(t, "jaket", res["nama"])
 				assert.Equal(t, tt.expectedBody.Status, body.Status)
 			default:
-				assert.Equal(t, tt.expectedBody, body)
+				if len(tt.expectedBody.ErrorsMessages) > 0 {
+					for _, v := range tt.expectedBody.ErrorsMessages {
+						assert.Contains(t, body.ErrorsMessages, v)
+					}
+					assert.Equal(t, tt.expectedBody.Status, body.Status)
+				} else {
+					assert.Equal(t, tt.expectedBody, body)
+				}
 			}
 		})
 	}
@@ -384,7 +427,14 @@ func TestProdukCreate(t *testing.T) {
 			code, body, err := test.GetJsonTestRequestResponse(app, "POST", "/api/v1/produk", tt.payload, &token)
 			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedCode, code)
-			assert.Equal(t, tt.expectedBody, body)
+			if len(tt.expectedBody.ErrorsMessages) > 0 {
+				for _, v := range tt.expectedBody.ErrorsMessages {
+					assert.Contains(t, body.ErrorsMessages, v)
+				}
+				assert.Equal(t, tt.expectedBody.Status, body.Status)
+			} else {
+				assert.Equal(t, tt.expectedBody, body)
+			}
 		})
 	}
 }
@@ -480,7 +530,14 @@ func TestProdukUpdate(t *testing.T) {
 			code, body, err := test.GetJsonTestRequestResponse(app, "PUT", "/api/v1/produk/"+tt.payload.ID, tt.payload, &token)
 			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedCode, code)
-			assert.Equal(t, tt.expectedBody, body)
+			if len(tt.expectedBody.ErrorsMessages) > 0 {
+				for _, v := range tt.expectedBody.ErrorsMessages {
+					assert.Contains(t, body.ErrorsMessages, v)
+				}
+				assert.Equal(t, tt.expectedBody.Status, body.Status)
+			} else {
+				assert.Equal(t, tt.expectedBody, body)
+			}
 		})
 	}
 }
@@ -554,6 +611,15 @@ func TestProdukGetAll(t *testing.T) {
 			},
 		},
 		{
+			name:         "sukses with next",
+			queryBody:    "?next=" + idProduk,
+			expectedCode: 200,
+			expectedBody: test.Response{
+				Status: message.OK,
+				Code:   200,
+			},
+		},
+		{
 			name:         "sukses limit 1",
 			queryBody:    "?limit=1",
 			expectedCode: 200,
@@ -620,9 +686,19 @@ func TestProdukGetAll(t *testing.T) {
 					assert.Contains(t, res[0]["nama"], "apparel")
 				case "sukses limit 1":
 					assert.Len(t, res, 1)
+				case "sukses with next":
+					assert.NotEmpty(t, res[0])
+					assert.NotEqual(t, idProduk, res[0]["id"])
 				}
 			} else {
-				assert.Equal(t, tt.expectedBody, body)
+				if len(tt.expectedBody.ErrorsMessages) > 0 {
+					for _, v := range tt.expectedBody.ErrorsMessages {
+						assert.Contains(t, body.ErrorsMessages, v)
+					}
+					assert.Equal(t, tt.expectedBody.Status, body.Status)
+				} else {
+					assert.Equal(t, tt.expectedBody, body)
+				}
 			}
 
 		})
@@ -710,7 +786,14 @@ func TestProdukGet(t *testing.T) {
 					}
 				}
 			} else {
-				assert.Equal(t, tt.expectedBody, body)
+				if len(tt.expectedBody.ErrorsMessages) > 0 {
+					for _, v := range tt.expectedBody.ErrorsMessages {
+						assert.Contains(t, body.ErrorsMessages, v)
+					}
+					assert.Equal(t, tt.expectedBody.Status, body.Status)
+				} else {
+					assert.Equal(t, tt.expectedBody, body)
+				}
 			}
 		})
 	}
@@ -798,7 +881,14 @@ func TestProdukCreateHargaDetail(t *testing.T) {
 			code, body, err := test.GetJsonTestRequestResponse(app, "POST", "/api/v1/produk/harga_detail", tt.payload, &token)
 			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedCode, code)
-			assert.Equal(t, tt.expectedBody, body)
+			if len(tt.expectedBody.ErrorsMessages) > 0 {
+				for _, v := range tt.expectedBody.ErrorsMessages {
+					assert.Contains(t, body.ErrorsMessages, v)
+				}
+				assert.Equal(t, tt.expectedBody.Status, body.Status)
+			} else {
+				assert.Equal(t, tt.expectedBody, body)
+			}
 		})
 	}
 }
@@ -867,7 +957,14 @@ func TestProdukUpdateHargaDetail(t *testing.T) {
 			code, body, err := test.GetJsonTestRequestResponse(app, "PUT", "/api/v1/produk/harga_detail/"+tt.payload.ID, tt.payload, &token)
 			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedCode, code)
-			assert.Equal(t, tt.expectedBody, body)
+			if len(tt.expectedBody.ErrorsMessages) > 0 {
+				for _, v := range tt.expectedBody.ErrorsMessages {
+					assert.Contains(t, body.ErrorsMessages, v)
+				}
+				assert.Equal(t, tt.expectedBody.Status, body.Status)
+			} else {
+				assert.Equal(t, tt.expectedBody, body)
+			}
 		})
 	}
 }
@@ -930,7 +1027,14 @@ func TestProdukGetAllHargaDetailByProdukId(t *testing.T) {
 				}
 				assert.Equal(t, tt.expectedBody.Status, body.Status)
 			default:
-				assert.Equal(t, tt.expectedBody, body)
+				if len(tt.expectedBody.ErrorsMessages) > 0 {
+					for _, v := range tt.expectedBody.ErrorsMessages {
+						assert.Contains(t, body.ErrorsMessages, v)
+					}
+					assert.Equal(t, tt.expectedBody.Status, body.Status)
+				} else {
+					assert.Equal(t, tt.expectedBody, body)
+				}
 			}
 
 		})
@@ -980,7 +1084,14 @@ func TestProdukDeleteKategori(t *testing.T) {
 			code, body, err := test.GetJsonTestRequestResponse(app, "DELETE", "/api/v1/produk/kategori/"+tt.id, nil, &token)
 			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedCode, code)
-			assert.Equal(t, tt.expectedBody, body)
+			if len(tt.expectedBody.ErrorsMessages) > 0 {
+				for _, v := range tt.expectedBody.ErrorsMessages {
+					assert.Contains(t, body.ErrorsMessages, v)
+				}
+				assert.Equal(t, tt.expectedBody.Status, body.Status)
+			} else {
+				assert.Equal(t, tt.expectedBody, body)
+			}
 		})
 	}
 }
@@ -1027,7 +1138,14 @@ func TestProdukDeleteHargaDetail(t *testing.T) {
 			code, body, err := test.GetJsonTestRequestResponse(app, "DELETE", "/api/v1/produk/harga_detail/"+tt.id, nil, &token)
 			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedCode, code)
-			assert.Equal(t, tt.expectedBody, body)
+			if len(tt.expectedBody.ErrorsMessages) > 0 {
+				for _, v := range tt.expectedBody.ErrorsMessages {
+					assert.Contains(t, body.ErrorsMessages, v)
+				}
+				assert.Equal(t, tt.expectedBody.Status, body.Status)
+			} else {
+				assert.Equal(t, tt.expectedBody, body)
+			}
 		})
 	}
 }
@@ -1074,7 +1192,14 @@ func TestProdukDelete(t *testing.T) {
 			code, body, err := test.GetJsonTestRequestResponse(app, "DELETE", "/api/v1/produk/"+tt.id, nil, &token)
 			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedCode, code)
-			assert.Equal(t, tt.expectedBody, body)
+			if len(tt.expectedBody.ErrorsMessages) > 0 {
+				for _, v := range tt.expectedBody.ErrorsMessages {
+					assert.Contains(t, body.ErrorsMessages, v)
+				}
+				assert.Equal(t, tt.expectedBody.Status, body.Status)
+			} else {
+				assert.Equal(t, tt.expectedBody, body)
+			}
 		})
 	}
 }

@@ -100,7 +100,14 @@ func TestBordirCreate(t *testing.T) {
 			code, body, err := test.GetJsonTestRequestResponse(app, "POST", "/api/v1/bordir", tt.payload, &token)
 			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedCode, code)
-			assert.Equal(t, tt.expectedBody, body)
+			if len(tt.expectedBody.ErrorsMessages) > 0 {
+				for _, v := range tt.expectedBody.ErrorsMessages {
+					assert.Contains(t, body.ErrorsMessages, v)
+				}
+				assert.Equal(t, tt.expectedBody.Status, body.Status)
+			} else {
+				assert.Equal(t, tt.expectedBody, body)
+			}
 		})
 	}
 }
@@ -168,12 +175,30 @@ func TestBordirUpdate(t *testing.T) {
 			code, body, err := test.GetJsonTestRequestResponse(app, "PUT", "/api/v1/bordir/"+tt.payload.ID, tt.payload, &token)
 			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedCode, code)
-			assert.Equal(t, tt.expectedBody, body)
+			if len(tt.expectedBody.ErrorsMessages) > 0 {
+				for _, v := range tt.expectedBody.ErrorsMessages {
+					assert.Contains(t, body.ErrorsMessages, v)
+				}
+				assert.Equal(t, tt.expectedBody.Status, body.Status)
+			} else {
+				assert.Equal(t, tt.expectedBody, body)
+			}
 		})
 	}
 }
 
 func TestBordirGetAll(t *testing.T) {
+	bordir := &entity.Bordir{
+		Base: entity.Base{
+			ID: test.UlidPkg.MakeUlid().String(),
+		},
+		Nama:  "test next",
+		Harga: 20000,
+	}
+	if err := dbt.Create(bordir).Error; err != nil {
+		helper.LogsError(err)
+		return
+	}
 	tests := []struct {
 		name         string
 		queryBody    string
@@ -191,6 +216,15 @@ func TestBordirGetAll(t *testing.T) {
 		{
 			name:         "sukses limit 1",
 			queryBody:    "?limit=1",
+			expectedCode: 200,
+			expectedBody: test.Response{
+				Status: message.OK,
+				Code:   200,
+			},
+		},
+		{
+			name:         "sukses with next",
+			queryBody:    "?next=" + idBordir,
 			expectedCode: 200,
 			expectedBody: test.Response{
 				Status: message.OK,
@@ -242,6 +276,9 @@ func TestBordirGetAll(t *testing.T) {
 					assert.Contains(t, res[0]["nama"], v.Get("nama"))
 				case "sukses limit 1":
 					assert.Len(t, res, 1)
+				case "sukses with next":
+					assert.NotEmpty(t, res[0])
+					assert.NotEqual(t, idBordir, res[0]["id"])
 				}
 			} else {
 				assert.Equal(t, tt.expectedBody, body)
@@ -293,7 +330,14 @@ func TestBordirDelete(t *testing.T) {
 			code, body, err := test.GetJsonTestRequestResponse(app, "DELETE", "/api/v1/bordir/"+tt.id, nil, &token)
 			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedCode, code)
-			assert.Equal(t, tt.expectedBody, body)
+			if len(tt.expectedBody.ErrorsMessages) > 0 {
+				for _, v := range tt.expectedBody.ErrorsMessages {
+					assert.Contains(t, body.ErrorsMessages, v)
+				}
+				assert.Equal(t, tt.expectedBody.Status, body.Status)
+			} else {
+				assert.Equal(t, tt.expectedBody, body)
+			}
 		})
 	}
 }

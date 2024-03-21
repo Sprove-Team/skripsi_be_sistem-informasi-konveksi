@@ -79,7 +79,7 @@ func (u *bordirUsecase) GetAll(ctx context.Context, reqBordir req.GetAll) ([]ent
 	datas, err := u.repo.GetAll(ctx, repo.SearchBordir{
 		Nama:  reqBordir.Nama,
 		Limit: reqBordir.Limit,
-
+		Next:  reqBordir.Next,
 		// Offset: offset,
 	})
 	if err != nil {

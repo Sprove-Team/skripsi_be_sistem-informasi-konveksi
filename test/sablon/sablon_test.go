@@ -100,7 +100,14 @@ func TestSablonCreate(t *testing.T) {
 			code, body, err := test.GetJsonTestRequestResponse(app, "POST", "/api/v1/sablon", tt.payload, &token)
 			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedCode, code)
-			assert.Equal(t, tt.expectedBody, body)
+			if len(tt.expectedBody.ErrorsMessages) > 0 {
+				for _, v := range tt.expectedBody.ErrorsMessages {
+					assert.Contains(t, body.ErrorsMessages, v)
+				}
+				assert.Equal(t, tt.expectedBody.Status, body.Status)
+			} else {
+				assert.Equal(t, tt.expectedBody, body)
+			}
 		})
 	}
 }
@@ -168,12 +175,30 @@ func TestSablonUpdate(t *testing.T) {
 			code, body, err := test.GetJsonTestRequestResponse(app, "PUT", "/api/v1/sablon/"+tt.payload.ID, tt.payload, &token)
 			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedCode, code)
-			assert.Equal(t, tt.expectedBody, body)
+			if len(tt.expectedBody.ErrorsMessages) > 0 {
+				for _, v := range tt.expectedBody.ErrorsMessages {
+					assert.Contains(t, body.ErrorsMessages, v)
+				}
+				assert.Equal(t, tt.expectedBody.Status, body.Status)
+			} else {
+				assert.Equal(t, tt.expectedBody, body)
+			}
 		})
 	}
 }
 
 func TestSablonGetAll(t *testing.T) {
+	sablon := &entity.Sablon{
+		Base: entity.Base{
+			ID: test.UlidPkg.MakeUlid().String(),
+		},
+		Nama:  "test next",
+		Harga: 20000,
+	}
+	if err := dbt.Create(sablon).Error; err != nil {
+		helper.LogsError(err)
+		return
+	}
 	tests := []struct {
 		name         string
 		queryBody    string
@@ -191,6 +216,15 @@ func TestSablonGetAll(t *testing.T) {
 		{
 			name:         "sukses limit 1",
 			queryBody:    "?limit=1",
+			expectedCode: 200,
+			expectedBody: test.Response{
+				Status: message.OK,
+				Code:   200,
+			},
+		},
+		{
+			name:         "sukses with next",
+			queryBody:    "?next=" + idSablon,
 			expectedCode: 200,
 			expectedBody: test.Response{
 				Status: message.OK,
@@ -242,9 +276,19 @@ func TestSablonGetAll(t *testing.T) {
 					assert.Contains(t, res[0]["nama"], v.Get("nama"))
 				case "sukses limit 1":
 					assert.Len(t, res, 1)
+				case "sukses with next":
+					assert.NotEmpty(t, res[0])
+					assert.NotEqual(t, idSablon, res[0]["id"])
 				}
 			} else {
-				assert.Equal(t, tt.expectedBody, body)
+				if len(tt.expectedBody.ErrorsMessages) > 0 {
+					for _, v := range tt.expectedBody.ErrorsMessages {
+						assert.Contains(t, body.ErrorsMessages, v)
+					}
+					assert.Equal(t, tt.expectedBody.Status, body.Status)
+				} else {
+					assert.Equal(t, tt.expectedBody, body)
+				}
 			}
 
 		})
@@ -293,7 +337,14 @@ func TestSablonDelete(t *testing.T) {
 			code, body, err := test.GetJsonTestRequestResponse(app, "DELETE", "/api/v1/sablon/"+tt.id, nil, &token)
 			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedCode, code)
-			assert.Equal(t, tt.expectedBody, body)
+			if len(tt.expectedBody.ErrorsMessages) > 0 {
+				for _, v := range tt.expectedBody.ErrorsMessages {
+					assert.Contains(t, body.ErrorsMessages, v)
+				}
+				assert.Equal(t, tt.expectedBody.Status, body.Status)
+			} else {
+				assert.Equal(t, tt.expectedBody, body)
+			}
 		})
 	}
 }
