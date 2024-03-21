@@ -3,253 +3,20 @@ package test_user
 import (
 	"fmt"
 	"net/url"
-	"os"
 	"strings"
 	"testing"
 
-	middleware_auth "github.com/be-sistem-informasi-konveksi/api/middleware/auth"
-	repo_user "github.com/be-sistem-informasi-konveksi/api/repository/user/mysql/gorm"
-	"github.com/be-sistem-informasi-konveksi/app/handler_init"
-	"github.com/be-sistem-informasi-konveksi/app/route"
 	"github.com/be-sistem-informasi-konveksi/common/message"
 	req_user "github.com/be-sistem-informasi-konveksi/common/request/user"
-	req_user_jenis_spv "github.com/be-sistem-informasi-konveksi/common/request/user/jenis_spv"
 	"github.com/be-sistem-informasi-konveksi/entity"
 	"github.com/be-sistem-informasi-konveksi/helper"
 	"github.com/be-sistem-informasi-konveksi/test"
 	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/mitchellh/mapstructure"
 	"github.com/stretchr/testify/assert"
-	"gorm.io/gorm"
 )
 
-var userRoute route.UserRoute
-var dbt *gorm.DB
-var token string
-var app = fiber.New()
-
-func TestMain(m *testing.M) {
-	dbt = test.GetDB()
-	userH := handler_init.NewUserHandlerInit(dbt, test.Validator, test.UlidPkg, test.Encryptor)
-
-	userRepo := repo_user.NewUserRepo(dbt)
-	authMid := middleware_auth.NewAuthMiddleware(userRepo)
-	userRoute = route.NewUserRoute(userH, authMid)
-
-	token = test.GetToken(dbt, authMid)
-
-	// app
-	app.Use(recover.New())
-	api := app.Group("/api")
-	v1 := api.Group("/v1")
-	userGroup := v1.Group("/user")
-	userGroup.Route("/jenis_spv", userRoute.JenisSpv)
-	userGroup.Route("/", userRoute.User)
-	// Run tests
-	exitVal := m.Run()
-	dbt.Unscoped().Where("1 = 1").Delete(&entity.JenisSpv{})
-	dbt.Unscoped().Where("1 = 1").Delete(&entity.User{})
-	os.Exit(exitVal)
-}
-
-// ? JENIS SPV
-
-func TestUserCreateSpv(t *testing.T) {
-	tests := []struct {
-		name         string
-		payload      req_user_jenis_spv.Create
-		expectedBody test.Response
-		expectedCode int
-	}{
-		{
-			name: "sukses",
-			payload: req_user_jenis_spv.Create{
-				Nama: "belanja",
-			},
-			expectedCode: 201,
-			expectedBody: test.Response{
-				Status: message.Created,
-				Code:   201,
-			},
-		},
-		{
-			name: "err: conflict",
-			payload: req_user_jenis_spv.Create{
-				Nama: "belanja",
-			},
-			expectedCode: 409,
-			expectedBody: test.Response{
-				Status: fiber.ErrConflict.Message,
-				Code:   409,
-			},
-		},
-		{
-			name: "err: wajib diisi",
-			payload: req_user_jenis_spv.Create{
-				Nama: "",
-			},
-			expectedCode: 400,
-			expectedBody: test.Response{
-				Status:         fiber.ErrBadRequest.Message,
-				Code:           400,
-				ErrorsMessages: []string{"nama wajib diisi"},
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			code, body, err := test.GetJsonTestRequestResponse(app, "POST", "/api/v1/user/jenis_spv", tt.payload, &token)
-			assert.NoError(t, err)
-			assert.Equal(t, tt.expectedCode, code)
-			if len(tt.expectedBody.ErrorsMessages) > 0 {
-				for _, v := range tt.expectedBody.ErrorsMessages {
-					assert.Contains(t, body.ErrorsMessages, v)
-				}
-				assert.Equal(t, tt.expectedBody.Status, body.Status)
-			} else {
-				assert.Equal(t, tt.expectedBody, body)
-			}
-		})
-	}
-}
-
-var idSpv string
-
-func TestUserUpdateSpv(t *testing.T) {
-	spv := new(entity.JenisSpv)
-	err := dbt.Select("id").First(spv).Error
-	if err != nil {
-		helper.LogsError(err)
-		return
-	}
-	spvConflict := &entity.JenisSpv{
-		Base: entity.Base{
-			ID: test.UlidPkg.MakeUlid().String(),
-		},
-		Nama: "conflict",
-	}
-	err = dbt.Create(spvConflict).Error
-	if err != nil {
-		helper.LogsError(err)
-		return
-	}
-	idSpv = spv.ID
-	tests := []struct {
-		name         string
-		payload      req_user_jenis_spv.Update
-		expectedBody test.Response
-		expectedCode int
-	}{
-		{
-			name: "sukses",
-			payload: req_user_jenis_spv.Update{
-				ID:   spv.ID,
-				Nama: "bordir",
-			},
-			expectedCode: 200,
-			expectedBody: test.Response{
-				Status: message.OK,
-				Code:   200,
-			},
-		},
-		{
-			name: "err: conflict",
-			payload: req_user_jenis_spv.Update{
-				ID:   spv.ID,
-				Nama: spvConflict.Nama,
-			},
-			expectedCode: 409,
-			expectedBody: test.Response{
-				Status: fiber.ErrConflict.Message,
-				Code:   409,
-			},
-		},
-		{
-			name: "err: tidak ditemukan",
-			payload: req_user_jenis_spv.Update{
-				ID:   "01HM4B8QBH7MWAVAYP10WN6PKB",
-				Nama: "bordir2",
-			},
-			expectedCode: 404,
-			expectedBody: test.Response{
-				Status: fiber.ErrNotFound.Message,
-				Code:   404,
-			},
-		},
-		{
-			name: "err: ulid tidak valid",
-			payload: req_user_jenis_spv.Update{
-				ID:   spv.ID + "123",
-				Nama: "bordir3",
-			},
-			expectedCode: 400,
-			expectedBody: test.Response{
-				Status:         fiber.ErrBadRequest.Message,
-				Code:           400,
-				ErrorsMessages: []string{"id tidak berupa ulid yang valid"},
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			code, body, err := test.GetJsonTestRequestResponse(app, "PUT", "/api/v1/user/jenis_spv/"+tt.payload.ID, tt.payload, &token)
-			assert.NoError(t, err)
-			assert.Equal(t, tt.expectedCode, code)
-			if len(tt.expectedBody.ErrorsMessages) > 0 {
-				for _, v := range tt.expectedBody.ErrorsMessages {
-					assert.Contains(t, body.ErrorsMessages, v)
-				}
-				assert.Equal(t, tt.expectedBody.Status, body.Status)
-			} else {
-				assert.Equal(t, tt.expectedBody, body)
-			}
-		})
-	}
-}
-
-func TestUserGetAllSpv(t *testing.T) {
-	tests := []struct {
-		name         string
-		expectedBody test.Response
-		expectedCode int
-	}{
-		{
-			name:         "sukses",
-			expectedCode: 200,
-			expectedBody: test.Response{
-				Status: message.OK,
-				Code:   200,
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			code, body, err := test.GetJsonTestRequestResponse(app, "GET", "/api/v1/user/jenis_spv", nil, &token)
-			assert.NoError(t, err)
-			assert.Equal(t, tt.expectedCode, code)
-			var res []any
-			err = mapstructure.Decode(body.Data, &res)
-			assert.NoError(t, err)
-			assert.Greater(t, len(res), 0)
-			assert.NotEmpty(t, res[0])
-			for _, v := range res {
-				assert.NotEmpty(t, v.(map[string]any)["id"])
-				assert.NotEmpty(t, v.(map[string]any)["created_at"])
-				assert.NotEmpty(t, v.(map[string]any)["nama"])
-			}
-			assert.Equal(t, tt.expectedBody.Status, body.Status)
-
-		})
-	}
-}
-
-// ? USER
-func TestUserCreate(t *testing.T) {
-
+func UserCreate(t *testing.T) {
 	tests := []struct {
 		name         string
 		payload      req_user.Create
@@ -420,7 +187,7 @@ var idUser string
 var idUserSpv string
 var idSpv2 string
 
-func TestUserUpdate(t *testing.T) {
+func UserUpdate(t *testing.T) {
 
 	user := new(entity.User)
 	err := dbt.Select("id").First(user, "ROLE NOT IN (?) ", []string{entity.RolesById[1], entity.RolesById[5]}).Error
@@ -618,7 +385,7 @@ func TestUserUpdate(t *testing.T) {
 	}
 }
 
-func TestUserGetAll(t *testing.T) {
+func UserGetAll(t *testing.T) {
 	tests := []struct {
 		name         string
 		queryBody    string
@@ -747,18 +514,16 @@ func TestUserGetAll(t *testing.T) {
 	}
 }
 
-// ! ALL DELETE TEST
-
-func TestUserDeleteSpv(t *testing.T) {
+func UserGet(t *testing.T) {
 	tests := []struct {
-		name         string
 		id           string
+		name         string
 		expectedBody test.Response
 		expectedCode int
 	}{
 		{
 			name:         "sukses",
-			id:           idSpv,
+			id:           idUser,
 			expectedCode: 200,
 			expectedBody: test.Response{
 				Status: message.OK,
@@ -766,17 +531,8 @@ func TestUserDeleteSpv(t *testing.T) {
 			},
 		},
 		{
-			name:         "err: tidak ditemukan",
-			id:           "01HM4B8QBH7MWAVAYP10WN6PKA",
-			expectedCode: 404,
-			expectedBody: test.Response{
-				Status: fiber.ErrNotFound.Message,
-				Code:   404,
-			},
-		},
-		{
 			name:         "err: ulid tidak valid",
-			id:           idSpv + "123",
+			id:           "01HQVTTJ1S2606JGTYYZ5NDKNR123",
 			expectedCode: 400,
 			expectedBody: test.Response{
 				Status:         fiber.ErrBadRequest.Message,
@@ -788,22 +544,39 @@ func TestUserDeleteSpv(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			code, body, err := test.GetJsonTestRequestResponse(app, "DELETE", "/api/v1/user/jenis_spv/"+tt.id, nil, &token)
+			code, body, err := test.GetJsonTestRequestResponse(app, "GET", "/api/v1/user/"+tt.id, nil, &token)
 			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedCode, code)
-			if len(tt.expectedBody.ErrorsMessages) > 0 {
-				for _, v := range tt.expectedBody.ErrorsMessages {
-					assert.Contains(t, body.ErrorsMessages, v)
-				}
+
+			var res map[string]any
+			if tt.name == "sukses" {
+				err = mapstructure.Decode(body.Data, &res)
+				assert.NoError(t, err)
+				assert.Greater(t, len(res), 0)
+				assert.NotEmpty(t, res)
+				assert.NotEmpty(t, res["id"])
+				assert.NotEmpty(t, res["created_at"])
+				assert.NotEmpty(t, res["nama"])
+				assert.NotEmpty(t, res["role"])
+				assert.NotEmpty(t, res["username"])
+				assert.NotEmpty(t, res["no_telp"])
+				assert.NotEmpty(t, res["alamat"])
 				assert.Equal(t, tt.expectedBody.Status, body.Status)
 			} else {
-				assert.Equal(t, tt.expectedBody, body)
+				if len(tt.expectedBody.ErrorsMessages) > 0 {
+					for _, v := range tt.expectedBody.ErrorsMessages {
+						assert.Contains(t, body.ErrorsMessages, v)
+					}
+					assert.Equal(t, tt.expectedBody.Status, body.Status)
+				} else {
+					assert.Equal(t, tt.expectedBody, body)
+				}
 			}
 		})
 	}
 }
 
-func TestUserDelete(t *testing.T) {
+func UserDelete(t *testing.T) {
 	tests := []struct {
 		name         string
 		id           string

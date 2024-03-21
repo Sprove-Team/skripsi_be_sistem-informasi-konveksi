@@ -2,54 +2,20 @@ package test_bordir
 
 import (
 	"net/url"
-	"os"
 	"strings"
 	"testing"
 
-	middleware_auth "github.com/be-sistem-informasi-konveksi/api/middleware/auth"
-	repo_user "github.com/be-sistem-informasi-konveksi/api/repository/user/mysql/gorm"
-	"github.com/be-sistem-informasi-konveksi/app/handler_init"
-	"github.com/be-sistem-informasi-konveksi/app/route"
 	"github.com/be-sistem-informasi-konveksi/common/message"
 	req_bordir "github.com/be-sistem-informasi-konveksi/common/request/bordir"
 	"github.com/be-sistem-informasi-konveksi/entity"
 	"github.com/be-sistem-informasi-konveksi/helper"
 	"github.com/be-sistem-informasi-konveksi/test"
 	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/mitchellh/mapstructure"
 	"github.com/stretchr/testify/assert"
-	"gorm.io/gorm"
 )
 
-var bordirRoute route.BordirRoute
-var dbt *gorm.DB
-var token string
-var app = fiber.New()
-
-func TestMain(m *testing.M) {
-	dbt = test.GetDB()
-	bordirH := handler_init.NewBordirHandlerInit(dbt, test.Validator, test.UlidPkg)
-
-	userRepo := repo_user.NewUserRepo(dbt)
-	authMid := middleware_auth.NewAuthMiddleware(userRepo)
-	bordirRoute = route.NewBordirRoute(bordirH, authMid)
-
-	token = test.GetToken(dbt, authMid)
-
-	// app
-	app.Use(recover.New())
-	api := app.Group("/api")
-	v1 := api.Group("/v1")
-	bordirGroup := v1.Group("/bordir")
-	bordirGroup.Route("/", bordirRoute.Bordir)
-	// Run tests
-	exitVal := m.Run()
-	dbt.Unscoped().Where("1 = 1").Delete(&entity.Bordir{})
-	os.Exit(exitVal)
-}
-
-func TestBordirCreate(t *testing.T) {
+func BordirCreate(t *testing.T) {
 	tests := []struct {
 		name         string
 		payload      req_bordir.Create
@@ -114,7 +80,7 @@ func TestBordirCreate(t *testing.T) {
 
 var idBordir string
 
-func TestBordirUpdate(t *testing.T) {
+func BordirUpdate(t *testing.T) {
 	bordir := new(entity.Bordir)
 	err := dbt.Select("id").First(bordir).Error
 	if err != nil {
@@ -187,7 +153,7 @@ func TestBordirUpdate(t *testing.T) {
 	}
 }
 
-func TestBordirGetAll(t *testing.T) {
+func BordirGetAll(t *testing.T) {
 	bordir := &entity.Bordir{
 		Base: entity.Base{
 			ID: test.UlidPkg.MakeUlid().String(),
@@ -288,7 +254,7 @@ func TestBordirGetAll(t *testing.T) {
 	}
 }
 
-func TestBordirDelete(t *testing.T) {
+func BordirDelete(t *testing.T) {
 	tests := []struct {
 		name         string
 		id           string
