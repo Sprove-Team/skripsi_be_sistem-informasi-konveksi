@@ -56,7 +56,7 @@ func (u *kelompokAkunUsecase) Create(ctx context.Context, reqKelompokAkun req.Cr
 func (u *kelompokAkunUsecase) Update(ctx context.Context, reqKelompokAkun req.Update) error {
 	defaultData := dataDefault.DefaultKodeAkunNKelompokAkun
 	if _, ok := defaultData[reqKelompokAkun.ID]; ok {
-		return errors.New(message.CantDeleteDefaultData)
+		return errors.New(message.CantModifiedDefaultData)
 	}
 	kelompokAkun, err := u.repo.GetById(ctx, reqKelompokAkun.ID)
 	if err != nil {
@@ -100,9 +100,13 @@ func (u *kelompokAkunUsecase) Update(ctx context.Context, reqKelompokAkun req.Up
 }
 
 func (u *kelompokAkunUsecase) Delete(ctx context.Context, id string) error {
+	_, err := u.repo.GetById(ctx, id)
+	if err != nil {
+		return err
+	}
 	defaultData := dataDefault.DefaultKodeAkunNKelompokAkun
 	if _, ok := defaultData[id]; ok {
-		return errors.New(message.CantDeleteDefaultData)
+		return errors.New(message.CantModifiedDefaultData)
 	}
 	return u.repo.Delete(ctx, id)
 }

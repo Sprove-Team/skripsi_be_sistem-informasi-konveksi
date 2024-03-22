@@ -63,7 +63,7 @@ func (u *akunUsecase) GetById(ctx context.Context, id string) (entity.Akun, erro
 func (u *akunUsecase) Update(ctx context.Context, reqAkun req.Update) error {
 	defaultData := dataDefault.DefaultKodeAkunNKelompokAkun
 	if _, ok := defaultData[reqAkun.ID]; ok {
-		return errors.New(message.CantDeleteDefaultData)
+		return errors.New(message.CantModifiedDefaultData)
 	}
 	akun, err := u.repo.GetById(ctx, reqAkun.ID)
 	if err != nil {
@@ -110,9 +110,12 @@ func (u *akunUsecase) Update(ctx context.Context, reqAkun req.Update) error {
 }
 
 func (u *akunUsecase) Delete(ctx context.Context, id string) error {
+	if _, err := u.repo.GetById(ctx, id); err != nil {
+		return err
+	}
 	defaultData := dataDefault.DefaultKodeAkunNKelompokAkun
 	if _, ok := defaultData[id]; ok {
-		return errors.New(message.CantDeleteDefaultData)
+		return errors.New(message.CantModifiedDefaultData)
 	}
 	return u.repo.Delete(ctx, id)
 }

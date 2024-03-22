@@ -2,7 +2,6 @@ package repo_akuntansi_akun
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/be-sistem-informasi-konveksi/entity"
 	"github.com/be-sistem-informasi-konveksi/helper"
@@ -40,13 +39,14 @@ func NewAkunRepo(DB *gorm.DB) AkunRepo {
 }
 
 func (r *akunRepo) GetById(ctx context.Context, id string) (entity.Akun, error) {
-	fmt.Println("Repo id ->", id)
 	data := entity.Akun{}
 	err := r.DB.WithContext(ctx).Omit("updated_at", "deleted_at").Preload("KelompokAkun", func(db *gorm.DB) *gorm.DB {
 		return db.Select("id", "nama", "kode")
 	}).First(&data, "id = ?", id).Error
 	if err != nil {
-		helper.LogsError(err)
+		if err != gorm.ErrRecordNotFound {
+			helper.LogsError(err)
+		}
 		return data, err
 	}
 	return data, nil
@@ -81,7 +81,9 @@ func (r *akunRepo) GetAkunDetailsByTransactionID(ctx context.Context, id string)
 func (r *akunRepo) Create(ctx context.Context, akun *entity.Akun) error {
 	err := r.DB.WithContext(ctx).Create(akun).Error
 	if err != nil {
-		helper.LogsError(err)
+		if err != gorm.ErrDuplicatedKey {
+			helper.LogsError(err)
+		}
 		return err
 	}
 	return nil
@@ -90,7 +92,9 @@ func (r *akunRepo) Create(ctx context.Context, akun *entity.Akun) error {
 func (r *akunRepo) Update(ctx context.Context, akun *entity.Akun) error {
 	err := r.DB.WithContext(ctx).Omit("id, created_at, updated_at, deleted_at").Updates(akun).Error
 	if err != nil {
-		helper.LogsError(err)
+		if err != gorm.ErrDuplicatedKey {
+			helper.LogsError(err)
+		}
 		return err
 	}
 	return nil

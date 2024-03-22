@@ -46,7 +46,7 @@ func errResponse(c *fiber.Ctx, err error) error {
 	badRequest := make([]string, 0, 1)
 
 	switch err.Error() {
-	case message.CantDeleteDefaultData:
+	case message.CantModifiedDefaultData:
 		badRequest = append(badRequest, err.Error())
 	}
 

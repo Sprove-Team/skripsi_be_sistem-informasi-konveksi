@@ -20,6 +20,6 @@ type Update struct {
 type GetAll struct {
 	Nama  string `query:"nama" validate:"omitempty"`
 	Kode  string `query:"kode" validate:"omitempty"`
-	Next  string `query:"Next" validate:"omitempty,ulid"`
-	Limit int    `query:"limit" validate:"omitempty,number"`
+	Next  string `query:"next" validate:"omitempty,ulid"`
+	Limit int    `query:"limit" validate:"omitempty"`
 }

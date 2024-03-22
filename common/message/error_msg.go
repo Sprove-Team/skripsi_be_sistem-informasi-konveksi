@@ -70,7 +70,7 @@ var (
 
 // misc
 var (
-	CantDeleteDefaultData = "tidak dapat menghapus atau mengubah data default"
+	CantModifiedDefaultData = "tidak dapat menghapus atau mengubah data default"
 )
 
 // akuntansi

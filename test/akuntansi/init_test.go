@@ -56,5 +56,20 @@ func TestMain(m *testing.M) {
 }
 
 func TestEndPointAkuntansi(t *testing.T) {
+	// kelompok akun
 	AkuntansiCreateKelompokAkun(t)
+	AkuntansiUpdateKelompokAkun(t)
+	AkuntansiGetAllKelompokAkun(t)
+	AkuntansiGetKelompokAkun(t)
+
+	// akun
+	AkuntansiCreateAkun(t)
+	AkuntansiUpdateAkun(t)
+	AkuntansiGetAllAkun(t)
+	AkuntansiGetAkun(t)
+}
+
+func TestEndPointDelete(t *testing.T) {
+	AkuntansiDeleteKelompokAkun(t)
+	AkuntansiDeleteAkun(t)
 }

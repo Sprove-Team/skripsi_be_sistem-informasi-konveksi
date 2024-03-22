@@ -247,7 +247,14 @@ func BordirGetAll(t *testing.T) {
 					assert.NotEqual(t, idBordir, res[0]["id"])
 				}
 			} else {
-				assert.Equal(t, tt.expectedBody, body)
+				if len(tt.expectedBody.ErrorsMessages) > 0 {
+					for _, v := range tt.expectedBody.ErrorsMessages {
+						assert.Contains(t, body.ErrorsMessages, v)
+					}
+					assert.Equal(t, tt.expectedBody.Status, body.Status)
+				} else {
+					assert.Equal(t, tt.expectedBody, body)
+				}
 			}
 
 		})

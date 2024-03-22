@@ -48,7 +48,7 @@ func errResponse(c *fiber.Ctx, err error) error {
 	badRequest := make([]string, 0, 1)
 
 	switch err.Error() {
-	case message.CantDeleteDefaultData, message.KelompokAkunNotFound:
+	case message.CantModifiedDefaultData, message.KelompokAkunNotFound:
 		badRequest = append(badRequest, err.Error())
 	}
 
@@ -137,7 +137,10 @@ func (h *akunHandler) Delete(c *fiber.Ctx) error {
 func (h *akunHandler) GetAll(c *fiber.Ctx) error {
 	req := new(req.GetAll)
 	c.QueryParser(req)
-
+	errValidate := h.validator.Validate(req)
+	if errValidate != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(errValidate)
+	}
 	ctx := c.UserContext()
 
 	data, err := h.uc.GetAll(ctx, *req)

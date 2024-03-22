@@ -3,7 +3,6 @@ package repo_akuntansi_kelompok_akun
 import (
 	"context"
 	"errors"
-	"log"
 
 	"github.com/be-sistem-informasi-konveksi/entity"
 	"github.com/be-sistem-informasi-konveksi/helper"
@@ -30,7 +29,9 @@ func NewKelompokAkunRepo(DB *gorm.DB) KelompokAkunRepo {
 func (r *kelompokAkunRepo) Create(ctx context.Context, kelompokAkun *entity.KelompokAkun) error {
 	err := r.DB.WithContext(ctx).Create(kelompokAkun).Error
 	if err != nil {
-		helper.LogsError(err)
+		if err != gorm.ErrDuplicatedKey {
+			helper.LogsError(err)
+		}
 		return errors.New(err.Error())
 	}
 	return err
@@ -39,7 +40,9 @@ func (r *kelompokAkunRepo) Create(ctx context.Context, kelompokAkun *entity.Kelo
 func (r *kelompokAkunRepo) Update(ctx context.Context, kelompokAkun *entity.KelompokAkun) error {
 	err := r.DB.WithContext(ctx).Omit("id").Updates(kelompokAkun).Error
 	if err != nil {
-		helper.LogsError(err)
+		if err != gorm.ErrDuplicatedKey {
+			helper.LogsError(err)
+		}
 		return err
 	}
 	return nil
@@ -48,6 +51,7 @@ func (r *kelompokAkunRepo) Update(ctx context.Context, kelompokAkun *entity.Kelo
 func (r *kelompokAkunRepo) Delete(ctx context.Context, id string) error {
 	err := r.DB.WithContext(ctx).Where("id = ?", id).Delete(&entity.KelompokAkun{}).Error
 	if err != nil {
+		helper.LogsError(err)
 		return err
 	}
 	return nil
@@ -70,7 +74,7 @@ func (r *kelompokAkunRepo) GetAll(ctx context.Context, searchKelompokAkun Search
 		"id > ?":            searchKelompokAkun.Next,
 		"kategori_akun = ?": searchKelompokAkun.KategoriAkun,
 		"nama LIKE ?":       "%" + searchKelompokAkun.Nama + "%",
-		"kode = ?":          searchKelompokAkun.Kode,
+		"kode LIKE ?":       searchKelompokAkun.Kode + "%",
 	}
 
 	for condition, value := range conditions {
@@ -91,7 +95,9 @@ func (r *kelompokAkunRepo) GetById(ctx context.Context, id string) (entity.Kelom
 	data := entity.KelompokAkun{}
 	err := r.DB.WithContext(ctx).First(&data, "id = ?", id).Error
 	if err != nil {
-		log.Println("error in kelompok_akun_repo GetById -> ", err.Error())
+		if err != gorm.ErrRecordNotFound {
+			helper.LogsError(err)
+		}
 		return data, err
 	}
 	return data, nil
