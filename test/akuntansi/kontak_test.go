@@ -5,9 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/be-sistem-informasi-konveksi/app/static_data"
 	"github.com/be-sistem-informasi-konveksi/common/message"
-	req_akuntansi_akun "github.com/be-sistem-informasi-konveksi/common/request/akuntansi/akun"
+	req_akuntansi_kontak "github.com/be-sistem-informasi-konveksi/common/request/akuntansi/kontak"
 	"github.com/be-sistem-informasi-konveksi/entity"
 	"github.com/be-sistem-informasi-konveksi/helper"
 	"github.com/be-sistem-informasi-konveksi/test"
@@ -16,21 +15,21 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func AkuntansiCreateAkun(t *testing.T) {
+func AkuntansiCreateKontak(t *testing.T) {
 	tests := []struct {
 		name         string
-		payload      req_akuntansi_akun.Create
+		payload      req_akuntansi_kontak.Create
 		expectedBody test.Response
 		expectedCode int
 	}{
 		{
 			name: "sukses",
-			payload: req_akuntansi_akun.Create{
-				Nama:           "akun test",
-				Kode:           "4",
-				KelompokAkunID: idKelompokAkun,
-				Deskripsi:      "des akun test",
-				SaldoNormal:    "DEBIT",
+			payload: req_akuntansi_kontak.Create{
+				Nama:       "megabaran",
+				NoTelp:     "+628964123452",
+				Alamat:     "jln. pahlawan no 3D",
+				Keterangan: "kontak langganan",
+				Email:      "megabaran@yahoo.com",
 			},
 			expectedCode: 201,
 			expectedBody: test.Response{
@@ -39,56 +38,40 @@ func AkuntansiCreateAkun(t *testing.T) {
 			},
 		},
 		{
-			name: "err: conflict",
-			payload: req_akuntansi_akun.Create{
-				Nama:           "akun test",
-				Kode:           "4",
-				KelompokAkunID: idKelompokAkun,
-				Deskripsi:      "des akun test",
-				SaldoNormal:    "DEBIT",
-			},
-			expectedCode: 409,
-			expectedBody: test.Response{
-				Status: fiber.ErrConflict.Message,
-				Code:   409,
-			},
-		},
-		{
-			name: "err: saldo normal harus berupa salah satu dari [DEBIT,KREDIT]",
-			payload: req_akuntansi_akun.Create{
-				Nama:           "akun test2",
-				Kode:           "124",
-				KelompokAkunID: idKelompokAkun,
-				Deskripsi:      "des akun test2",
-				SaldoNormal:    "ABCD",
+			name: "err: validasi format email & no telp",
+			payload: req_akuntansi_kontak.Create{
+				Nama:       "megabaran2",
+				NoTelp:     "0828964123452",
+				Alamat:     "jln. pahlawan no 3D2",
+				Keterangan: "kontak langganan2",
+				Email:      "megabaran2",
 			},
 			expectedCode: 400,
 			expectedBody: test.Response{
 				Status:         fiber.ErrBadRequest.Message,
 				Code:           400,
-				ErrorsMessages: []string{"saldo normal harus berupa salah satu dari [DEBIT,KREDIT]"},
+				ErrorsMessages: []string{"no telp harus berformat e164", "email harus berupa alamat email yang valid"},
 			},
 		},
 		{
 			name: "err: wajib diisi",
-			payload: req_akuntansi_akun.Create{
-				Nama:           "",
-				Kode:           "",
-				KelompokAkunID: "",
-				SaldoNormal:    "",
+			payload: req_akuntansi_kontak.Create{
+				Nama:   "",
+				NoTelp: "",
+				Alamat: "",
 			},
 			expectedCode: 400,
 			expectedBody: test.Response{
 				Status:         fiber.ErrBadRequest.Message,
 				Code:           400,
-				ErrorsMessages: []string{"nama wajib diisi", "kode wajib diisi", "kelompok akun id wajib diisi", "saldo normal wajib diisi"},
+				ErrorsMessages: []string{"nama wajib diisi", "no telp wajib diisi", "alamat wajib diisi"},
 			},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			code, body, err := test.GetJsonTestRequestResponse(app, "POST", "/api/v1/akuntansi/akun", tt.payload, &token)
+			code, body, err := test.GetJsonTestRequestResponse(app, "POST", "/api/v1/akuntansi/kontak", tt.payload, &token)
 			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedCode, code)
 			if len(tt.expectedBody.ErrorsMessages) > 0 {
@@ -103,48 +86,48 @@ func AkuntansiCreateAkun(t *testing.T) {
 	}
 }
 
-var idAkun string
-var idAkun2 string
+var idKontak string
+var idKontak2 string
 
-func AkuntansiUpdateAkun(t *testing.T) {
-	akun := new(entity.Akun)
-	err := dbt.Model(akun).Order("id DESC").Preload("KelompokAkun").First(akun).Error
+func AkuntansiUpdateKontak(t *testing.T) {
+	kontak := new(entity.Kontak)
+	err := dbt.Model(kontak).Order("id DESC").First(kontak).Error
 	if err != nil {
 		helper.LogsError(err)
 		return
 	}
-	akun2 := &entity.Akun{
+	kontak2 := &entity.Kontak{
 		Base: entity.Base{
 			ID: test.UlidPkg.MakeUlid().String(),
 		},
-		Kode:           akun.KelompokAkun.Kode + "1",
-		Nama:           "akun conflict",
-		KelompokAkunID: akun.KelompokAkunID,
-		SaldoNormal:    "DEBIT",
-		Deskripsi:      "des akun conflict",
+		Nama:       "test",
+		NoTelp:     "+62828964123459",
+		Alamat:     "jln. pahlawan no 3D2",
+		Keterangan: "kontak langganan2",
+		Email:      "megabaran2@gmail.com",
 	}
-	if err := dbt.Create(akun2).Error; err != nil {
+	if err := dbt.Create(kontak2).Error; err != nil {
 		helper.LogsError(err)
 		return
 	}
-	idAkun = akun.ID
-	idAkun2 = akun2.ID
+	idKontak = kontak.ID
+	idKontak2 = kontak2.ID
 
 	tests := []struct {
 		name         string
-		payload      req_akuntansi_akun.Update
+		payload      req_akuntansi_kontak.Update
 		expectedBody test.Response
 		expectedCode int
 	}{
 		{
 			name: "sukses",
-			payload: req_akuntansi_akun.Update{
-				ID:             idAkun,
-				Nama:           "akun update test",
-				Kode:           "99",
-				KelompokAkunID: idKelompokAkun2,
-				Deskripsi:      "update akun",
-				SaldoNormal:    "KREDIT",
+			payload: req_akuntansi_kontak.Update{
+				ID:         idKontak,
+				Nama:       "test update",
+				NoTelp:     "+62828912323459",
+				Alamat:     "jln. heroik no 3D2",
+				Keterangan: "kontak langganan tetap",
+				Email:      "megabaran_test@gmail.com",
 			},
 			expectedCode: 200,
 			expectedBody: test.Response{
@@ -153,47 +136,14 @@ func AkuntansiUpdateAkun(t *testing.T) {
 			},
 		},
 		{
-			name: "err: can't update default data",
-			payload: req_akuntansi_akun.Update{
-				ID:             static_data.DataAkun[0][0].ID,
-				Nama:           "can't update akun test",
-				Kode:           "19",
-				KelompokAkunID: static_data.DataKelompokAkun[12].ID,
-				Deskripsi:      "des can't update akun test",
-				SaldoNormal:    "KREDIT",
-			},
-			expectedCode: 400,
-			expectedBody: test.Response{
-				Status:         fiber.ErrBadRequest.Message,
-				Code:           400,
-				ErrorsMessages: []string{message.CantModifiedDefaultData},
-			},
-		},
-		{
-			name: "err: conflict",
-			payload: req_akuntansi_akun.Update{
-				ID:             idAkun,
-				Nama:           akun2.Nama,
-				Kode:           "1",
-				KelompokAkunID: akun2.KelompokAkunID,
-				Deskripsi:      "des update conflict",
-				SaldoNormal:    "KREDIT",
-			},
-			expectedCode: 409,
-			expectedBody: test.Response{
-				Status: fiber.ErrConflict.Message,
-				Code:   409,
-			},
-		},
-		{
 			name: "err: tidak ditemukan",
-			payload: req_akuntansi_akun.Update{
-				ID:             "01HM4B8QBH7MWAVAYP10WN6PKA",
-				Nama:           "update not found",
-				Kode:           "13",
-				KelompokAkunID: static_data.DataKelompokAkun[12].ID,
-				Deskripsi:      "des update not found",
-				SaldoNormal:    "KREDIT",
+			payload: req_akuntansi_kontak.Update{
+				ID:         "01HM4B8QBH7MWAVAYP10WN6PKZ",
+				Nama:       "test update not found",
+				NoTelp:     "+62828912323451",
+				Alamat:     "jln. heroik no 3D1",
+				Keterangan: "kontak langganan1",
+				Email:      "megabaran_test1@gmail.com",
 			},
 			expectedCode: 404,
 			expectedBody: test.Response{
@@ -202,31 +152,14 @@ func AkuntansiUpdateAkun(t *testing.T) {
 			},
 		},
 		{
-			name: "err: saldo normal harus berupa salah satu dari [DEBIT,KREDIT]",
-			payload: req_akuntansi_akun.Update{
-				ID:             idAkun,
-				Nama:           "akun test2",
-				Kode:           "14",
-				KelompokAkunID: idKelompokAkun,
-				Deskripsi:      "des akun test2",
-				SaldoNormal:    "ABCD",
-			},
-			expectedCode: 400,
-			expectedBody: test.Response{
-				Status:         fiber.ErrBadRequest.Message,
-				Code:           400,
-				ErrorsMessages: []string{"saldo normal harus berupa salah satu dari [DEBIT,KREDIT]"},
-			},
-		},
-		{
 			name: "err: ulid tidak valid",
-			payload: req_akuntansi_akun.Update{
-				ID:             idAkun + "123",
-				Nama:           "kelompok ulid tidak valid",
-				Kode:           "15",
-				KelompokAkunID: static_data.DataKelompokAkun[12].ID,
-				Deskripsi:      "des update ulid tidak valid",
-				SaldoNormal:    "KREDIT",
+			payload: req_akuntansi_kontak.Update{
+				ID:         idKontak + "123",
+				Nama:       "test update ulid tidak valid",
+				NoTelp:     "+62828912323458",
+				Alamat:     "jln. heroik no 3D8",
+				Keterangan: "kontak langganan8",
+				Email:      "megabaran_test8@gmail.com",
 			},
 			expectedCode: 400,
 			expectedBody: test.Response{
@@ -239,7 +172,7 @@ func AkuntansiUpdateAkun(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			code, body, err := test.GetJsonTestRequestResponse(app, "PUT", "/api/v1/akuntansi/akun/"+tt.payload.ID, tt.payload, &token)
+			code, body, err := test.GetJsonTestRequestResponse(app, "PUT", "/api/v1/akuntansi/kontak/"+tt.payload.ID, tt.payload, &token)
 			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedCode, code)
 			if len(tt.expectedBody.ErrorsMessages) > 0 {
@@ -254,7 +187,7 @@ func AkuntansiUpdateAkun(t *testing.T) {
 	}
 }
 
-func AkuntansiGetAllAkun(t *testing.T) {
+func AkuntansiGetAllKontak(t *testing.T) {
 	tests := []struct {
 		name         string
 		queryBody    string
@@ -269,9 +202,9 @@ func AkuntansiGetAllAkun(t *testing.T) {
 				Code:   200,
 			},
 		},
-		{ // same data with idAkun2
+		{ // same data with idKontak2
 			name:         "sukses with filter",
-			queryBody:    "?nama=akun+update+test&kode=1123499",
+			queryBody:    "?nama=test&no_telp=%2B628289123&email=megabaran",
 			expectedCode: 200,
 			expectedBody: test.Response{
 				Status: message.OK,
@@ -289,7 +222,7 @@ func AkuntansiGetAllAkun(t *testing.T) {
 		},
 		{
 			name:         "sukses with next",
-			queryBody:    "?next=" + idAkun,
+			queryBody:    "?next=" + idKontak,
 			expectedCode: 200,
 			expectedBody: test.Response{
 				Status: message.OK,
@@ -310,7 +243,7 @@ func AkuntansiGetAllAkun(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			code, body, err := test.GetJsonTestRequestResponse(app, "GET", "/api/v1/akuntansi/akun"+tt.queryBody, nil, &token)
+			code, body, err := test.GetJsonTestRequestResponse(app, "GET", "/api/v1/akuntansi/kontak"+tt.queryBody, nil, &token)
 			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedCode, code)
 
@@ -322,28 +255,27 @@ func AkuntansiGetAllAkun(t *testing.T) {
 				assert.Greater(t, len(res), 0)
 				assert.NotEmpty(t, res[0])
 				assert.NotEmpty(t, res[0]["id"])
-				assert.NotEmpty(t, res[0]["kode"])
 				assert.NotEmpty(t, res[0]["nama"])
+				assert.NotEmpty(t, res[0]["alamat"])
+				assert.NotEmpty(t, res[0]["email"])
+				assert.NotEmpty(t, res[0]["no_telp"])
+				assert.NotEmpty(t, res[0]["keterangan"])
 				assert.NotEmpty(t, res[0]["created_at"])
-				assert.NotEmpty(t, res[0]["saldo_normal"])
-				assert.NotEmpty(t, res[0]["deskripsi"])
-				assert.NotEmpty(t, res[0]["kelompok_akun"])
-				assert.NotEmpty(t, res[0]["kelompok_akun"].(map[string]any)["id"])
-				assert.NotEmpty(t, res[0]["kelompok_akun"].(map[string]any)["kode"])
-				assert.NotEmpty(t, res[0]["kelompok_akun"].(map[string]any)["nama"])
 				assert.Equal(t, tt.expectedBody.Status, body.Status)
 				switch tt.name {
 				case "sukses with filter":
 					v, err := url.ParseQuery(tt.queryBody[1:])
 					assert.NoError(t, err)
 					assert.NotEmpty(t, res)
-					assert.Equal(t, res[0]["nama"], v.Get("nama"))
-					assert.Equal(t, res[0]["kode"], v.Get("kode"))
+					assert.Contains(t, res[0]["nama"], v.Get("nama"))
+					assert.Contains(t, res[0]["email"], v.Get("email"))
+					assert.Equal(t, res[0]["no_telp"].(string)[0:len(v.Get("no_telp"))], v.Get("no_telp"))
+
 				case "sukses limit 1":
 					assert.Len(t, res, 1)
 				case "sukses with next":
 					assert.NotEmpty(t, res[0])
-					assert.NotEqual(t, idAkun, res[0]["id"])
+					assert.NotEqual(t, idKontak, res[0]["id"])
 				}
 			} else {
 				if len(tt.expectedBody.ErrorsMessages) > 0 {
@@ -360,7 +292,7 @@ func AkuntansiGetAllAkun(t *testing.T) {
 	}
 }
 
-func AkuntansiGetAkun(t *testing.T) {
+func AkuntansiGetKontak(t *testing.T) {
 	tests := []struct {
 		id           string
 		name         string
@@ -369,7 +301,7 @@ func AkuntansiGetAkun(t *testing.T) {
 	}{
 		{
 			name:         "sukses",
-			id:           idAkun,
+			id:           idKontak,
 			expectedCode: 200,
 			expectedBody: test.Response{
 				Status: message.OK,
@@ -399,7 +331,7 @@ func AkuntansiGetAkun(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			code, body, err := test.GetJsonTestRequestResponse(app, "GET", "/api/v1/akuntansi/akun/"+tt.id, nil, &token)
+			code, body, err := test.GetJsonTestRequestResponse(app, "GET", "/api/v1/akuntansi/kontak/"+tt.id, nil, &token)
 			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedCode, code)
 
@@ -409,15 +341,12 @@ func AkuntansiGetAkun(t *testing.T) {
 				assert.NoError(t, err)
 				assert.NotEmpty(t, res)
 				assert.NotEmpty(t, res["id"])
-				assert.NotEmpty(t, res["created_at"])
 				assert.NotEmpty(t, res["nama"])
-				assert.NotEmpty(t, res["kode"])
-				assert.NotEmpty(t, res["saldo_normal"])
-				assert.NotEmpty(t, res["deskripsi"])
-				assert.NotEmpty(t, res["kelompok_akun"])
-				assert.NotEmpty(t, res["kelompok_akun"].(map[string]any)["id"])
-				assert.NotEmpty(t, res["kelompok_akun"].(map[string]any)["kode"])
-				assert.NotEmpty(t, res["kelompok_akun"].(map[string]any)["nama"])
+				assert.NotEmpty(t, res["alamat"])
+				assert.NotEmpty(t, res["email"])
+				assert.NotEmpty(t, res["no_telp"])
+				assert.NotEmpty(t, res["keterangan"])
+				assert.NotEmpty(t, res["created_at"])
 				assert.Equal(t, tt.expectedBody.Status, body.Status)
 			} else {
 				if len(tt.expectedBody.ErrorsMessages) > 0 {
@@ -433,7 +362,7 @@ func AkuntansiGetAkun(t *testing.T) {
 	}
 }
 
-func AkuntansiDeleteAkun(t *testing.T) {
+func AkuntansiDeleteKontak(t *testing.T) {
 	tests := []struct {
 		name         string
 		id           string
@@ -442,7 +371,7 @@ func AkuntansiDeleteAkun(t *testing.T) {
 	}{
 		{
 			name:         "sukses",
-			id:           idAkun,
+			id:           idKontak,
 			expectedCode: 200,
 			expectedBody: test.Response{
 				Status: message.OK,
@@ -459,18 +388,8 @@ func AkuntansiDeleteAkun(t *testing.T) {
 			},
 		},
 		{
-			name:         "err: can't delete default data",
-			id:           static_data.DataAkun[0][0].ID,
-			expectedCode: 400,
-			expectedBody: test.Response{
-				Status:         fiber.ErrBadRequest.Message,
-				Code:           400,
-				ErrorsMessages: []string{message.CantModifiedDefaultData},
-			},
-		},
-		{
 			name:         "err: ulid tidak valid",
-			id:           idAkun + "123",
+			id:           idKontak + "123",
 			expectedCode: 400,
 			expectedBody: test.Response{
 				Status:         fiber.ErrBadRequest.Message,
@@ -482,7 +401,7 @@ func AkuntansiDeleteAkun(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			code, body, err := test.GetJsonTestRequestResponse(app, "DELETE", "/api/v1/akuntansi/akun/"+tt.id, nil, &token)
+			code, body, err := test.GetJsonTestRequestResponse(app, "DELETE", "/api/v1/akuntansi/kontak/"+tt.id, nil, &token)
 			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedCode, code)
 			if len(tt.expectedBody.ErrorsMessages) > 0 {

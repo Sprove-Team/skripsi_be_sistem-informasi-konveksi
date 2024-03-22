@@ -81,9 +81,6 @@ func (u *kontakUsecase) Update(param ParamUpdate) error {
 	oldData, err := u.repo.GetById(repo.ParamGetById{Ctx: param.Ctx, ID: param.Req.ID})
 
 	if err != nil {
-		if err.Error() == "record not found" {
-			return errors.New(message.KontakNotFound)
-		}
 		return err
 	}
 
@@ -140,5 +137,11 @@ func (u *kontakUsecase) GetById(param ParamGetById) (*entity.Kontak, error) {
 }
 
 func (u *kontakUsecase) Delete(param ParamDelete) error {
+	if _, err := u.repo.GetById(repo.ParamGetById{
+		Ctx: param.Ctx,
+		ID:  param.ID,
+	}); err != nil {
+		return err
+	}
 	return u.repo.Delete(repo.ParamDelete(param))
 }

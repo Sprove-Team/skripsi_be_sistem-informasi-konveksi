@@ -2,7 +2,7 @@ package entity
 
 type Kontak struct {
 	Base
-	Nama       string      `gorm:"type:varchar(150);;not null" json:"nama,omitempty"`
+	Nama       string      `gorm:"type:varchar(150);not null" json:"nama,omitempty"`
 	NoTelp     string      `gorm:"type:varchar(50)" json:"no_telp,omitempty"`
 	Alamat     string      `gorm:"type:varchar(225)" json:"alamat,omitempty"`
 	Email      string      `gorm:"type:varchar(225);default=''" json:"email,omitempty"`

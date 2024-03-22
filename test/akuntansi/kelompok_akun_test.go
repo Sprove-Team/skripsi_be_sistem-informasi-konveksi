@@ -391,7 +391,6 @@ func AkuntansiGetKelompokAkun(t *testing.T) {
 			if tt.name == "sukses" {
 				err = mapstructure.Decode(body.Data, &res)
 				assert.NoError(t, err)
-				assert.Greater(t, len(res), 0)
 				assert.NotEmpty(t, res)
 				assert.NotEmpty(t, res["id"])
 				assert.NotEmpty(t, res["created_at"])
