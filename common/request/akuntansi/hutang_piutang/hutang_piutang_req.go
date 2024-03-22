@@ -30,7 +30,6 @@ type Create struct {
 	Jenis      string       `json:"jenis" validate:"required,oneof=PIUTANG HUTANG"`
 	Keterangan string       `json:"keterangan" validate:"required"`
 	Transaksi  ReqTransaksi `json:"transaksi" validate:"required"`
-	BayarAwal  []ReqBayar   `json:"bayar_awal" validate:"omitempty,min=1,dive"`
 }
 
 type CreateBayar struct {

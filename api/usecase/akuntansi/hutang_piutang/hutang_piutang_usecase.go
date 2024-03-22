@@ -3,6 +3,7 @@ package uc_akuntansi_hp
 import (
 	"context"
 	"errors"
+	"fmt"
 	"math"
 	"strings"
 	"sync"
@@ -75,81 +76,55 @@ func (u *hutangPiutangUsecase) CreateDataHP(param ParamCreateDataHp) (*entity.Hu
 		Kredit: param.Req.Transaksi.AyatJurnal[1].Kredit,
 	}
 
-	lengthAyByr := len(param.Req.BayarAwal)
-	lengthAkuns := 2 + lengthAyByr
-	akunIds := make([]string, lengthAkuns)
-	akunIds[0] = ayHP1.AkunID
-	akunIds[1] = ayHP2.AkunID
-
-	for i, akunByr := range param.Req.BayarAwal {
-		akunIds[i+2] = akunByr.AkunBayarID
-	}
+	akunIds := []string{ayHP1.AkunID, ayHP2.AkunID}
 
 	akuns, err := u.repoAkun.GetByIds(param.Ctx, akunIds)
 	if err != nil {
 		return nil, err
 	}
 
-	if len(akuns) != lengthAkuns {
+	if len(akuns) != len(akunIds) {
 		return nil, errors.New(message.AkunNotFound)
 	}
 
-	akunMap := map[string]entity.Akun{}
-
 	// validate akun + add ayat jurnal saldo untk create tr hutang piutang
-	ayTagihan := entity.AyatJurnal{} // ay hutang/piutang yg akan dibayar bila bayar tidak kosong
-	akunTagihan := entity.Akun{}
+	akunMap := map[string]entity.Akun{}
+	akunYgAkanDibayar := entity.Akun{} // akun yang akan dibayar nantinya
 	for _, akun := range akuns {
 		if err := pkgAkuntansiLogic.IsValidAkunHutangPiutang(akun.KelompokAkun.Nama); err != nil {
 			return nil, err
 		}
 
-		// pasti ada 1 saldo debit jika jenis piutang, jika tidak error, begitu sebaliknya untuk hutang
 		switch akun.ID {
 		case ayHP1.AkunID:
 			pkgAkuntansiLogic.UpdateSaldo(&ayHP1.Saldo, ayHP1.Kredit, ayHP1.Debit, akun.SaldoNormal)
-			if param.Req.Jenis == "PIUTANG" {
-				if akun.SaldoNormal == "DEBIT" {
-					ayTagihan = ayHP2
-					akunTagihan = akun
-				}
-			} else {
-				if akun.SaldoNormal == "KREDIT" {
-					ayTagihan = ayHP2
-					akunTagihan = akun
-				}
-			}
 
 		case ayHP2.AkunID:
 			pkgAkuntansiLogic.UpdateSaldo(&ayHP2.Saldo, ayHP2.Kredit, ayHP2.Debit, akun.SaldoNormal)
-			if param.Req.Jenis == "PIUTANG" {
-				if akun.SaldoNormal == "DEBIT" {
-					ayTagihan = ayHP2
-					akunTagihan = akun
-				}
-			} else {
-				if akun.SaldoNormal == "KREDIT" {
-					ayTagihan = ayHP2
-					akunTagihan = akun
-				}
-			}
+		}
+
+		//! mencari akun pembayaran berdasarkan jenis dari requestnya
+		//? pasti ada 1 saldo debit jika jenis piutang, jika tidak error, begitu sebaliknya untuk hutang
+		if (param.Req.Jenis == "PIUTANG" && akun.SaldoNormal == "DEBIT") ||
+			(param.Req.Jenis == "HUTANG" && akun.SaldoNormal == "KREDIT") {
+			akunYgAkanDibayar = akun
 		}
 
 		akunMap[akun.ID] = akun
 	}
 
-	// cek kelompok akun sesuai dengan jenis hutang/piutang
-	if akunTagihan.KelompokAkun == nil {
-		return nil, errors.New(message.AkunNotMatchWithJenisHP)
-	}
-	if !strings.EqualFold(akunTagihan.KelompokAkun.Nama, param.Req.Jenis) {
-		return nil, errors.New(message.AkunNotMatchWithJenisHP)
+	fmt.Println("akun pembayaran -> ", akunYgAkanDibayar.Nama)
+	// cek kelompok akun yang akaun dibayar sesuai dengan jenis hutang/piutang
+	// validasi ini ada untuk menghindari pengurangan atau penambahan ayat jurnal pada akun hp yang salah
+	if akunYgAkanDibayar.ID == "" || !strings.EqualFold(akunYgAkanDibayar.KelompokAkun.Nama, param.Req.Jenis) {
+		return nil, errors.New(message.IncorrectEntryAkunHP)
 	}
 
 	// validate credit, debit hp is equal
 	if ayHP1.Saldo < 0 || ayHP2.Saldo < 0 {
 		return nil, errors.New(message.IncorrectPlacementOfCreditAndDebit)
 	}
+
 	if ayHP1.Saldo-ayHP2.Saldo != 0 {
 		return nil, errors.New(message.CreditDebitNotSame)
 	}
@@ -162,10 +137,9 @@ func (u *hutangPiutangUsecase) CreateDataHP(param ParamCreateDataHp) (*entity.Hu
 	}
 
 	// create transaksi HP, based on ay1 and ay2 variable
-	transaksiHpID := u.ulid.MakeUlid().String()
 	transaksiHP := entity.Transaksi{
 		Base: entity.Base{
-			ID: transaksiHpID,
+			ID: u.ulid.MakeUlid().String(),
 		},
 		Keterangan:      param.Req.Keterangan,
 		BuktiPembayaran: param.Req.Transaksi.BuktiPembayaran,
@@ -175,34 +149,8 @@ func (u *hutangPiutangUsecase) CreateDataHP(param ParamCreateDataHp) (*entity.Hu
 		AyatJurnals:     []entity.AyatJurnal{ayHP1, ayHP2},
 	}
 
-	// create transaksi bayar awal hp
-	dataByrHutangPiutang := make([]entity.DataBayarHutangPiutang, lengthAyByr)
-	var totalAllTrBayar float64
-	if lengthAyByr > 0 {
-		for i, trByr := range param.Req.BayarAwal {
-			totalAllTrBayar += trByr.Total
-			akun := akunMap[trByr.AkunBayarID]
-			if akun.KelompokAkun.Nama != "kas & bank" {
-				return nil, errors.New(message.InvalidAkunBayar)
-			}
-			byrHP, err := pkgAkuntansiLogic.CreateDataBayarHP(trByr, ayTagihan, param.Req.KontakID, trByr.Keterangan, u.ulid)
-			if err != nil {
-				return nil, err
-			}
-			dataByrHutangPiutang[i] = *byrHP
-		}
-	}
-
-	if totalAllTrBayar > ayTagihan.Debit {
-		return nil, errors.New(message.BayarMustLessThanSisaTagihan)
-	}
-
 	dataHP.Total = transaksiHP.Total
-	dataHP.Sisa = transaksiHP.Total - totalAllTrBayar
-	if dataHP.Sisa <= 0 {
-		dataHP.Status = "LUNAS"
-	}
-	dataHP.DataBayarHutangPiutang = dataByrHutangPiutang
+	dataHP.Sisa = transaksiHP.Total
 	dataHP.Transaksi = transaksiHP
 
 	return dataHP, nil

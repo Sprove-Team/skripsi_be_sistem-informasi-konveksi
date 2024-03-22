@@ -91,7 +91,7 @@ var (
 	KontakNotFound = "kontak tidak ditemukan"
 	// hutang piutang
 	HutangPiutangNotFound              = "hutang piutang tidak di temukan"
-	AkunNotMatchWithJenisHP            = "akun harus sama dengan jenis hutang piutang"
+	IncorrectEntryAkunHP               = "transaksi menyebabkan pengurangan atau penambahan pada akun hutang piutang yang salah"
 	InvalidAkunHutangPiutang           = "akun bukan merupakan akun hutang piutang"
 	IncorrectPlacementOfCreditAndDebit = "peletakan total debit dan kredit untuk hutang piutang tidak benar"
 	TotalHPMustGeOrEqToTotalByr        = "jumlah hutang piutang harus lebih besar atau sama dengan total hutang piutang yang telah dibayar"
