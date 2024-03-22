@@ -27,6 +27,7 @@ func cleanUp() {
 	}
 	dbt.Unscoped().Delete(&entity.KelompokAkun{}, "id NOT IN (?)", ids)
 	dbt.Unscoped().Where("1 = 1").Delete(&entity.Kontak{})
+	dbt.Unscoped().Where("1 = 1").Delete(&entity.Transaksi{})
 }
 
 func TestMain(m *testing.M) {
@@ -73,6 +74,10 @@ func TestEndPointAkuntansi(t *testing.T) {
 	AkuntansiCreateKontak(t)
 	AkuntansiUpdateKontak(t)
 	AkuntansiGetAllKontak(t)
+
+	// transaksi
+	AkuntansiCreateTransaksi(t)
+	AkuntansiUpdateTransaksi(t)
 }
 
 func TestEndPointDelete(t *testing.T) {

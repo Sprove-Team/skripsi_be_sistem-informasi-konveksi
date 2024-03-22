@@ -5,7 +5,10 @@ import (
 
 	"github.com/be-sistem-informasi-konveksi/common/message"
 	req_akuntansi_transaksi "github.com/be-sistem-informasi-konveksi/common/request/akuntansi/transaksi"
+	"github.com/be-sistem-informasi-konveksi/entity"
+	"github.com/be-sistem-informasi-konveksi/helper"
 	"github.com/be-sistem-informasi-konveksi/test"
+	"github.com/gofiber/fiber/v2"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -17,11 +20,11 @@ func AkuntansiCreateTransaksi(t *testing.T) {
 		expectedCode int
 	}{
 		{
-			name: "sukses",
+			name: "sukses without kontak",
 			payload: req_akuntansi_transaksi.Create{
 				BuktiPembayaran: []string{"http://bukti-pembayaran.jpg"},
 				Tanggal:         "2023-10-30T14:17:03.723Z",
-				Keterangan:      "Membayar beban listrik dan air sebesar Rp. 250.000,-",
+				Keterangan:      "Membayar beban listrik dan air sebesar Rp. 10.000,-",
 				KontakID:        "",
 				AyatJurnal: []req_akuntansi_transaksi.ReqAyatJurnal{
 					{
@@ -40,57 +43,123 @@ func AkuntansiCreateTransaksi(t *testing.T) {
 				Code:   201,
 			},
 		},
-		// {
-		// 	name: "err: conflict",
-		// 	payload: req_akuntansi_transaksi.Create{
-		// 		Nama:           "akun test",
-		// 		Kode:           "4",
-		// 		KelompokAkunID: idKelompokAkun,
-		// 		Deskripsi:      "des akun test",
-		// 		SaldoNormal:    "DEBIT",
-		// 	},
-		// 	expectedCode: 409,
-		// 	expectedBody: test.Response{
-		// 		Status: fiber.ErrConflict.Message,
-		// 		Code:   409,
-		// 	},
-		// },
-		// {
-		// 	name: "err: saldo normal harus berupa salah satu dari [DEBIT,KREDIT]",
-		// 	payload: req_akuntansi_transaksi.Create{
-		// 		Nama:           "akun test2",
-		// 		Kode:           "124",
-		// 		KelompokAkunID: idKelompokAkun,
-		// 		Deskripsi:      "des akun test2",
-		// 		SaldoNormal:    "ABCD",
-		// 	},
-		// 	expectedCode: 400,
-		// 	expectedBody: test.Response{
-		// 		Status:         fiber.ErrBadRequest.Message,
-		// 		Code:           400,
-		// 		ErrorsMessages: []string{"saldo normal harus berupa salah satu dari [DEBIT,KREDIT]"},
-		// 	},
-		// },
-		// {
-		// 	name: "err: wajib diisi",
-		// 	payload: req_akuntansi_transaksi.Create{
-		// 		Nama:           "",
-		// 		Kode:           "",
-		// 		KelompokAkunID: "",
-		// 		SaldoNormal:    "",
-		// 	},
-		// 	expectedCode: 400,
-		// 	expectedBody: test.Response{
-		// 		Status:         fiber.ErrBadRequest.Message,
-		// 		Code:           400,
-		// 		ErrorsMessages: []string{"nama wajib diisi", "kode wajib diisi", "kelompok akun id wajib diisi", "saldo normal wajib diisi"},
-		// 	},
-		// },
+		{
+			name: "sukses with kontak",
+			payload: req_akuntansi_transaksi.Create{
+				BuktiPembayaran: []string{"http://bukti-pembayaran2.jpg"},
+				Tanggal:         "2023-10-28T14:17:03.723Z",
+				Keterangan:      "Membayar beban listrik dan air sebesar Rp. 10.000,- with kontak",
+				KontakID:        idKontak,
+				AyatJurnal: []req_akuntansi_transaksi.ReqAyatJurnal{
+					{
+						AkunID: "01HP7DVBGX4JR0KETMEQTSH53Y",
+						Debit:  10000,
+					},
+					{
+						AkunID: "01HP7DVBGTC06PXWT6FD66VERN",
+						Kredit: 10000,
+					},
+				},
+			},
+			expectedCode: 201,
+			expectedBody: test.Response{
+				Status: message.Created,
+				Code:   201,
+			},
+		},
+		{
+			name: "err: kredit wajib diisi jika debit tidak diisi, begitu sebaliknya",
+			payload: req_akuntansi_transaksi.Create{
+				BuktiPembayaran: []string{"http://bukti-pembayaran2.jpg"},
+				Tanggal:         "2023-10-28T14:17:03.723Z",
+				Keterangan:      "Membayar beban listrik dan air sebesar Rp. 10.000,- with kontak",
+				KontakID:        idKontak,
+				AyatJurnal: []req_akuntansi_transaksi.ReqAyatJurnal{
+					{
+						AkunID: "01HP7DVBGX4JR0KETMEQTSH53Y",
+					},
+					{
+						AkunID: "01HP7DVBGTC06PXWT6FD66VERN",
+						Kredit: 10000,
+					},
+				},
+			},
+			expectedCode: 400,
+			expectedBody: test.Response{
+				Status:         fiber.ErrBadRequest.Message,
+				Code:           400,
+				ErrorsMessages: []string{"kredit wajib diisi jika debit tidak diisi", "debit wajib diisi jika kredit tidak diisi"},
+			},
+		},
+		{
+			name: "err: total debit dan kredit harus sama",
+			payload: req_akuntansi_transaksi.Create{
+				BuktiPembayaran: []string{"http://bukti-pembayaran2.jpg"},
+				Tanggal:         "2023-10-28T14:17:03.723Z",
+				Keterangan:      "Membayar beban listrik dan air sebesar Rp. 10.000,- with kontak",
+				KontakID:        idKontak,
+				AyatJurnal: []req_akuntansi_transaksi.ReqAyatJurnal{
+					{
+						AkunID: "01HP7DVBGX4JR0KETMEQTSH53Y",
+						Kredit: 10000,
+					},
+					{
+						AkunID: "01HP7DVBGTC06PXWT6FD66VERN",
+						Kredit: 10000,
+					},
+				},
+			},
+			expectedCode: 400,
+			expectedBody: test.Response{
+				Status:         fiber.ErrBadRequest.Message,
+				Code:           400,
+				ErrorsMessages: []string{message.CreditDebitNotSame},
+			},
+		},
+		{
+			name: "err: wajib diisi akun id pada ayat jurnal",
+			payload: req_akuntansi_transaksi.Create{
+				BuktiPembayaran: []string{"http://bukti-pembayaran2.jpg"},
+				Tanggal:         "2023-10-28T14:17:03.723Z",
+				Keterangan:      "Membayar beban listrik dan air sebesar Rp. 10.000,- with kontak",
+				KontakID:        idKontak,
+				AyatJurnal: []req_akuntansi_transaksi.ReqAyatJurnal{
+					{
+						Debit: 10000,
+					},
+					{
+						Kredit: 10000,
+					},
+				},
+			},
+			expectedCode: 400,
+			expectedBody: test.Response{
+				Status:         fiber.ErrBadRequest.Message,
+				Code:           400,
+				ErrorsMessages: []string{"akun id wajib diisi"},
+			},
+		},
+		{
+			name: "err: wajib diisi",
+			payload: req_akuntansi_transaksi.Create{
+				BuktiPembayaran: nil,
+				Tanggal:         "",
+				Keterangan:      "",
+				KontakID:        "",
+				AyatJurnal:      nil,
+			},
+			expectedCode: 400,
+			expectedBody: test.Response{
+				Status:         fiber.ErrBadRequest.Message,
+				Code:           400,
+				ErrorsMessages: []string{"tanggal wajib diisi", "keterangan wajib diisi", "ayat jurnal wajib diisi"},
+			},
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			code, body, err := test.GetJsonTestRequestResponse(app, "POST", "/api/v1/akuntansi/akun", tt.payload, &token)
+			code, body, err := test.GetJsonTestRequestResponse(app, "POST", "/api/v1/akuntansi/transaksi", tt.payload, &token)
 			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedCode, code)
 			if len(tt.expectedBody.ErrorsMessages) > 0 {
@@ -105,156 +174,99 @@ func AkuntansiCreateTransaksi(t *testing.T) {
 	}
 }
 
-// var idAkun string
-// var idAkun2 string
+var idTransaksi string
 
-// func AkuntansiUpdateAkun(t *testing.T) {
-// 	akun := new(entity.Akun)
-// 	err := dbt.Model(akun).Order("id DESC").Preload("KelompokAkun").First(akun).Error
-// 	if err != nil {
-// 		helper.LogsError(err)
-// 		return
-// 	}
-// 	akun2 := &entity.Akun{
-// 		Base: entity.Base{
-// 			ID: test.UlidPkg.MakeUlid().String(),
-// 		},
-// 		Kode:           akun.KelompokAkun.Kode + "1",
-// 		Nama:           "akun conflict",
-// 		KelompokAkunID: akun.KelompokAkunID,
-// 		SaldoNormal:    "DEBIT",
-// 		Deskripsi:      "des akun conflict",
-// 	}
-// 	if err := dbt.Create(akun2).Error; err != nil {
-// 		helper.LogsError(err)
-// 		return
-// 	}
-// 	idAkun = akun.ID
-// 	idAkun2 = akun2.ID
+func AkuntansiUpdateTransaksi(t *testing.T) {
+	transaksi := new(entity.Transaksi)
+	err := dbt.Model(transaksi).Order("id DESC").First(transaksi).Error
+	if err != nil {
+		helper.LogsError(err)
+		return
+	}
 
-// 	tests := []struct {
-// 		name         string
-// 		payload      req_akuntansi_akun.Update
-// 		expectedBody test.Response
-// 		expectedCode int
-// 	}{
-// 		{
-// 			name: "sukses",
-// 			payload: req_akuntansi_akun.Update{
-// 				ID:             idAkun,
-// 				Nama:           "akun update test",
-// 				Kode:           "99",
-// 				KelompokAkunID: idKelompokAkun2,
-// 				Deskripsi:      "update akun",
-// 				SaldoNormal:    "KREDIT",
-// 			},
-// 			expectedCode: 200,
-// 			expectedBody: test.Response{
-// 				Status: message.OK,
-// 				Code:   200,
-// 			},
-// 		},
-// 		{
-// 			name: "err: can't update default data",
-// 			payload: req_akuntansi_akun.Update{
-// 				ID:             static_data.DataAkun[0][0].ID,
-// 				Nama:           "can't update akun test",
-// 				Kode:           "19",
-// 				KelompokAkunID: static_data.DataKelompokAkun[12].ID,
-// 				Deskripsi:      "des can't update akun test",
-// 				SaldoNormal:    "KREDIT",
-// 			},
-// 			expectedCode: 400,
-// 			expectedBody: test.Response{
-// 				Status:         fiber.ErrBadRequest.Message,
-// 				Code:           400,
-// 				ErrorsMessages: []string{message.CantModifiedDefaultData},
-// 			},
-// 		},
-// 		{
-// 			name: "err: conflict",
-// 			payload: req_akuntansi_akun.Update{
-// 				ID:             idAkun,
-// 				Nama:           akun2.Nama,
-// 				Kode:           "1",
-// 				KelompokAkunID: akun2.KelompokAkunID,
-// 				Deskripsi:      "des update conflict",
-// 				SaldoNormal:    "KREDIT",
-// 			},
-// 			expectedCode: 409,
-// 			expectedBody: test.Response{
-// 				Status: fiber.ErrConflict.Message,
-// 				Code:   409,
-// 			},
-// 		},
-// 		{
-// 			name: "err: tidak ditemukan",
-// 			payload: req_akuntansi_akun.Update{
-// 				ID:             "01HM4B8QBH7MWAVAYP10WN6PKA",
-// 				Nama:           "update not found",
-// 				Kode:           "13",
-// 				KelompokAkunID: static_data.DataKelompokAkun[12].ID,
-// 				Deskripsi:      "des update not found",
-// 				SaldoNormal:    "KREDIT",
-// 			},
-// 			expectedCode: 404,
-// 			expectedBody: test.Response{
-// 				Status: fiber.ErrNotFound.Message,
-// 				Code:   404,
-// 			},
-// 		},
-// 		{
-// 			name: "err: saldo normal harus berupa salah satu dari [DEBIT,KREDIT]",
-// 			payload: req_akuntansi_akun.Update{
-// 				ID:             idAkun,
-// 				Nama:           "akun test2",
-// 				Kode:           "14",
-// 				KelompokAkunID: idKelompokAkun,
-// 				Deskripsi:      "des akun test2",
-// 				SaldoNormal:    "ABCD",
-// 			},
-// 			expectedCode: 400,
-// 			expectedBody: test.Response{
-// 				Status:         fiber.ErrBadRequest.Message,
-// 				Code:           400,
-// 				ErrorsMessages: []string{"saldo normal harus berupa salah satu dari [DEBIT,KREDIT]"},
-// 			},
-// 		},
-// 		{
-// 			name: "err: ulid tidak valid",
-// 			payload: req_akuntansi_akun.Update{
-// 				ID:             idAkun + "123",
-// 				Nama:           "kelompok ulid tidak valid",
-// 				Kode:           "15",
-// 				KelompokAkunID: static_data.DataKelompokAkun[12].ID,
-// 				Deskripsi:      "des update ulid tidak valid",
-// 				SaldoNormal:    "KREDIT",
-// 			},
-// 			expectedCode: 400,
-// 			expectedBody: test.Response{
-// 				Status:         fiber.ErrBadRequest.Message,
-// 				Code:           400,
-// 				ErrorsMessages: []string{"id tidak berupa ulid yang valid"},
-// 			},
-// 		},
-// 	}
+	idTransaksi = transaksi.ID
 
-// 	for _, tt := range tests {
-// 		t.Run(tt.name, func(t *testing.T) {
-// 			code, body, err := test.GetJsonTestRequestResponse(app, "PUT", "/api/v1/akuntansi/akun/"+tt.payload.ID, tt.payload, &token)
-// 			assert.NoError(t, err)
-// 			assert.Equal(t, tt.expectedCode, code)
-// 			if len(tt.expectedBody.ErrorsMessages) > 0 {
-// 				for _, v := range tt.expectedBody.ErrorsMessages {
-// 					assert.Contains(t, body.ErrorsMessages, v)
-// 				}
-// 				assert.Equal(t, tt.expectedBody.Status, body.Status)
-// 			} else {
-// 				assert.Equal(t, tt.expectedBody, body)
-// 			}
-// 		})
-// 	}
-// }
+	tests := []struct {
+		name         string
+		payload      req_akuntansi_transaksi.Update
+		expectedBody test.Response
+		expectedCode int
+	}{
+		{
+			name: "sukses",
+			payload: req_akuntansi_transaksi.Update{
+				ID:              idTransaksi,
+				BuktiPembayaran: []string{"http://bukti-update.jpg"},
+				Tanggal:         "2023-10-10T14:17:03.723Z",
+				Keterangan:      "Membayar beban gaji Rp. 15.000,- update",
+				AyatJurnal: []req_akuntansi_transaksi.ReqAyatJurnal{
+					{
+						AkunID: "01HP7DVBGX4JR0KETMEJXMZCMF",
+						Debit:  15000,
+					},
+					{
+						AkunID: "01HP7DVBGTC06PXWT6FD66VERN",
+						Kredit: 15000,
+					},
+				},
+			},
+			expectedCode: 200,
+			expectedBody: test.Response{
+				Status: message.OK,
+				Code:   200,
+			},
+		},
+		// {
+		// 	name: "err: tidak ditemukan",
+		// 	payload: req_akuntansi_akun.Update{
+		// 		ID:             "01HM4B8QBH7MWAVAYP10WN6PKA",
+		// 		Nama:           "update not found",
+		// 		Kode:           "13",
+		// 		KelompokAkunID: static_data.DataKelompokAkun[12].ID,
+		// 		Deskripsi:      "des update not found",
+		// 		SaldoNormal:    "KREDIT",
+		// 	},
+		// 	expectedCode: 404,
+		// 	expectedBody: test.Response{
+		// 		Status: fiber.ErrNotFound.Message,
+		// 		Code:   404,
+		// 	},
+		// },
+		// {
+		// 	name: "err: ulid tidak valid",
+		// 	payload: req_akuntansi_akun.Update{
+		// 		ID:             idAkun + "123",
+		// 		Nama:           "kelompok ulid tidak valid",
+		// 		Kode:           "15",
+		// 		KelompokAkunID: static_data.DataKelompokAkun[12].ID,
+		// 		Deskripsi:      "des update ulid tidak valid",
+		// 		SaldoNormal:    "KREDIT",
+		// 	},
+		// 	expectedCode: 400,
+		// 	expectedBody: test.Response{
+		// 		Status:         fiber.ErrBadRequest.Message,
+		// 		Code:           400,
+		// 		ErrorsMessages: []string{"id tidak berupa ulid yang valid"},
+		// 	},
+		// },
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			code, body, err := test.GetJsonTestRequestResponse(app, "PUT", "/api/v1/akuntansi/transaksi/"+tt.payload.ID, tt.payload, &token)
+			assert.NoError(t, err)
+			assert.Equal(t, tt.expectedCode, code)
+			if len(tt.expectedBody.ErrorsMessages) > 0 {
+				for _, v := range tt.expectedBody.ErrorsMessages {
+					assert.Contains(t, body.ErrorsMessages, v)
+				}
+				assert.Equal(t, tt.expectedBody.Status, body.Status)
+			} else {
+				assert.Equal(t, tt.expectedBody, body)
+			}
+		})
+	}
+}
 
 // func AkuntansiGetAllAkun(t *testing.T) {
 // 	tests := []struct {
