@@ -18,12 +18,14 @@ import (
 func SablonCreate(t *testing.T) {
 	tests := []struct {
 		name         string
+		token        string
 		payload      req_sablon.Create
 		expectedBody test.Response
 		expectedCode int
 	}{
 		{
-			name: "sukses",
+			name:  "sukses",
+			token: tokens[entity.RolesById[1]],
 			payload: req_sablon.Create{
 				Nama:  "DTF",
 				Harga: 40000,
@@ -35,7 +37,8 @@ func SablonCreate(t *testing.T) {
 			},
 		},
 		{
-			name: "err: conflict",
+			name:  "err: conflict",
+			token: tokens[entity.RolesById[1]],
 			payload: req_sablon.Create{
 				Nama:  "DTF",
 				Harga: 40000,
@@ -47,7 +50,8 @@ func SablonCreate(t *testing.T) {
 			},
 		},
 		{
-			name: "err: wajib diisi",
+			name:  "err: wajib diisi",
+			token: tokens[entity.RolesById[1]],
 			payload: req_sablon.Create{
 				Nama:  "",
 				Harga: 0,
@@ -59,11 +63,51 @@ func SablonCreate(t *testing.T) {
 				ErrorsMessages: []string{"nama wajib diisi", "harga wajib diisi"},
 			},
 		},
+		{
+			name:         "err: authorization " + entity.RolesById[2],
+			payload:      req_sablon.Create{},
+			token:        tokens[entity.RolesById[2]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[3],
+			payload:      req_sablon.Create{},
+			token:        tokens[entity.RolesById[3]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[4],
+			payload:      req_sablon.Create{},
+			token:        tokens[entity.RolesById[4]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[5],
+			payload:      req_sablon.Create{},
+			token:        tokens[entity.RolesById[5]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			code, body, err := test.GetJsonTestRequestResponse(app, "POST", "/api/v1/sablon", tt.payload, &token)
+			code, body, err := test.GetJsonTestRequestResponse(app, "POST", "/api/v1/sablon", tt.payload, &tt.token)
 			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedCode, code)
 			if len(tt.expectedBody.ErrorsMessages) > 0 {
@@ -90,12 +134,14 @@ func SablonUpdate(t *testing.T) {
 	idSablon = sablon.ID
 	tests := []struct {
 		name         string
+		token        string
 		payload      req_sablon.Update
 		expectedBody test.Response
 		expectedCode int
 	}{
 		{
-			name: "sukses",
+			name:  "sukses",
+			token: tokens[entity.RolesById[1]],
 			payload: req_sablon.Update{
 				ID:    sablon.ID,
 				Nama:  "DTF-2",
@@ -108,7 +154,8 @@ func SablonUpdate(t *testing.T) {
 			},
 		},
 		{
-			name: "err: tidak ditemukan",
+			name:  "err: tidak ditemukan",
+			token: tokens[entity.RolesById[1]],
 			payload: req_sablon.Update{
 				ID:    "01HM4B8QBH7MWAVAYP10WN6PKA",
 				Nama:  "DTF-3",
@@ -121,7 +168,8 @@ func SablonUpdate(t *testing.T) {
 			},
 		},
 		{
-			name: "err: ulid tidak valid",
+			name:  "err: ulid tidak valid",
+			token: tokens[entity.RolesById[1]],
 			payload: req_sablon.Update{
 				ID:    sablon.ID + "123",
 				Nama:  "DTF-4",
@@ -134,11 +182,51 @@ func SablonUpdate(t *testing.T) {
 				ErrorsMessages: []string{"id tidak berupa ulid yang valid"},
 			},
 		},
+		{
+			name:         "err: authorization " + entity.RolesById[2],
+			payload:      req_sablon.Update{},
+			token:        tokens[entity.RolesById[2]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[3],
+			payload:      req_sablon.Update{},
+			token:        tokens[entity.RolesById[3]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[4],
+			payload:      req_sablon.Update{},
+			token:        tokens[entity.RolesById[4]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[5],
+			payload:      req_sablon.Update{},
+			token:        tokens[entity.RolesById[5]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			code, body, err := test.GetJsonTestRequestResponse(app, "PUT", "/api/v1/sablon/"+tt.payload.ID, tt.payload, &token)
+			code, body, err := test.GetJsonTestRequestResponse(app, "PUT", "/api/v1/sablon/"+tt.payload.ID, tt.payload, &tt.token)
 			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedCode, code)
 			if len(tt.expectedBody.ErrorsMessages) > 0 {
@@ -167,12 +255,14 @@ func SablonGetAll(t *testing.T) {
 	}
 	tests := []struct {
 		name         string
+		token        string
 		queryBody    string
 		expectedBody test.Response
 		expectedCode int
 	}{
 		{
 			name:         "sukses",
+			token:        tokens[entity.RolesById[1]],
 			expectedCode: 200,
 			expectedBody: test.Response{
 				Status: message.OK,
@@ -181,6 +271,7 @@ func SablonGetAll(t *testing.T) {
 		},
 		{
 			name:         "sukses limit 1",
+			token:        tokens[entity.RolesById[1]],
 			queryBody:    "?limit=1",
 			expectedCode: 200,
 			expectedBody: test.Response{
@@ -190,6 +281,7 @@ func SablonGetAll(t *testing.T) {
 		},
 		{
 			name:         "sukses with next",
+			token:        tokens[entity.RolesById[1]],
 			queryBody:    "?next=" + idSablon,
 			expectedCode: 200,
 			expectedBody: test.Response{
@@ -199,6 +291,7 @@ func SablonGetAll(t *testing.T) {
 		},
 		{
 			name:         "sukses with: filter nama",
+			token:        tokens[entity.RolesById[1]],
 			queryBody:    "?nama=DTF-2",
 			expectedCode: 200,
 			expectedBody: test.Response{
@@ -208,6 +301,7 @@ func SablonGetAll(t *testing.T) {
 		},
 		{
 			name:         "err: ulid tidak valid",
+			token:        tokens[entity.RolesById[1]],
 			expectedCode: 400,
 			queryBody:    "?next=01HQVTTJ1S2606JGTYYZ5NDKNR123",
 			expectedBody: test.Response{
@@ -216,11 +310,47 @@ func SablonGetAll(t *testing.T) {
 				ErrorsMessages: []string{"next tidak berupa ulid yang valid"},
 			},
 		},
+		{
+			name:         "err: authorization " + entity.RolesById[2],
+			token:        tokens[entity.RolesById[2]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[3],
+			token:        tokens[entity.RolesById[3]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[4],
+			token:        tokens[entity.RolesById[4]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[5],
+			token:        tokens[entity.RolesById[5]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			code, body, err := test.GetJsonTestRequestResponse(app, "GET", "/api/v1/sablon"+tt.queryBody, nil, &token)
+			code, body, err := test.GetJsonTestRequestResponse(app, "GET", "/api/v1/sablon"+tt.queryBody, nil, &tt.token)
 			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedCode, code)
 
@@ -264,12 +394,14 @@ func SablonGetAll(t *testing.T) {
 func SablonDelete(t *testing.T) {
 	tests := []struct {
 		name         string
+		token        string
 		id           string
 		expectedBody test.Response
 		expectedCode int
 	}{
 		{
 			name:         "sukses",
+			token:        tokens[entity.RolesById[1]],
 			id:           idSablon,
 			expectedCode: 200,
 			expectedBody: test.Response{
@@ -279,6 +411,7 @@ func SablonDelete(t *testing.T) {
 		},
 		{
 			name:         "err: tidak ditemukan",
+			token:        tokens[entity.RolesById[1]],
 			id:           "01HM4B8QBH7MWAVAYP10WN6PKA",
 			expectedCode: 404,
 			expectedBody: test.Response{
@@ -288,6 +421,7 @@ func SablonDelete(t *testing.T) {
 		},
 		{
 			name:         "err: ulid tidak valid",
+			token:        tokens[entity.RolesById[1]],
 			id:           idSablon + "123",
 			expectedCode: 400,
 			expectedBody: test.Response{
@@ -296,11 +430,51 @@ func SablonDelete(t *testing.T) {
 				ErrorsMessages: []string{"id tidak berupa ulid yang valid"},
 			},
 		},
+		{
+			name:         "err: authorization " + entity.RolesById[2],
+			id:           idSablon,
+			token:        tokens[entity.RolesById[2]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[3],
+			id:           idSablon,
+			token:        tokens[entity.RolesById[3]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[4],
+			id:           idSablon,
+			token:        tokens[entity.RolesById[4]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[5],
+			id:           idSablon,
+			token:        tokens[entity.RolesById[5]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			code, body, err := test.GetJsonTestRequestResponse(app, "DELETE", "/api/v1/sablon/"+tt.id, nil, &token)
+			code, body, err := test.GetJsonTestRequestResponse(app, "DELETE", "/api/v1/sablon/"+tt.id, nil, &tt.token)
 			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedCode, code)
 			if len(tt.expectedBody.ErrorsMessages) > 0 {

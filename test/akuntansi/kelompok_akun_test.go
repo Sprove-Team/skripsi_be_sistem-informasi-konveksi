@@ -19,12 +19,14 @@ import (
 func AkuntansiCreateKelompokAkun(t *testing.T) {
 	tests := []struct {
 		name         string
+		token        string
 		payload      req_akuntansi_kelompok_akun.Create
 		expectedBody test.Response
 		expectedCode int
 	}{
 		{
-			name: "sukses",
+			name:  "sukses",
+			token: tokens[entity.RolesById[1]],
 			payload: req_akuntansi_kelompok_akun.Create{
 				Nama:         "kelompok test",
 				Kode:         "11111111",
@@ -37,7 +39,8 @@ func AkuntansiCreateKelompokAkun(t *testing.T) {
 			},
 		},
 		{
-			name: "err: conflict",
+			name:  "err: conflict",
+			token: tokens[entity.RolesById[1]],
 			payload: req_akuntansi_kelompok_akun.Create{
 				Nama:         static_data.DataKelompokAkun[0].Nama,
 				Kode:         "1",
@@ -50,7 +53,8 @@ func AkuntansiCreateKelompokAkun(t *testing.T) {
 			},
 		},
 		{
-			name: "err: kategori akun harus berupa salah satu dari [ASET,KEWAJIBAN,MODAL,PENDAPATAN,BEBAN]",
+			name:  "err: kategori akun harus berupa salah satu dari [ASET,KEWAJIBAN,MODAL,PENDAPATAN,BEBAN]",
+			token: tokens[entity.RolesById[1]],
 			payload: req_akuntansi_kelompok_akun.Create{
 				Nama:         "kelompok err kategori",
 				Kode:         "212312",
@@ -64,7 +68,8 @@ func AkuntansiCreateKelompokAkun(t *testing.T) {
 			},
 		},
 		{
-			name: "err: wajib diisi",
+			name:  "err: wajib diisi",
+			token: tokens[entity.RolesById[1]],
 			payload: req_akuntansi_kelompok_akun.Create{
 				Nama:         "",
 				Kode:         "",
@@ -77,11 +82,41 @@ func AkuntansiCreateKelompokAkun(t *testing.T) {
 				ErrorsMessages: []string{"nama wajib diisi", "kode wajib diisi", "kategori akun wajib diisi"},
 			},
 		},
+		{
+			name:         "err: authorization " + entity.RolesById[3],
+			payload:      req_akuntansi_kelompok_akun.Create{},
+			token:        tokens[entity.RolesById[3]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[4],
+			payload:      req_akuntansi_kelompok_akun.Create{},
+			token:        tokens[entity.RolesById[4]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[5],
+			payload:      req_akuntansi_kelompok_akun.Create{},
+			token:        tokens[entity.RolesById[5]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			code, body, err := test.GetJsonTestRequestResponse(app, "POST", "/api/v1/akuntansi/kelompok_akun", tt.payload, &token)
+			code, body, err := test.GetJsonTestRequestResponse(app, "POST", "/api/v1/akuntansi/kelompok_akun", tt.payload, &tt.token)
 			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedCode, code)
 			if len(tt.expectedBody.ErrorsMessages) > 0 {
@@ -122,12 +157,14 @@ func AkuntansiUpdateKelompokAkun(t *testing.T) {
 	idKelompokAkun2 = kelompokAkun2.ID
 	tests := []struct {
 		name         string
+		token        string
 		payload      req_akuntansi_kelompok_akun.Update
 		expectedBody test.Response
 		expectedCode int
 	}{
 		{
-			name: "sukses",
+			name:  "sukses",
+			token: tokens[entity.RolesById[1]],
 			payload: req_akuntansi_kelompok_akun.Update{
 				ID:           idKelompokAkun,
 				Nama:         "kelompok akun update",
@@ -141,7 +178,8 @@ func AkuntansiUpdateKelompokAkun(t *testing.T) {
 			},
 		},
 		{
-			name: "err: can't update default data",
+			name:  "err: can't update default data",
+			token: tokens[entity.RolesById[1]],
 			payload: req_akuntansi_kelompok_akun.Update{
 				ID:           static_data.DataKelompokAkun[0].ID,
 				Nama:         "can't update",
@@ -156,7 +194,8 @@ func AkuntansiUpdateKelompokAkun(t *testing.T) {
 			},
 		},
 		{
-			name: "err: conflict",
+			name:  "err: conflict",
+			token: tokens[entity.RolesById[1]],
 			payload: req_akuntansi_kelompok_akun.Update{
 				ID:           idKelompokAkun,
 				Nama:         "update conflict",
@@ -170,7 +209,8 @@ func AkuntansiUpdateKelompokAkun(t *testing.T) {
 			},
 		},
 		{
-			name: "err: tidak ditemukan",
+			name:  "err: tidak ditemukan",
+			token: tokens[entity.RolesById[1]],
 			payload: req_akuntansi_kelompok_akun.Update{
 				ID:           "01HM4B8QBH7MWAVAYP10WN6PKA",
 				Nama:         "update not found",
@@ -184,7 +224,8 @@ func AkuntansiUpdateKelompokAkun(t *testing.T) {
 			},
 		},
 		{
-			name: "err: kategori akun harus berupa salah satu dari [ASET,KEWAJIBAN,MODAL,PENDAPATAN,BEBAN]",
+			name:  "err: kategori akun harus berupa salah satu dari [ASET,KEWAJIBAN,MODAL,PENDAPATAN,BEBAN]",
+			token: tokens[entity.RolesById[1]],
 			payload: req_akuntansi_kelompok_akun.Update{
 				ID:           idKelompokAkun,
 				Nama:         "kelompok err kategori",
@@ -199,7 +240,8 @@ func AkuntansiUpdateKelompokAkun(t *testing.T) {
 			},
 		},
 		{
-			name: "err: ulid tidak valid",
+			name:  "err: ulid tidak valid",
+			token: tokens[entity.RolesById[1]],
 			payload: req_akuntansi_kelompok_akun.Update{
 				ID:           idKelompokAkun + "123",
 				Nama:         "kelompok ulid tidak valid",
@@ -213,11 +255,41 @@ func AkuntansiUpdateKelompokAkun(t *testing.T) {
 				ErrorsMessages: []string{"id tidak berupa ulid yang valid"},
 			},
 		},
+		{
+			name:         "err: authorization " + entity.RolesById[3],
+			payload:      req_akuntansi_kelompok_akun.Update{},
+			token:        tokens[entity.RolesById[3]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[4],
+			payload:      req_akuntansi_kelompok_akun.Update{},
+			token:        tokens[entity.RolesById[4]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[5],
+			payload:      req_akuntansi_kelompok_akun.Update{},
+			token:        tokens[entity.RolesById[5]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			code, body, err := test.GetJsonTestRequestResponse(app, "PUT", "/api/v1/akuntansi/kelompok_akun/"+tt.payload.ID, tt.payload, &token)
+			code, body, err := test.GetJsonTestRequestResponse(app, "PUT", "/api/v1/akuntansi/kelompok_akun/"+tt.payload.ID, tt.payload, &tt.token)
 			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedCode, code)
 			if len(tt.expectedBody.ErrorsMessages) > 0 {
@@ -235,12 +307,14 @@ func AkuntansiUpdateKelompokAkun(t *testing.T) {
 func AkuntansiGetAllKelompokAkun(t *testing.T) {
 	tests := []struct {
 		name         string
+		token        string
 		queryBody    string
 		expectedBody test.Response
 		expectedCode int
 	}{
 		{
 			name:         "sukses",
+			token:        tokens[entity.RolesById[1]],
 			expectedCode: 200,
 			expectedBody: test.Response{
 				Status: message.OK,
@@ -249,6 +323,7 @@ func AkuntansiGetAllKelompokAkun(t *testing.T) {
 		},
 		{ // same data with idKelompokAkun2
 			name:         "sukses with filter",
+			token:        tokens[entity.RolesById[1]],
 			queryBody:    "?nama=kelompok+akun+conflict&kode=11234&kategori_akun=" + entity.KategoriAkunByKode["1"],
 			expectedCode: 200,
 			expectedBody: test.Response{
@@ -258,6 +333,7 @@ func AkuntansiGetAllKelompokAkun(t *testing.T) {
 		},
 		{
 			name:         "sukses limit 1",
+			token:        tokens[entity.RolesById[1]],
 			queryBody:    "?limit=1",
 			expectedCode: 200,
 			expectedBody: test.Response{
@@ -267,6 +343,7 @@ func AkuntansiGetAllKelompokAkun(t *testing.T) {
 		},
 		{
 			name:         "sukses with next",
+			token:        tokens[entity.RolesById[1]],
 			queryBody:    "?next=" + idKelompokAkun,
 			expectedCode: 200,
 			expectedBody: test.Response{
@@ -276,6 +353,7 @@ func AkuntansiGetAllKelompokAkun(t *testing.T) {
 		},
 		{
 			name:         "err: kategori akun harus berupa salah satu dari [ASET,KEWAJIBAN,MODAL,PENDAPATAN,BEBAN]",
+			token:        tokens[entity.RolesById[1]],
 			expectedCode: 400,
 			queryBody:    "?kategori_akun=ABCD",
 			expectedBody: test.Response{
@@ -286,6 +364,7 @@ func AkuntansiGetAllKelompokAkun(t *testing.T) {
 		},
 		{
 			name:         "err: ulid tidak valid",
+			token:        tokens[entity.RolesById[1]],
 			expectedCode: 400,
 			queryBody:    "?next=01HQVTTJ1S2606JGTYYZ5NDKNR123",
 			expectedBody: test.Response{
@@ -294,11 +373,38 @@ func AkuntansiGetAllKelompokAkun(t *testing.T) {
 				ErrorsMessages: []string{"next tidak berupa ulid yang valid"},
 			},
 		},
+		{
+			name:         "err: authorization " + entity.RolesById[3],
+			token:        tokens[entity.RolesById[3]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[4],
+			token:        tokens[entity.RolesById[4]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[5],
+			token:        tokens[entity.RolesById[5]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			code, body, err := test.GetJsonTestRequestResponse(app, "GET", "/api/v1/akuntansi/kelompok_akun"+tt.queryBody, nil, &token)
+			code, body, err := test.GetJsonTestRequestResponse(app, "GET", "/api/v1/akuntansi/kelompok_akun"+tt.queryBody, nil, &tt.token)
 			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedCode, code)
 
@@ -348,11 +454,13 @@ func AkuntansiGetKelompokAkun(t *testing.T) {
 	tests := []struct {
 		id           string
 		name         string
+		token        string
 		expectedBody test.Response
 		expectedCode int
 	}{
 		{
 			name:         "sukses",
+			token:        tokens[entity.RolesById[1]],
 			id:           idKelompokAkun,
 			expectedCode: 200,
 			expectedBody: test.Response{
@@ -362,6 +470,7 @@ func AkuntansiGetKelompokAkun(t *testing.T) {
 		},
 		{
 			name:         "err: tidak ditemukan",
+			token:        tokens[entity.RolesById[1]],
 			id:           "01HM4B8QBH7MWAVAYP10WN6PKA",
 			expectedCode: 404,
 			expectedBody: test.Response{
@@ -371,6 +480,7 @@ func AkuntansiGetKelompokAkun(t *testing.T) {
 		},
 		{
 			name:         "err: ulid tidak valid",
+			token:        tokens[entity.RolesById[1]],
 			id:           "01HQVTTJ1S2606JGTYYZ5NDKNR123",
 			expectedCode: 400,
 			expectedBody: test.Response{
@@ -379,11 +489,41 @@ func AkuntansiGetKelompokAkun(t *testing.T) {
 				ErrorsMessages: []string{"id tidak berupa ulid yang valid"},
 			},
 		},
+		{
+			name:         "err: authorization " + entity.RolesById[3],
+			id:           idKelompokAkun,
+			token:        tokens[entity.RolesById[3]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[4],
+			id:           idKelompokAkun,
+			token:        tokens[entity.RolesById[4]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[5],
+			id:           idKelompokAkun,
+			token:        tokens[entity.RolesById[5]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			code, body, err := test.GetJsonTestRequestResponse(app, "GET", "/api/v1/akuntansi/kelompok_akun/"+tt.id, nil, &token)
+			code, body, err := test.GetJsonTestRequestResponse(app, "GET", "/api/v1/akuntansi/kelompok_akun/"+tt.id, nil, &tt.token)
 			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedCode, code)
 
@@ -415,12 +555,14 @@ func AkuntansiGetKelompokAkun(t *testing.T) {
 func AkuntansiDeleteKelompokAkun(t *testing.T) {
 	tests := []struct {
 		name         string
+		token        string
 		id           string
 		expectedBody test.Response
 		expectedCode int
 	}{
 		{
 			name:         "sukses",
+			token:        tokens[entity.RolesById[1]],
 			id:           idKelompokAkun,
 			expectedCode: 200,
 			expectedBody: test.Response{
@@ -430,6 +572,7 @@ func AkuntansiDeleteKelompokAkun(t *testing.T) {
 		},
 		{
 			name:         "err: tidak ditemukan",
+			token:        tokens[entity.RolesById[1]],
 			id:           "01HM4B8QBH7MWAVAYP10WN6PKA",
 			expectedCode: 404,
 			expectedBody: test.Response{
@@ -439,6 +582,7 @@ func AkuntansiDeleteKelompokAkun(t *testing.T) {
 		},
 		{
 			name:         "err: can't delete default data",
+			token:        tokens[entity.RolesById[1]],
 			id:           static_data.DataKelompokAkun[0].ID,
 			expectedCode: 400,
 			expectedBody: test.Response{
@@ -449,6 +593,7 @@ func AkuntansiDeleteKelompokAkun(t *testing.T) {
 		},
 		{
 			name:         "err: ulid tidak valid",
+			token:        tokens[entity.RolesById[1]],
 			id:           idKelompokAkun + "123",
 			expectedCode: 400,
 			expectedBody: test.Response{
@@ -457,11 +602,41 @@ func AkuntansiDeleteKelompokAkun(t *testing.T) {
 				ErrorsMessages: []string{"id tidak berupa ulid yang valid"},
 			},
 		},
+		{
+			name:         "err: authorization " + entity.RolesById[3],
+			id:           idKelompokAkun,
+			token:        tokens[entity.RolesById[3]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[4],
+			id:           idKelompokAkun,
+			token:        tokens[entity.RolesById[4]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[5],
+			id:           idKelompokAkun,
+			token:        tokens[entity.RolesById[5]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			code, body, err := test.GetJsonTestRequestResponse(app, "DELETE", "/api/v1/akuntansi/kelompok_akun/"+tt.id, nil, &token)
+			code, body, err := test.GetJsonTestRequestResponse(app, "DELETE", "/api/v1/akuntansi/kelompok_akun/"+tt.id, nil, &tt.token)
 			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedCode, code)
 			if len(tt.expectedBody.ErrorsMessages) > 0 {

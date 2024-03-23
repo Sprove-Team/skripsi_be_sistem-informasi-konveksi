@@ -105,12 +105,12 @@ func main() {
 		akuntansiRoute := route.NewAkuntansiRoute(akuntansiHandler, authMid)
 		akuntansiGroup := v1.Group("/akuntansi")
 		{
-			akuntansiGroup.Route("", akuntansiRoute.Akuntansi) // pelaporan akuntansi
 			akuntansiGroup.Route("/akun", akuntansiRoute.Akun)
 			akuntansiGroup.Route("/kontak", akuntansiRoute.Kontak)
 			akuntansiGroup.Route("/kelompok_akun", akuntansiRoute.KelompokAkun)
 			akuntansiGroup.Route("/transaksi", akuntansiRoute.Transaksi)
 			akuntansiGroup.Route("/hutang_piutang", akuntansiRoute.HutangPiutang)
+			akuntansiGroup.Route("", akuntansiRoute.Akuntansi) // pelaporan akuntansi
 		}
 
 		// invoice
@@ -118,8 +118,8 @@ func main() {
 		invoiceRoute := route.NewInvoiceRoute(invoiceHandler, authMid)
 		invoiceGroup := v1.Group("/invoice")
 		{
-			invoiceGroup.Route("", invoiceRoute.Invoice)
 			invoiceGroup.Route("/data_bayar", invoiceRoute.DataBayarInvoice)
+			invoiceGroup.Route("", invoiceRoute.Invoice)
 		}
 
 		// tugas
@@ -127,8 +127,8 @@ func main() {
 		tugasRoute := route.NewTugasRoute(tugasHandler, authMid)
 		tugasGroup := v1.Group("/tugas")
 		{
-			tugasGroup.Route("", tugasRoute.Tugas)
 			tugasGroup.Route("/sub_tugas", tugasRoute.SubTugas)
+			tugasGroup.Route("", tugasRoute.Tugas)
 		}
 
 		// profile

@@ -3,7 +3,6 @@ package uc_akuntansi_hp
 import (
 	"context"
 	"errors"
-	"fmt"
 	"math"
 	"strings"
 	"sync"
@@ -113,7 +112,6 @@ func (u *hutangPiutangUsecase) CreateDataHP(param ParamCreateDataHp) (*entity.Hu
 		akunMap[akun.ID] = akun
 	}
 
-	fmt.Println("akun pembayaran -> ", akunYgAkanDibayar.Nama)
 	// cek kelompok akun yang akaun dibayar sesuai dengan jenis hutang/piutang
 	// validasi ini ada untuk menghindari pengurangan atau penambahan ayat jurnal pada akun hp yang salah
 	if akunYgAkanDibayar.ID == "" || !strings.EqualFold(akunYgAkanDibayar.KelompokAkun.Nama, param.Req.Jenis) {

@@ -17,15 +17,17 @@ func UserCreateSpv(t *testing.T) {
 	tests := []struct {
 		name         string
 		payload      req_user_jenis_spv.Create
+		token        string
 		expectedBody test.Response
 		expectedCode int
 	}{
 		{
 			name: "sukses",
 			payload: req_user_jenis_spv.Create{
-				Nama: "belanja",
+				Nama: "test_belanja",
 			},
 			expectedCode: 201,
+			token:        tokens[entity.RolesById[1]],
 			expectedBody: test.Response{
 				Status: message.Created,
 				Code:   201,
@@ -34,8 +36,9 @@ func UserCreateSpv(t *testing.T) {
 		{
 			name: "err: conflict",
 			payload: req_user_jenis_spv.Create{
-				Nama: "belanja",
+				Nama: "test_belanja",
 			},
+			token:        tokens[entity.RolesById[1]],
 			expectedCode: 409,
 			expectedBody: test.Response{
 				Status: fiber.ErrConflict.Message,
@@ -47,6 +50,7 @@ func UserCreateSpv(t *testing.T) {
 			payload: req_user_jenis_spv.Create{
 				Nama: "",
 			},
+			token:        tokens[entity.RolesById[1]],
 			expectedCode: 400,
 			expectedBody: test.Response{
 				Status:         fiber.ErrBadRequest.Message,
@@ -54,11 +58,51 @@ func UserCreateSpv(t *testing.T) {
 				ErrorsMessages: []string{"nama wajib diisi"},
 			},
 		},
+		{
+			name:         "err: authorization " + entity.RolesById[2],
+			payload:      req_user_jenis_spv.Create{},
+			token:        tokens[entity.RolesById[2]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[3],
+			payload:      req_user_jenis_spv.Create{},
+			token:        tokens[entity.RolesById[3]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[4],
+			payload:      req_user_jenis_spv.Create{},
+			token:        tokens[entity.RolesById[4]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[5],
+			payload:      req_user_jenis_spv.Create{},
+			token:        tokens[entity.RolesById[5]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			code, body, err := test.GetJsonTestRequestResponse(app, "POST", "/api/v1/user/jenis_spv", tt.payload, &token)
+			code, body, err := test.GetJsonTestRequestResponse(app, "POST", "/api/v1/user/jenis_spv", tt.payload, &tt.token)
 			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedCode, code)
 			if len(tt.expectedBody.ErrorsMessages) > 0 {
@@ -77,16 +121,17 @@ var idSpv string
 
 func UserUpdateSpv(t *testing.T) {
 	spv := new(entity.JenisSpv)
-	err := dbt.Select("id").First(spv).Error
+	err := dbt.Where("id NOT IN (?)", idsDefaultSpv).Select("id").First(spv).Error
 	if err != nil {
 		helper.LogsError(err)
 		return
 	}
+
 	spvConflict := &entity.JenisSpv{
 		Base: entity.Base{
 			ID: test.UlidPkg.MakeUlid().String(),
 		},
-		Nama: "conflict",
+		Nama: "test_conflict",
 	}
 	err = dbt.Create(spvConflict).Error
 	if err != nil {
@@ -96,15 +141,17 @@ func UserUpdateSpv(t *testing.T) {
 	idSpv = spv.ID
 	tests := []struct {
 		name         string
+		token        string
 		payload      req_user_jenis_spv.Update
 		expectedBody test.Response
 		expectedCode int
 	}{
 		{
-			name: "sukses",
+			name:  "sukses",
+			token: tokens[entity.RolesById[1]],
 			payload: req_user_jenis_spv.Update{
 				ID:   spv.ID,
-				Nama: "bordir",
+				Nama: "test_bordir",
 			},
 			expectedCode: 200,
 			expectedBody: test.Response{
@@ -113,7 +160,8 @@ func UserUpdateSpv(t *testing.T) {
 			},
 		},
 		{
-			name: "err: conflict",
+			name:  "err: conflict",
+			token: tokens[entity.RolesById[1]],
 			payload: req_user_jenis_spv.Update{
 				ID:   spv.ID,
 				Nama: spvConflict.Nama,
@@ -125,10 +173,11 @@ func UserUpdateSpv(t *testing.T) {
 			},
 		},
 		{
-			name: "err: tidak ditemukan",
+			name:  "err: tidak ditemukan",
+			token: tokens[entity.RolesById[1]],
 			payload: req_user_jenis_spv.Update{
 				ID:   "01HM4B8QBH7MWAVAYP10WN6PKB",
-				Nama: "bordir2",
+				Nama: "test_bordir2",
 			},
 			expectedCode: 404,
 			expectedBody: test.Response{
@@ -137,10 +186,11 @@ func UserUpdateSpv(t *testing.T) {
 			},
 		},
 		{
-			name: "err: ulid tidak valid",
+			name:  "err: ulid tidak valid",
+			token: tokens[entity.RolesById[1]],
 			payload: req_user_jenis_spv.Update{
 				ID:   spv.ID + "123",
-				Nama: "bordir3",
+				Nama: "test_bordir3",
 			},
 			expectedCode: 400,
 			expectedBody: test.Response{
@@ -149,11 +199,51 @@ func UserUpdateSpv(t *testing.T) {
 				ErrorsMessages: []string{"id tidak berupa ulid yang valid"},
 			},
 		},
+		{
+			name:         "err: authorization " + entity.RolesById[2],
+			payload:      req_user_jenis_spv.Update{},
+			token:        tokens[entity.RolesById[2]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[3],
+			payload:      req_user_jenis_spv.Update{},
+			token:        tokens[entity.RolesById[3]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[4],
+			payload:      req_user_jenis_spv.Update{},
+			token:        tokens[entity.RolesById[4]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[5],
+			payload:      req_user_jenis_spv.Update{},
+			token:        tokens[entity.RolesById[5]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			code, body, err := test.GetJsonTestRequestResponse(app, "PUT", "/api/v1/user/jenis_spv/"+tt.payload.ID, tt.payload, &token)
+			code, body, err := test.GetJsonTestRequestResponse(app, "PUT", "/api/v1/user/jenis_spv/"+tt.payload.ID, tt.payload, &tt.token)
 			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedCode, code)
 			if len(tt.expectedBody.ErrorsMessages) > 0 {
@@ -171,11 +261,13 @@ func UserUpdateSpv(t *testing.T) {
 func UserGetAllSpv(t *testing.T) {
 	tests := []struct {
 		name         string
+		token        string
 		expectedBody test.Response
 		expectedCode int
 	}{
 		{
 			name:         "sukses",
+			token:        tokens[entity.RolesById[1]],
 			expectedCode: 200,
 			expectedBody: test.Response{
 				Status: message.OK,
@@ -186,7 +278,7 @@ func UserGetAllSpv(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			code, body, err := test.GetJsonTestRequestResponse(app, "GET", "/api/v1/user/jenis_spv", nil, &token)
+			code, body, err := test.GetJsonTestRequestResponse(app, "GET", "/api/v1/user/jenis_spv", nil, &tt.token)
 			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedCode, code)
 			var res []any
@@ -208,12 +300,14 @@ func UserGetAllSpv(t *testing.T) {
 func UserDeleteSpv(t *testing.T) {
 	tests := []struct {
 		name         string
+		token        string
 		id           string
 		expectedBody test.Response
 		expectedCode int
 	}{
 		{
 			name:         "sukses",
+			token:        tokens[entity.RolesById[1]],
 			id:           idSpv,
 			expectedCode: 200,
 			expectedBody: test.Response{
@@ -223,6 +317,7 @@ func UserDeleteSpv(t *testing.T) {
 		},
 		{
 			name:         "err: tidak ditemukan",
+			token:        tokens[entity.RolesById[1]],
 			id:           "01HM4B8QBH7MWAVAYP10WN6PKA",
 			expectedCode: 404,
 			expectedBody: test.Response{
@@ -232,6 +327,7 @@ func UserDeleteSpv(t *testing.T) {
 		},
 		{
 			name:         "err: ulid tidak valid",
+			token:        tokens[entity.RolesById[1]],
 			id:           idSpv + "123",
 			expectedCode: 400,
 			expectedBody: test.Response{
@@ -240,11 +336,51 @@ func UserDeleteSpv(t *testing.T) {
 				ErrorsMessages: []string{"id tidak berupa ulid yang valid"},
 			},
 		},
+		{
+			name:         "err: authorization " + entity.RolesById[2],
+			id:           idSpv,
+			token:        tokens[entity.RolesById[2]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[3],
+			id:           idSpv,
+			token:        tokens[entity.RolesById[3]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[4],
+			id:           idSpv,
+			token:        tokens[entity.RolesById[4]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[5],
+			id:           idSpv,
+			token:        tokens[entity.RolesById[5]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			code, body, err := test.GetJsonTestRequestResponse(app, "DELETE", "/api/v1/user/jenis_spv/"+tt.id, nil, &token)
+			code, body, err := test.GetJsonTestRequestResponse(app, "DELETE", "/api/v1/user/jenis_spv/"+tt.id, nil, &tt.token)
 			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedCode, code)
 			if len(tt.expectedBody.ErrorsMessages) > 0 {

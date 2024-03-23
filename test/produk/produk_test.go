@@ -17,12 +17,14 @@ import (
 func ProdukCreate(t *testing.T) {
 	tests := []struct {
 		name         string
+		token        string
 		payload      req_produk.Create
 		expectedBody test.Response
 		expectedCode int
 	}{
 		{
-			name: "sukses",
+			name:  "sukses",
+			token: tokens[entity.RolesById[1]],
 			payload: req_produk.Create{
 				Nama:       "apparel premium jaket 24",
 				KategoriID: idKategori,
@@ -34,7 +36,8 @@ func ProdukCreate(t *testing.T) {
 			},
 		},
 		{
-			name: "err: conflict",
+			name:  "err: conflict",
+			token: tokens[entity.RolesById[1]],
 			payload: req_produk.Create{
 				Nama:       "apparel premium jaket 24",
 				KategoriID: idKategori,
@@ -46,7 +49,8 @@ func ProdukCreate(t *testing.T) {
 			},
 		},
 		{
-			name: "err: kategori produk not found",
+			name:  "err: kategori produk not found",
+			token: tokens[entity.RolesById[1]],
 			payload: req_produk.Create{
 				Nama:       "apparel premium jaket 25",
 				KategoriID: "01HQVTTJ1S2606JGTYYZ5NDKNZ",
@@ -59,7 +63,8 @@ func ProdukCreate(t *testing.T) {
 			},
 		},
 		{
-			name: "err: ulid tidak valid",
+			name:  "err: ulid tidak valid",
+			token: tokens[entity.RolesById[1]],
 			payload: req_produk.Create{
 				Nama:       "apparel premium jaket 25",
 				KategoriID: "01HQVTTJ1S2606JGTYYZ5NDKNZ123",
@@ -72,7 +77,8 @@ func ProdukCreate(t *testing.T) {
 			},
 		},
 		{
-			name: "err: wajib diisi",
+			name:  "err: wajib diisi",
+			token: tokens[entity.RolesById[1]],
 			payload: req_produk.Create{
 				Nama:       "",
 				KategoriID: "",
@@ -84,11 +90,51 @@ func ProdukCreate(t *testing.T) {
 				ErrorsMessages: []string{"nama wajib diisi", "kategori id wajib diisi"},
 			},
 		},
+		{
+			name:         "err: authorization " + entity.RolesById[2],
+			payload:      req_produk.Create{},
+			token:        tokens[entity.RolesById[2]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[3],
+			payload:      req_produk.Create{},
+			token:        tokens[entity.RolesById[3]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[4],
+			payload:      req_produk.Create{},
+			token:        tokens[entity.RolesById[4]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[5],
+			payload:      req_produk.Create{},
+			token:        tokens[entity.RolesById[5]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			code, body, err := test.GetJsonTestRequestResponse(app, "POST", "/api/v1/produk", tt.payload, &token)
+			code, body, err := test.GetJsonTestRequestResponse(app, "POST", "/api/v1/produk", tt.payload, &tt.token)
 			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedCode, code)
 			if len(tt.expectedBody.ErrorsMessages) > 0 {
@@ -129,12 +175,14 @@ func ProdukUpdate(t *testing.T) {
 	}
 	tests := []struct {
 		name         string
+		token        string
 		payload      req_produk.Update
 		expectedBody test.Response
 		expectedCode int
 	}{
 		{
-			name: "sukses",
+			name:  "sukses",
+			token: tokens[entity.RolesById[1]],
 			payload: req_produk.Update{
 				Nama:       "apparel premium jaket 25",
 				ID:         produk.ID,
@@ -147,7 +195,8 @@ func ProdukUpdate(t *testing.T) {
 			},
 		},
 		{
-			name: "err: tidak ditemukan",
+			name:  "err: tidak ditemukan",
+			token: tokens[entity.RolesById[1]],
 			payload: req_produk.Update{
 				Nama:       "apparel premium jaket 25",
 				ID:         "01HQVTTJ1S2606JGTYYZ5NDKNZ",
@@ -160,7 +209,8 @@ func ProdukUpdate(t *testing.T) {
 			},
 		},
 		{
-			name: "err: kategori produk tidak ditemukan",
+			name:  "err: kategori produk tidak ditemukan",
+			token: tokens[entity.RolesById[1]],
 			payload: req_produk.Update{
 				Nama:       "apparel premium jaket 25",
 				ID:         produk.ID,
@@ -174,7 +224,8 @@ func ProdukUpdate(t *testing.T) {
 			},
 		},
 		{
-			name: "err: ulid tidak valid",
+			name:  "err: ulid tidak valid",
+			token: tokens[entity.RolesById[1]],
 			payload: req_produk.Update{
 				Nama:       "apparel premium jaket 25",
 				ID:         "01HQVTTJ1S2606JGTYYZ5NDKNZ123",
@@ -187,11 +238,51 @@ func ProdukUpdate(t *testing.T) {
 				ErrorsMessages: []string{"id tidak berupa ulid yang valid", "kategori id tidak berupa ulid yang valid"},
 			},
 		},
+		{
+			name:         "err: authorization " + entity.RolesById[2],
+			payload:      req_produk.Update{},
+			token:        tokens[entity.RolesById[2]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[3],
+			payload:      req_produk.Update{},
+			token:        tokens[entity.RolesById[3]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[4],
+			payload:      req_produk.Update{},
+			token:        tokens[entity.RolesById[4]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[5],
+			payload:      req_produk.Update{},
+			token:        tokens[entity.RolesById[5]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			code, body, err := test.GetJsonTestRequestResponse(app, "PUT", "/api/v1/produk/"+tt.payload.ID, tt.payload, &token)
+			code, body, err := test.GetJsonTestRequestResponse(app, "PUT", "/api/v1/produk/"+tt.payload.ID, tt.payload, &tt.token)
 			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedCode, code)
 			if len(tt.expectedBody.ErrorsMessages) > 0 {
@@ -235,12 +326,14 @@ func ProdukGetAll(t *testing.T) {
 
 	tests := []struct {
 		name         string
+		token        string
 		queryBody    string
 		expectedBody test.Response
 		expectedCode int
 	}{
 		{
 			name:         "sukses",
+			token:        tokens[entity.RolesById[1]],
 			expectedCode: 200,
 			expectedBody: test.Response{
 				Status: message.OK,
@@ -249,6 +342,7 @@ func ProdukGetAll(t *testing.T) {
 		},
 		{
 			name:         "sukses with: filter nama",
+			token:        tokens[entity.RolesById[1]],
 			queryBody:    "?nama=apparel",
 			expectedCode: 200,
 			expectedBody: test.Response{
@@ -258,6 +352,7 @@ func ProdukGetAll(t *testing.T) {
 		},
 		{
 			name:         "sukses with: filter harga detail `NOT_EMPTY`",
+			token:        tokens[entity.RolesById[1]],
 			queryBody:    "?harga_detail=NOT_EMPTY",
 			expectedCode: 200,
 			expectedBody: test.Response{
@@ -267,6 +362,7 @@ func ProdukGetAll(t *testing.T) {
 		},
 		{
 			name:         "sukses with: filter harga detail `EMPTY`",
+			token:        tokens[entity.RolesById[1]],
 			queryBody:    "?harga_detail=EMPTY",
 			expectedCode: 200,
 			expectedBody: test.Response{
@@ -276,6 +372,7 @@ func ProdukGetAll(t *testing.T) {
 		},
 		{
 			name:         "sukses with next",
+			token:        tokens[entity.RolesById[1]],
 			queryBody:    "?next=" + idProduk,
 			expectedCode: 200,
 			expectedBody: test.Response{
@@ -285,6 +382,7 @@ func ProdukGetAll(t *testing.T) {
 		},
 		{
 			name:         "sukses limit 1",
+			token:        tokens[entity.RolesById[1]],
 			queryBody:    "?limit=1",
 			expectedCode: 200,
 			expectedBody: test.Response{
@@ -294,6 +392,7 @@ func ProdukGetAll(t *testing.T) {
 		},
 		{
 			name:         "err: ulid tidak valid",
+			token:        tokens[entity.RolesById[1]],
 			expectedCode: 400,
 			queryBody:    "?next=01HQVTTJ1S2606JGTYYZ5NDKNR123",
 			expectedBody: test.Response{
@@ -304,6 +403,7 @@ func ProdukGetAll(t *testing.T) {
 		},
 		{
 			name:         "err: value harus berupa [EMPTY,NOT_EMPTY]",
+			token:        tokens[entity.RolesById[1]],
 			expectedCode: 400,
 			queryBody:    "?harga_detail=abcd",
 			expectedBody: test.Response{
@@ -312,11 +412,47 @@ func ProdukGetAll(t *testing.T) {
 				ErrorsMessages: []string{"harga detail harus berupa salah satu dari [EMPTY,NOT_EMPTY]"},
 			},
 		},
+		{
+			name:         "err: authorization " + entity.RolesById[2],
+			token:        tokens[entity.RolesById[2]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[3],
+			token:        tokens[entity.RolesById[3]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[4],
+			token:        tokens[entity.RolesById[4]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[5],
+			token:        tokens[entity.RolesById[5]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			code, body, err := test.GetJsonTestRequestResponse(app, "GET", "/api/v1/produk"+tt.queryBody, nil, &token)
+			code, body, err := test.GetJsonTestRequestResponse(app, "GET", "/api/v1/produk"+tt.queryBody, nil, &tt.token)
 			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedCode, code)
 			var res []map[string]any
@@ -372,12 +508,14 @@ func ProdukGetAll(t *testing.T) {
 func ProdukGet(t *testing.T) {
 	tests := []struct {
 		id           string
+		token        string
 		name         string
 		expectedBody test.Response
 		expectedCode int
 	}{
 		{
 			name:         "sukses without: harga detail",
+			token:        tokens[entity.RolesById[1]],
 			id:           idProduk,
 			expectedCode: 200,
 			expectedBody: test.Response{
@@ -387,6 +525,7 @@ func ProdukGet(t *testing.T) {
 		},
 		{
 			name:         "sukses with: harga detail",
+			token:        tokens[entity.RolesById[1]],
 			id:           idProdukHasHargaDetail,
 			expectedCode: 200,
 			expectedBody: test.Response{
@@ -396,6 +535,7 @@ func ProdukGet(t *testing.T) {
 		},
 		{
 			name:         "err: tidak ditemukan",
+			token:        tokens[entity.RolesById[1]],
 			id:           "01HM4B8QBH7MWAVAYP10WN6PKA",
 			expectedCode: 404,
 			expectedBody: test.Response{
@@ -405,6 +545,7 @@ func ProdukGet(t *testing.T) {
 		},
 		{
 			name:         "err: ulid tidak valid",
+			token:        tokens[entity.RolesById[1]],
 			id:           "01HQVTTJ1S2606JGTYYZ5NDKNR123",
 			expectedCode: 400,
 			expectedBody: test.Response{
@@ -413,11 +554,51 @@ func ProdukGet(t *testing.T) {
 				ErrorsMessages: []string{"id tidak berupa ulid yang valid"},
 			},
 		},
+		{
+			name:         "err: authorization " + entity.RolesById[2],
+			id:           idProduk,
+			token:        tokens[entity.RolesById[2]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[3],
+			id:           idProduk,
+			token:        tokens[entity.RolesById[3]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[4],
+			id:           idProduk,
+			token:        tokens[entity.RolesById[4]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[5],
+			id:           idProduk,
+			token:        tokens[entity.RolesById[5]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			code, body, err := test.GetJsonTestRequestResponse(app, "GET", "/api/v1/produk/"+tt.id, nil, &token)
+			code, body, err := test.GetJsonTestRequestResponse(app, "GET", "/api/v1/produk/"+tt.id, nil, &tt.token)
 			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedCode, code)
 
@@ -466,12 +647,14 @@ func ProdukGet(t *testing.T) {
 func ProdukDelete(t *testing.T) {
 	tests := []struct {
 		name         string
+		token        string
 		id           string
 		expectedBody test.Response
 		expectedCode int
 	}{
 		{
 			name:         "sukses",
+			token:        tokens[entity.RolesById[1]],
 			id:           idProduk,
 			expectedCode: 200,
 			expectedBody: test.Response{
@@ -481,6 +664,7 @@ func ProdukDelete(t *testing.T) {
 		},
 		{
 			name:         "err: tidak ditemukan",
+			token:        tokens[entity.RolesById[1]],
 			id:           "01HM4B8QBH7MWAVAYP10WN6PKA",
 			expectedCode: 404,
 			expectedBody: test.Response{
@@ -490,6 +674,7 @@ func ProdukDelete(t *testing.T) {
 		},
 		{
 			name:         "err: ulid tidak valid",
+			token:        tokens[entity.RolesById[1]],
 			id:           idProduk + "123",
 			expectedCode: 400,
 			expectedBody: test.Response{
@@ -498,11 +683,51 @@ func ProdukDelete(t *testing.T) {
 				ErrorsMessages: []string{"id tidak berupa ulid yang valid"},
 			},
 		},
+		{
+			name:         "err: authorization " + entity.RolesById[2],
+			id:           idProduk,
+			token:        tokens[entity.RolesById[2]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[3],
+			id:           idProduk,
+			token:        tokens[entity.RolesById[3]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[4],
+			id:           idProduk,
+			token:        tokens[entity.RolesById[4]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[5],
+			id:           idProduk,
+			token:        tokens[entity.RolesById[5]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			code, body, err := test.GetJsonTestRequestResponse(app, "DELETE", "/api/v1/produk/"+tt.id, nil, &token)
+			code, body, err := test.GetJsonTestRequestResponse(app, "DELETE", "/api/v1/produk/"+tt.id, nil, &tt.token)
 			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedCode, code)
 			if len(tt.expectedBody.ErrorsMessages) > 0 {

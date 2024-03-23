@@ -87,11 +87,16 @@ func (h *subTugasHandler) Update(c *fiber.Ctx) error {
 	if errValidate != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(errValidate)
 	}
+	claims, ok := c.Locals("user").(*pkg.Claims)
+	if !ok {
+		return c.Status(fiber.StatusInternalServerError).JSON(res_global.ErrorRes(fiber.ErrInternalServerError.Code, fiber.ErrInternalServerError.Message, nil))
+	}
 
 	ctx := c.UserContext()
 	err := h.uc.Update(uc_sub_tugas.ParamUpdate{
-		Ctx: ctx,
-		Req: *req,
+		Ctx:    ctx,
+		Claims: claims,
+		Req:    *req,
 	})
 
 	if err != nil {

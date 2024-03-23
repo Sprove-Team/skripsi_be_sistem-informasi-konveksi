@@ -107,17 +107,26 @@ func (dbgc *DBGorm) InitDBGorm(ulid pkg.UlidPkg) *gorm.DB {
 		}
 		return nil
 	})
-	// default value for users
+	// default value for users & jenis spv
 	g.Go(func() error {
-		err = addDefultValues(db, static_data.DefaultUserDirektur)
+		err := addDefultValues(db, static_data.DefaultSupervisor)
 		if err != nil {
-			return err
+			if err.Error() != "duplicated key not allowed" {
+				return err
+			}
+		}
+		err = addDefultValues(db, static_data.DefaultUsers)
+		if err != nil {
+			if err.Error() != "duplicated key not allowed" {
+				return err
+			}
 		}
 		return nil
 	})
 
 	if err := g.Wait(); err != nil {
 		if err.Error() != "duplicated key not allowed" {
+			helper.LogsError(err)
 			os.Exit(1)
 		}
 	}
@@ -139,7 +148,6 @@ func autoMigrateEntities(db *gorm.DB, entities ...interface{}) {
 }
 
 func addDefultValues(db *gorm.DB, values ...interface{}) error {
-	// fmt.Println(golAkun)
 	err := db.Transaction(func(tx *gorm.DB) error {
 		for _, v := range values {
 			if err := tx.Create(v).Error; err != nil {

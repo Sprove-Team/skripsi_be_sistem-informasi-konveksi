@@ -3,6 +3,7 @@ package static_data
 import (
 	"fmt"
 
+	req_auth "github.com/be-sistem-informasi-konveksi/common/request/auth"
 	"github.com/be-sistem-informasi-konveksi/entity"
 	"github.com/be-sistem-informasi-konveksi/helper"
 	"github.com/be-sistem-informasi-konveksi/pkg"
@@ -158,18 +159,111 @@ var (
 )
 
 // user
-var PlainPassword = "direktur123456"
-var DefaultUserDirektur = &entity.User{
-	Base: entity.Base{
-		ID: "01HR4MEJQVFC6WD6RTJQC1TPSJ",
+var getId = func() string {
+	return pkg.NewUlidPkg().MakeUlid().String()
+}
+var CredentialUsers = map[string]req_auth.Login{
+	entity.RolesById[1]: {
+		Username: "akun_direktur",
+		Password: "direktur123456",
 	},
-	Nama:     "akun_direktur",
-	Role:     entity.RolesById[1],
-	Username: "direktur",
-	Password: func() string {
-		pass, _ := helper.NewEncryptor().HashPassword(PlainPassword)
-		return pass
-	}(),
-	NoTelp: "+62895397290606",
-	Alamat: "angantaka",
+	entity.RolesById[2]: {
+		Username: "akun_bendahara",
+		Password: "bendahara123456",
+	},
+	entity.RolesById[3]: {
+		Username: "akun_admin",
+		Password: "admin123456",
+	},
+	entity.RolesById[4]: {
+		Username: "akun_manajerproduksi",
+		Password: "manajerproduksi123456",
+	},
+	entity.RolesById[5]: {
+		Username: "akun_supervisorbelanja",
+		Password: "supservisorbelanja123456",
+	},
+}
+
+var DefaultSupervisor = []entity.JenisSpv{
+	{
+		Base: entity.Base{
+			ID: "01HSN8C1KV0TZBMHPTPR8AAZT8",
+		},
+		Nama: "belanja",
+	},
+}
+
+var DefaultUsers = []entity.User{
+	{
+		Base: entity.Base{
+			ID: "01HSN8C1KV0TZBMHPTPTJNTY88",
+		},
+		Nama:     "akun_direktur",
+		Role:     entity.RolesById[1],
+		Username: CredentialUsers[entity.RolesById[1]].Username,
+		Password: func() string {
+			pass, _ := helper.NewEncryptor().HashPassword(CredentialUsers[entity.RolesById[1]].Password)
+			return pass
+		}(),
+		NoTelp: "+62895397290606",
+		Alamat: "angantaka",
+	},
+	{
+		Base: entity.Base{
+			ID: "01HSN8C1PK0NNVS3AD3PHJ4D54",
+		},
+		Nama:     "akun_bendahara",
+		Role:     entity.RolesById[2],
+		Username: CredentialUsers[entity.RolesById[2]].Username,
+		Password: func() string {
+			pass, _ := helper.NewEncryptor().HashPassword(CredentialUsers[entity.RolesById[2]].Password)
+			return pass
+		}(),
+		NoTelp: "+62895397290607",
+		Alamat: "angantaka2",
+	},
+	{
+		Base: entity.Base{
+			ID: "01HSN8C1SYNMCFP6RZMDK3DDGE",
+		},
+		Nama:     "akun_admin",
+		Role:     entity.RolesById[3],
+		Username: CredentialUsers[entity.RolesById[3]].Username,
+		Password: func() string {
+			pass, _ := helper.NewEncryptor().HashPassword(CredentialUsers[entity.RolesById[3]].Password)
+			return pass
+		}(),
+		NoTelp: "+62895397290608",
+		Alamat: "angantaka3",
+	},
+	{
+		Base: entity.Base{
+			ID: "01HSN8C1WYR5CTWGQKMQ6JTFAR",
+		},
+		Nama:     "akun_manajerproduksi",
+		Role:     entity.RolesById[4],
+		Username: CredentialUsers[entity.RolesById[4]].Username,
+		Password: func() string {
+			pass, _ := helper.NewEncryptor().HashPassword(CredentialUsers[entity.RolesById[4]].Password)
+			return pass
+		}(),
+		NoTelp: "+62895397290609",
+		Alamat: "angantaka4",
+	},
+	{
+		Base: entity.Base{
+			ID: "01HSN8C1ZW2W5R29PYQBEXZACP",
+		},
+		Nama:     "akun_supervisorbelanja",
+		Role:     entity.RolesById[5],
+		Username: CredentialUsers[entity.RolesById[5]].Username,
+		Password: func() string {
+			pass, _ := helper.NewEncryptor().HashPassword(CredentialUsers[entity.RolesById[5]].Password)
+			return pass
+		}(),
+		NoTelp:     "+62895397290610",
+		Alamat:     "angantaka5",
+		JenisSpvID: DefaultSupervisor[0].ID,
+	},
 }

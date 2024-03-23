@@ -18,8 +18,9 @@ type (
 		Req req_sub_tugas.CreateByTugasId
 	}
 	ParamUpdate struct {
-		Ctx context.Context
-		Req req_sub_tugas.Update
+		Ctx    context.Context
+		Claims *pkg.Claims
+		Req    req_sub_tugas.Update
 	}
 	ParamDelete struct {
 		Ctx context.Context
@@ -74,17 +75,25 @@ func (u *subTugasUsecase) Update(param ParamUpdate) error {
 		return err
 	}
 
-	err := u.repo.Update(repo_sub_tugas.ParamUpdate{
-		Ctx: param.Ctx,
-		NewSubTugas: &entity.SubTugas{
-			Base: entity.Base{
-				ID: param.Req.ID,
-			},
-			Nama:      param.Req.Nama,
-			Deskripsi: param.Req.Deskripsi,
-			Status:    param.Req.Status,
+	newSubTugas := &entity.SubTugas{
+		Base: entity.Base{
+			ID: param.Req.ID,
 		},
+	}
+
+	if param.Claims.Role == entity.RolesById[5] {
+		newSubTugas.Status = param.Req.Status
+	} else {
+		newSubTugas.Nama = param.Req.Nama
+		newSubTugas.Deskripsi = param.Req.Deskripsi
+		newSubTugas.Status = param.Req.Status
+	}
+
+	err := u.repo.Update(repo_sub_tugas.ParamUpdate{
+		Ctx:         param.Ctx,
+		NewSubTugas: newSubTugas,
 	})
+
 	if err != nil {
 		return err
 	}

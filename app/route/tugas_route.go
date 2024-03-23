@@ -21,17 +21,22 @@ func NewTugasRoute(h handler_init.TugasHandlerInit, auth middleware_auth.AuthMid
 }
 
 func (ro *tugasRoute) Tugas(router fiber.Router) {
-	router.Use(ro.auth.Authorization([]string{"DIREKTUR", "MANAJER_PRODUKSI"}))
-	router.Post("", ro.h.TugasHandler().Create)
-	router.Put("/:id", ro.h.TugasHandler().Update)
-	router.Delete("/:id", ro.h.TugasHandler().Delete)
-	router.Get("", ro.h.TugasHandler().GetAll)
-	router.Get("/:id", ro.h.TugasHandler().GetById)
-	router.Get("/:invoice_id", ro.h.TugasHandler().GetByInvoiceId)
+	auth := ro.auth.Authorization([]string{"DIREKTUR", "MANAJER_PRODUKSI"})
+	auth2 := ro.auth.Authorization([]string{"DIREKTUR", "MANAJER_PRODUKSI", "SUPERVISOR"})
+
+	router.Post("", auth, ro.h.TugasHandler().Create)
+	router.Put("/:id", auth, ro.h.TugasHandler().Update)
+	router.Delete("/:id", auth, ro.h.TugasHandler().Delete)
+	router.Get("", auth2, ro.h.TugasHandler().GetAll)
+	router.Get("/:id", auth2, ro.h.TugasHandler().GetById)
+	router.Get("/:invoice_id", auth2, ro.h.TugasHandler().GetByInvoiceId)
 }
 
 func (ro *tugasRoute) SubTugas(router fiber.Router) {
-	router.Post("/:tugas_id", ro.h.SubTugasHandler().CreateByTugasId)
-	router.Put("/:id", ro.h.SubTugasHandler().Update)
-	router.Delete("/:id", ro.h.SubTugasHandler().Delete)
+	auth := ro.auth.Authorization([]string{"DIREKTUR", "MANAJER_PRODUKSI"})
+	auth2 := ro.auth.Authorization([]string{"DIREKTUR", "MANAJER_PRODUKSI", "SUPERVISOR"})
+
+	router.Post("/:tugas_id", auth, ro.h.SubTugasHandler().CreateByTugasId)
+	router.Put("/:id", auth2, ro.h.SubTugasHandler().Update)
+	router.Delete("/:id", auth, ro.h.SubTugasHandler().Delete)
 }

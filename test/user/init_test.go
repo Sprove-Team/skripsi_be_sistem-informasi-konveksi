@@ -8,6 +8,7 @@ import (
 	repo_user "github.com/be-sistem-informasi-konveksi/api/repository/user/mysql/gorm"
 	"github.com/be-sistem-informasi-konveksi/app/handler_init"
 	"github.com/be-sistem-informasi-konveksi/app/route"
+	"github.com/be-sistem-informasi-konveksi/app/static_data"
 	"github.com/be-sistem-informasi-konveksi/entity"
 	"github.com/be-sistem-informasi-konveksi/test"
 	"github.com/gofiber/fiber/v2"
@@ -16,19 +17,37 @@ import (
 )
 
 var dbt *gorm.DB
-var token string
+var tokens map[string]string
 var app = fiber.New()
+var idsDefaultUser []string
+var idsDefaultSpv []string
+
+func cleanUp() {
+	idsSpv := make([]string, len(static_data.DefaultSupervisor))
+	for i, v := range static_data.DefaultSupervisor {
+		idsSpv[i] = v.ID
+	}
+	dbt.Unscoped().Where("id NOT IN (?)", idsSpv).Delete(&entity.JenisSpv{})
+
+	ids := make([]string, len(static_data.DefaultUsers))
+	for i, v := range static_data.DefaultUsers {
+		ids[i] = v.ID
+	}
+	dbt.Unscoped().Where("id NOT IN (?)", ids).Delete(&entity.User{})
+}
 
 func TestMain(m *testing.M) {
-	dbt = test.GetDB()
+	test.GetDB()
+	dbt = test.DBT
+
 	userH := handler_init.NewUserHandlerInit(dbt, test.Validator, test.UlidPkg, test.Encryptor)
 
 	userRepo := repo_user.NewUserRepo(dbt)
 	authMid := middleware_auth.NewAuthMiddleware(userRepo)
 	userRoute := route.NewUserRoute(userH, authMid)
 
-	token = test.GetToken(dbt, authMid)
-
+	test.GetTokens(dbt, authMid)
+	tokens = test.Tokens
 	// app
 	app.Use(recover.New())
 	api := app.Group("/api")
@@ -36,10 +55,18 @@ func TestMain(m *testing.M) {
 	userGroup := v1.Group("/user")
 	userGroup.Route("/jenis_spv", userRoute.JenisSpv)
 	userGroup.Route("/", userRoute.User)
+
+	idsDefaultUser = make([]string, len(static_data.DefaultUsers))
+	for i, v := range static_data.DefaultUsers {
+		idsDefaultUser[i] = v.ID
+	}
+	idsDefaultSpv = make([]string, len(static_data.DefaultSupervisor))
+	for i, v := range static_data.DefaultSupervisor {
+		idsDefaultSpv[i] = v.ID
+	}
 	// Run tests
 	exitVal := m.Run()
-	dbt.Unscoped().Where("1 = 1").Delete(&entity.JenisSpv{})
-	dbt.Unscoped().Where("1 = 1").Delete(&entity.User{})
+	cleanUp()
 	os.Exit(exitVal)
 }
 

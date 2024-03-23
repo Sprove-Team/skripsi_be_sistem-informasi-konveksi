@@ -7,20 +7,16 @@ import (
 	"net/http/httptest"
 	"os"
 	"regexp"
+	"time"
 
 	middleware_auth "github.com/be-sistem-informasi-konveksi/api/middleware/auth"
 	"github.com/be-sistem-informasi-konveksi/app/config"
-	"github.com/be-sistem-informasi-konveksi/app/handler_init"
-	"github.com/be-sistem-informasi-konveksi/app/route"
 	"github.com/be-sistem-informasi-konveksi/app/static_data"
-	req_auth "github.com/be-sistem-informasi-konveksi/common/request/auth"
 	"github.com/be-sistem-informasi-konveksi/helper"
 	"github.com/be-sistem-informasi-konveksi/pkg"
 	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/joho/godotenv"
 	_ "github.com/joho/godotenv/autoload"
-	"github.com/mitchellh/mapstructure"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
@@ -35,35 +31,32 @@ type Response struct {
 var Validator = pkg.NewValidator()
 var UlidPkg = pkg.NewUlidPkg()
 var Encryptor = helper.NewEncryptor()
+var Tokens = make(map[string]string)
+var DBT *gorm.DB
 
-func GetToken(dbt *gorm.DB, authMid middleware_auth.AuthMidleware) (token string) {
-	app := fiber.New()
-	api := app.Group("/api/v1")
-	app.Use(recover.New())
-
+func GetTokens(dbt *gorm.DB, authMid middleware_auth.AuthMidleware) {
+	if len(Tokens) == len(static_data.DefaultUsers) {
+		return
+	}
 	pkgJwt := pkg.NewJwt(os.Getenv("JWT_TOKEN"), os.Getenv("JWT_REFTOKEN"))
-	authH := handler_init.NewAuthHandlerInit(dbt, pkgJwt, Validator, UlidPkg, helper.NewEncryptor())
-	authRoute := route.NewAuthRoute(authH, authMid)
-	authGroup := api.Group("/auth")
-	{
-		authGroup.Route("", authRoute.Auth)
-	}
-	_, body, err := GetJsonTestRequestResponse(app, "POST", "/api/v1/auth/login", req_auth.Login{
-		Username: static_data.DefaultUserDirektur.Username,
-		Password: static_data.PlainPassword,
-	}, nil)
-	if err != nil {
-		helper.LogsError(err)
-		return
-	}
 
-	var dataAuth map[string]interface{}
-	if err := mapstructure.Decode(body.Data, &dataAuth); err != nil {
-		helper.LogsError(err)
-		return
+	for _, v := range static_data.DefaultUsers {
+		claims := &pkg.Claims{
+			Nama:     v.Nama,
+			ID:       v.ID,
+			Username: v.Username,
+			Role:     v.Role,
+		}
+		claims.Subject = "access_token"
+		token, err := pkgJwt.CreateToken(false, claims, time.Now().Add(time.Hour*8))
+
+		if err != nil {
+			helper.LogsError(err)
+			os.Exit(1)
+		} else {
+			Tokens[v.Role] = token
+		}
 	}
-	token = dataAuth["token"].(string)
-	return
 }
 
 func GetJsonTestRequestResponse(app *fiber.App, method string, url string, reqBody any, token *string) (code int, respBody Response, err error) {
@@ -113,7 +106,10 @@ func loadEnv() {
 	}
 }
 
-func GetDB() *gorm.DB {
+func GetDB() {
+	if DBT != nil {
+		return
+	}
 	loadEnv()
 	dbGormConf := config.DBGorm{
 		DB_Username: "root",
@@ -128,6 +124,5 @@ func GetDB() *gorm.DB {
 	}
 
 	ulidPkg := pkg.NewUlidPkg()
-	dbGorm := dbGormConf.InitDBGorm(ulidPkg)
-	return dbGorm
+	DBT = dbGormConf.InitDBGorm(ulidPkg)
 }

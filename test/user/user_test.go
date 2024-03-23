@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/be-sistem-informasi-konveksi/app/static_data"
 	"github.com/be-sistem-informasi-konveksi/common/message"
 	req_user "github.com/be-sistem-informasi-konveksi/common/request/user"
 	"github.com/be-sistem-informasi-konveksi/entity"
@@ -19,12 +20,14 @@ import (
 func UserCreate(t *testing.T) {
 	tests := []struct {
 		name         string
+		token        string
 		payload      req_user.Create
 		expectedBody test.Response
 		expectedCode int
 	}{
 		{
-			name: "sukses: create not spv user",
+			name:  "sukses: create not spv user",
+			token: tokens[entity.RolesById[1]],
 			payload: req_user.Create{
 				Nama:     "manager_produksi",
 				Username: "manager_produksi",
@@ -40,7 +43,8 @@ func UserCreate(t *testing.T) {
 			},
 		},
 		{
-			name: "sukses: create spv user",
+			name:  "sukses: create spv user",
+			token: tokens[entity.RolesById[1]],
 			payload: req_user.Create{
 				Nama:       "supervisorbordir",
 				Username:   "supervisorbordir",
@@ -57,7 +61,8 @@ func UserCreate(t *testing.T) {
 			},
 		},
 		{
-			name: "err: conflict",
+			name:  "err: conflict",
+			token: tokens[entity.RolesById[1]],
 			payload: req_user.Create{
 				Nama:     "manager_produksi",
 				Username: "manager_produksi",
@@ -73,7 +78,8 @@ func UserCreate(t *testing.T) {
 			},
 		},
 		{
-			name: "err: wajib diisi",
+			name:  "err: wajib diisi",
+			token: tokens[entity.RolesById[1]],
 			payload: req_user.Create{
 				Nama:     "",
 				Username: "",
@@ -97,7 +103,8 @@ func UserCreate(t *testing.T) {
 			},
 		},
 		{
-			name: "err: role harus berupa [DIREKTUR,ADMIN,BENDAHARA,MANAJER_PRODUKSI,SUPERVISOR]",
+			name:  "err: role harus berupa [DIREKTUR,ADMIN,BENDAHARA,MANAJER_PRODUKSI,SUPERVISOR]",
+			token: tokens[entity.RolesById[1]],
 			payload: req_user.Create{
 				Nama:     "manager_produksi2",
 				Username: "manager_produksi2",
@@ -114,7 +121,8 @@ func UserCreate(t *testing.T) {
 			},
 		},
 		{
-			name: "err: no telp harus berformat e164",
+			name:  "err: no telp harus berformat e164",
+			token: tokens[entity.RolesById[1]],
 			payload: req_user.Create{
 				Nama:     "manager_produksi3",
 				Username: "manager_produksi3",
@@ -131,7 +139,8 @@ func UserCreate(t *testing.T) {
 			},
 		},
 		{
-			name: "err: panjang minimal password adalah 6 karakter",
+			name:  "err: panjang minimal password adalah 6 karakter",
+			token: tokens[entity.RolesById[1]],
 			payload: req_user.Create{
 				Nama:     "manager_produksi4",
 				Username: "manager_produksi4",
@@ -148,7 +157,8 @@ func UserCreate(t *testing.T) {
 			},
 		},
 		{
-			name: "err: jenis spv id wajib diisi ketika role supervisor",
+			name:  "err: jenis spv id wajib diisi ketika role supervisor",
+			token: tokens[entity.RolesById[1]],
 			payload: req_user.Create{
 				Nama:     "supervisorbordir2",
 				Username: "supervisorbordir2",
@@ -164,11 +174,51 @@ func UserCreate(t *testing.T) {
 				ErrorsMessages: []string{"jenis spv id wajib diisi ketika role supervisor"},
 			},
 		},
+		{
+			name:         "err: authorization " + entity.RolesById[2],
+			payload:      req_user.Create{},
+			token:        tokens[entity.RolesById[2]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[3],
+			payload:      req_user.Create{},
+			token:        tokens[entity.RolesById[3]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[4],
+			payload:      req_user.Create{},
+			token:        tokens[entity.RolesById[4]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[5],
+			payload:      req_user.Create{},
+			token:        tokens[entity.RolesById[5]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			code, body, err := test.GetJsonTestRequestResponse(app, "POST", "/api/v1/user", tt.payload, &token)
+			code, body, err := test.GetJsonTestRequestResponse(app, "POST", "/api/v1/user", tt.payload, &tt.token)
 			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedCode, code)
 			if len(tt.expectedBody.ErrorsMessages) > 0 {
@@ -190,13 +240,13 @@ var idSpv2 string
 func UserUpdate(t *testing.T) {
 
 	user := new(entity.User)
-	err := dbt.Select("id").First(user, "ROLE NOT IN (?) ", []string{entity.RolesById[1], entity.RolesById[5]}).Error
+	err := dbt.Select("id").First(user, "ROLE NOT IN (?) AND id NOT IN (?)", []string{entity.RolesById[1], entity.RolesById[5]}, idsDefaultUser).Error
 	if err != nil {
 		helper.LogsError(err)
 		return
 	}
 	userSpv := new(entity.User)
-	err = dbt.Select("id").First(userSpv, "jenis_spv_id = ?", idSpv).Error
+	err = dbt.Select("id").First(userSpv, "jenis_spv_id = ? AND id NOT IN (?)", idSpv, idsDefaultUser).Error
 	if err != nil {
 		helper.LogsError(err)
 		return
@@ -205,7 +255,7 @@ func UserUpdate(t *testing.T) {
 		Base: entity.Base{
 			ID: test.UlidPkg.MakeUlid().String(),
 		},
-		Nama: "belanja",
+		Nama: "test_belanja2",
 	}
 	err = dbt.Create(spv2).Error
 	if err != nil {
@@ -219,12 +269,14 @@ func UserUpdate(t *testing.T) {
 
 	tests := []struct {
 		name         string
+		token        string
 		payload      req_user.Update
 		expectedBody test.Response
 		expectedCode int
 	}{
 		{
-			name: "sukses: update not spv user",
+			name:  "sukses: update not spv user",
+			token: tokens[entity.RolesById[1]],
 			payload: req_user.Update{
 				ID:       idUser,
 				Nama:     "admin2",
@@ -241,7 +293,8 @@ func UserUpdate(t *testing.T) {
 			},
 		},
 		{
-			name: "sukses: update spv user",
+			name:  "sukses: update spv user",
+			token: tokens[entity.RolesById[1]],
 			payload: req_user.Update{
 				ID:         idUserSpv,
 				Nama:       "supervisorbelanja",
@@ -259,15 +312,16 @@ func UserUpdate(t *testing.T) {
 			},
 		},
 		{
-			name: "err: conflict",
+			name:  "err: conflict",
+			token: tokens[entity.RolesById[1]],
 			payload: req_user.Update{
 				ID:       idUser,
-				Nama:     "admin2",
-				Username: "direktur",
+				Nama:     static_data.DefaultUsers[0].Nama,
+				Username: static_data.DefaultUsers[0].Username,
 				Password: "admin22",
 				Role:     "ADMIN",
-				Alamat:   "test1234",
-				NoTelp:   "+62898397290606",
+				Alamat:   static_data.DefaultUsers[0].Alamat,
+				NoTelp:   static_data.DefaultUsers[0].NoTelp,
 			},
 			expectedCode: 409,
 			expectedBody: test.Response{
@@ -276,7 +330,8 @@ func UserUpdate(t *testing.T) {
 			},
 		},
 		{
-			name: "err: role harus berupa [DIREKTUR,ADMIN,BENDAHARA,MANAJER_PRODUKSI,SUPERVISOR]",
+			name:  "err: role harus berupa [DIREKTUR,ADMIN,BENDAHARA,MANAJER_PRODUKSI,SUPERVISOR]",
+			token: tokens[entity.RolesById[1]],
 			payload: req_user.Update{
 				ID:       idSpv,
 				Nama:     "manager_produksi2",
@@ -294,7 +349,8 @@ func UserUpdate(t *testing.T) {
 			},
 		},
 		{
-			name: "err: no telp harus berformat e164",
+			name:  "err: no telp harus berformat e164",
+			token: tokens[entity.RolesById[1]],
 			payload: req_user.Update{
 				ID:       idSpv,
 				Nama:     "manager_produksi3",
@@ -312,7 +368,8 @@ func UserUpdate(t *testing.T) {
 			},
 		},
 		{
-			name: "err: panjang minimal password adalah 6 karakter",
+			name:  "err: panjang minimal password adalah 6 karakter",
+			token: tokens[entity.RolesById[1]],
 			payload: req_user.Update{
 				ID:       idSpv,
 				Nama:     "manager_produksi4",
@@ -330,7 +387,8 @@ func UserUpdate(t *testing.T) {
 			},
 		},
 		{
-			name: "err: jenis spv id wajib diisi ketika role supervisor",
+			name:  "err: jenis spv id wajib diisi ketika role supervisor",
+			token: tokens[entity.RolesById[1]],
 			payload: req_user.Update{
 				ID:       idUser,
 				Nama:     "supervisorbelanja2",
@@ -348,7 +406,8 @@ func UserUpdate(t *testing.T) {
 			},
 		},
 		{
-			name: "err: ulid tidak valid",
+			name:  "err: ulid tidak valid",
+			token: tokens[entity.RolesById[1]],
 			payload: req_user.Update{
 				ID:         idUser + "123",
 				Nama:       "supervisorbelanja2",
@@ -366,11 +425,52 @@ func UserUpdate(t *testing.T) {
 				ErrorsMessages: []string{"id tidak berupa ulid yang valid", "jenis spv id tidak berupa ulid yang valid"},
 			},
 		},
+
+		{
+			name:         "err: authorization " + entity.RolesById[2],
+			payload:      req_user.Update{},
+			token:        tokens[entity.RolesById[2]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[3],
+			payload:      req_user.Update{},
+			token:        tokens[entity.RolesById[3]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[4],
+			payload:      req_user.Update{},
+			token:        tokens[entity.RolesById[4]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[5],
+			payload:      req_user.Update{},
+			token:        tokens[entity.RolesById[5]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			code, body, err := test.GetJsonTestRequestResponse(app, "PUT", "/api/v1/user/"+tt.payload.ID, tt.payload, &token)
+			code, body, err := test.GetJsonTestRequestResponse(app, "PUT", "/api/v1/user/"+tt.payload.ID, tt.payload, &tt.token)
 			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedCode, code)
 			if len(tt.expectedBody.ErrorsMessages) > 0 {
@@ -388,12 +488,14 @@ func UserUpdate(t *testing.T) {
 func UserGetAll(t *testing.T) {
 	tests := []struct {
 		name         string
+		token        string
 		queryBody    string
 		expectedBody test.Response
 		expectedCode int
 	}{
 		{
 			name:         "sukses",
+			token:        tokens[entity.RolesById[1]],
 			expectedCode: 200,
 			expectedBody: test.Response{
 				Status: message.OK,
@@ -402,6 +504,7 @@ func UserGetAll(t *testing.T) {
 		},
 		{
 			name:         "sukses with filter search",
+			token:        tokens[entity.RolesById[1]],
 			queryBody:    fmt.Sprintf("?search[nama]=supervisorbelanja&search[jenis_spv_id]=%s&search[role]=SUPERVISOR&search[username]=supervisorbelanja&search[alamat]=test123&search[no_telp]=%s6289589729", idSpv2, "%2B"),
 			expectedCode: 200,
 			expectedBody: test.Response{
@@ -411,6 +514,7 @@ func UserGetAll(t *testing.T) {
 		},
 		{
 			name:         "sukses with next",
+			token:        tokens[entity.RolesById[1]],
 			queryBody:    "?next=" + idUser,
 			expectedCode: 200,
 			expectedBody: test.Response{
@@ -420,6 +524,7 @@ func UserGetAll(t *testing.T) {
 		},
 		{
 			name:         "sukses limit 1",
+			token:        tokens[entity.RolesById[1]],
 			queryBody:    "?limit=1",
 			expectedCode: 200,
 			expectedBody: test.Response{
@@ -429,6 +534,7 @@ func UserGetAll(t *testing.T) {
 		},
 		{
 			name:         "err: ulid tidak valid",
+			token:        tokens[entity.RolesById[1]],
 			expectedCode: 400,
 			queryBody:    "?next=01HQVTTJ1S2606JGTYYZ5NDKNR123&search[jenis_spv_id]=ABCDSI123124AASDDC",
 			expectedBody: test.Response{
@@ -439,6 +545,7 @@ func UserGetAll(t *testing.T) {
 		},
 		{
 			name:         "err: role harus berupa [DIREKTUR,ADMIN,BENDAHARA,MANAJER_PRODUKSI,SUPERVISOR]",
+			token:        tokens[entity.RolesById[1]],
 			expectedCode: 400,
 			queryBody:    "?search[role]=abcd",
 			expectedBody: test.Response{
@@ -449,6 +556,7 @@ func UserGetAll(t *testing.T) {
 		},
 		{
 			name:         "err: no telp harus berformat e164",
+			token:        tokens[entity.RolesById[1]],
 			queryBody:    "?search[no_telp]=08912312313",
 			expectedCode: 400,
 			expectedBody: test.Response{
@@ -457,11 +565,47 @@ func UserGetAll(t *testing.T) {
 				ErrorsMessages: []string{"no telp harus berformat e164"},
 			},
 		},
+		{
+			name:         "err: authorization " + entity.RolesById[2],
+			token:        tokens[entity.RolesById[2]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[3],
+			token:        tokens[entity.RolesById[3]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[4],
+			token:        tokens[entity.RolesById[4]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[5],
+			token:        tokens[entity.RolesById[5]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			code, body, err := test.GetJsonTestRequestResponse(app, "GET", "/api/v1/user"+tt.queryBody, nil, &token)
+			code, body, err := test.GetJsonTestRequestResponse(app, "GET", "/api/v1/user"+tt.queryBody, nil, &tt.token)
 			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedCode, code)
 
@@ -517,12 +661,14 @@ func UserGetAll(t *testing.T) {
 func UserGet(t *testing.T) {
 	tests := []struct {
 		id           string
+		token        string
 		name         string
 		expectedBody test.Response
 		expectedCode int
 	}{
 		{
 			name:         "sukses",
+			token:        tokens[entity.RolesById[1]],
 			id:           idUser,
 			expectedCode: 200,
 			expectedBody: test.Response{
@@ -532,6 +678,7 @@ func UserGet(t *testing.T) {
 		},
 		{
 			name:         "err: ulid tidak valid",
+			token:        tokens[entity.RolesById[1]],
 			id:           "01HQVTTJ1S2606JGTYYZ5NDKNR123",
 			expectedCode: 400,
 			expectedBody: test.Response{
@@ -540,11 +687,51 @@ func UserGet(t *testing.T) {
 				ErrorsMessages: []string{"id tidak berupa ulid yang valid"},
 			},
 		},
+		{
+			name:         "err: authorization " + entity.RolesById[2],
+			id:           idUser,
+			token:        tokens[entity.RolesById[2]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[3],
+			id:           idUser,
+			token:        tokens[entity.RolesById[3]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[4],
+			id:           idUser,
+			token:        tokens[entity.RolesById[4]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[5],
+			id:           idUser,
+			token:        tokens[entity.RolesById[5]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			code, body, err := test.GetJsonTestRequestResponse(app, "GET", "/api/v1/user/"+tt.id, nil, &token)
+			code, body, err := test.GetJsonTestRequestResponse(app, "GET", "/api/v1/user/"+tt.id, nil, &tt.token)
 			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedCode, code)
 
@@ -579,12 +766,14 @@ func UserGet(t *testing.T) {
 func UserDelete(t *testing.T) {
 	tests := []struct {
 		name         string
+		token        string
 		id           string
 		expectedBody test.Response
 		expectedCode int
 	}{
 		{
 			name:         "sukses",
+			token:        tokens[entity.RolesById[1]],
 			id:           idUser,
 			expectedCode: 200,
 			expectedBody: test.Response{
@@ -594,6 +783,7 @@ func UserDelete(t *testing.T) {
 		},
 		{
 			name:         "err: tidak ditemukan",
+			token:        tokens[entity.RolesById[1]],
 			id:           "01HM4B8QBH7MWAVAYP10WN6PKA",
 			expectedCode: 404,
 			expectedBody: test.Response{
@@ -603,6 +793,7 @@ func UserDelete(t *testing.T) {
 		},
 		{
 			name:         "err: ulid tidak valid",
+			token:        tokens[entity.RolesById[1]],
 			id:           idUser + "123",
 			expectedCode: 400,
 			expectedBody: test.Response{
@@ -611,11 +802,51 @@ func UserDelete(t *testing.T) {
 				ErrorsMessages: []string{"id tidak berupa ulid yang valid"},
 			},
 		},
+		{
+			name:         "err: authorization " + entity.RolesById[2],
+			id:           idUser,
+			token:        tokens[entity.RolesById[2]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[3],
+			id:           idUser,
+			token:        tokens[entity.RolesById[3]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[4],
+			id:           idUser,
+			token:        tokens[entity.RolesById[4]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[5],
+			id:           idUser,
+			token:        tokens[entity.RolesById[5]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			code, body, err := test.GetJsonTestRequestResponse(app, "DELETE", "/api/v1/user/"+tt.id, nil, &token)
+			code, body, err := test.GetJsonTestRequestResponse(app, "DELETE", "/api/v1/user/"+tt.id, nil, &tt.token)
 			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedCode, code)
 			if len(tt.expectedBody.ErrorsMessages) > 0 {

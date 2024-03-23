@@ -16,19 +16,20 @@ import (
 )
 
 var dbt *gorm.DB
-var token string
+var tokens map[string]string
 var app = fiber.New()
 
 func TestMain(m *testing.M) {
-	dbt = test.GetDB()
+	test.GetDB()
+	dbt = test.DBT
 	bordirH := handler_init.NewBordirHandlerInit(dbt, test.Validator, test.UlidPkg)
 
 	userRepo := repo_user.NewUserRepo(dbt)
 	authMid := middleware_auth.NewAuthMiddleware(userRepo)
 	bordirRoute := route.NewBordirRoute(bordirH, authMid)
 
-	token = test.GetToken(dbt, authMid)
-
+	test.GetTokens(dbt, authMid)
+	tokens = test.Tokens
 	// app
 	app.Use(recover.New())
 	api := app.Group("/api")

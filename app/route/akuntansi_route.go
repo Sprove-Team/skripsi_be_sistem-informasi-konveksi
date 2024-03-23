@@ -27,6 +27,7 @@ func NewAkuntansiRoute(h handler_init.AkuntansiHandlerInit, auth middleware_auth
 func (ro *akuntansiRoute) Akun(router fiber.Router) {
 	// this is how to use the authorization function
 	// ~ router.Get("", ro.auth.Authorization([]string{"direktur", "bendahara"}), ro.h.AkunHandler().GetAll)
+	router.Use(ro.auth.Authorization([]string{"DIREKTUR", "BENDAHARA"}))
 	router.Get("", ro.h.Akun().GetAll)
 	router.Get("/:id", ro.h.Akun().GetById)
 	router.Post("", ro.h.Akun().Create)
@@ -35,6 +36,7 @@ func (ro *akuntansiRoute) Akun(router fiber.Router) {
 }
 
 func (ro *akuntansiRoute) KelompokAkun(router fiber.Router) {
+	router.Use(ro.auth.Authorization([]string{"DIREKTUR", "BENDAHARA"}))
 	router.Post("", ro.h.KelompokAkun().Create)
 	router.Get("", ro.h.KelompokAkun().GetAll)
 	router.Get("/:id", ro.h.KelompokAkun().GetById)
@@ -43,6 +45,7 @@ func (ro *akuntansiRoute) KelompokAkun(router fiber.Router) {
 }
 
 func (ro *akuntansiRoute) Transaksi(router fiber.Router) {
+	router.Use(ro.auth.Authorization([]string{"DIREKTUR", "BENDAHARA"}))
 	router.Get("/history", ro.h.Transaksi().GetHistory)
 	router.Get("", ro.h.Transaksi().GetAll)
 	router.Get("/:id", ro.h.Transaksi().GetById)
@@ -52,12 +55,14 @@ func (ro *akuntansiRoute) Transaksi(router fiber.Router) {
 }
 
 func (ro *akuntansiRoute) HutangPiutang(router fiber.Router) {
+	router.Use(ro.auth.Authorization([]string{"DIREKTUR", "BENDAHARA"}))
 	router.Post("", ro.h.HutangPiutang().Create)
 	router.Post("/bayar/:hutang_piutang_id", ro.h.HutangPiutang().CreateBayar)
 	router.Get("", ro.h.HutangPiutang().GetAll)
 }
 
 func (ro *akuntansiRoute) Kontak(router fiber.Router) {
+	router.Use(ro.auth.Authorization([]string{"DIREKTUR", "BENDAHARA"}))
 	router.Post("", ro.h.Kontak().Create)
 	router.Put("/:id", ro.h.Kontak().Update)
 	router.Get("", ro.h.Kontak().GetAll)

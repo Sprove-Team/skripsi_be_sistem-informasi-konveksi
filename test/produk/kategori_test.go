@@ -5,8 +5,7 @@ import (
 	"testing"
 
 	"github.com/be-sistem-informasi-konveksi/common/message"
-	req_produk "github.com/be-sistem-informasi-konveksi/common/request/produk"
-	produkKategori "github.com/be-sistem-informasi-konveksi/common/request/produk/kategori"
+	req_produk_kategori "github.com/be-sistem-informasi-konveksi/common/request/produk/kategori"
 	"github.com/be-sistem-informasi-konveksi/entity"
 	"github.com/be-sistem-informasi-konveksi/helper"
 	"github.com/be-sistem-informasi-konveksi/test"
@@ -19,13 +18,15 @@ func ProdukCreateKategori(t *testing.T) {
 
 	tests := []struct {
 		name         string
-		payload      produkKategori.Create
+		token        string
+		payload      req_produk_kategori.Create
 		expectedBody test.Response
 		expectedCode int
 	}{
 		{
-			name: "sukses",
-			payload: produkKategori.Create{
+			name:  "sukses",
+			token: tokens[entity.RolesById[1]],
+			payload: req_produk_kategori.Create{
 				Nama: "kaos",
 			},
 			expectedCode: 201,
@@ -35,8 +36,9 @@ func ProdukCreateKategori(t *testing.T) {
 			},
 		},
 		{
-			name: "err: conflict",
-			payload: produkKategori.Create{
+			name:  "err: conflict",
+			token: tokens[entity.RolesById[1]],
+			payload: req_produk_kategori.Create{
 				Nama: "kaos",
 			},
 			expectedCode: 409,
@@ -46,8 +48,9 @@ func ProdukCreateKategori(t *testing.T) {
 			},
 		},
 		{
-			name: "err: wajib diisi",
-			payload: produkKategori.Create{
+			name:  "err: wajib diisi",
+			token: tokens[entity.RolesById[1]],
+			payload: req_produk_kategori.Create{
 				Nama: "",
 			},
 			expectedCode: 400,
@@ -57,11 +60,51 @@ func ProdukCreateKategori(t *testing.T) {
 				ErrorsMessages: []string{"nama wajib diisi"},
 			},
 		},
+		{
+			name:         "err: authorization " + entity.RolesById[2],
+			payload:      req_produk_kategori.Create{},
+			token:        tokens[entity.RolesById[2]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[3],
+			payload:      req_produk_kategori.Create{},
+			token:        tokens[entity.RolesById[3]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[4],
+			payload:      req_produk_kategori.Create{},
+			token:        tokens[entity.RolesById[4]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[5],
+			payload:      req_produk_kategori.Create{},
+			token:        tokens[entity.RolesById[5]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			code, body, err := test.GetJsonTestRequestResponse(app, "POST", "/api/v1/produk/kategori", tt.payload, &token)
+			code, body, err := test.GetJsonTestRequestResponse(app, "POST", "/api/v1/produk/kategori", tt.payload, &tt.token)
 			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedCode, code)
 			assert.Equal(t, tt.expectedBody, body)
@@ -81,13 +124,15 @@ func ProdukUpdateKategori(t *testing.T) {
 	idKategori = kategori.ID
 	tests := []struct {
 		name         string
-		payload      req_produk.Update
+		token        string
+		payload      req_produk_kategori.Update
 		expectedBody test.Response
 		expectedCode int
 	}{
 		{
-			name: "sukses",
-			payload: req_produk.Update{
+			name:  "sukses",
+			token: tokens[entity.RolesById[1]],
+			payload: req_produk_kategori.Update{
 				ID:   kategori.ID,
 				Nama: "jaket",
 			},
@@ -98,8 +143,9 @@ func ProdukUpdateKategori(t *testing.T) {
 			},
 		},
 		{
-			name: "err: tidak ditemukan",
-			payload: req_produk.Update{
+			name:  "err: tidak ditemukan",
+			token: tokens[entity.RolesById[1]],
+			payload: req_produk_kategori.Update{
 				ID:   "01HM4B8QBH7MWAVAYP10WN6PKA",
 				Nama: "jaket",
 			},
@@ -110,8 +156,9 @@ func ProdukUpdateKategori(t *testing.T) {
 			},
 		},
 		{
-			name: "err: ulid tidak valid",
-			payload: req_produk.Update{
+			name:  "err: ulid tidak valid",
+			token: tokens[entity.RolesById[1]],
+			payload: req_produk_kategori.Update{
 				ID:   kategori.ID + "123",
 				Nama: "jaket",
 			},
@@ -122,11 +169,51 @@ func ProdukUpdateKategori(t *testing.T) {
 				ErrorsMessages: []string{"id tidak berupa ulid yang valid"},
 			},
 		},
+		{
+			name:         "err: authorization " + entity.RolesById[2],
+			payload:      req_produk_kategori.Update{},
+			token:        tokens[entity.RolesById[2]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[3],
+			payload:      req_produk_kategori.Update{},
+			token:        tokens[entity.RolesById[3]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[4],
+			payload:      req_produk_kategori.Update{},
+			token:        tokens[entity.RolesById[4]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[5],
+			payload:      req_produk_kategori.Update{},
+			token:        tokens[entity.RolesById[5]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			code, body, err := test.GetJsonTestRequestResponse(app, "PUT", "/api/v1/produk/kategori/"+tt.payload.ID, tt.payload, &token)
+			code, body, err := test.GetJsonTestRequestResponse(app, "PUT", "/api/v1/produk/kategori/"+tt.payload.ID, tt.payload, &tt.token)
 			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedCode, code)
 			if len(tt.expectedBody.ErrorsMessages) > 0 {
@@ -154,12 +241,14 @@ func ProdukGetAllKategori(t *testing.T) {
 	}
 	tests := []struct {
 		name         string
+		token        string
 		queryBody    string
 		expectedBody test.Response
 		expectedCode int
 	}{
 		{
 			name:         "sukses",
+			token:        tokens[entity.RolesById[1]],
 			expectedCode: 200,
 			expectedBody: test.Response{
 				Status: message.OK,
@@ -168,6 +257,7 @@ func ProdukGetAllKategori(t *testing.T) {
 		},
 		{
 			name:         "sukses limit 1",
+			token:        tokens[entity.RolesById[1]],
 			queryBody:    "?limit=1",
 			expectedCode: 200,
 			expectedBody: test.Response{
@@ -177,6 +267,7 @@ func ProdukGetAllKategori(t *testing.T) {
 		},
 		{
 			name:         "sukses with next",
+			token:        tokens[entity.RolesById[1]],
 			queryBody:    "?next=" + idProduk,
 			expectedCode: 200,
 			expectedBody: test.Response{
@@ -186,6 +277,7 @@ func ProdukGetAllKategori(t *testing.T) {
 		},
 		{
 			name:         "sukses with: filter nama",
+			token:        tokens[entity.RolesById[1]],
 			queryBody:    "?nama=jaket",
 			expectedCode: 200,
 			expectedBody: test.Response{
@@ -195,6 +287,7 @@ func ProdukGetAllKategori(t *testing.T) {
 		},
 		{
 			name:         "err: ulid tidak valid",
+			token:        tokens[entity.RolesById[1]],
 			expectedCode: 400,
 			queryBody:    "?next=01HQVTTJ1S2606JGTYYZ5NDKNR123",
 			expectedBody: test.Response{
@@ -203,11 +296,47 @@ func ProdukGetAllKategori(t *testing.T) {
 				ErrorsMessages: []string{"next tidak berupa ulid yang valid"},
 			},
 		},
+		{
+			name:         "err: authorization " + entity.RolesById[2],
+			token:        tokens[entity.RolesById[2]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[3],
+			token:        tokens[entity.RolesById[3]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[4],
+			token:        tokens[entity.RolesById[4]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[5],
+			token:        tokens[entity.RolesById[5]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			code, body, err := test.GetJsonTestRequestResponse(app, "GET", "/api/v1/produk/kategori"+tt.queryBody, nil, &token)
+			code, body, err := test.GetJsonTestRequestResponse(app, "GET", "/api/v1/produk/kategori"+tt.queryBody, nil, &tt.token)
 			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedCode, code)
 
@@ -248,12 +377,14 @@ func ProdukGetAllKategori(t *testing.T) {
 func ProdukGetKategori(t *testing.T) {
 	tests := []struct {
 		id           string
+		token        string
 		name         string
 		expectedBody test.Response
 		expectedCode int
 	}{
 		{
 			name:         "sukses",
+			token:        tokens[entity.RolesById[1]],
 			id:           idKategori,
 			expectedCode: 200,
 			expectedBody: test.Response{
@@ -263,6 +394,7 @@ func ProdukGetKategori(t *testing.T) {
 		},
 		{
 			name:         "err: tidak ditemukan",
+			token:        tokens[entity.RolesById[1]],
 			id:           "01HM4B8QBH7MWAVAYP10WN6PKA",
 			expectedCode: 404,
 			expectedBody: test.Response{
@@ -272,6 +404,7 @@ func ProdukGetKategori(t *testing.T) {
 		},
 		{
 			name:         "err: ulid tidak valid",
+			token:        tokens[entity.RolesById[1]],
 			id:           "01HQVTTJ1S2606JGTYYZ5NDKNR123",
 			expectedCode: 400,
 			expectedBody: test.Response{
@@ -280,11 +413,51 @@ func ProdukGetKategori(t *testing.T) {
 				ErrorsMessages: []string{"id tidak berupa ulid yang valid"},
 			},
 		},
+		{
+			name:         "err: authorization " + entity.RolesById[2],
+			id:           idKategori,
+			token:        tokens[entity.RolesById[2]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[3],
+			id:           idKategori,
+			token:        tokens[entity.RolesById[3]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[4],
+			id:           idKategori,
+			token:        tokens[entity.RolesById[4]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[5],
+			id:           idKategori,
+			token:        tokens[entity.RolesById[5]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			code, body, err := test.GetJsonTestRequestResponse(app, "GET", "/api/v1/produk/kategori/"+tt.id, nil, &token)
+			code, body, err := test.GetJsonTestRequestResponse(app, "GET", "/api/v1/produk/kategori/"+tt.id, nil, &tt.token)
 			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedCode, code)
 
@@ -315,12 +488,14 @@ func ProdukGetKategori(t *testing.T) {
 func ProdukDeleteKategori(t *testing.T) {
 	tests := []struct {
 		name         string
+		token        string
 		id           string
 		expectedBody test.Response
 		expectedCode int
 	}{
 		{
 			name:         "sukses",
+			token:        tokens[entity.RolesById[1]],
 			id:           idKategori,
 			expectedCode: 200,
 			expectedBody: test.Response{
@@ -330,6 +505,7 @@ func ProdukDeleteKategori(t *testing.T) {
 		},
 		{
 			name:         "err: tidak ditemukan",
+			token:        tokens[entity.RolesById[1]],
 			id:           "01HM4B8QBH7MWAVAYP10WN6PKA",
 			expectedCode: 404,
 			expectedBody: test.Response{
@@ -339,6 +515,7 @@ func ProdukDeleteKategori(t *testing.T) {
 		},
 		{
 			name:         "err: ulid tidak valid",
+			token:        tokens[entity.RolesById[1]],
 			id:           idKategori + "123",
 			expectedCode: 400,
 			expectedBody: test.Response{
@@ -347,11 +524,51 @@ func ProdukDeleteKategori(t *testing.T) {
 				ErrorsMessages: []string{"id tidak berupa ulid yang valid"},
 			},
 		},
+		{
+			name:         "err: authorization " + entity.RolesById[2],
+			id:           idKategori,
+			token:        tokens[entity.RolesById[2]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[3],
+			id:           idKategori,
+			token:        tokens[entity.RolesById[3]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[4],
+			id:           idKategori,
+			token:        tokens[entity.RolesById[4]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[5],
+			id:           idKategori,
+			token:        tokens[entity.RolesById[5]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			code, body, err := test.GetJsonTestRequestResponse(app, "DELETE", "/api/v1/produk/kategori/"+tt.id, nil, &token)
+			code, body, err := test.GetJsonTestRequestResponse(app, "DELETE", "/api/v1/produk/kategori/"+tt.id, nil, &tt.token)
 			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedCode, code)
 			if len(tt.expectedBody.ErrorsMessages) > 0 {
