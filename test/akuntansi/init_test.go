@@ -79,10 +79,14 @@ func TestEndPointAkuntansi(t *testing.T) {
 	// transaksi
 	AkuntansiCreateTransaksi(t)
 	AkuntansiUpdateTransaksi(t)
+	AkuntansiGetAllTransaksi(t)
+	AkuntansiGetTransaksi(t)
+	AkuntansiGetHistoryTransaksi(t)
 }
 
 func TestEndPointDelete(t *testing.T) {
 	AkuntansiDeleteKelompokAkun(t)
 	AkuntansiDeleteAkun(t)
+	AkuntansiDeleteTransaksi(t)
 	AkuntansiDeleteKontak(t)
 }
