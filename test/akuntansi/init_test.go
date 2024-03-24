@@ -10,6 +10,7 @@ import (
 	"github.com/be-sistem-informasi-konveksi/app/route"
 	"github.com/be-sistem-informasi-konveksi/app/static_data"
 	"github.com/be-sistem-informasi-konveksi/entity"
+	"github.com/be-sistem-informasi-konveksi/helper"
 	"github.com/be-sistem-informasi-konveksi/test"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/recover"
@@ -25,19 +26,38 @@ func cleanUp() {
 	for _, kelompok := range static_data.DataKelompokAkun {
 		ids = append(ids, kelompok.ID)
 	}
-	dbt.Unscoped().Delete(&entity.KelompokAkun{}, "id NOT IN (?)", ids)
-	dbt.Unscoped().Where("1 = 1").Delete(&entity.Kontak{})
-	dbt.Unscoped().Where("1 = 1").Delete(&entity.Transaksi{})
+	if err := dbt.Unscoped().Delete(&entity.KelompokAkun{}, "id NOT IN (?)", ids).Error; err != nil {
+		helper.LogsError(err)
+	}
+	if err := dbt.Unscoped().Where("1 = 1").Delete(&entity.HutangPiutang{}).Error; err != nil {
+		helper.LogsError(err)
+	}
+	if err := dbt.Unscoped().Where("1 = 1").Delete(&entity.Transaksi{}).Error; err != nil {
+		helper.LogsError(err)
+	}
+	if err := dbt.Unscoped().Where("1 = 1").Delete(&entity.Kontak{}).Error; err != nil {
+		helper.LogsError(err)
+	}
 }
+
+// func setupInvoiceData() {
+// 	payload := req_invoice.Create{
+// 		KontakID: idKontak,
+// 	}
+// 	token := tokens[entity.RolesById[1]]
+// 	test.GetJsonTestRequestResponse(app, "POST", "/api/v1/invoice", payload, &token)
+// }
 
 func TestMain(m *testing.M) {
 	test.GetDB()
 	dbt = test.DBT
 	akuntansiH := handler_init.NewAkuntansiHandlerInit(dbt, test.Validator, test.UlidPkg)
+	invoiceH := handler_init.NewInvoiceHandlerInit(dbt, test.Validator, test.UlidPkg, test.Encryptor)
 
 	userRepo := repo_user.NewUserRepo(dbt)
 	authMid := middleware_auth.NewAuthMiddleware(userRepo)
 	akuntansiRoute := route.NewAkuntansiRoute(akuntansiH, authMid)
+	invoiceRoute := route.NewInvoiceRoute(invoiceH, authMid)
 
 	test.GetTokens(dbt, authMid)
 	tokens = test.Tokens
@@ -52,6 +72,8 @@ func TestMain(m *testing.M) {
 	akuntansiGroup.Route("/transaksi", akuntansiRoute.Transaksi)
 	akuntansiGroup.Route("/hutang_piutang", akuntansiRoute.HutangPiutang)
 	akuntansiGroup.Route("", akuntansiRoute.Akuntansi)
+	invoiceGroup := v1.Group("/invoice")
+	invoiceGroup.Route("/", invoiceRoute.Invoice)
 	// Run tests
 	exitVal := m.Run()
 	cleanUp()
@@ -76,12 +98,16 @@ func TestEndPointAkuntansi(t *testing.T) {
 	AkuntansiUpdateKontak(t)
 	AkuntansiGetAllKontak(t)
 
+	// hutang piutang
+	AkuntansiCreateHutangPiutang(t)
+
 	// transaksi
 	AkuntansiCreateTransaksi(t)
-	AkuntansiUpdateTransaksi(t)
+	AkuntansiUpdateTransaksi(t) // TODO: add validasi tr hp
 	AkuntansiGetAllTransaksi(t)
 	AkuntansiGetTransaksi(t)
 	AkuntansiGetHistoryTransaksi(t)
+
 }
 
 func TestEndPointDelete(t *testing.T) {

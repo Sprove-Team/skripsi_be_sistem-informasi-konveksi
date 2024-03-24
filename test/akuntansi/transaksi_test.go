@@ -26,7 +26,7 @@ func AkuntansiCreateTransaksi(t *testing.T) {
 			name:  "sukses without kontak",
 			token: tokens[entity.RolesById[1]],
 			payload: req_akuntansi_transaksi.Create{
-				BuktiPembayaran: []string{"http://bukti-pembayaran.jpg"},
+				BuktiPembayaran: []string{"bukti-pembayaran.webp"},
 				Tanggal:         "2023-10-30T14:17:03.723Z",
 				Keterangan:      "Membayar beban listrik dan air sebesar Rp. 10.000,-",
 				KontakID:        "",
@@ -51,7 +51,7 @@ func AkuntansiCreateTransaksi(t *testing.T) {
 			name:  "sukses with kontak",
 			token: tokens[entity.RolesById[1]],
 			payload: req_akuntansi_transaksi.Create{
-				BuktiPembayaran: []string{"http://bukti-pembayaran2.jpg"},
+				BuktiPembayaran: []string{"bukti-pembayaran2.webp"},
 				Tanggal:         "2023-10-28T14:17:03.723Z",
 				Keterangan:      "Membayar beban listrik dan air sebesar Rp. 10.000,- with kontak",
 				KontakID:        idKontak,
@@ -76,7 +76,7 @@ func AkuntansiCreateTransaksi(t *testing.T) {
 			name:  "err: kredit wajib diisi jika debit tidak diisi, begitu sebaliknya",
 			token: tokens[entity.RolesById[1]],
 			payload: req_akuntansi_transaksi.Create{
-				BuktiPembayaran: []string{"http://bukti-pembayaran2.jpg"},
+				BuktiPembayaran: []string{"bukti-pembayaran2.webp"},
 				Tanggal:         "2023-10-28T14:17:03.723Z",
 				Keterangan:      "Membayar beban listrik dan air sebesar Rp. 10.000,- with kontak",
 				KontakID:        idKontak,
@@ -101,7 +101,7 @@ func AkuntansiCreateTransaksi(t *testing.T) {
 			name:  "err: total debit dan kredit harus sama",
 			token: tokens[entity.RolesById[1]],
 			payload: req_akuntansi_transaksi.Create{
-				BuktiPembayaran: []string{"http://bukti-pembayaran2.jpg"},
+				BuktiPembayaran: []string{"bukti-pembayaran2.webp"},
 				Tanggal:         "2023-10-28T14:17:03.723Z",
 				Keterangan:      "Membayar beban listrik dan air sebesar Rp. 10.000,- with kontak",
 				KontakID:        idKontak,
@@ -124,12 +124,64 @@ func AkuntansiCreateTransaksi(t *testing.T) {
 			},
 		},
 		{
+			name:  "err: duplicate akun",
+			token: tokens[entity.RolesById[1]],
+			payload: req_akuntansi_transaksi.Create{
+				BuktiPembayaran: []string{"bukti-pembayaran2.webp"},
+				Tanggal:         "2023-10-28T14:17:03.723Z",
+				Keterangan:      "err",
+				KontakID:        idKontak,
+				AyatJurnal: []req_akuntansi_transaksi.ReqAyatJurnal{
+					{
+						AkunID: "01HP7DVBGX4JR0KETMEQTSH53Y",
+						Kredit: 10000,
+					},
+					{
+						AkunID: "01HP7DVBGX4JR0KETMEQTSH53Y",
+						Debit:  10000,
+					},
+				},
+			},
+			expectedCode: 400,
+			expectedBody: test.Response{
+				Status:         fiber.ErrBadRequest.Message,
+				Code:           400,
+				ErrorsMessages: []string{message.AkunCannotBeSame},
+			},
+		},
+		{
+			name:  "err: akun not found",
+			token: tokens[entity.RolesById[1]],
+			payload: req_akuntansi_transaksi.Create{
+				BuktiPembayaran: []string{"bukti-pembayaran2.webp"},
+				Tanggal:         "2023-10-28T14:17:03.723Z",
+				Keterangan:      "err",
+				KontakID:        idKontak,
+				AyatJurnal: []req_akuntansi_transaksi.ReqAyatJurnal{
+					{
+						AkunID: test.UlidPkg.MakeUlid().String(),
+						Kredit: 10000,
+					},
+					{
+						AkunID: test.UlidPkg.MakeUlid().String(),
+						Debit:  10000,
+					},
+				},
+			},
+			expectedCode: 400,
+			expectedBody: test.Response{
+				Status:         fiber.ErrBadRequest.Message,
+				Code:           400,
+				ErrorsMessages: []string{message.AkunNotFound},
+			},
+		},
+		{
 			name:  "err: wajib diisi akun id pada ayat jurnal",
 			token: tokens[entity.RolesById[1]],
 			payload: req_akuntansi_transaksi.Create{
-				BuktiPembayaran: []string{"http://bukti-pembayaran2.jpg"},
+				BuktiPembayaran: []string{"bukti-pembayaran2.webp"},
 				Tanggal:         "2023-10-28T14:17:03.723Z",
-				Keterangan:      "Membayar beban listrik dan air sebesar Rp. 10.000,- with kontak",
+				Keterangan:      "err",
 				KontakID:        idKontak,
 				AyatJurnal: []req_akuntansi_transaksi.ReqAyatJurnal{
 					{
@@ -151,9 +203,9 @@ func AkuntansiCreateTransaksi(t *testing.T) {
 			name:  "err: tanggal harus berformat RFC3999",
 			token: tokens[entity.RolesById[1]],
 			payload: req_akuntansi_transaksi.Create{
-				BuktiPembayaran: []string{"http://bukti-pembayaran3.jpg"},
+				BuktiPembayaran: []string{"bukti-pembayaran3.webp"},
 				Tanggal:         "2023-10-28",
-				Keterangan:      "Membayar beban listrik dan air sebesar Rp. 10.000,3",
+				Keterangan:      "err",
 				KontakID:        idKontak,
 				AyatJurnal: []req_akuntansi_transaksi.ReqAyatJurnal{
 					{
@@ -177,9 +229,9 @@ func AkuntansiCreateTransaksi(t *testing.T) {
 			name:  "err: panjang minimal ayat jurnal adalah 2 item",
 			token: tokens[entity.RolesById[1]],
 			payload: req_akuntansi_transaksi.Create{
-				BuktiPembayaran: []string{"http://bukti-pembayaran3.jpg"},
+				BuktiPembayaran: []string{"bukti-pembayaran3.webp"},
 				Tanggal:         "2023-10-28T14:17:03.723Z",
-				Keterangan:      "Membayar beban listrik dan air sebesar Rp. 10.000,3",
+				Keterangan:      "err",
 				KontakID:        idKontak,
 				AyatJurnal: []req_akuntansi_transaksi.ReqAyatJurnal{
 					{
@@ -199,9 +251,9 @@ func AkuntansiCreateTransaksi(t *testing.T) {
 			name:  "err: ulid tidak valid",
 			token: tokens[entity.RolesById[1]],
 			payload: req_akuntansi_transaksi.Create{
-				BuktiPembayaran: []string{"http://bukti-pembayaran3.jpg"},
+				BuktiPembayaran: []string{"bukti-pembayaran3.webp"},
 				Tanggal:         "2023-10-28T14:17:03.723Z",
-				Keterangan:      "Membayar beban listrik dan air sebesar Rp. 10.000,3",
+				Keterangan:      "err",
 				KontakID:        "ADFADCADFADFASDFASFSAFASFASFDASDFASDF123",
 				AyatJurnal: []req_akuntansi_transaksi.ReqAyatJurnal{
 					{
@@ -319,7 +371,7 @@ func AkuntansiUpdateTransaksi(t *testing.T) {
 			token: tokens[entity.RolesById[1]],
 			payload: req_akuntansi_transaksi.Update{
 				ID:              idTransaksi,
-				BuktiPembayaran: []string{"http://bukti-update.jpg"},
+				BuktiPembayaran: []string{"bukti-update.webp"},
 				Tanggal:         "2023-10-10T14:17:03.723Z",
 				Keterangan:      "Membayar beban gaji Rp. 15.000,- update",
 				AyatJurnal: []req_akuntansi_transaksi.ReqAyatJurnal{
@@ -344,7 +396,7 @@ func AkuntansiUpdateTransaksi(t *testing.T) {
 			token: tokens[entity.RolesById[1]],
 			payload: req_akuntansi_transaksi.Update{
 				ID:              idTransaksi,
-				BuktiPembayaran: []string{"http://bukti-pembayaran3.jpg"},
+				BuktiPembayaran: []string{"bukti-pembayaran3.webp"},
 				Tanggal:         "2023-10-28",
 				Keterangan:      "Membayar beban listrik dan air sebesar Rp. 10.000,3",
 				AyatJurnal: []req_akuntansi_transaksi.ReqAyatJurnal{
@@ -370,7 +422,7 @@ func AkuntansiUpdateTransaksi(t *testing.T) {
 			token: tokens[entity.RolesById[1]],
 			payload: req_akuntansi_transaksi.Update{
 				ID:              idTransaksi,
-				BuktiPembayaran: []string{"http://bukti-pembayaran2.jpg"},
+				BuktiPembayaran: []string{"bukti-pembayaran2.webp"},
 				Tanggal:         "2023-10-28T14:17:03.723Z",
 				Keterangan:      "err",
 				AyatJurnal: []req_akuntansi_transaksi.ReqAyatJurnal{
@@ -396,7 +448,7 @@ func AkuntansiUpdateTransaksi(t *testing.T) {
 			token: tokens[entity.RolesById[1]],
 			payload: req_akuntansi_transaksi.Update{
 				ID:              idTransaksi,
-				BuktiPembayaran: []string{"http://bukti-pembayaran2.jpg"},
+				BuktiPembayaran: []string{"bukti-pembayaran2.webp"},
 				Tanggal:         "2023-10-28T14:17:03.723Z",
 				Keterangan:      "err",
 				AyatJurnal: []req_akuntansi_transaksi.ReqAyatJurnal{
@@ -420,7 +472,7 @@ func AkuntansiUpdateTransaksi(t *testing.T) {
 			token: tokens[entity.RolesById[1]],
 			payload: req_akuntansi_transaksi.Update{
 				ID:              idTransaksi,
-				BuktiPembayaran: []string{"http://bukti-pembayaran3.jpg"},
+				BuktiPembayaran: []string{"bukti-pembayaran3.webp"},
 				Tanggal:         "2023-10-28T14:17:03.723Z",
 				Keterangan:      "err",
 				AyatJurnal: []req_akuntansi_transaksi.ReqAyatJurnal{
@@ -442,7 +494,7 @@ func AkuntansiUpdateTransaksi(t *testing.T) {
 			token: tokens[entity.RolesById[1]],
 			payload: req_akuntansi_transaksi.Update{
 				ID:              "01HM4B8QBH7MWAVAYP10WN6PKA",
-				BuktiPembayaran: []string{"http://bukti-update.jpg"},
+				BuktiPembayaran: []string{"bukti-update.webp"},
 				Tanggal:         "2023-10-10T14:17:03.723Z",
 				Keterangan:      "err",
 				AyatJurnal: []req_akuntansi_transaksi.ReqAyatJurnal{
@@ -467,7 +519,7 @@ func AkuntansiUpdateTransaksi(t *testing.T) {
 			token: tokens[entity.RolesById[1]],
 			payload: req_akuntansi_transaksi.Update{
 				ID:              idAkun + "123",
-				BuktiPembayaran: []string{"http://bukti-update.jpg"},
+				BuktiPembayaran: []string{"bukti-update.webp"},
 				Tanggal:         "2023-10-10T14:17:03.723Z",
 				Keterangan:      "err",
 				AyatJurnal: []req_akuntansi_transaksi.ReqAyatJurnal{
