@@ -27,7 +27,7 @@ func (ro *invoiceRoute) Invoice(router fiber.Router) {
 	auth3 := ro.auth.Authorization([]string{"DIREKTUR", "ADMIN", "MANAJER_PRODUKSI", "SUPERVISOR"})
 
 	router.Get("", auth3, ro.h.InvoiceHandler().GetAll)
-	router.Get("/:id", auth3, ro.h.InvoiceHandler().GetById)
+	router.Get("/:id", ro.h.InvoiceHandler().GetById) // public
 	router.Post("", auth, ro.h.InvoiceHandler().Create)
 	router.Put("/:id", auth2, ro.h.InvoiceHandler().Update)
 	router.Delete("/:id", auth2, ro.h.InvoiceHandler().Delete)

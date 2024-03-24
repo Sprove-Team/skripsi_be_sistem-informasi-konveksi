@@ -119,7 +119,9 @@ func (r *invoiceRepo) GetById(param ParamGetById) (*entity.Invoice, error) {
 	tx := r.DB.WithContext(param.Ctx).
 		Preload("DataBayarInvoice").
 		Preload("DataBayarInvoice.Akun").
-		Preload("DetailInvoice").
+		Preload("DetailInvoice", func(db *gorm.DB) *gorm.DB {
+			return db.Order("qty ASC")
+		}).
 		Preload("DetailInvoice.Produk").
 		Preload("DetailInvoice.Bordir").
 		Preload("DetailInvoice.Sablon").
