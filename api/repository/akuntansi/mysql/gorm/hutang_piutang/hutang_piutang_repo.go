@@ -14,8 +14,12 @@ type (
 		HutangPiutang *entity.HutangPiutang
 	}
 	ParamGetAll struct {
-		Ctx    context.Context
-		Search SearchParam
+		Ctx      context.Context
+		KontakID string
+		Jenis    []string
+		Status   []string
+		Limit    int
+		Next     string
 	}
 	ParamGetById struct {
 		Ctx context.Context
@@ -35,17 +39,9 @@ type (
 	}
 )
 
-type SearchParam struct {
-	KontakID string
-	Jenis    []string
-	Status   []string
-	Next     string
-	Limit    int
-}
-
 type HutangPiutangRepo interface {
 	Create(param ParamCreate) error
-	GetAll(param ParamGetAll) ([]entity.HutangPiutang, error)
+	GetAll(param ParamGetAll) ([]entity.Kontak, error)
 	GetById(param ParamGetById) (*entity.HutangPiutang, error)
 	GetByInvoiceId(param ParamGetByInvoiceId) (*entity.HutangPiutang, error)
 	GetByTrId(param ParamGetByTrId) (*entity.HutangPiutang, error)
@@ -67,40 +63,32 @@ func (r *hutangPiutangRepo) Create(param ParamCreate) error {
 	return nil
 }
 
-func (r *hutangPiutangRepo) GetAll(param ParamGetAll) ([]entity.HutangPiutang, error) {
-	datas := []entity.HutangPiutang{}
-	tx := r.DB.WithContext(param.Ctx).Model(&entity.HutangPiutang{}).Order("id ASC")
+func (r *hutangPiutangRepo) GetAll(param ParamGetAll) ([]entity.Kontak, error) {
+	datas := make([]entity.Kontak, 0, param.Limit)
+	tx := r.DB.WithContext(param.Ctx).Model(datas).Order("id ASC")
 
-	if param.Search.Next != "" {
-		tx = tx.Where("id > ?", param.Search.Next)
+	if param.KontakID != "" {
+		tx = tx.Where("id = ?", param.KontakID)
+	} else if param.Next != "" {
+		tx = tx.Where("id > ?", param.Next)
 	}
 
-	if param.Search.Jenis != nil {
-		tx = tx.Where("jenis IN (?)", param.Search.Jenis)
-	}
-
-	if param.Search.Status != nil {
-		tx = tx.Where("status IN (?)", param.Search.Status)
-	}
-
-	if param.Search.KontakID != "" {
-		tx = tx.Where("kontak_id = ?", param.Search.KontakID)
-	}
-
-	tx = tx.
-		Preload("Transaksi").
-		Preload("Transaksi.Kontak").
-		Preload("DataBayarHutangPiutang").
-		Preload("DataBayarHutangPiutang.Transaksi").
-		Limit(param.Search.Limit)
-
-	if err := tx.Find(&datas).Error; err != nil {
+	tx = tx.Preload("Transaksi", func(db *gorm.DB) *gorm.DB {
+		tx2 := db.Joins("INNER JOIN hutang_piutang ON transaksi.id = hutang_piutang.transaksi_id")
+		if param.Jenis != nil && param.Status != nil {
+			tx2 = tx2.Where("hutang_piutang.jenis IN (?) AND hutang_piutang.status IN (?)", param.Jenis, param.Status)
+		} else if param.Jenis != nil {
+			tx2 = tx2.Where("hutang_piutang.jenis IN (?)", param.Jenis)
+		} else if param.Status != nil {
+			tx2 = tx2.Where("hutang_piutang.status IN (?)", param.Status)
+		}
+		return tx2.Preload("HutangPiutang")
+	})
+	if err := tx.Limit(param.Limit).Find(&datas).Error; err != nil {
 		helper.LogsError(err)
 		return nil, err
 	}
-
 	return datas, nil
-
 }
 
 func (r *hutangPiutangRepo) GetById(param ParamGetById) (*entity.HutangPiutang, error) {

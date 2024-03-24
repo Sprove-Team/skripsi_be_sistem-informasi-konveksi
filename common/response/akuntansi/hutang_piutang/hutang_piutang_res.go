@@ -15,6 +15,7 @@ type ResDataHutangPiutang struct {
 
 type GetAll struct {
 	Nama          string                 `json:"nama"`
+	KontakId      string                 `json:"kontak_id"`
 	TotalPiutang  float64                `json:"total_piutang"`
 	SisaPiutang   float64                `json:"sisa_piutang"`
 	TotalHutang   float64                `json:"total_hutang"`

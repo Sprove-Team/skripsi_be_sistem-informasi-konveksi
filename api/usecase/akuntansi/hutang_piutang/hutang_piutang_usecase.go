@@ -5,7 +5,6 @@ import (
 	"errors"
 	"math"
 	"strings"
-	"sync"
 	"time"
 
 	repoAkun "github.com/be-sistem-informasi-konveksi/api/repository/akuntansi/mysql/gorm/akun"
@@ -182,83 +181,57 @@ func (u *hutangPiutangUsecase) GetAll(ctx context.Context, reqHutangPiutang req.
 	if reqHutangPiutang.Limit <= 0 {
 		reqHutangPiutang.Limit = 10
 	}
-	repoSearch := repo.SearchParam{
-		KontakID: reqHutangPiutang.KontakID,
-		Status:   []string{reqHutangPiutang.Status},
-		Jenis:    []string{reqHutangPiutang.Jenis},
-		Next:     reqHutangPiutang.Next,
-		Limit:    reqHutangPiutang.Limit,
-	}
 
+	repoFilter := repo.ParamGetAll{
+		Ctx:      ctx,
+		KontakID: reqHutangPiutang.KontakID,
+		Jenis:    []string{reqHutangPiutang.Jenis},
+		Status:   []string{reqHutangPiutang.Status},
+		Limit:    reqHutangPiutang.Limit,
+		Next:     reqHutangPiutang.Next,
+	}
 	if reqHutangPiutang.Jenis == "ALL" || reqHutangPiutang.Jenis == "" {
-		repoSearch.Jenis = []string{"PIUTANG", "HUTANG"}
+		repoFilter.Jenis = []string{"PIUTANG", "HUTANG"}
 	}
 	if reqHutangPiutang.Status == "ALL" || reqHutangPiutang.Status == "" {
-		repoSearch.Status = []string{"BELUM_LUNAS", "LUNAS"}
+		repoFilter.Status = []string{"BELUM_LUNAS", "LUNAS"}
 	}
 
-	datas, err := u.repo.GetAll(repo.ParamGetAll{
-		Ctx:    ctx,
-		Search: repoSearch,
-	})
+	data, err := u.repo.GetAll(repoFilter)
 	if err != nil {
 		return nil, err
 	}
 
-	groupDataByKontak := make(map[string]res.GetAll)
+	resData := make([]res.GetAll, len(data))
 
-	m := new(sync.RWMutex)
-	wg := new(sync.WaitGroup)
-	maxGoroutines := 12
-	guard := make(chan struct{}, maxGoroutines)
-	for _, dataHpMixUp := range datas {
-		wg.Add(1)
-		guard <- struct{}{} // would block if guard channel is already filled
-		go func(data entity.HutangPiutang) {
-			defer func() {
-				<-guard
-				wg.Done()
-			}()
-			m.Lock()
-			defer m.Unlock()
-			dat, ok := groupDataByKontak[data.Transaksi.Kontak.Nama]
-			if !ok {
-				dat = res.GetAll{
-					Nama: data.Transaksi.Kontak.Nama,
-				}
-			}
-			dataHp := res.ResDataHutangPiutang{
-				ID:          data.ID,
-				InvoiceID:   data.InvoiceID,
-				Jenis:       data.Jenis,
-				TransaksiID: data.TransaksiID,
-				Tanggal:     data.Transaksi.Tanggal.Format(time.RFC3339),
-				Status:      data.Status,
-				Total:       data.Total,
-				Sisa:        data.Sisa,
-			}
-
-			if data.Jenis == "PIUTANG" {
-				dat.TotalPiutang += data.Total
-				dat.SisaPiutang += data.Sisa
+	for i, kontak := range data {
+		resData[i] = res.GetAll{
+			Nama:     kontak.Nama,
+			KontakId: kontak.ID,
+		}
+		dataHP := make([]res.ResDataHutangPiutang, len(kontak.Transaksi))
+		for j, tr := range kontak.Transaksi {
+			if tr.HutangPiutang.Jenis == "PIUTANG" {
+				resData[i].TotalPiutang += tr.HutangPiutang.Total
+				resData[i].SisaPiutang += tr.HutangPiutang.Sisa
 			} else {
-				dat.TotalHutang += data.Total
-				dat.SisaHutang += data.Sisa
+				resData[i].TotalHutang += tr.HutangPiutang.Total
+				resData[i].SisaHutang += tr.HutangPiutang.Sisa
 			}
-
-			dat.HutangPiutang = append(dat.HutangPiutang, dataHp)
-			groupDataByKontak[data.Transaksi.Kontak.Nama] = dat
-
-		}(dataHpMixUp)
+			dataHP[j] = res.ResDataHutangPiutang{
+				ID:          tr.HutangPiutang.ID,
+				InvoiceID:   tr.HutangPiutang.InvoiceID,
+				TransaksiID: tr.HutangPiutang.TransaksiID,
+				Jenis:       tr.HutangPiutang.Jenis,
+				Status:      tr.HutangPiutang.Status,
+				Tanggal:     tr.Tanggal.Format(time.RFC3339),
+				Total:       tr.HutangPiutang.Total,
+				Sisa:        tr.HutangPiutang.Sisa,
+			}
+		}
+		resData[i].HutangPiutang = dataHP
 	}
-	wg.Wait()
 
-	resData := make([]res.GetAll, len(groupDataByKontak))
-	i := 0
-	for _, v := range groupDataByKontak {
-		resData[i] = v
-		i++
-	}
 	return resData, nil
 }
 
