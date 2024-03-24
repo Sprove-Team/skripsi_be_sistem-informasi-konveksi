@@ -40,4 +40,6 @@ type GetAll struct {
 	KontakID string `query:"kontak_id" validate:"omitempty,ulid"`
 	Jenis    string `query:"jenis" validate:"omitempty,oneof=PIUTANG HUTANG ALL"`
 	Status   string `query:"status" validate:"omitempty,oneof=BELUM_LUNAS LUNAS ALL"`
+	Next     string `query:"next" validate:"omitempty,ulid"`
+	Limit    int    `query:"limit" validate:"omitempty"`
 }

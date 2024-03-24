@@ -39,6 +39,8 @@ type SearchParam struct {
 	KontakID string
 	Jenis    []string
 	Status   []string
+	Next     string
+	Limit    int
 }
 
 type HutangPiutangRepo interface {
@@ -69,6 +71,10 @@ func (r *hutangPiutangRepo) GetAll(param ParamGetAll) ([]entity.HutangPiutang, e
 	datas := []entity.HutangPiutang{}
 	tx := r.DB.WithContext(param.Ctx).Model(&entity.HutangPiutang{}).Order("id ASC")
 
+	if param.Search.Next != "" {
+		tx = tx.Where("id > ?", param.Search.Next)
+	}
+
 	if param.Search.Jenis != nil {
 		tx = tx.Where("jenis IN (?)", param.Search.Jenis)
 	}
@@ -85,7 +91,8 @@ func (r *hutangPiutangRepo) GetAll(param ParamGetAll) ([]entity.HutangPiutang, e
 		Preload("Transaksi").
 		Preload("Transaksi.Kontak").
 		Preload("DataBayarHutangPiutang").
-		Preload("DataBayarHutangPiutang.Transaksi")
+		Preload("DataBayarHutangPiutang.Transaksi").
+		Limit(param.Search.Limit)
 
 	if err := tx.Find(&datas).Error; err != nil {
 		helper.LogsError(err)

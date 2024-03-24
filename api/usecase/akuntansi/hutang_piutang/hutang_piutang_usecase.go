@@ -179,10 +179,15 @@ func (u *hutangPiutangUsecase) CreateCommitDB(ctx context.Context, hp *entity.Hu
 }
 
 func (u *hutangPiutangUsecase) GetAll(ctx context.Context, reqHutangPiutang req.GetAll) ([]res.GetAll, error) {
+	if reqHutangPiutang.Limit <= 0 {
+		reqHutangPiutang.Limit = 10
+	}
 	repoSearch := repo.SearchParam{
 		KontakID: reqHutangPiutang.KontakID,
 		Status:   []string{reqHutangPiutang.Status},
 		Jenis:    []string{reqHutangPiutang.Jenis},
+		Next:     reqHutangPiutang.Next,
+		Limit:    reqHutangPiutang.Limit,
 	}
 
 	if reqHutangPiutang.Jenis == "ALL" || reqHutangPiutang.Jenis == "" {
