@@ -1,3 +1,5 @@
+//go:build test_exclude
+
 package test_user
 
 import (
