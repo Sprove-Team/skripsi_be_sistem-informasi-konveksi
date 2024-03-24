@@ -1,15 +1,18 @@
-//go:build test_exclude
-
 package test_akuntansi
 
 import (
+	"net/url"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/be-sistem-informasi-konveksi/common/message"
 	req_akuntansi_hp "github.com/be-sistem-informasi-konveksi/common/request/akuntansi/hutang_piutang"
 	"github.com/be-sistem-informasi-konveksi/entity"
+	"github.com/be-sistem-informasi-konveksi/helper"
 	"github.com/be-sistem-informasi-konveksi/test"
 	"github.com/gofiber/fiber/v2"
+	"github.com/mitchellh/mapstructure"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -280,36 +283,6 @@ func AkuntansiCreateHutangPiutang(t *testing.T) {
 				ErrorsMessages: []string{message.IncorrectEntryAkunHP},
 			},
 		},
-		// {
-		// 	name:  "err: kategori akun harus berupa salah satu dari [ASET,KEWAJIBAN,MODAL,PENDAPATAN,BEBAN]",
-		// 	token: tokens[entity.RolesById[1]],
-		// 	payload: req_akuntansi_hp.Create{
-		// 		Nama:         "kelompok err kategori",
-		// 		Kode:         "212312",
-		// 		KategoriAkun: "asdf",
-		// 	},
-		// 	expectedCode: 400,
-		// 	expectedBody: test.Response{
-		// 		Status:         fiber.ErrBadRequest.Message,
-		// 		Code:           400,
-		// 		ErrorsMessages: []string{"kategori akun harus berupa salah satu dari [ASET,KEWAJIBAN,MODAL,PENDAPATAN,BEBAN]"},
-		// 	},
-		// },
-		// {
-		// 	name:  "err: wajib diisi",
-		// 	token: tokens[entity.RolesById[1]],
-		// 	payload: req_akuntansi_hp.Create{
-		// 		Nama:         "",
-		// 		Kode:         "",
-		// 		KategoriAkun: "",
-		// 	},
-		// 	expectedCode: 400,
-		// 	expectedBody: test.Response{
-		// 		Status:         fiber.ErrBadRequest.Message,
-		// 		Code:           400,
-		// 		ErrorsMessages: []string{"nama wajib diisi", "kode wajib diisi", "kategori akun wajib diisi"},
-		// 	},
-		// },
 		{
 			name:         "err: authorization " + entity.RolesById[3],
 			payload:      req_akuntansi_hp.Create{},
@@ -355,6 +328,192 @@ func AkuntansiCreateHutangPiutang(t *testing.T) {
 			} else {
 				assert.Equal(t, tt.expectedBody, body)
 			}
+		})
+	}
+}
+
+var idTransaksiWithHP string
+
+func AkuntansiGetAllHutangPiutang(t *testing.T) {
+	// create invoice for test data hp that invoice id
+	{
+		tt := time.Now().Add(time.Hour * 24)
+		invoice := &entity.Invoice{
+			Base: entity.Base{
+				ID: test.UlidPkg.MakeUlid().String(),
+			},
+			NomorReferensi:  "001",
+			TanggalDeadline: &tt,
+			TanggalKirim:    &tt,
+			Keterangan:      "test for hp",
+			KontakID:        idKontak,
+			TotalQty:        10,
+			TotalHarga:      10000,
+		}
+		if err := dbt.Create(invoice).Error; err != nil {
+			helper.LogsError(err)
+			return
+		}
+		tr := &entity.Transaksi{
+			Base: entity.Base{
+				ID: test.UlidPkg.MakeUlid().String(),
+			},
+			Keterangan: "test for hp",
+			KontakID:   idKontak,
+			Total:      10000,
+			Tanggal:    tt,
+		}
+		if err := dbt.Create(tr).Error; err != nil {
+			helper.LogsError(err)
+			return
+		}
+		idHp := test.UlidPkg.MakeUlid().String()
+		hpWithInvoiceId := &entity.HutangPiutang{
+			Base: entity.Base{
+				ID: idHp,
+			},
+			InvoiceID:   invoice.ID,
+			TransaksiID: tr.ID,
+			Jenis:       "PIUTANG",
+			Total:       10000,
+			Sisa:        10000,
+		}
+
+		if err := dbt.Create(hpWithInvoiceId).Error; err != nil {
+			helper.LogsError(err)
+			return
+		}
+	}
+
+	dataKontak := new(entity.Kontak)
+	if err := dbt.First(dataKontak, "id = ?", idKontak).Error; err != nil {
+		helper.LogsError(err)
+		return
+	}
+
+	tests := []struct {
+		name         string
+		token        string
+		queryBody    string
+		expectedBody test.Response
+		expectedCode int
+	}{
+		{
+			name:         "sukses",
+			token:        tokens[entity.RolesById[1]],
+			expectedCode: 200,
+			expectedBody: test.Response{
+				Status: message.OK,
+				Code:   200,
+			},
+		},
+		{ // same data with idKelompokAkun2
+			name:         "sukses with filter",
+			token:        tokens[entity.RolesById[1]],
+			queryBody:    "?status=BELUM_LUNAS&jenis=HUTANG&kontak_id=" + dataKontak.ID,
+			expectedCode: 200,
+			expectedBody: test.Response{
+				Status: message.OK,
+				Code:   200,
+			},
+		},
+		// {
+		// 	name:         "sukses limit 1",
+		// 	token:        tokens[entity.RolesById[1]],
+		// 	queryBody:    "?limit=1",
+		// 	expectedCode: 200,
+		// 	expectedBody: test.Response{
+		// 		Status: message.OK,
+		// 		Code:   200,
+		// 	},
+		// },
+		{
+			name:         "err: authorization " + entity.RolesById[4],
+			token:        tokens[entity.RolesById[4]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[5],
+			token:        tokens[entity.RolesById[5]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			code, body, err := test.GetJsonTestRequestResponse(app, "GET", "/api/v1/akuntansi/hutang_piutang"+tt.queryBody, nil, &tt.token)
+			assert.NoError(t, err)
+			assert.Equal(t, tt.expectedCode, code)
+
+			var res []map[string]interface{}
+			if strings.Contains(tt.name, "sukses") {
+				err = mapstructure.Decode(body.Data, &res)
+				assert.NoError(t, err)
+				length := len(res)
+				assert.Greater(t, length, 0)
+				if length <= 0 {
+					return
+				}
+				assert.NotEmpty(t, res[0])
+				assert.NotEmpty(t, res[0]["nama"])
+				assert.NotEmpty(t, res[0]["total_piutang"])
+				assert.NotEmpty(t, res[0]["total_hutang"])
+				assert.NotEmpty(t, res[0]["sisa_piutang"])
+				assert.NotEmpty(t, res[0]["sisa_hutang"])
+				assert.NotEmpty(t, res[0]["hutang_piutang"])
+				var invoiceIdEverExist bool
+				for _, hp := range res[0]["hutang_piutang"].([]any) {
+					hp2 := hp.(map[string]any)
+					assert.NotEmpty(t, hp2["id"])
+					assert.NotEmpty(t, hp2["jenis"])
+					assert.NotEmpty(t, hp2["transaksi_id"])
+					assert.NotEmpty(t, hp2["tanggal"])
+					assert.NotEmpty(t, hp2["status"])
+					assert.NotEmpty(t, hp2["total"])
+					assert.NotEmpty(t, hp2["sisa"])
+					if idTransaksiWithHP == "" {
+						idTransaksiWithHP = hp2["transaksi_id"].(string)
+					}
+					_, ok := hp2["invoice_id"]
+					if ok {
+						invoiceIdEverExist = true
+					}
+				}
+
+				assert.Equal(t, tt.expectedBody.Status, body.Status)
+				switch tt.name {
+				case "sukses":
+					assert.True(t, invoiceIdEverExist)
+				case "sukses with filter":
+					v, err := url.ParseQuery(tt.queryBody[1:])
+					assert.NoError(t, err)
+					assert.Equal(t, res[0]["status"], v.Get("status"))
+					assert.Equal(t, res[0]["jenis"], v.Get("jenis"))
+					assert.Equal(t, res[0]["nama"], dataKontak.Nama)
+				case "sukses limit 1":
+					assert.Len(t, res, 1)
+				case "sukses with next":
+					assert.NotEqual(t, idKelompokAkun, res[0]["id"])
+				}
+			} else {
+				if len(tt.expectedBody.ErrorsMessages) > 0 {
+					for _, v := range tt.expectedBody.ErrorsMessages {
+						assert.Contains(t, body.ErrorsMessages, v)
+					}
+					assert.Equal(t, tt.expectedBody.Status, body.Status)
+				} else {
+					assert.Equal(t, tt.expectedBody, body)
+				}
+			}
+
 		})
 	}
 }

@@ -1,5 +1,3 @@
-//go:build test_exclude
-
 package test_akuntansi
 
 import (
@@ -45,6 +43,7 @@ func cleanUp() {
 // func setupInvoiceData() {
 // 	payload := req_invoice.Create{
 // 		KontakID: idKontak,
+
 // 	}
 // 	token := tokens[entity.RolesById[1]]
 // 	test.GetJsonTestRequestResponse(app, "POST", "/api/v1/invoice", payload, &token)
@@ -83,17 +82,17 @@ func TestMain(m *testing.M) {
 }
 
 func TestEndPointAkuntansi(t *testing.T) {
-	// kelompok akun
-	AkuntansiCreateKelompokAkun(t)
-	AkuntansiUpdateKelompokAkun(t)
-	AkuntansiGetAllKelompokAkun(t)
-	AkuntansiGetKelompokAkun(t)
+	// // kelompok akun
+	// AkuntansiCreateKelompokAkun(t)
+	// AkuntansiUpdateKelompokAkun(t)
+	// AkuntansiGetAllKelompokAkun(t)
+	// AkuntansiGetKelompokAkun(t)
 
-	// akun
-	AkuntansiCreateAkun(t)
-	AkuntansiUpdateAkun(t)
-	AkuntansiGetAllAkun(t)
-	AkuntansiGetAkun(t)
+	// // akun
+	// AkuntansiCreateAkun(t)
+	// AkuntansiUpdateAkun(t)
+	// AkuntansiGetAllAkun(t)
+	// AkuntansiGetAkun(t)
 
 	// kontak
 	AkuntansiCreateKontak(t)
@@ -102,19 +101,20 @@ func TestEndPointAkuntansi(t *testing.T) {
 
 	// hutang piutang
 	AkuntansiCreateHutangPiutang(t)
+	AkuntansiGetAllHutangPiutang(t)
 
 	// transaksi
-	AkuntansiCreateTransaksi(t)
-	AkuntansiUpdateTransaksi(t) // TODO: add validasi tr hp
-	AkuntansiGetAllTransaksi(t)
-	AkuntansiGetTransaksi(t)
-	AkuntansiGetHistoryTransaksi(t)
+	// AkuntansiCreateTransaksi(t)
+	// AkuntansiUpdateTransaksi(t) // TODO: add validasi tr hp
+	// AkuntansiGetAllTransaksi(t)
+	// AkuntansiGetTransaksi(t)
+	// AkuntansiGetHistoryTransaksi(t)
 
 }
 
 func TestEndPointDelete(t *testing.T) {
-	AkuntansiDeleteKelompokAkun(t)
-	AkuntansiDeleteAkun(t)
-	AkuntansiDeleteTransaksi(t)
+	// AkuntansiDeleteKelompokAkun(t)
+	// AkuntansiDeleteAkun(t)
+	// AkuntansiDeleteTransaksi(t)
 	AkuntansiDeleteKontak(t)
 }
