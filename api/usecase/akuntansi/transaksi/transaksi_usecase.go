@@ -157,14 +157,13 @@ func (u *transaksiUsecase) Update(ctx context.Context, reqTransaksi req.Update) 
 
 		akunsMap := map[string]entity.Akun{}
 
-		for _, v := range akuns {
+		if hp.ID != "" || hpFromByr.ID != "" {
 			// validasi ayat jurnal jika termasuk hutang piutang
-			if hp.ID != "" || hpFromByr.ID != "" {
-				if err := pkgAkuntansiLogic.IsValidAkunHutangPiutang(v.KelompokAkun.Nama); err != nil {
-					return err
-				}
+			if err := pkgAkuntansiLogic.IsAkunHutangPiutangExist(akuns); err != nil {
+				return err
 			}
-
+		}
+		for _, v := range akuns {
 			akunsMap[v.ID] = v
 		}
 

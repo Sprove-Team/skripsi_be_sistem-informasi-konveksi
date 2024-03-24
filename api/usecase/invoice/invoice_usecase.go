@@ -282,7 +282,6 @@ func (u *invoiceUsecase) CreateDataInvoice(param ParamCreateDataInvoice) (*entit
 	}
 	reqHpUC := reqHP.Create{
 		KontakID:   param.Req.KontakID,
-		InvoiceID:  invoiceID,
 		Jenis:      "PIUTANG",
 		Keterangan: param.Req.Keterangan,
 		Transaksi: reqHP.ReqTransaksi{

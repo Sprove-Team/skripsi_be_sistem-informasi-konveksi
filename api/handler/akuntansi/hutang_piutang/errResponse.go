@@ -39,7 +39,7 @@ func (e *errResponse) errHP(c *fiber.Ctx, err error) error {
 		message.CreditDebitNotSame,
 		message.AkunNotFound,
 		message.KontakNotFound,
-		message.InvalidAkunHutangPiutang,
+		message.AkunHPDoesNotExist,
 		message.IncorrectEntryAkunHP,
 		message.InvalidAkunBayar,
 		message.BayarMustLessThanSisaTagihan,

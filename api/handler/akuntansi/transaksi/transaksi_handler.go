@@ -52,7 +52,7 @@ func errResponse(c *fiber.Ctx, err error) error {
 		message.AkunHutangPiutangNotEq2,
 		message.BayarMustLessThanSisaTagihan,
 		message.TotalHPMustGeOrEqToTotalByr,
-		message.InvalidAkunHutangPiutang,
+		message.AkunHPDoesNotExist,
 		message.AkunNotMatchWithJenisHPTr:
 		badRequest = append(badRequest, err.Error())
 	}

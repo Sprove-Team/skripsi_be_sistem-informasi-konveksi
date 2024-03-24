@@ -31,6 +31,10 @@ type (
 		Ctx context.Context
 		ID  string
 	}
+	ParamGetByIdWithoutPreload struct {
+		Ctx context.Context
+		ID  string
+	}
 	ParamUpdateFullAssoc struct {
 		Ctx     context.Context
 		Invoice *entity.Invoice
@@ -48,6 +52,7 @@ type InvoiceRepo interface {
 	GetLastInvoiceCrrYear(ctx context.Context) (entity.Invoice, error)
 	GetById(param ParamGetById) (*entity.Invoice, error)
 	CheckInvoice(param ParamGetById) error
+	GetByIdWithoutPreload(param ParamGetByIdWithoutPreload) (*entity.Invoice, error)
 	GetByIdFullAssoc(param ParamGetById) (*entity.Invoice, error)
 	GetAll(param ParamGetAll) ([]entity.Invoice, error)
 	Delete(param ParamDelete) error
@@ -97,6 +102,16 @@ func (r *invoiceRepo) CheckInvoice(param ParamGetById) error {
 		return err
 	}
 	return nil
+}
+
+func (r *invoiceRepo) GetByIdWithoutPreload(param ParamGetByIdWithoutPreload) (*entity.Invoice, error) {
+	data := new(entity.Invoice)
+	err := r.DB.WithContext(param.Ctx).First(data, "id = ?", param.ID).Error
+	if err != nil {
+		helper.LogsError(err)
+		return nil, err
+	}
+	return data, nil
 }
 
 func (r *invoiceRepo) GetById(param ParamGetById) (*entity.Invoice, error) {

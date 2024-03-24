@@ -3,7 +3,6 @@ package uc_akuntansi
 import (
 	"errors"
 	"math"
-	"strings"
 	"time"
 
 	"github.com/be-sistem-informasi-konveksi/common/message"
@@ -14,20 +13,13 @@ import (
 	"github.com/be-sistem-informasi-konveksi/pkg"
 )
 
-func IsValidAkunHutangPiutang(nama string) error {
-	validNames := []string{"piutang", "hutang", "kas & bank"}
-	if strings.HasPrefix(nama, "pendapatan") {
-		return nil
-	}
-	if strings.HasPrefix(nama, "beban") {
-		return nil
-	}
-	for _, validName := range validNames {
-		if nama == validName {
+func IsAkunHutangPiutangExist(akuns []entity.Akun) error {
+	for _, akun := range akuns {
+		if akun.KelompokAkun.Nama == "piutang" || akun.KelompokAkun.Nama == "hutang" {
 			return nil
 		}
 	}
-	return errors.New(message.InvalidAkunHutangPiutang)
+	return errors.New(message.AkunHPDoesNotExist)
 }
 
 func IsValidAkunHp(hp *entity.HutangPiutang, akun *entity.Akun, ay *reqTr.ReqAyatJurnal) error {

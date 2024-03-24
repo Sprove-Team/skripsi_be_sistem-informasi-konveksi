@@ -45,7 +45,12 @@ type hutangPiutangUsecase struct {
 	ulid        pkg.UlidPkg
 }
 
-func NewHutangPiutangUsecase(repo repo.HutangPiutangRepo, repoBayarHP repoBayarHP.DataBayarHutangPiutangRepo, repoAkun repoAkun.AkunRepo, repoKontak repoKontak.KontakRepo, ulid pkg.UlidPkg) HutangPiutangUsecase {
+func NewHutangPiutangUsecase(
+	repo repo.HutangPiutangRepo,
+	repoBayarHP repoBayarHP.DataBayarHutangPiutangRepo,
+	repoAkun repoAkun.AkunRepo,
+	repoKontak repoKontak.KontakRepo,
+	ulid pkg.UlidPkg) HutangPiutangUsecase {
 	return &hutangPiutangUsecase{repo, repoBayarHP, repoAkun, repoKontak, ulid}
 }
 
@@ -89,11 +94,12 @@ func (u *hutangPiutangUsecase) CreateDataHP(param ParamCreateDataHp) (*entity.Hu
 	// validate akun + add ayat jurnal saldo untk create tr hutang piutang
 	akunMap := map[string]entity.Akun{}
 	akunYgAkanDibayar := entity.Akun{} // akun yang akan dibayar nantinya
-	for _, akun := range akuns {
-		if err := pkgAkuntansiLogic.IsValidAkunHutangPiutang(akun.KelompokAkun.Nama); err != nil {
-			return nil, err
-		}
+	if err := pkgAkuntansiLogic.IsAkunHutangPiutangExist(akuns); err != nil {
+		return nil, err
+	}
 
+	// get saldo & data akun yang akan dibayar/berkurang nantinya
+	for _, akun := range akuns {
 		switch akun.ID {
 		case ayHP1.AkunID:
 			pkgAkuntansiLogic.UpdateSaldo(&ayHP1.Saldo, ayHP1.Kredit, ayHP1.Debit, akun.SaldoNormal)
@@ -155,6 +161,7 @@ func (u *hutangPiutangUsecase) CreateDataHP(param ParamCreateDataHp) (*entity.Hu
 }
 
 func (u *hutangPiutangUsecase) CreateCommitDB(ctx context.Context, hp *entity.HutangPiutang) error {
+
 	_, err := u.repoKontak.GetById(repoKontak.ParamGetById{
 		Ctx: ctx,
 		ID:  hp.Transaksi.KontakID,

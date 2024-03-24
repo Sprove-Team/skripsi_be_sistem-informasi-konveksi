@@ -92,7 +92,7 @@ var (
 	// hutang piutang
 	HutangPiutangNotFound              = "hutang piutang tidak di temukan"
 	IncorrectEntryAkunHP               = "transaksi menyebabkan pengurangan atau penambahan pada akun hutang piutang yang salah"
-	InvalidAkunHutangPiutang           = "akun bukan merupakan akun hutang piutang"
+	AkunHPDoesNotExist                 = "akun hutang piutang tidak ada pada ayat jurnal"
 	IncorrectPlacementOfCreditAndDebit = "peletakan total debit dan kredit untuk hutang piutang tidak benar"
 	TotalHPMustGeOrEqToTotalByr        = "jumlah hutang piutang harus lebih besar atau sama dengan total hutang piutang yang telah dibayar"
 	// bayar hutang piutang

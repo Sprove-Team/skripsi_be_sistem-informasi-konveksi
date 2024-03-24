@@ -25,8 +25,7 @@ type ReqBayar struct {
 }
 
 type Create struct {
-	KontakID   string       `json:"kontak_id" validate:"required,ulid"`
-	InvoiceID  string       `json:"invoice_id" validate:"omitempty,ulid"`
+	KontakID   string       `json:"kontak_id" validate:"required,omitempty,ulid"`
 	Jenis      string       `json:"jenis" validate:"required,oneof=PIUTANG HUTANG"`
 	Keterangan string       `json:"keterangan" validate:"required"`
 	Transaksi  ReqTransaksi `json:"transaksi" validate:"required"`

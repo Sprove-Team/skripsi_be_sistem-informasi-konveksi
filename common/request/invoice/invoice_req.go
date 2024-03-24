@@ -26,7 +26,6 @@ type ReqBayar struct {
 }
 
 type Create struct {
-	StatusProduksi  string             `json:"status_produksi" validate:"omitempty,oneof=BELUM_DIKERJAKAN DIPROSES SELESAI"`
 	KontakID        string             `json:"kontak_id" validate:"required_without=NewKontak,excluded_with=NewKontak,ulid"`
 	NewKontak       ReqNewKontak       `json:"new_kontak" validate:"omitempty"`
 	Bayar           ReqBayar           `json:"bayar" validate:"required"`
