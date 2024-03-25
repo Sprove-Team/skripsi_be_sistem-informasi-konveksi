@@ -25,7 +25,7 @@ type (
 
 type (
 	DataAyatJurnalBB struct {
-		TransaksiID string  `json:"transaksi_id"`
+		TransaksiID string  `json:"transaksi_id,omitempty"`
 		Tanggal     string  `json:"tanggal"`
 		Keterangan  string  `json:"keterangan"`
 		Debit       float64 `json:"debit"`

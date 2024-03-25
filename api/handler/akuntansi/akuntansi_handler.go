@@ -2,6 +2,7 @@ package handler_akuntansi
 
 import (
 	"context"
+	"strings"
 
 	usecase "github.com/be-sistem-informasi-konveksi/api/usecase/akuntansi"
 	"github.com/be-sistem-informasi-konveksi/common/message"
@@ -53,7 +54,8 @@ func (h *akuntansiHandler) GetAllJU(c *fiber.Ctx) error {
 func (h *akuntansiHandler) GetAllBB(c *fiber.Ctx) error {
 	reqU := new(req.GetAllBB)
 	c.QueryParser(reqU)
-
+	akunIds := c.Query("akun_id")
+	reqU.AkunID = strings.Split(strings.Trim(akunIds, " "), ",")
 	errValidate := h.validator.Validate(reqU)
 	if errValidate != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(errValidate)

@@ -9,13 +9,14 @@ import (
 )
 
 // transaksi
-func UpdateSaldo(saldo *float64, ayKredit, ayDebit float64, saldoNormal string) {
+func UpdateSaldo(ayKredit, ayDebit float64, saldoNormal string) (saldo float64) {
 	if saldoNormal == "DEBIT" {
-		*saldo = ayDebit - ayKredit
+		saldo = ayDebit - ayKredit
 	}
 	if saldoNormal == "KREDIT" {
-		*saldo = ayKredit - ayDebit
+		saldo = ayKredit - ayDebit
 	}
+	return
 }
 
 func IsSameReqAyJurnals(a, b []entity.AyatJurnal) bool {

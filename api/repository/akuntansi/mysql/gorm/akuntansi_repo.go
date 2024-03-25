@@ -63,7 +63,7 @@ type ResultDataLBR struct {
 
 type AkuntansiRepo interface {
 	GetDataJU(ctx context.Context, startDate, endDate time.Time) ([]ResultDataJU, error)
-	GetDataBB(ctx context.Context, akunID string, startDate, endDate time.Time) ([]ResultDataBB, []ResultSaldoAwalDataBB, error)
+	GetDataBB(ctx context.Context, akunIDs []string, startDate, endDate time.Time) ([]ResultDataBB, []ResultSaldoAwalDataBB, error)
 	GetDataNC(ctx context.Context, date time.Time) ([]ResultDataNc, error)
 	GetDataLBR(ctx context.Context, startDate, endDate time.Time) ([]ResultDataLBR, error)
 	// GetNeraca(ctx context.Context)
@@ -98,11 +98,11 @@ func (r *akuntansiRepo) GetDataJU(ctx context.Context, startDate, endDate time.T
 	return resultDatasJU, nil
 }
 
-func (r *akuntansiRepo) GetDataBB(ctx context.Context, akunID string, startDate, endDate time.Time) ([]ResultDataBB, []ResultSaldoAwalDataBB, error) {
+func (r *akuntansiRepo) GetDataBB(ctx context.Context, akunIDs []string, startDate, endDate time.Time) ([]ResultDataBB, []ResultSaldoAwalDataBB, error) {
 	resultDatasBB := []ResultDataBB{}
 	resultSaldoAwalDatasBB := []ResultSaldoAwalDataBB{}
 
-	isAkunIdExist := akunID == ""
+	isAkunIdExist := len(akunIDs) == 0
 	err := r.DB.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		subQuery := tx.Model(&entity.Transaksi{}).
 			Select("id").
@@ -115,7 +115,7 @@ func (r *akuntansiRepo) GetDataBB(ctx context.Context, akunID string, startDate,
 			Select("transaksi.id as TransaksiID,akun.id as AkunID, akun.kode as KodeAkun, akun.nama as NamaAkun, akun.saldo_normal as SaldoNormal, ayat_jurnal.debit as Debit, ayat_jurnal.kredit as Kredit, transaksi.Tanggal as Tanggal, transaksi.keterangan as Keterangan, ayat_jurnal.saldo as Saldo")
 
 		if !isAkunIdExist {
-			tx2 = tx2.Where("akun.id = ?", akunID)
+			tx2 = tx2.Where("akun.id IN (?)", akunIDs)
 		}
 
 		err2 := tx2.Where("transaksi.id IN (?)", subQuery).
@@ -134,7 +134,7 @@ func (r *akuntansiRepo) GetDataBB(ctx context.Context, akunID string, startDate,
 			Select("akun.id as AkunID,akun.Kode as KodeAkun, akun.nama as NamaAkun, akun.saldo_normal as SaldoNormal, COALESCE(SUM(ayat_jurnal.saldo),0) as Saldo")
 
 		if !isAkunIdExist {
-			tx3 = tx3.Where("akun.id = ?", akunID)
+			tx3 = tx3.Where("akun.id IN (?)", akunIDs)
 		}
 
 		err3 := tx3.Where("ayat_jurnal.transaksi_id IN (?)", subQuery2).Group("akun.id").

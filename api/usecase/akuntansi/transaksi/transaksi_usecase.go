@@ -218,7 +218,6 @@ func (u *transaksiUsecase) Update(ctx context.Context, reqTransaksi req.Update) 
 
 		for i, ay := range reqTransaksi.AyatJurnal {
 			akun := akunsMap[ay.AkunID]
-
 			if err := pkgAkuntansiLogic.IsValidAkunHp(hp, &akun, &ay); err != nil {
 				return err
 			}
@@ -227,8 +226,7 @@ func (u *transaksiUsecase) Update(ctx context.Context, reqTransaksi req.Update) 
 			}
 
 			// logic calculate saldo ayatJurnal
-			var saldo float64
-			pkgAkuntansiLogic.UpdateSaldo(&saldo, ay.Kredit, ay.Debit, akun.SaldoNormal)
+			var saldo = pkgAkuntansiLogic.UpdateSaldo(ay.Kredit, ay.Debit, akun.SaldoNormal)
 			ayatJurnal := entity.AyatJurnal{
 				Base: entity.Base{
 					ID: u.ulid.MakeUlid().String(),
@@ -337,8 +335,7 @@ func (u *transaksiUsecase) Create(ctx context.Context, reqTransaksi req.Create) 
 		}
 
 		// logic calculate saldo ayatJurnal
-		var saldo float64
-		pkgAkuntansiLogic.UpdateSaldo(&saldo, v.Kredit, v.Debit, akun.SaldoNormal)
+		var saldo = pkgAkuntansiLogic.UpdateSaldo(v.Kredit, v.Debit, akun.SaldoNormal)
 
 		ayatJurnal := entity.AyatJurnal{
 			Base: entity.Base{

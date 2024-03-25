@@ -136,6 +136,7 @@ func (r *hutangPiutangRepo) GetHPForBayar(param ParamGetHPForBayar) (*entity.Hut
 	tx := r.DB.WithContext(param.Ctx).Model(data).Where("id = ?", param.ID)
 	tx = tx.
 		Preload("Transaksi").
+		Preload("Transaksi.AyatJurnals").
 		Preload("Transaksi.AyatJurnals.Akun")
 
 	if err := tx.First(data).Error; err != nil {

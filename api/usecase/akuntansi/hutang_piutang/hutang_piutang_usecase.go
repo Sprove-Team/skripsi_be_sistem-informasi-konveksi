@@ -101,10 +101,10 @@ func (u *hutangPiutangUsecase) CreateDataHP(param ParamCreateDataHp) (*entity.Hu
 	for _, akun := range akuns {
 		switch akun.ID {
 		case ayHP1.AkunID:
-			pkgAkuntansiLogic.UpdateSaldo(&ayHP1.Saldo, ayHP1.Kredit, ayHP1.Debit, akun.SaldoNormal)
+			ayHP1.Saldo = pkgAkuntansiLogic.UpdateSaldo(ayHP1.Kredit, ayHP1.Debit, akun.SaldoNormal)
 
 		case ayHP2.AkunID:
-			pkgAkuntansiLogic.UpdateSaldo(&ayHP2.Saldo, ayHP2.Kredit, ayHP2.Debit, akun.SaldoNormal)
+			ayHP2.Saldo = pkgAkuntansiLogic.UpdateSaldo(ayHP2.Kredit, ayHP2.Debit, akun.SaldoNormal)
 		}
 
 		//! mencari akun pembayaran berdasarkan jenis dari requestnya
@@ -305,7 +305,6 @@ func (u *hutangPiutangUsecase) CreateDataBayar(ctx context.Context, reqHutangPiu
 				(kodeKlompokAkun == "27" && hp.Jenis == "HUTANG") {
 				ayTagihan.AkunID = ay.AkunID
 				ayTagihan.Saldo = -reqHutangPiutang.Total
-
 				// Set Kredit or Debit based on transaction type
 				if hp.Jenis == "PIUTANG" {
 					ayTagihan.Kredit = reqHutangPiutang.Total
@@ -316,7 +315,6 @@ func (u *hutangPiutangUsecase) CreateDataBayar(ctx context.Context, reqHutangPiu
 			}
 		}
 		var err error
-
 		byrHP, err = pkgAkuntansiLogic.CreateDataBayarHP(reqHutangPiutang.ReqBayar, ayTagihan, hp.Transaksi.KontakID, reqHutangPiutang.Keterangan, u.ulid)
 
 		if err != nil {
