@@ -37,13 +37,14 @@ type Create struct {
 
 type ReqUpdateDetailInvoice struct {
 	ID           string  `json:"id" validate:"required,ulid"`
-	ProdukID     string  `json:"produk_id" validate:"required,ulid"`
-	BordirID     string  `json:"bordir_id" validate:"required,ulid"`
-	SablonID     string  `json:"sablon_id" validate:"required,ulid"`
-	GambarDesign string  `json:"gambar_design" validate:"required"`
-	Total        float64 `json:"total" validate:"required,number"`
-	Qty          int     `json:"qty" validate:"required,number,min=1"`
+	ProdukID     string  `json:"produk_id" validate:"omitempty,ulid"`
+	BordirID     string  `json:"bordir_id" validate:"omitempty,ulid"`
+	SablonID     string  `json:"sablon_id" validate:"omitempty,ulid"`
+	GambarDesign string  `json:"gambar_design" validate:"omitempty"`
+	Total        float64 `json:"total" validate:"omitempty,number"`
+	Qty          int     `json:"qty" validate:"omitempty,number,min=1"`
 }
+
 type Update struct {
 	ID              string                   `params:"id" validate:"required"`
 	StatusProduksi  string                   `json:"status_produksi" validate:"required,oneof=BELUM_DIKERJAKAN DIPROSES SELESAI"`
