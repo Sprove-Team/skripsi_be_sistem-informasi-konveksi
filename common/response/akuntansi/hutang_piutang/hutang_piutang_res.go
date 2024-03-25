@@ -6,6 +6,7 @@ type ResDataHutangPiutang struct {
 	ID          string  `json:"id"`
 	InvoiceID   string  `json:"invoice_id,omitempty"`
 	Jenis       string  `json:"jenis"`
+	Keterangan  string  `json:"keterangan"`
 	TransaksiID string  `json:"transaksi_id"`
 	Tanggal     string  `json:"tanggal"`
 	Status      string  `json:"status"`

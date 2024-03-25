@@ -202,25 +202,33 @@ func (u *hutangPiutangUsecase) GetAll(ctx context.Context, reqHutangPiutang req.
 		return nil, err
 	}
 
-	resData := make([]res.GetAll, len(data))
+	resData := make([]res.GetAll, 0, len(data))
 
-	for i, kontak := range data {
-		resData[i] = res.GetAll{
+	for _, kontak := range data {
+
+		lengthTr := len(kontak.Transaksi)
+		if lengthTr == 0 {
+			continue
+		}
+		data := res.GetAll{
 			Nama:     kontak.Nama,
 			KontakId: kontak.ID,
 		}
-		dataHP := make([]res.ResDataHutangPiutang, len(kontak.Transaksi))
+
+		dataHP := make([]res.ResDataHutangPiutang, lengthTr)
+
 		for j, tr := range kontak.Transaksi {
 			if tr.HutangPiutang.Jenis == "PIUTANG" {
-				resData[i].TotalPiutang += tr.HutangPiutang.Total
-				resData[i].SisaPiutang += tr.HutangPiutang.Sisa
+				data.TotalPiutang += tr.HutangPiutang.Total
+				data.SisaPiutang += tr.HutangPiutang.Sisa
 			} else {
-				resData[i].TotalHutang += tr.HutangPiutang.Total
-				resData[i].SisaHutang += tr.HutangPiutang.Sisa
+				data.TotalHutang += tr.HutangPiutang.Total
+				data.SisaHutang += tr.HutangPiutang.Sisa
 			}
 			dataHP[j] = res.ResDataHutangPiutang{
 				ID:          tr.HutangPiutang.ID,
 				InvoiceID:   tr.HutangPiutang.InvoiceID,
+				Keterangan:  tr.Keterangan,
 				TransaksiID: tr.HutangPiutang.TransaksiID,
 				Jenis:       tr.HutangPiutang.Jenis,
 				Status:      tr.HutangPiutang.Status,
@@ -229,7 +237,8 @@ func (u *hutangPiutangUsecase) GetAll(ctx context.Context, reqHutangPiutang req.
 				Sisa:        tr.HutangPiutang.Sisa,
 			}
 		}
-		resData[i].HutangPiutang = dataHP
+		data.HutangPiutang = dataHP
+		resData = append(resData, data)
 	}
 
 	return resData, nil
