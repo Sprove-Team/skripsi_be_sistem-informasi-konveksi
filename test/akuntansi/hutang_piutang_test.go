@@ -336,53 +336,52 @@ var idTransaksiWithHP string
 
 func AkuntansiGetAllHutangPiutang(t *testing.T) {
 	// create invoice for test data hp that invoice id
-	{
-		tt := time.Now().Add(time.Hour * 24)
-		invoice := &entity.Invoice{
-			Base: entity.Base{
-				ID: test.UlidPkg.MakeUlid().String(),
-			},
-			NomorReferensi:  "001",
-			TanggalDeadline: &tt,
-			TanggalKirim:    &tt,
-			Keterangan:      "test for hp",
-			KontakID:        idKontak,
-			TotalQty:        10,
-			TotalHarga:      10000,
-		}
-		if err := dbt.Create(invoice).Error; err != nil {
-			helper.LogsError(err)
-			return
-		}
-		tr := &entity.Transaksi{
-			Base: entity.Base{
-				ID: test.UlidPkg.MakeUlid().String(),
-			},
-			Keterangan: "test for hp",
-			KontakID:   idKontak,
-			Total:      10000,
-			Tanggal:    tt,
-		}
-		if err := dbt.Create(tr).Error; err != nil {
-			helper.LogsError(err)
-			return
-		}
-		idHp := test.UlidPkg.MakeUlid().String()
-		hpWithInvoiceId := &entity.HutangPiutang{
-			Base: entity.Base{
-				ID: idHp,
-			},
-			InvoiceID:   invoice.ID,
-			TransaksiID: tr.ID,
-			Jenis:       "PIUTANG",
-			Total:       10000,
-			Sisa:        10000,
-		}
 
-		if err := dbt.Create(hpWithInvoiceId).Error; err != nil {
-			helper.LogsError(err)
-			return
-		}
+	tt := time.Now().Add(time.Hour * 24)
+	invoice := &entity.Invoice{
+		Base: entity.Base{
+			ID: test.UlidPkg.MakeUlid().String(),
+		},
+		NomorReferensi:  "001",
+		TanggalDeadline: &tt,
+		TanggalKirim:    &tt,
+		Keterangan:      "test for hp",
+		KontakID:        idKontak2,
+		TotalQty:        10,
+		TotalHarga:      10000,
+	}
+	if err := dbt.Create(invoice).Error; err != nil {
+		helper.LogsError(err)
+		return
+	}
+	tr := &entity.Transaksi{
+		Base: entity.Base{
+			ID: test.UlidPkg.MakeUlid().String(),
+		},
+		Keterangan: "test for hp",
+		KontakID:   idKontak2,
+		Total:      10000,
+		Tanggal:    tt,
+	}
+	if err := dbt.Create(tr).Error; err != nil {
+		helper.LogsError(err)
+		return
+	}
+	idHp := test.UlidPkg.MakeUlid().String()
+	hpWithInvoiceId := &entity.HutangPiutang{
+		Base: entity.Base{
+			ID: idHp,
+		},
+		InvoiceID:   invoice.ID,
+		TransaksiID: tr.ID,
+		Jenis:       "PIUTANG",
+		Total:       10000,
+		Sisa:        10000,
+	}
+
+	if err := dbt.Create(hpWithInvoiceId).Error; err != nil {
+		helper.LogsError(err)
+		return
 	}
 
 	dataKontak := new(entity.Kontak)
@@ -417,16 +416,26 @@ func AkuntansiGetAllHutangPiutang(t *testing.T) {
 				Code:   200,
 			},
 		},
-		// {
-		// 	name:         "sukses limit 1",
-		// 	token:        tokens[entity.RolesById[1]],
-		// 	queryBody:    "?limit=1",
-		// 	expectedCode: 200,
-		// 	expectedBody: test.Response{
-		// 		Status: message.OK,
-		// 		Code:   200,
-		// 	},
-		// },
+		{
+			name:         "sukses limit 1",
+			token:        tokens[entity.RolesById[1]],
+			queryBody:    "?limit=1",
+			expectedCode: 200,
+			expectedBody: test.Response{
+				Status: message.OK,
+				Code:   200,
+			},
+		},
+		{
+			name:         "sukses with next",
+			token:        tokens[entity.RolesById[1]],
+			queryBody:    "?next=" + idKontak,
+			expectedCode: 200,
+			expectedBody: test.Response{
+				Status: message.OK,
+				Code:   200,
+			},
+		},
 		{
 			name:         "err: authorization " + entity.RolesById[4],
 			token:        tokens[entity.RolesById[4]],
@@ -462,47 +471,75 @@ func AkuntansiGetAllHutangPiutang(t *testing.T) {
 				if length <= 0 {
 					return
 				}
-				assert.NotEmpty(t, res[0])
-				assert.NotEmpty(t, res[0]["nama"])
-				assert.NotEmpty(t, res[0]["total_piutang"])
-				assert.NotEmpty(t, res[0]["total_hutang"])
-				assert.NotEmpty(t, res[0]["sisa_piutang"])
-				assert.NotEmpty(t, res[0]["sisa_hutang"])
-				assert.NotEmpty(t, res[0]["hutang_piutang"])
-				var invoiceIdEverExist bool
-				for _, hp := range res[0]["hutang_piutang"].([]any) {
-					hp2 := hp.(map[string]any)
-					assert.NotEmpty(t, hp2["id"])
-					assert.NotEmpty(t, hp2["jenis"])
-					assert.NotEmpty(t, hp2["transaksi_id"])
-					assert.NotEmpty(t, hp2["tanggal"])
-					assert.NotEmpty(t, hp2["status"])
-					assert.NotEmpty(t, hp2["total"])
-					assert.NotEmpty(t, hp2["sisa"])
-					if idTransaksiWithHP == "" {
-						idTransaksiWithHP = hp2["transaksi_id"].(string)
+
+				for _, v := range res {
+					assert.NotEmpty(t, v)
+					assert.NotEmpty(t, v["nama"])
+					assert.NotEmpty(t, v["kontak_id"])
+					assert.NotEmpty(t, v["hutang_piutang"])
+					var totalPiutang, totalHutang, sisaPiutang, sisaHutang int
+					for _, hp := range v["hutang_piutang"].([]any) {
+						hp2 := hp.(map[string]any)
+						assert.NotEmpty(t, hp2["id"])
+						assert.NotEmpty(t, hp2["jenis"])
+						assert.NotEmpty(t, hp2["transaksi_id"])
+						assert.NotEmpty(t, hp2["tanggal"])
+						assert.NotEmpty(t, hp2["status"])
+						assert.NotEmpty(t, hp2["total"])
+						assert.NotEmpty(t, hp2["sisa"])
+						if idTransaksiWithHP == "" {
+							idTransaksiWithHP = hp2["transaksi_id"].(string)
+						}
+						invID, ok := hp2["invoice_id"]
+						if ok {
+							assert.Equal(t, invID, invoice.ID)
+						}
+						if hp2["jenis"] == "PIUTANG" {
+							totalPiutang += int(hp2["total"].(float64))
+							sisaPiutang += int(hp2["sisa"].(float64))
+						} else {
+							totalHutang += int(hp2["total"].(float64))
+							sisaHutang += int(hp2["sisa"].(float64))
+						}
+						if tt.name == "sukses with filter" {
+							vq, err := url.ParseQuery(tt.queryBody[1:])
+							assert.NoError(t, err)
+							assert.Equal(t, hp2["status"], vq.Get("status"))
+							assert.Equal(t, hp2["jenis"], vq.Get("jenis"))
+						}
 					}
-					_, ok := hp2["invoice_id"]
-					if ok {
-						invoiceIdEverExist = true
+					switch tt.name {
+					case "sukses":
+						if dat, ok := v["total_piutang"].(float64); ok && dat != 0 {
+							assert.Greater(t, int(dat), 0)
+						}
+						if dat, ok := v["total_hutang"].(float64); ok && dat != 0 {
+							assert.Greater(t, int(dat), 0)
+						}
+						if dat, ok := v["sisa_piutang"].(float64); ok && dat != 0 {
+							assert.Greater(t, int(dat), 0)
+						}
+						if dat, ok := v["sisa_hutang"].(float64); ok && dat != 0 {
+							assert.Greater(t, int(dat), 0)
+						}
+					case "sukses with filter":
+						// karna jenis yg difilter HUTANG
+						assert.Empty(t, v["total_piutang"])
+						assert.Empty(t, v["sisa_piutang"])
+						assert.NotEmpty(t, v["total_hutang"])
+						assert.NotEmpty(t, v["sisa_hutang"])
+						assert.Equal(t, v["nama"], dataKontak.Nama)
+						assert.Equal(t, v["kontak_id"], dataKontak.ID)
+					case "sukses with next":
+						assert.NotEqual(t, dataKontak.ID, v["id"])
 					}
 				}
 
-				assert.Equal(t, tt.expectedBody.Status, body.Status)
-				switch tt.name {
-				case "sukses":
-					assert.True(t, invoiceIdEverExist)
-				case "sukses with filter":
-					v, err := url.ParseQuery(tt.queryBody[1:])
-					assert.NoError(t, err)
-					assert.Equal(t, res[0]["status"], v.Get("status"))
-					assert.Equal(t, res[0]["jenis"], v.Get("jenis"))
-					assert.Equal(t, res[0]["nama"], dataKontak.Nama)
-				case "sukses limit 1":
+				if tt.name == "sukses limit 1" {
 					assert.Len(t, res, 1)
-				case "sukses with next":
-					assert.NotEqual(t, idKelompokAkun, res[0]["id"])
 				}
+				assert.Equal(t, tt.expectedBody.Status, body.Status)
+
 			} else {
 				if len(tt.expectedBody.ErrorsMessages) > 0 {
 					for _, v := range tt.expectedBody.ErrorsMessages {
