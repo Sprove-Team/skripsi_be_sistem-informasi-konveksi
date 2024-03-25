@@ -40,15 +40,6 @@ func cleanUp() {
 	}
 }
 
-// func setupInvoiceData() {
-// 	payload := req_invoice.Create{
-// 		KontakID: idKontak,
-
-// 	}
-// 	token := tokens[entity.RolesById[1]]
-// 	test.GetJsonTestRequestResponse(app, "POST", "/api/v1/invoice", payload, &token)
-// }
-
 func TestMain(m *testing.M) {
 	test.GetDB()
 	dbt = test.DBT
@@ -102,14 +93,15 @@ func TestEndPointAkuntansi(t *testing.T) {
 
 	// transaksi
 	AkuntansiCreateTransaksi(t)
-	AkuntansiUpdateTransaksi(t) // TODO: add validasi tr hp & tr bayar hp
+	AkuntansiUpdateTransaksi(t)
 	// AkuntansiGetAllTransaksi(t)
 	// AkuntansiGetTransaksi(t)
 	// AkuntansiGetHistoryTransaksi(t)
 
-}
-
-func TestEndPointDelete(t *testing.T) {
+	// akuntansi
+	AkuntansiGetJU(t)
+	AkuntansiGetBB(t)
+	// delete all
 	// AkuntansiDeleteKelompokAkun(t)
 	// AkuntansiDeleteAkun(t)
 	// AkuntansiDeleteTransaksi(t)

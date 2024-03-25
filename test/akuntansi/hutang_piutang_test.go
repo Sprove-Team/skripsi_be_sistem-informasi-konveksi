@@ -552,6 +552,18 @@ func AkuntansiGetAllHutangPiutang(t *testing.T) {
 
 		})
 	}
+	if err := dbt.Unscoped().Delete(hpWithInvoiceId).Error; err != nil {
+		helper.LogsError(err)
+		return
+	}
+	if err := dbt.Unscoped().Delete(invoice).Error; err != nil {
+		helper.LogsError(err)
+		return
+	}
+	if err := dbt.Unscoped().Delete(tr).Error; err != nil {
+		helper.LogsError(err)
+		return
+	}
 }
 
 var idTrWithBayarHP string
