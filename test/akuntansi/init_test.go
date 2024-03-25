@@ -53,12 +53,10 @@ func TestMain(m *testing.M) {
 	test.GetDB()
 	dbt = test.DBT
 	akuntansiH := handler_init.NewAkuntansiHandlerInit(dbt, test.Validator, test.UlidPkg)
-	invoiceH := handler_init.NewInvoiceHandlerInit(dbt, test.Validator, test.UlidPkg, test.Encryptor)
 
 	userRepo := repo_user.NewUserRepo(dbt)
 	authMid := middleware_auth.NewAuthMiddleware(userRepo)
 	akuntansiRoute := route.NewAkuntansiRoute(akuntansiH, authMid)
-	invoiceRoute := route.NewInvoiceRoute(invoiceH, authMid)
 
 	test.GetTokens(dbt, authMid)
 	tokens = test.Tokens
@@ -73,8 +71,6 @@ func TestMain(m *testing.M) {
 	akuntansiGroup.Route("/transaksi", akuntansiRoute.Transaksi)
 	akuntansiGroup.Route("/hutang_piutang", akuntansiRoute.HutangPiutang)
 	akuntansiGroup.Route("", akuntansiRoute.Akuntansi)
-	invoiceGroup := v1.Group("/invoice")
-	invoiceGroup.Route("/", invoiceRoute.Invoice)
 	// Run tests
 	exitVal := m.Run()
 	cleanUp()
@@ -102,10 +98,11 @@ func TestEndPointAkuntansi(t *testing.T) {
 	// hutang piutang
 	AkuntansiCreateHutangPiutang(t)
 	AkuntansiGetAllHutangPiutang(t)
+	AkuntansiCreateBayarHP(t)
 
 	// transaksi
-	// AkuntansiCreateTransaksi(t)
-	// AkuntansiUpdateTransaksi(t) // TODO: add validasi tr hp
+	AkuntansiCreateTransaksi(t)
+	AkuntansiUpdateTransaksi(t) // TODO: add validasi tr hp & tr bayar hp
 	// AkuntansiGetAllTransaksi(t)
 	// AkuntansiGetTransaksi(t)
 	// AkuntansiGetHistoryTransaksi(t)

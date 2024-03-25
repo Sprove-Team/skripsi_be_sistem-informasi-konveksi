@@ -365,14 +365,14 @@ func (u *invoiceUsecase) UpdateDataInvoice(param ParamUpdateDataInvoice) (*entit
 		ID: oldData.ID,
 	}
 	switch param.Claims.Role {
-	case "MANAJER_PRODUKSI":
+	case entity.RolesById[4]: // manager produksi
 		return &entity.Invoice{
 			Base:           oldData.Base,
 			UserID:         param.Claims.ID,
 			KontakID:       oldData.KontakID,
 			StatusProduksi: param.Req.StatusProduksi,
 		}, nil
-	case "DIREKTUR":
+	case entity.RolesById[1]: // direktur
 		oldData.StatusProduksi = param.Req.StatusProduksi
 	}
 

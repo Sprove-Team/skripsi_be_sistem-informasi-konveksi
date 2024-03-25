@@ -1,6 +1,7 @@
 package test_akuntansi
 
 import (
+	"math"
 	"strings"
 	"testing"
 
@@ -392,6 +393,186 @@ func AkuntansiUpdateTransaksi(t *testing.T) {
 			},
 		},
 		{
+			name:  "sukses update tr hp",
+			token: tokens[entity.RolesById[1]],
+			payload: req_akuntansi_transaksi.Update{
+				ID:              idTransaksiWithHP, // jenis PIUTANG
+				BuktiPembayaran: []string{"bukti-update-hp.webp"},
+				Tanggal:         "2023-10-20T14:17:03.723Z",
+				Keterangan:      "joni menggunakan jasa konveksi sebesar 20.000 dan dibayar bulan depan",
+				AyatJurnal: []req_akuntansi_transaksi.ReqAyatJurnal{
+					{
+						AkunID: "01HP7DVBGTC06PXWT6FF89WRAB", // piutang usaha
+						Debit:  20000,
+					},
+					{
+						AkunID: "01HP7DVBGVHMSA4VHWXPQ3635H", // peralatan
+						Kredit: 20000,
+					},
+				},
+			},
+			expectedCode: 200,
+			expectedBody: test.Response{
+				Status: message.OK,
+				Code:   200,
+			},
+		},
+		{
+			name:  "sukses update tr bayar hp",
+			token: tokens[entity.RolesById[1]],
+			payload: req_akuntansi_transaksi.Update{
+				ID:              idTrWithBayarHP, // tr bayar piutang, sisa hp jadi 15.000 karena di ubah di test pertama dan sudah dibayar 5.000
+				BuktiPembayaran: []string{"bukti-update-hp.webp"},
+				Tanggal:         "2023-10-20T14:17:03.723Z",
+				Keterangan:      "joni jadinya melunasi utangnya",
+				AyatJurnal: []req_akuntansi_transaksi.ReqAyatJurnal{
+					{
+						AkunID: "01HP7DVBGTC06PXWT6FF89WRAB", // piutang usaha
+						Kredit: 20000,
+					},
+					{
+						AkunID: "01HP7DVBGTC06PXWT6FD66VERN", // kas
+						Debit:  20000,
+					},
+				},
+			},
+			expectedCode: 200,
+			expectedBody: test.Response{
+				Status: message.OK,
+				Code:   200,
+			},
+		},
+		{
+			name:  "err: transaksi merupakan hutang piutang, akun harus sama dengan jenis hutang piutang",
+			token: tokens[entity.RolesById[1]],
+			payload: req_akuntansi_transaksi.Update{
+				ID:              idTransaksiWithHP, // jenis PIUTANG
+				BuktiPembayaran: []string{"bukti-update-hp.webp"},
+				Tanggal:         "2023-10-20T14:17:03.723Z",
+				Keterangan:      "joni menggunakan jasa konveksi sebesar 20.000 dan dibayar bulan depan",
+				AyatJurnal: []req_akuntansi_transaksi.ReqAyatJurnal{
+					{
+						AkunID: "01HP7DVBGVHMSA4VHWXZR27J7C", // hutang usaha
+						Debit:  20000,
+					},
+					{
+						AkunID: "01HP7DVBGVHMSA4VHWXPQ3635H", // peralatan
+						Kredit: 20000,
+					},
+				},
+			},
+			expectedCode: 400,
+			expectedBody: test.Response{
+				Status:         fiber.ErrBadRequest.Message,
+				Code:           400,
+				ErrorsMessages: []string{message.AkunNotMatchWithJenisHPTr},
+			},
+		},
+		{
+			name:  "err: akun hutang piutang tidak ada",
+			token: tokens[entity.RolesById[1]],
+			payload: req_akuntansi_transaksi.Update{
+				ID:              idTransaksiWithHP, // jenis PIUTANG
+				BuktiPembayaran: []string{"bukti-update-hp.webp"},
+				Tanggal:         "2023-10-20T14:17:03.723Z",
+				Keterangan:      "joni menggunakan jasa konveksi sebesar 20.000 dan dibayar bulan depan",
+				AyatJurnal: []req_akuntansi_transaksi.ReqAyatJurnal{
+					{
+						AkunID: "01HP7DVBGTC06PXWT6FD66VERN", // kas
+						Debit:  20000,
+					},
+					{
+						AkunID: "01HP7DVBGVHMSA4VHWXPQ3635H", // peralatan
+						Kredit: 20000,
+					},
+				},
+			},
+			expectedCode: 400,
+			expectedBody: test.Response{
+				Status:         fiber.ErrBadRequest.Message,
+				Code:           400,
+				ErrorsMessages: []string{message.AkunHPDoesNotExist},
+			},
+		},
+		{
+			name:  "err: total hp harus lebih besar atau sama dengan total yang telah di bayar",
+			token: tokens[entity.RolesById[1]],
+			payload: req_akuntansi_transaksi.Update{
+				ID:              idTransaksiWithHP, // jenis PIUTANG, total yg telah dibayar sebesar 5000 based on hp test
+				BuktiPembayaran: []string{"bukti-update-hp.webp"},
+				Tanggal:         "2023-10-20T14:17:03.723Z",
+				Keterangan:      "joni menggunakan jasa konveksi sebesar 4000 dan dibayar bulan depan",
+				AyatJurnal: []req_akuntansi_transaksi.ReqAyatJurnal{
+					{
+						AkunID: "01HP7DVBGWR5ZR6C13RFQKQ2A0", // pendapatan jasa
+						Kredit: 4000,
+					},
+					{
+						AkunID: "01HP7DVBGTC06PXWT6FF89WRAB", // piutang usaha
+						Debit:  4000,
+					},
+				},
+			},
+			expectedCode: 400,
+			expectedBody: test.Response{
+				Status:         fiber.ErrBadRequest.Message,
+				Code:           400,
+				ErrorsMessages: []string{message.TotalHPMustGeOrEqToTotalByr},
+			},
+		},
+		{
+			name:  "err: total yang dibayar harus lebih kecil atau sama dengan sisa tagihan",
+			token: tokens[entity.RolesById[1]],
+			payload: req_akuntansi_transaksi.Update{
+				ID:              idTrWithBayarHP,
+				BuktiPembayaran: []string{"bukti-update-hp.webp"},
+				Tanggal:         "2023-10-20T14:17:03.723Z",
+				Keterangan:      "joni membayar sebesar 10000000",
+				AyatJurnal: []req_akuntansi_transaksi.ReqAyatJurnal{
+					{
+						AkunID: "01HP7DVBGTC06PXWT6FF89WRAB", // piutang usaha
+						Kredit: 10000000,
+					},
+					{
+						AkunID: "01HP7DVBGTC06PXWT6FD66VERN", // kas
+						Debit:  10000000,
+					},
+				},
+			},
+			expectedCode: 400,
+			expectedBody: test.Response{
+				Status:         fiber.ErrBadRequest.Message,
+				Code:           400,
+				ErrorsMessages: []string{message.BayarMustLessThanSisaTagihan},
+			},
+		},
+		{
+			name:  "err: akun tidak ditemukan",
+			token: tokens[entity.RolesById[1]],
+			payload: req_akuntansi_transaksi.Update{
+				ID:              idTransaksiWithHP, // jenis PIUTANG
+				BuktiPembayaran: []string{"bukti-update-hp.webp"},
+				Tanggal:         "2023-10-20T14:17:03.723Z",
+				Keterangan:      "joni menggunakan jasa konveksi sebesar 20.000 dan dibayar bulan depan",
+				AyatJurnal: []req_akuntansi_transaksi.ReqAyatJurnal{
+					{
+						AkunID: "02HP7DVBGTC06PXWT6FD66VERN", // akun not found
+						Debit:  20000,
+					},
+					{
+						AkunID: "01HP7DVBGVHMSA4VHWXPQ3635H", // peralatan
+						Kredit: 20000,
+					},
+				},
+			},
+			expectedCode: 400,
+			expectedBody: test.Response{
+				Status:         fiber.ErrBadRequest.Message,
+				Code:           400,
+				ErrorsMessages: []string{message.AkunNotFound},
+			},
+		},
+		{
 			name:  "err: tanggal harus berformat RFC3999",
 			token: tokens[entity.RolesById[1]],
 			payload: req_akuntansi_transaksi.Update{
@@ -583,6 +764,30 @@ func AkuntansiUpdateTransaksi(t *testing.T) {
 				}
 				assert.Equal(t, tt.expectedBody.Status, body.Status)
 			} else {
+				if strings.Contains(tt.name, "sukses") {
+					hp := new(entity.HutangPiutang)
+					if err := dbt.First(hp, "transaksi_id = ?", idTransaksiWithHP).Error; err != nil {
+						helper.LogsError(err)
+						return
+					}
+
+					totalUpdate := math.Abs(tt.payload.AyatJurnal[0].Debit - tt.payload.AyatJurnal[0].Kredit)
+					switch tt.name {
+					case "sukses update tr hp":
+						totalByrOld := (hp.Total - hp.Sisa)
+						assert.Equal(t, hp.Total, totalUpdate)
+						assert.Equal(t, hp.Sisa, totalUpdate-totalByrOld)
+					case "sukses update tr bayar hp":
+						sisaCurrent := hp.Total - totalUpdate
+						assert.Equal(t, hp.Sisa, sisaCurrent)
+					}
+
+					if hp.Sisa <= 0 {
+						assert.Equal(t, hp.Status, "LUNAS")
+					} else {
+						assert.Equal(t, hp.Status, "BELUM_LUNAS")
+					}
+				}
 				assert.Equal(t, tt.expectedBody, body)
 			}
 		})

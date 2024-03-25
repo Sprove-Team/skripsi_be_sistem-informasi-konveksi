@@ -155,6 +155,10 @@ func (u *transaksiUsecase) Update(ctx context.Context, reqTransaksi req.Update) 
 			return err
 		}
 
+		if len(akuns) != helper.CountUniqueElements(akunIDs) {
+			return errors.New(message.AkunNotFound)
+		}
+
 		akunsMap := map[string]entity.Akun{}
 
 		if hp.ID != "" || hpFromByr.ID != "" {

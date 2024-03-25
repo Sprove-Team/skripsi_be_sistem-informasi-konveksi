@@ -367,10 +367,9 @@ func AkuntansiGetAllHutangPiutang(t *testing.T) {
 		helper.LogsError(err)
 		return
 	}
-	idHp := test.UlidPkg.MakeUlid().String()
 	hpWithInvoiceId := &entity.HutangPiutang{
 		Base: entity.Base{
-			ID: idHp,
+			ID: test.UlidPkg.MakeUlid().String(),
 		},
 		InvoiceID:   invoice.ID,
 		TransaksiID: tr.ID,
@@ -551,6 +550,196 @@ func AkuntansiGetAllHutangPiutang(t *testing.T) {
 				}
 			}
 
+		})
+	}
+}
+
+var idTrWithBayarHP string
+
+func AkuntansiCreateBayarHP(t *testing.T) {
+	hp := new(entity.HutangPiutang)
+	if err := dbt.First(hp).Error; err != nil {
+		helper.LogsError(err)
+		return
+	}
+	tests := []struct {
+		name         string
+		token        string
+		payload      req_akuntansi_hp.CreateBayar
+		expectedBody test.Response
+		expectedCode int
+	}{
+		{
+			name:  "sukses",
+			token: tokens[entity.RolesById[1]],
+			payload: req_akuntansi_hp.CreateBayar{
+				HutangPiutangID: hp.ID,
+				ReqBayar: req_akuntansi_hp.ReqBayar{
+					Tanggal:         "2024-01-01T14:17:03.723Z",
+					BuktiPembayaran: []string{"bukti-pembayaran.jpg"},
+					Keterangan:      "bayar lunas",
+					AkunBayarID:     "01HP7DVBGTC06PXWT6FD66VERN",
+					Total:           5000,
+				},
+			},
+			expectedCode: 201,
+			expectedBody: test.Response{
+				Status: message.Created,
+				Code:   201,
+			},
+		},
+		{
+			name:  "err: bayar too much",
+			token: tokens[entity.RolesById[1]],
+			payload: req_akuntansi_hp.CreateBayar{
+				HutangPiutangID: hp.ID,
+				ReqBayar: req_akuntansi_hp.ReqBayar{
+					Tanggal:         "2024-01-01T14:17:03.723Z",
+					BuktiPembayaran: []string{"bukti-pembayaran.jpg"},
+					Keterangan:      "bayar lunas",
+					AkunBayarID:     "01HP7DVBGTC06PXWT6FD66VERN",
+					Total:           100000,
+				},
+			},
+			expectedCode: 400,
+			expectedBody: test.Response{
+				Status:         fiber.ErrBadRequest.Message,
+				Code:           400,
+				ErrorsMessages: []string{message.BayarMustLessThanSisaTagihan},
+			},
+		},
+		{
+			name:  "err: wajib diisi",
+			token: tokens[entity.RolesById[1]],
+			payload: req_akuntansi_hp.CreateBayar{
+				HutangPiutangID: hp.ID,
+				ReqBayar: req_akuntansi_hp.ReqBayar{
+					Tanggal:     "",
+					Keterangan:  "",
+					AkunBayarID: "",
+					Total:       0,
+				},
+			},
+			expectedCode: 400,
+			expectedBody: test.Response{
+				Status:         fiber.ErrBadRequest.Message,
+				Code:           400,
+				ErrorsMessages: []string{"total wajib diisi", "tanggal wajib diisi", "bukti pembayaran wajib diisi", "keterangan wajib diisi", "akun bayar id wajib diisi"},
+			},
+		},
+		{
+			name:  "err: bukti pembayaran haru memliki item lebih dari 0",
+			token: tokens[entity.RolesById[1]],
+			payload: req_akuntansi_hp.CreateBayar{
+				HutangPiutangID: hp.ID,
+				ReqBayar: req_akuntansi_hp.ReqBayar{
+					Tanggal:         "2024-01-01T14:17:03.723Z",
+					BuktiPembayaran: []string{},
+					Keterangan:      "bayar lunas",
+					AkunBayarID:     "01HP7DVBGTC06PXWT6FD66VERN",
+					Total:           10000,
+				},
+			},
+			expectedCode: 400,
+			expectedBody: test.Response{
+				Status:         fiber.ErrBadRequest.Message,
+				Code:           400,
+				ErrorsMessages: []string{"bukti pembayaran harus berisi lebih dari 0 item"},
+			},
+		},
+		{
+			name:  "err: format tanggal",
+			token: tokens[entity.RolesById[1]],
+			payload: req_akuntansi_hp.CreateBayar{
+				HutangPiutangID: hp.ID,
+				ReqBayar: req_akuntansi_hp.ReqBayar{
+					Tanggal:         "2024-01-01",
+					BuktiPembayaran: []string{},
+					Keterangan:      "bayar lunas",
+					AkunBayarID:     "01HP7DVBGTC06PXWT6FD66VERN",
+					Total:           10000,
+				},
+			},
+			expectedCode: 400,
+			expectedBody: test.Response{
+				Status:         fiber.ErrBadRequest.Message,
+				Code:           400,
+				ErrorsMessages: []string{"tanggal harus berformat RFC3999"},
+			},
+		},
+		{
+			name:  "err: ulid tidak valid",
+			token: tokens[entity.RolesById[1]],
+			payload: req_akuntansi_hp.CreateBayar{
+				HutangPiutangID: hp.ID + "123",
+				ReqBayar: req_akuntansi_hp.ReqBayar{
+					Tanggal:         "2024-01-01T14:17:03.723Z",
+					BuktiPembayaran: []string{},
+					Keterangan:      "bayar lunas",
+					AkunBayarID:     "01HP7DVBGTC06PXWT6FD66VERN123",
+					Total:           10000,
+				},
+			},
+			expectedCode: 400,
+			expectedBody: test.Response{
+				Status:         fiber.ErrBadRequest.Message,
+				Code:           400,
+				ErrorsMessages: []string{"hutang piutang id tidak berupa ulid yang valid", "akun bayar id tidak berupa ulid yang valid"},
+			},
+		},
+		{
+			name:  "err: total harus lebih dari 0",
+			token: tokens[entity.RolesById[1]],
+			payload: req_akuntansi_hp.CreateBayar{
+				HutangPiutangID: hp.ID + "123",
+				ReqBayar: req_akuntansi_hp.ReqBayar{
+					Tanggal:         "2024-01-01T14:17:03.723Z",
+					BuktiPembayaran: []string{"bukti-pembayaran.jpg"},
+					Keterangan:      "bayar lunas",
+					AkunBayarID:     "01HP7DVBGTC06PXWT6FD66VERN",
+					Total:           -10000,
+				},
+			},
+			expectedCode: 400,
+			expectedBody: test.Response{
+				Status:         fiber.ErrBadRequest.Message,
+				Code:           400,
+				ErrorsMessages: []string{"total harus lebih besar dari 0"},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			code, body, err := test.GetJsonTestRequestResponse(app, "POST", "/api/v1/akuntansi/hutang_piutang/bayar/"+tt.payload.HutangPiutangID, tt.payload, &tt.token)
+			assert.NoError(t, err)
+			assert.Equal(t, tt.expectedCode, code)
+			if len(tt.expectedBody.ErrorsMessages) > 0 {
+				for _, v := range tt.expectedBody.ErrorsMessages {
+					assert.Contains(t, body.ErrorsMessages, v)
+				}
+				assert.Equal(t, tt.expectedBody.Status, body.Status)
+			} else {
+				assert.Equal(t, tt.expectedBody, body)
+				if tt.name == "sukses" {
+					datResAfterBayar := new(entity.HutangPiutang)
+					if err := dbt.Preload("DataBayarHutangPiutang").First(datResAfterBayar, "id = ?", hp.ID).Error; err != nil {
+						helper.LogsError(err)
+						return
+					}
+					assert.NotEmpty(t, datResAfterBayar.DataBayarHutangPiutang)
+					if len(datResAfterBayar.DataBayarHutangPiutang) > 0 {
+						idTrWithBayarHP = datResAfterBayar.DataBayarHutangPiutang[0].TransaksiID
+					}
+					sisa := hp.Sisa - tt.payload.Total
+					assert.Equal(t, datResAfterBayar.Sisa, sisa)
+					if sisa <= 0 {
+						assert.Equal(t, datResAfterBayar.Status, "LUNAS")
+					} else {
+						assert.Equal(t, datResAfterBayar.Status, "BELUM_LUNAS")
+					}
+				}
+			}
 		})
 	}
 }

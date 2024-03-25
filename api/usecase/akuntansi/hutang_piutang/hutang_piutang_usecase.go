@@ -320,6 +320,7 @@ func (u *hutangPiutangUsecase) CreateDataBayar(ctx context.Context, reqHutangPiu
 		byrHP, err = pkgAkuntansiLogic.CreateDataBayarHP(reqHutangPiutang.ReqBayar, ayTagihan, hp.Transaksi.KontakID, reqHutangPiutang.Keterangan, u.ulid)
 
 		if err != nil {
+			helper.LogsError(err)
 			return nil, err
 		}
 

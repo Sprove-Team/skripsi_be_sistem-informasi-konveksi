@@ -83,7 +83,7 @@ func CreateDataBayarHP(trByr req.ReqBayar, ayTagihan entity.AyatJurnal, kontakId
 			Debit:  trByr.Total,
 			Saldo:  trByr.Total,
 		},
-		// ay kredit, bayar mengurangi akun utang/piutangnya
+		// ay kredit, bayar mengurangi akun hutang/piutangnya
 		{
 			Base: entity.Base{
 				ID: ulid.MakeUlid().String(),
