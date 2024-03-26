@@ -285,6 +285,9 @@ func UserGetAllSpv(t *testing.T) {
 			err = mapstructure.Decode(body.Data, &res)
 			assert.NoError(t, err)
 			assert.Greater(t, len(res), 0)
+			if len(res) <= 0 {
+				return
+			}
 			assert.NotEmpty(t, res[0])
 			for _, v := range res {
 				assert.NotEmpty(t, v.(map[string]any)["id"])

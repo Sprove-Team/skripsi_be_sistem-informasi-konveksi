@@ -864,6 +864,9 @@ func AkuntansiGetAllTransaksi(t *testing.T) {
 
 				// data without kontak
 				assert.Greater(t, len(res), 0)
+				if len(res) <= 0 {
+					return
+				}
 				for _, v := range res {
 					assert.NotEmpty(t, v)
 					assert.NotEmpty(t, v["id"])
@@ -1181,6 +1184,9 @@ func AkuntansiGetHistoryTransaksi(t *testing.T) {
 				err = mapstructure.Decode(body.Data, &res)
 				assert.NoError(t, err)
 				assert.Greater(t, len(res), 0)
+				if len(res) <= 0 {
+					return
+				}
 				for _, v := range res {
 					assert.NotEmpty(t, v)
 					assert.NotEmpty(t, v["id"])

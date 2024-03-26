@@ -460,6 +460,9 @@ func ProdukGetAll(t *testing.T) {
 				err = mapstructure.Decode(body.Data, &res)
 				assert.NoError(t, err)
 				assert.Greater(t, len(res), 0)
+				if len(res) <= 0 {
+					return
+				}
 				assert.NotEmpty(t, res[0])
 				assert.NotEmpty(t, res[0]["id"])
 				assert.NotEmpty(t, res[0]["created_at"])
@@ -607,6 +610,9 @@ func ProdukGet(t *testing.T) {
 				err = mapstructure.Decode(body.Data, &res)
 				assert.NoError(t, err)
 				assert.Greater(t, len(res), 0)
+				if len(res) <= 0 {
+					return
+				}
 				assert.NotEmpty(t, res)
 				assert.NotEmpty(t, res["id"])
 				assert.NotEmpty(t, res["created_at"])

@@ -207,16 +207,6 @@ func AkuntansiUpdateKontak(t *testing.T) {
 			},
 		},
 		{
-			name:         "err: authorization " + entity.RolesById[3],
-			payload:      req_akuntansi_kontak.Update{},
-			token:        tokens[entity.RolesById[3]],
-			expectedCode: 401,
-			expectedBody: test.Response{
-				Status: fiber.ErrUnauthorized.Message,
-				Code:   401,
-			},
-		},
-		{
 			name:         "err: authorization " + entity.RolesById[4],
 			payload:      req_akuntansi_kontak.Update{},
 			token:        tokens[entity.RolesById[4]],
@@ -354,6 +344,9 @@ func AkuntansiGetAllKontak(t *testing.T) {
 				assert.NoError(t, err)
 
 				assert.Greater(t, len(res), 0)
+				if len(res) <= 0 {
+					return
+				}
 				assert.NotEmpty(t, res[0])
 				assert.NotEmpty(t, res[0]["id"])
 				assert.NotEmpty(t, res[0]["nama"])

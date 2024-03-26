@@ -9,6 +9,7 @@ import (
 	"github.com/be-sistem-informasi-konveksi/app/handler_init"
 	"github.com/be-sistem-informasi-konveksi/app/route"
 	"github.com/be-sistem-informasi-konveksi/entity"
+	"github.com/be-sistem-informasi-konveksi/helper"
 	"github.com/be-sistem-informasi-konveksi/test"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/recover"
@@ -18,6 +19,21 @@ import (
 var dbt *gorm.DB
 var tokens map[string]string
 var app = fiber.New()
+
+func cleanUp() {
+	if err := dbt.Unscoped().Where("1 = 1").Delete(&entity.KategoriProduk{}).Error; err != nil {
+		helper.LogsError(err)
+		os.Exit(1)
+	}
+	if err := dbt.Unscoped().Where("1 = 1").Delete(&entity.HargaDetailProduk{}).Error; err != nil {
+		helper.LogsError(err)
+		os.Exit(1)
+	}
+	if err := dbt.Unscoped().Where("1 = 1").Delete(&entity.Produk{}).Error; err != nil {
+		helper.LogsError(err)
+		os.Exit(1)
+	}
+}
 
 func TestMain(m *testing.M) {
 	test.GetDB()
@@ -41,7 +57,7 @@ func TestMain(m *testing.M) {
 
 	// Run tests
 	exitVal := m.Run()
-	dbt.Unscoped().Where("1 = 1").Delete(&entity.KategoriProduk{})
+	cleanUp()
 	os.Exit(exitVal)
 }
 
@@ -65,6 +81,6 @@ func TestEndPointProduk(t *testing.T) {
 
 	//? delete
 	ProdukDeleteKategori(t)
-	ProdukDelete(t)
 	ProdukDeleteHargaDetail(t)
+	ProdukDelete(t)
 }

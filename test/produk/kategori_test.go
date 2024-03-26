@@ -345,6 +345,9 @@ func ProdukGetAllKategori(t *testing.T) {
 				err = mapstructure.Decode(body.Data, &res)
 				assert.NoError(t, err)
 				assert.Greater(t, len(res), 0)
+				if len(res) <= 0 {
+					return
+				}
 				assert.NotEmpty(t, res[0])
 				assert.NotEmpty(t, res[0]["id"])
 				assert.NotEmpty(t, res[0]["created_at"])
