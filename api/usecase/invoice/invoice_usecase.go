@@ -181,7 +181,7 @@ func (u *invoiceUsecase) CheckDataDetails(param ParamCheckDataDetails) error {
 }
 
 func (u *invoiceUsecase) CreateDataInvoice(param ParamCreateDataInvoice) (*entity.Invoice, *reqHP.Create, error) {
-	// fmt.Println("akun_id -> ", param.Req.Bayar.AkunID)
+
 	tanggalDeadline, err := time.Parse(time.RFC3339, param.Req.TanggalDeadline)
 	if err != nil {
 		helper.LogsError(err)
@@ -191,6 +191,25 @@ func (u *invoiceUsecase) CreateDataInvoice(param ParamCreateDataInvoice) (*entit
 	if err != nil {
 		helper.LogsError(err)
 		return nil, nil, err
+	}
+
+	if param.Req.NewKontak.Nama != "" {
+		param.Req.KontakID = u.ulid.MakeUlid().String()
+		err := u.repoKontak.Create(kontakRepo.ParamCreate{
+			Ctx: param.Ctx,
+			Kontak: &entity.Kontak{
+				Base: entity.Base{
+					ID: param.Req.KontakID,
+				},
+				Nama:   param.Req.NewKontak.Nama,
+				NoTelp: param.Req.NewKontak.NoTelp,
+				Alamat: param.Req.NewKontak.Alamat,
+				Email:  param.Req.NewKontak.Email,
+			},
+		})
+		if err != nil {
+			return nil, nil, err
+		}
 	}
 
 	lengthDetail := len(param.Req.DetailInvoice)
@@ -376,6 +395,10 @@ func (u *invoiceUsecase) UpdateDataInvoice(param ParamUpdateDataInvoice) (*entit
 		if param.Req.StatusProduksi != "" {
 			oldData.StatusProduksi = param.Req.StatusProduksi
 		}
+	default:
+		if param.Req.StatusProduksi != "" {
+			return nil, errors.New(strings.ToLower(param.Claims.Role) + message.UserNotAllowedToModifiedStatusProdusi)
+		}
 	}
 
 	oldData.UserID = param.Claims.ID
@@ -466,21 +489,18 @@ func (u *invoiceUsecase) UpdateDataInvoice(param ParamUpdateDataInvoice) (*entit
 }
 
 func (u *invoiceUsecase) SaveCommitDB(param ParamCommitDB) error {
-	g := new(errgroup.Group)
 
-	_, err := u.repoKontak.GetById(kontakRepo.ParamGetById{
-		Ctx: param.Ctx,
-		ID:  param.Invoice.KontakID,
-	})
-	if err != nil {
-		if err.Error() == "record not found" {
-			return errors.New(message.KontakNotFound)
+	if param.Invoice != nil && param.Invoice.KontakID != "" {
+		_, err := u.repoKontak.GetById(kontakRepo.ParamGetById{
+			Ctx: param.Ctx,
+			ID:  param.Invoice.KontakID,
+		})
+		if err != nil {
+			if err.Error() == "record not found" {
+				return errors.New(message.KontakNotFound)
+			}
+			return err
 		}
-		return err
-	}
-
-	if err := g.Wait(); err != nil {
-		return err
 	}
 
 	return u.repo.UpdateFullAssoc(repo.ParamUpdateFullAssoc(param))

@@ -209,7 +209,11 @@ func (r *invoiceRepo) GetAll(param ParamGetAll) ([]entity.Invoice, error) {
 
 	invoices := make([]entity.Invoice, param.Limit)
 
-	if err := tx.Limit(param.Limit).Preload("Kontak").Preload("User").Find(&invoices).Error; err != nil {
+	if err := tx.Limit(param.Limit).Preload("Kontak", func(db *gorm.DB) *gorm.DB {
+		return db.Omit("created_at")
+	}).Preload("User", func(db *gorm.DB) *gorm.DB {
+		return db.Omit("no_telp", "alamat", "created_at")
+	}).Find(&invoices).Error; err != nil {
 		return nil, err
 	}
 

@@ -2,6 +2,7 @@ package handler_invoice
 
 import (
 	"context"
+	"strings"
 
 	ucHutangPiutang "github.com/be-sistem-informasi-konveksi/api/usecase/akuntansi/hutang_piutang"
 	ucKontak "github.com/be-sistem-informasi-konveksi/api/usecase/akuntansi/kontak"
@@ -62,14 +63,20 @@ func errResponse(c *fiber.Ctx, err error) error {
 		message.SablonNotFound,
 		message.ProdukNotFound,
 		message.BordirNotFound,
+		message.DetailInvoiceNotFound,
 		message.BayarMustLessThanTotalHargaInvoice,
 		message.AkunNotFound:
+		badRequest = append(badRequest, err.Error())
+	}
+
+	if strings.Contains(err.Error(), message.UserNotAllowedToModifiedStatusProdusi) {
 		badRequest = append(badRequest, err.Error())
 	}
 
 	if len(badRequest) > 0 {
 		return c.Status(fiber.StatusBadRequest).JSON(res_global.ErrorRes(fiber.ErrBadRequest.Code, fiber.ErrBadRequest.Message, badRequest))
 	}
+
 	return c.Status(fiber.StatusInternalServerError).JSON(res_global.ErrorRes(fiber.ErrInternalServerError.Code, fiber.ErrInternalServerError.Message, nil))
 }
 

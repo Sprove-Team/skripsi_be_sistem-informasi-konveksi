@@ -108,4 +108,6 @@ var (
 	DetailInvoiceNotFound              = "detail invoice tidak ditemukan"
 	//data bayar
 	CannotModifiedTerkonfirmasiDataBayar = "tidak bisa mengubah atau menghapus data bayar invoice yang berstatus `TERKONFIRMASI`"
+	// user not allowed
+	UserNotAllowedToModifiedStatusProdusi = " tidak diizinkan untuk mengedit status produksi"
 )

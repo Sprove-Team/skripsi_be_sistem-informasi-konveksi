@@ -7,8 +7,8 @@ type ReqDetailInvoice struct {
 	BordirID     string  `json:"bordir_id" validate:"omitempty,ulid"`
 	SablonID     string  `json:"sablon_id" validate:"omitempty,ulid"`
 	GambarDesign string  `json:"gambar_design" validate:"required"`
-	Total        float64 `json:"total" validate:"required,number"`
-	Qty          int     `json:"qty" validate:"required,number,min=1"`
+	Total        float64 `json:"total" validate:"required,number,gt=0"`
+	Qty          int     `json:"qty" validate:"required,number,gt=0"`
 }
 
 type ReqNewKontak struct {
@@ -37,8 +37,8 @@ type Create struct {
 
 type ReqUpdateDetailInvoice struct {
 	ID    string  `json:"id" validate:"required,ulid"`
-	Total float64 `json:"total" validate:"omitempty,number"`
-	Qty   int     `json:"qty" validate:"omitempty,number,min=1"`
+	Total float64 `json:"total" validate:"omitempty,number,gt=0"`
+	Qty   int     `json:"qty" validate:"omitempty,number,gt=0"`
 }
 
 type Update struct {
