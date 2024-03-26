@@ -19,7 +19,7 @@ type ReqNewKontak struct {
 }
 
 type ReqBayar struct {
-	BuktiPembayaran entity.BuktiPembayaran `json:"bukti_pembayaran" validate:"required"`
+	BuktiPembayaran entity.BuktiPembayaran `json:"bukti_pembayaran" validate:"required,gt=0"`
 	Keterangan      string                 `json:"keterangan" validate:"required"`
 	AkunID          string                 `json:"akun_id" validate:"required,ulid"`
 	Total           float64                `json:"total" validate:"required,number,gt=0"`
@@ -32,23 +32,18 @@ type Create struct {
 	TanggalDeadline string             `json:"tanggal_deadline" validate:"required,datetime=2006-01-02T15:04:05Z07:00"`
 	TanggalKirim    string             `json:"tanggal_kirim" validate:"required,datetime=2006-01-02T15:04:05Z07:00"`
 	Keterangan      string             `json:"keterangan" validate:"omitempty"`
-	DetailInvoice   []ReqDetailInvoice `json:"detail_invoice" validate:"gt=0,dive,required"`
+	DetailInvoice   []ReqDetailInvoice `json:"detail_invoice" validate:"required,gt=0,dive"`
 }
 
 type ReqUpdateDetailInvoice struct {
-	ID           string  `json:"id" validate:"required,ulid"`
-	ProdukID     string  `json:"produk_id" validate:"omitempty,ulid"`
-	BordirID     string  `json:"bordir_id" validate:"omitempty,ulid"`
-	SablonID     string  `json:"sablon_id" validate:"omitempty,ulid"`
-	GambarDesign string  `json:"gambar_design" validate:"omitempty"`
-	Total        float64 `json:"total" validate:"omitempty,number"`
-	Qty          int     `json:"qty" validate:"omitempty,number,min=1"`
+	ID    string  `json:"id" validate:"required,ulid"`
+	Total float64 `json:"total" validate:"omitempty,number"`
+	Qty   int     `json:"qty" validate:"omitempty,number,min=1"`
 }
 
 type Update struct {
 	ID              string                   `params:"id" validate:"required"`
-	StatusProduksi  string                   `json:"status_produksi" validate:"required,oneof=BELUM_DIKERJAKAN DIPROSES SELESAI"`
-	KontakID        string                   `json:"kontak_id" validate:"omitempty,ulid"`
+	StatusProduksi  string                   `json:"status_produksi" validate:"omitempty,oneof=BELUM_DIKERJAKAN DIPROSES SELESAI"`
 	TanggalDeadline string                   `json:"tanggal_deadline" validate:"omitempty,datetime=2006-01-02T15:04:05Z07:00"`
 	TanggalKirim    string                   `json:"tanggal_kirim" validate:"omitempty,datetime=2006-01-02T15:04:05Z07:00"`
 	Keterangan      string                   `json:"keterangan" validate:"omitempty"`

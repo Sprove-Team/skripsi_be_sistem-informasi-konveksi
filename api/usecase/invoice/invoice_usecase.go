@@ -373,12 +373,15 @@ func (u *invoiceUsecase) UpdateDataInvoice(param ParamUpdateDataInvoice) (*entit
 			StatusProduksi: param.Req.StatusProduksi,
 		}, nil
 	case entity.RolesById[1]: // direktur
-		oldData.StatusProduksi = param.Req.StatusProduksi
+		if param.Req.StatusProduksi != "" {
+			oldData.StatusProduksi = param.Req.StatusProduksi
+		}
 	}
 
 	oldData.UserID = param.Claims.ID
-	oldData.Keterangan = param.Req.Keterangan
-	oldData.KontakID = param.Req.KontakID
+	if param.Req.Keterangan != "" {
+		oldData.Keterangan = param.Req.Keterangan
+	}
 
 	if param.Req.TanggalKirim != "" {
 		tanggalKirim, err := time.Parse(time.RFC3339, param.Req.TanggalKirim)
@@ -404,10 +407,6 @@ func (u *invoiceUsecase) UpdateDataInvoice(param ParamUpdateDataInvoice) (*entit
 			return oldData.DetailInvoice[i].ID < oldData.DetailInvoice[j].ID
 		})
 
-		var produkIds = make([]string, 0, lengthDetail)
-		var bordirIds = make([]string, 0, lengthDetail)
-		var sablonIds = make([]string, 0, lengthDetail)
-
 		for _, detail := range param.Req.DetailInvoice {
 			idx := sort.Search(len(oldData.DetailInvoice), func(i int) bool {
 				return oldData.DetailInvoice[i].ID >= detail.ID
@@ -418,60 +417,44 @@ func (u *invoiceUsecase) UpdateDataInvoice(param ParamUpdateDataInvoice) (*entit
 				oldData.TotalHarga = (oldData.TotalHarga - oldData.DetailInvoice[idx].Total) + detail.Total
 				oldData.TotalQty = (oldData.TotalQty - oldData.DetailInvoice[idx].Qty) + detail.Qty
 
-				oldData.DetailInvoice[idx].BordirID = detail.BordirID
-				oldData.DetailInvoice[idx].ProdukID = detail.ProdukID
-				oldData.DetailInvoice[idx].SablonID = detail.SablonID
 				oldData.DetailInvoice[idx].Qty = detail.Qty
 				oldData.DetailInvoice[idx].Total = detail.Total
-				oldData.DetailInvoice[idx].GambarDesign = detail.GambarDesign
 
-				produkIds = append(produkIds, detail.ProdukID)
-				bordirIds = append(bordirIds, detail.BordirID)
-				sablonIds = append(sablonIds, detail.SablonID)
 			} else {
 				return nil, errors.New(message.DetailInvoiceNotFound)
 			}
 		}
 
-		err := u.CheckDataDetails(ParamCheckDataDetails{
-			Ctx:       param.Ctx,
-			ProdukIds: produkIds,
-			BordirIds: bordirIds,
-			SablonIds: sablonIds,
-		})
-
-		if err != nil {
-			return nil, err
-		}
-
 		// update oldData total harga & qty
 		var oldTotalBayar = oldData.HutangPiutang.Total - oldData.HutangPiutang.Sisa
 
-		if oldData.TotalHarga < oldTotalBayar {
+		newTotalHarga := oldData.TotalHarga
+
+		if newTotalHarga < oldTotalBayar {
 			return nil, errors.New(message.TotalBayarMustGeOrEqToTotalByr)
 		}
 
-		oldData.HutangPiutang.Sisa = oldData.TotalHarga - oldTotalBayar
-		oldData.HutangPiutang.Total = oldData.TotalHarga
+		oldData.HutangPiutang.Sisa = newTotalHarga - oldTotalBayar
+		oldData.HutangPiutang.Total = newTotalHarga
 
 		if oldData.HutangPiutang.Sisa <= 0 {
 			oldData.HutangPiutang.Status = "LUNAS"
 		}
 
 		// update tr
-		oldData.HutangPiutang.Transaksi.Total = oldData.TotalHarga
+		oldData.HutangPiutang.Transaksi.Total = newTotalHarga
 		for i, ay := range oldData.HutangPiutang.Transaksi.AyatJurnals {
 			// update debit kredit
 			if ay.Debit != 0 {
-				ay.Debit = oldData.TotalHarga
+				ay.Debit = newTotalHarga
 			} else {
-				ay.Kredit = oldData.TotalHarga
+				ay.Kredit = newTotalHarga
 			}
 			// update saldo
 			if ay.Saldo > 0 {
-				ay.Saldo = oldData.TotalHarga
+				ay.Saldo = newTotalHarga
 			} else {
-				ay.Saldo = -oldData.TotalHarga
+				ay.Saldo = -newTotalHarga
 			}
 			oldData.HutangPiutang.Transaksi.AyatJurnals[i] = ay
 		}
@@ -479,8 +462,6 @@ func (u *invoiceUsecase) UpdateDataInvoice(param ParamUpdateDataInvoice) (*entit
 
 	// update transaksi hutang piutang
 	oldData.HutangPiutang.Transaksi.Keterangan = param.Req.Keterangan
-	oldData.HutangPiutang.Transaksi.KontakID = param.Req.KontakID
-
 	return oldData, nil
 }
 
