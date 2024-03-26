@@ -26,12 +26,12 @@ type ReqBayar struct {
 }
 
 type Create struct {
-	KontakID        string             `json:"kontak_id" validate:"required_without=NewKontak,excluded_with=NewKontak,ulid"`
+	KontakID        string             `json:"kontak_id" validate:"required_without=NewKontak,excluded_with=NewKontak,omitempty,ulid"`
 	NewKontak       ReqNewKontak       `json:"new_kontak" validate:"omitempty"`
 	Bayar           ReqBayar           `json:"bayar" validate:"required"`
 	TanggalDeadline string             `json:"tanggal_deadline" validate:"required,datetime=2006-01-02T15:04:05Z07:00"`
 	TanggalKirim    string             `json:"tanggal_kirim" validate:"required,datetime=2006-01-02T15:04:05Z07:00"`
-	Keterangan      string             `json:"keterangan" validate:"required"`
+	Keterangan      string             `json:"keterangan" validate:"omitempty"`
 	DetailInvoice   []ReqDetailInvoice `json:"detail_invoice" validate:"gt=0,dive,required"`
 }
 
