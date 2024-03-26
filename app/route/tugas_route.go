@@ -29,7 +29,7 @@ func (ro *tugasRoute) Tugas(router fiber.Router) {
 	router.Delete("/:id", auth, ro.h.TugasHandler().Delete)
 	router.Get("", auth2, ro.h.TugasHandler().GetAll)
 	router.Get("/:id", auth2, ro.h.TugasHandler().GetById)
-	router.Get("/:invoice_id", auth2, ro.h.TugasHandler().GetByInvoiceId)
+	router.Get("/invoice/:invoice_id", auth2, ro.h.TugasHandler().GetByInvoiceId)
 }
 
 func (ro *tugasRoute) SubTugas(router fiber.Router) {
