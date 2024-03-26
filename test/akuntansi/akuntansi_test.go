@@ -397,3 +397,123 @@ func AkuntansiGetNC(t *testing.T) {
 		})
 	}
 }
+
+func AkuntansiGetLB(t *testing.T) {
+	tests := []struct {
+		name         string
+		token        string
+		queryBody    string
+		expectedBody test.Response
+		expectedCode int
+	}{
+		{
+			name:         "sukses",
+			token:        tokens[entity.RolesById[1]],
+			expectedCode: 200,
+			queryBody:    "?start_date=2023-01-20&end_date=2024-12-30",
+			expectedBody: test.Response{
+				Status: message.OK,
+				Code:   200,
+			},
+		},
+		{
+			name:         "err: format start date & end date",
+			token:        tokens[entity.RolesById[1]],
+			expectedCode: 400,
+			queryBody:    "?start_date=2023-01-01T22:17:03.723+08:00&end_date=2024-01-01T22:17:03.723+08:00",
+			expectedBody: test.Response{
+				Status:         fiber.ErrBadRequest.Message,
+				Code:           400,
+				ErrorsMessages: []string{"start date harus berformat Tahun-Bulan-Tanggal", "end date harus berformat Tahun-Bulan-Tanggal"},
+			},
+		},
+		{
+			name:         "err: wajib diisi",
+			token:        tokens[entity.RolesById[1]],
+			expectedCode: 400,
+			expectedBody: test.Response{
+				Status:         fiber.ErrBadRequest.Message,
+				Code:           400,
+				ErrorsMessages: []string{"start date wajib diisi", "end date wajib diisi"},
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[3],
+			token:        tokens[entity.RolesById[3]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[4],
+			token:        tokens[entity.RolesById[4]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[5],
+			token:        tokens[entity.RolesById[5]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			code, body, err := test.GetJsonTestRequestResponse(app, "GET", "/api/v1/akuntansi/laba_rugi"+tt.queryBody, nil, &tt.token)
+			assert.NoError(t, err)
+			assert.Equal(t, tt.expectedCode, code)
+			var res []map[string]any
+			if strings.Contains(tt.name, "sukses") {
+				err = mapstructure.Decode(body.Data, &res)
+				assert.NoError(t, err)
+				assert.NotEmpty(t, res)
+				if len(res) <= 0 {
+					return
+				}
+
+				for _, v := range res {
+					assert.NotEmpty(t, v["kategori_akun"])
+					assert.NotEmpty(t, v["akun"])
+					var total float64
+					if ays, ok := v["akun"].([]any); ok && len(ays) > 0 {
+						for _, ay := range ays {
+							ay2 := ay.(map[string]any)
+							assert.NotEmpty(t, ay2["nama_akun"])
+							assert.NotEmpty(t, ay2["kode_akun"])
+							total += ay2["saldo"].(float64)
+							if dat, ok := ay2["saldo_kredit"].(float64); ok && dat != 0 {
+								assert.Greater(t, dat, float64(0))
+							}
+							if dat, ok := ay2["saldo_debit"].(float64); ok && dat != 0 {
+								assert.Greater(t, dat, float64(0))
+							}
+						}
+					}
+					if v["total"].(float64) != 0 {
+						assert.Equal(t, total, v["total"].(float64))
+					}
+				}
+
+				assert.Equal(t, tt.expectedBody.Status, body.Status)
+			} else {
+				if len(tt.expectedBody.ErrorsMessages) > 0 {
+					for _, v := range tt.expectedBody.ErrorsMessages {
+						assert.Contains(t, body.ErrorsMessages, v)
+					}
+					assert.Equal(t, tt.expectedBody.Status, body.Status)
+				} else {
+					assert.Equal(t, tt.expectedBody, body)
+				}
+			}
+		})
+	}
+}

@@ -69,17 +69,17 @@ func TestMain(m *testing.M) {
 }
 
 func TestEndPointAkuntansi(t *testing.T) {
-	// // kelompok akun
-	// AkuntansiCreateKelompokAkun(t)
-	// AkuntansiUpdateKelompokAkun(t)
-	// AkuntansiGetAllKelompokAkun(t)
-	// AkuntansiGetKelompokAkun(t)
+	// kelompok akun
+	AkuntansiCreateKelompokAkun(t)
+	AkuntansiUpdateKelompokAkun(t)
+	AkuntansiGetAllKelompokAkun(t)
+	AkuntansiGetKelompokAkun(t)
 
-	// // akun
-	// AkuntansiCreateAkun(t)
-	// AkuntansiUpdateAkun(t)
-	// AkuntansiGetAllAkun(t)
-	// AkuntansiGetAkun(t)
+	// akun
+	AkuntansiCreateAkun(t)
+	AkuntansiUpdateAkun(t)
+	AkuntansiGetAllAkun(t)
+	AkuntansiGetAkun(t)
 
 	// kontak
 	AkuntansiCreateKontak(t)
@@ -94,17 +94,19 @@ func TestEndPointAkuntansi(t *testing.T) {
 	// transaksi
 	AkuntansiCreateTransaksi(t)
 	AkuntansiUpdateTransaksi(t)
-	// AkuntansiGetAllTransaksi(t)
-	// AkuntansiGetTransaksi(t)
-	// AkuntansiGetHistoryTransaksi(t)
+	AkuntansiGetAllTransaksi(t)
+	AkuntansiGetTransaksi(t)
+	AkuntansiGetHistoryTransaksi(t)
 
 	// akuntansi
 	AkuntansiGetJU(t)
 	AkuntansiGetBB(t)
 	AkuntansiGetNC(t)
+	AkuntansiGetLB(t)
+
 	// delete all
-	// AkuntansiDeleteKelompokAkun(t)
-	// AkuntansiDeleteAkun(t)
-	// AkuntansiDeleteTransaksi(t)
+	AkuntansiDeleteKelompokAkun(t)
+	AkuntansiDeleteAkun(t)
+	AkuntansiDeleteTransaksi(t)
 	AkuntansiDeleteKontak(t)
 }

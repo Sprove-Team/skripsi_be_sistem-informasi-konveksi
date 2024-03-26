@@ -253,7 +253,7 @@ func (u *akuntansiUsecase) GetAllLBR(ctx context.Context, reqGetAllLBR req.GetAl
 		return nil, err
 	}
 
-	labaRugiMap := map[string]res.LabaRugiRes{}
+	labaRugiMap := make(map[string]res.LabaRugiRes)
 	var saldoKreditDebit float64
 	for _, v := range lbrRes {
 		labaRugi, ok := labaRugiMap[v.KategoriAkun]
