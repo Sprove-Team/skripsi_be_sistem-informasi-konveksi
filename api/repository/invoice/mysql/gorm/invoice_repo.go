@@ -125,11 +125,14 @@ func (r *invoiceRepo) GetById(param ParamGetById) (*entity.Invoice, error) {
 		Preload("DetailInvoice.Produk", func(db *gorm.DB) *gorm.DB {
 			return db.Omit("created_at")
 		}).
+		Preload("DetailInvoice.Produk.HargaDetails", func(db *gorm.DB) *gorm.DB {
+			return db.Omit("created_at").Order("qty ASC")
+		}).
 		Preload("DetailInvoice.Bordir", func(db *gorm.DB) *gorm.DB {
-			return db.Omit("harga", "created_at")
+			return db.Omit("created_at")
 		}).
 		Preload("DetailInvoice.Sablon", func(db *gorm.DB) *gorm.DB {
-			return db.Omit("harga", "created_at")
+			return db.Omit("created_at")
 		}).
 		Preload("Kontak").
 		Preload("User").
