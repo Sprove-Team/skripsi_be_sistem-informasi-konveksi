@@ -101,6 +101,7 @@ func TestEndPointAkuntansi(t *testing.T) {
 	// akuntansi
 	AkuntansiGetJU(t)
 	AkuntansiGetBB(t)
+	AkuntansiGetNC(t)
 	// delete all
 	// AkuntansiDeleteKelompokAkun(t)
 	// AkuntansiDeleteAkun(t)

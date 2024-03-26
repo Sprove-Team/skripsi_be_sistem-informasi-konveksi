@@ -287,3 +287,113 @@ func AkuntansiGetBB(t *testing.T) {
 		})
 	}
 }
+
+func AkuntansiGetNC(t *testing.T) {
+	tests := []struct {
+		name         string
+		token        string
+		queryBody    string
+		expectedBody test.Response
+		expectedCode int
+	}{
+		{
+			name:         "sukses",
+			token:        tokens[entity.RolesById[1]],
+			expectedCode: 200,
+			queryBody:    "?date=2024-01",
+			expectedBody: test.Response{
+				Status: message.OK,
+				Code:   200,
+			},
+		},
+		{
+			name:         "err: format date",
+			token:        tokens[entity.RolesById[1]],
+			expectedCode: 400,
+			queryBody:    "?date=2023-01-01T22:17:03.723+08:00",
+			expectedBody: test.Response{
+				Status:         fiber.ErrBadRequest.Message,
+				Code:           400,
+				ErrorsMessages: []string{"date harus berformat Tahun-Bulan"},
+			},
+		},
+		{
+			name:         "err: wajib diisi",
+			token:        tokens[entity.RolesById[1]],
+			expectedCode: 400,
+			expectedBody: test.Response{
+				Status:         fiber.ErrBadRequest.Message,
+				Code:           400,
+				ErrorsMessages: []string{"date wajib diisi"},
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[3],
+			token:        tokens[entity.RolesById[3]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[4],
+			token:        tokens[entity.RolesById[4]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[5],
+			token:        tokens[entity.RolesById[5]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			code, body, err := test.GetJsonTestRequestResponse(app, "GET", "/api/v1/akuntansi/neraca_saldo"+tt.queryBody, nil, &tt.token)
+			assert.NoError(t, err)
+			assert.Equal(t, tt.expectedCode, code)
+			var res map[string]any
+			if strings.Contains(tt.name, "sukses") {
+				err = mapstructure.Decode(body.Data, &res)
+				assert.NoError(t, err)
+				assert.NotEmpty(t, res)
+				if len(res) <= 0 {
+					return
+				}
+
+				var totalDebit, totalKredit float64
+				if ays, ok := res["saldo_akun"].([]any); ok && len(ays) > 0 {
+					for _, ay := range ays {
+						ay2 := ay.(map[string]any)
+						assert.NotEmpty(t, ay2["kode_akun"])
+						assert.NotEmpty(t, ay2["nama_akun"])
+						totalDebit += ay2["saldo_debit"].(float64)
+						totalKredit += ay2["saldo_kredit"].(float64)
+					}
+				}
+				assert.Equal(t, totalDebit, res["total_debit"].(float64))
+				assert.Equal(t, totalKredit, res["total_kredit"].(float64))
+
+				assert.Equal(t, tt.expectedBody.Status, body.Status)
+			} else {
+				if len(tt.expectedBody.ErrorsMessages) > 0 {
+					for _, v := range tt.expectedBody.ErrorsMessages {
+						assert.Contains(t, body.ErrorsMessages, v)
+					}
+					assert.Equal(t, tt.expectedBody.Status, body.Status)
+				} else {
+					assert.Equal(t, tt.expectedBody, body)
+				}
+			}
+		})
+	}
+}

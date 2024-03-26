@@ -75,6 +75,8 @@ func NewValidator() Validator {
 			format = "RFC3999"
 		case "2006-01-02":
 			format = "Tahun-Bulan-Tanggal"
+		case "2006-01":
+			format = "Tahun-Bulan"
 		default:
 			format = fe.Param()
 		}
