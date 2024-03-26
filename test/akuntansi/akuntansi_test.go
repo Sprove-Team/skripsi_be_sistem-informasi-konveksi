@@ -53,6 +53,15 @@ func AkuntansiGetJU(t *testing.T) {
 			},
 		},
 		{
+			name:         "authorization " + entity.RolesById[2] + " passed",
+			token:        tokens[entity.RolesById[2]],
+			expectedCode: 400,
+			expectedBody: test.Response{
+				Status: fiber.ErrBadRequest.Message,
+				Code:   400,
+			},
+		},
+		{
 			name:         "err: authorization " + entity.RolesById[3],
 			token:        tokens[entity.RolesById[3]],
 			expectedCode: 401,
@@ -134,6 +143,9 @@ func AkuntansiGetJU(t *testing.T) {
 					}
 					assert.Equal(t, tt.expectedBody.Status, body.Status)
 				} else {
+					if strings.Contains(tt.name, "passed") {
+						return
+					}
 					assert.Equal(t, tt.expectedBody, body)
 				}
 			}
@@ -199,6 +211,16 @@ func AkuntansiGetBB(t *testing.T) {
 				Code:   401,
 			},
 		},
+		{
+			name:         "authorization " + entity.RolesById[2] + " passed",
+			token:        tokens[entity.RolesById[2]],
+			expectedCode: 400,
+			expectedBody: test.Response{
+				Status: fiber.ErrBadRequest.Message,
+				Code:   400,
+			},
+		},
+
 		{
 			name:         "err: authorization " + entity.RolesById[4],
 			token:        tokens[entity.RolesById[4]],
@@ -281,6 +303,9 @@ func AkuntansiGetBB(t *testing.T) {
 					}
 					assert.Equal(t, tt.expectedBody.Status, body.Status)
 				} else {
+					if strings.Contains(tt.name, "passed") {
+						return
+					}
 					assert.Equal(t, tt.expectedBody, body)
 				}
 			}
@@ -325,6 +350,15 @@ func AkuntansiGetNC(t *testing.T) {
 				Status:         fiber.ErrBadRequest.Message,
 				Code:           400,
 				ErrorsMessages: []string{"date wajib diisi"},
+			},
+		},
+		{
+			name:         "authorization " + entity.RolesById[2] + " passed",
+			token:        tokens[entity.RolesById[2]],
+			expectedCode: 400,
+			expectedBody: test.Response{
+				Status: fiber.ErrBadRequest.Message,
+				Code:   400,
 			},
 		},
 		{
@@ -391,6 +425,9 @@ func AkuntansiGetNC(t *testing.T) {
 					}
 					assert.Equal(t, tt.expectedBody.Status, body.Status)
 				} else {
+					if strings.Contains(tt.name, "passed") {
+						return
+					}
 					assert.Equal(t, tt.expectedBody, body)
 				}
 			}
@@ -435,6 +472,15 @@ func AkuntansiGetLB(t *testing.T) {
 				Status:         fiber.ErrBadRequest.Message,
 				Code:           400,
 				ErrorsMessages: []string{"start date wajib diisi", "end date wajib diisi"},
+			},
+		},
+		{
+			name:         "authorization " + entity.RolesById[2] + " passed",
+			token:        tokens[entity.RolesById[2]],
+			expectedCode: 400,
+			expectedBody: test.Response{
+				Status: fiber.ErrBadRequest.Message,
+				Code:   400,
 			},
 		},
 		{
@@ -511,6 +557,9 @@ func AkuntansiGetLB(t *testing.T) {
 					}
 					assert.Equal(t, tt.expectedBody.Status, body.Status)
 				} else {
+					if strings.Contains(tt.name, "passed") {
+						return
+					}
 					assert.Equal(t, tt.expectedBody, body)
 				}
 			}

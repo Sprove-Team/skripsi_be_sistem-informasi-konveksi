@@ -72,6 +72,15 @@ func AkuntansiCreateKontak(t *testing.T) {
 			},
 		},
 		{
+			name:         "authorization " + entity.RolesById[2] + " passed",
+			token:        tokens[entity.RolesById[2]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
 			name:         "err: authorization " + entity.RolesById[3],
 			payload:      req_akuntansi_kontak.Create{},
 			token:        tokens[entity.RolesById[3]],
@@ -107,6 +116,12 @@ func AkuntansiCreateKontak(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			code, body, err := test.GetJsonTestRequestResponse(app, "POST", "/api/v1/akuntansi/kontak", tt.payload, &tt.token)
 			assert.NoError(t, err)
+			if strings.Contains(tt.name, "passed") {
+				assert.NotEqual(t, tt.expectedCode, code)
+				assert.NotEqual(t, tt.expectedBody.Code, body.Code)
+				assert.NotEqual(t, tt.expectedBody.Status, body.Status)
+				return
+			}
 			assert.Equal(t, tt.expectedCode, code)
 			if len(tt.expectedBody.ErrorsMessages) > 0 {
 				for _, v := range tt.expectedBody.ErrorsMessages {
@@ -207,8 +222,34 @@ func AkuntansiUpdateKontak(t *testing.T) {
 			},
 		},
 		{
-			name:         "err: authorization " + entity.RolesById[4],
-			payload:      req_akuntansi_kontak.Update{},
+			name:  "authorization " + entity.RolesById[2] + " passed",
+			token: tokens[entity.RolesById[2]],
+			payload: req_akuntansi_kontak.Update{
+				ID: idAkun,
+			},
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name: "err: authorization " + entity.RolesById[3],
+			payload: req_akuntansi_kontak.Update{
+				ID: idAkun,
+			},
+			token:        tokens[entity.RolesById[3]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name: "err: authorization " + entity.RolesById[4],
+			payload: req_akuntansi_kontak.Update{
+				ID: idAkun,
+			},
 			token:        tokens[entity.RolesById[4]],
 			expectedCode: 401,
 			expectedBody: test.Response{
@@ -217,8 +258,10 @@ func AkuntansiUpdateKontak(t *testing.T) {
 			},
 		},
 		{
-			name:         "err: authorization " + entity.RolesById[5],
-			payload:      req_akuntansi_kontak.Update{},
+			name: "err: authorization " + entity.RolesById[5],
+			payload: req_akuntansi_kontak.Update{
+				ID: idAkun,
+			},
 			token:        tokens[entity.RolesById[5]],
 			expectedCode: 401,
 			expectedBody: test.Response{
@@ -232,6 +275,12 @@ func AkuntansiUpdateKontak(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			code, body, err := test.GetJsonTestRequestResponse(app, "PUT", "/api/v1/akuntansi/kontak/"+tt.payload.ID, tt.payload, &tt.token)
 			assert.NoError(t, err)
+			if strings.Contains(tt.name, "passed") {
+				assert.NotEqual(t, tt.expectedCode, code)
+				assert.NotEqual(t, tt.expectedBody.Code, body.Code)
+				assert.NotEqual(t, tt.expectedBody.Status, body.Status)
+				return
+			}
 			assert.Equal(t, tt.expectedCode, code)
 			if len(tt.expectedBody.ErrorsMessages) > 0 {
 				for _, v := range tt.expectedBody.ErrorsMessages {
@@ -304,6 +353,15 @@ func AkuntansiGetAllKontak(t *testing.T) {
 			},
 		},
 		{
+			name:         "authorization " + entity.RolesById[2] + " passed",
+			token:        tokens[entity.RolesById[2]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
 			name:         "err: authorization " + entity.RolesById[3],
 			token:        tokens[entity.RolesById[3]],
 			expectedCode: 401,
@@ -336,6 +394,12 @@ func AkuntansiGetAllKontak(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			code, body, err := test.GetJsonTestRequestResponse(app, "GET", "/api/v1/akuntansi/kontak"+tt.queryBody, nil, &tt.token)
 			assert.NoError(t, err)
+			if strings.Contains(tt.name, "passed") {
+				assert.NotEqual(t, tt.expectedCode, code)
+				assert.NotEqual(t, tt.expectedBody.Code, body.Code)
+				assert.NotEqual(t, tt.expectedBody.Status, body.Status)
+				return
+			}
 			assert.Equal(t, tt.expectedCode, code)
 
 			var res []map[string]interface{}
@@ -426,6 +490,16 @@ func AkuntansiGetKontak(t *testing.T) {
 			},
 		},
 		{
+			name:         "authorization " + entity.RolesById[2] + " passed",
+			id:           idAkun,
+			token:        tokens[entity.RolesById[2]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
 			name:         "err: authorization " + entity.RolesById[3],
 			id:           idKontak,
 			token:        tokens[entity.RolesById[3]],
@@ -461,6 +535,12 @@ func AkuntansiGetKontak(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			code, body, err := test.GetJsonTestRequestResponse(app, "GET", "/api/v1/akuntansi/kontak/"+tt.id, nil, &tt.token)
 			assert.NoError(t, err)
+			if strings.Contains(tt.name, "passed") {
+				assert.NotEqual(t, tt.expectedCode, code)
+				assert.NotEqual(t, tt.expectedBody.Code, body.Code)
+				assert.NotEqual(t, tt.expectedBody.Status, body.Status)
+				return
+			}
 			assert.Equal(t, tt.expectedCode, code)
 
 			var res map[string]any
@@ -530,6 +610,16 @@ func AkuntansiDeleteKontak(t *testing.T) {
 			},
 		},
 		{
+			name:         "authorization " + entity.RolesById[2] + " passed",
+			token:        tokens[entity.RolesById[2]],
+			id:           idAkun,
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
 			name:         "err: authorization " + entity.RolesById[3],
 			id:           idKontak,
 			token:        tokens[entity.RolesById[3]],
@@ -565,6 +655,12 @@ func AkuntansiDeleteKontak(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			code, body, err := test.GetJsonTestRequestResponse(app, "DELETE", "/api/v1/akuntansi/kontak/"+tt.id, nil, &tt.token)
 			assert.NoError(t, err)
+			if strings.Contains(tt.name, "passed") {
+				assert.NotEqual(t, tt.expectedCode, code)
+				assert.NotEqual(t, tt.expectedBody.Code, body.Code)
+				assert.NotEqual(t, tt.expectedBody.Status, body.Status)
+				return
+			}
 			assert.Equal(t, tt.expectedCode, code)
 			if len(tt.expectedBody.ErrorsMessages) > 0 {
 				for _, v := range tt.expectedBody.ErrorsMessages {

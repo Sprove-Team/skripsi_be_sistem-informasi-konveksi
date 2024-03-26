@@ -284,6 +284,15 @@ func AkuntansiCreateHutangPiutang(t *testing.T) {
 			},
 		},
 		{
+			name:         "authorization " + entity.RolesById[2] + " passed",
+			token:        tokens[entity.RolesById[2]],
+			expectedCode: 400,
+			expectedBody: test.Response{
+				Status: fiber.ErrBadRequest.Message,
+				Code:   400,
+			},
+		},
+		{
 			name:         "err: authorization " + entity.RolesById[3],
 			payload:      req_akuntansi_hp.Create{},
 			token:        tokens[entity.RolesById[3]],
@@ -326,6 +335,9 @@ func AkuntansiCreateHutangPiutang(t *testing.T) {
 				}
 				assert.Equal(t, tt.expectedBody.Status, body.Status)
 			} else {
+				if strings.Contains(tt.name, "passed") {
+					return
+				}
 				assert.Equal(t, tt.expectedBody, body)
 			}
 		})
@@ -433,6 +445,24 @@ func AkuntansiGetAllHutangPiutang(t *testing.T) {
 			expectedBody: test.Response{
 				Status: message.OK,
 				Code:   200,
+			},
+		},
+		{
+			name:         "authorization " + entity.RolesById[2] + " passed",
+			token:        tokens[entity.RolesById[2]],
+			expectedCode: 200,
+			expectedBody: test.Response{
+				Status: message.OK,
+				Code:   200,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[3],
+			token:        tokens[entity.RolesById[3]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
 			},
 		},
 		{
@@ -546,6 +576,9 @@ func AkuntansiGetAllHutangPiutang(t *testing.T) {
 					}
 					assert.Equal(t, tt.expectedBody.Status, body.Status)
 				} else {
+					if strings.Contains(tt.name, "passed") {
+						return
+					}
 					assert.Equal(t, tt.expectedBody, body)
 				}
 			}
@@ -719,12 +752,57 @@ func AkuntansiCreateBayarHP(t *testing.T) {
 				ErrorsMessages: []string{"total harus lebih besar dari 0"},
 			},
 		},
+		{
+			name:  "authorization " + entity.RolesById[2] + " passed",
+			token: tokens[entity.RolesById[2]],
+			payload: req_akuntansi_hp.CreateBayar{
+				HutangPiutangID: hp.ID + "123",
+			},
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[3],
+			token:        tokens[entity.RolesById[3]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[4],
+			token:        tokens[entity.RolesById[4]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[5],
+			token:        tokens[entity.RolesById[5]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			code, body, err := test.GetJsonTestRequestResponse(app, "POST", "/api/v1/akuntansi/hutang_piutang/bayar/"+tt.payload.HutangPiutangID, tt.payload, &tt.token)
 			assert.NoError(t, err)
+			if strings.Contains(tt.name, "passed") {
+				assert.NotEqual(t, tt.expectedCode, code)
+				assert.NotEqual(t, tt.expectedBody.Code, body.Code)
+				assert.NotEqual(t, tt.expectedBody.Status, body.Status)
+				return
+			}
 			assert.Equal(t, tt.expectedCode, code)
 			if len(tt.expectedBody.ErrorsMessages) > 0 {
 				for _, v := range tt.expectedBody.ErrorsMessages {
@@ -732,6 +810,7 @@ func AkuntansiCreateBayarHP(t *testing.T) {
 				}
 				assert.Equal(t, tt.expectedBody.Status, body.Status)
 			} else {
+
 				assert.Equal(t, tt.expectedBody, body)
 				if tt.name == "sukses" {
 					datResAfterBayar := new(entity.HutangPiutang)

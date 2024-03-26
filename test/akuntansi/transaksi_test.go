@@ -292,6 +292,15 @@ func AkuntansiCreateTransaksi(t *testing.T) {
 			},
 		},
 		{
+			name:         "authorization " + entity.RolesById[2] + " passed",
+			token:        tokens[entity.RolesById[2]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
 			name:         "err: authorization " + entity.RolesById[3],
 			payload:      req_akuntansi_transaksi.Create{},
 			token:        tokens[entity.RolesById[3]],
@@ -327,6 +336,12 @@ func AkuntansiCreateTransaksi(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			code, body, err := test.GetJsonTestRequestResponse(app, "POST", "/api/v1/akuntansi/transaksi", tt.payload, &tt.token)
 			assert.NoError(t, err)
+			if strings.Contains(tt.name, "passed") {
+				assert.NotEqual(t, tt.expectedCode, code)
+				assert.NotEqual(t, tt.expectedBody.Code, body.Code)
+				assert.NotEqual(t, tt.expectedBody.Status, body.Status)
+				return
+			}
 			assert.Equal(t, tt.expectedCode, code)
 			if len(tt.expectedBody.ErrorsMessages) > 0 {
 				for _, v := range tt.expectedBody.ErrorsMessages {
@@ -722,8 +737,22 @@ func AkuntansiUpdateTransaksi(t *testing.T) {
 			},
 		},
 		{
-			name:         "err: authorization " + entity.RolesById[3],
-			payload:      req_akuntansi_transaksi.Update{},
+			name:  "authorization " + entity.RolesById[2] + " passed",
+			token: tokens[entity.RolesById[2]],
+			payload: req_akuntansi_transaksi.Update{
+				ID: idAkun,
+			},
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name: "err: authorization " + entity.RolesById[3],
+			payload: req_akuntansi_transaksi.Update{
+				ID: idAkun,
+			},
 			token:        tokens[entity.RolesById[3]],
 			expectedCode: 401,
 			expectedBody: test.Response{
@@ -732,8 +761,10 @@ func AkuntansiUpdateTransaksi(t *testing.T) {
 			},
 		},
 		{
-			name:         "err: authorization " + entity.RolesById[4],
-			payload:      req_akuntansi_transaksi.Update{},
+			name: "err: authorization " + entity.RolesById[4],
+			payload: req_akuntansi_transaksi.Update{
+				ID: idAkun,
+			},
 			token:        tokens[entity.RolesById[4]],
 			expectedCode: 401,
 			expectedBody: test.Response{
@@ -742,8 +773,10 @@ func AkuntansiUpdateTransaksi(t *testing.T) {
 			},
 		},
 		{
-			name:         "err: authorization " + entity.RolesById[5],
-			payload:      req_akuntansi_transaksi.Update{},
+			name: "err: authorization " + entity.RolesById[5],
+			payload: req_akuntansi_transaksi.Update{
+				ID: idAkun,
+			},
 			token:        tokens[entity.RolesById[5]],
 			expectedCode: 401,
 			expectedBody: test.Response{
@@ -757,6 +790,12 @@ func AkuntansiUpdateTransaksi(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			code, body, err := test.GetJsonTestRequestResponse(app, "PUT", "/api/v1/akuntansi/transaksi/"+tt.payload.ID, tt.payload, &tt.token)
 			assert.NoError(t, err)
+			if strings.Contains(tt.name, "passed") {
+				assert.NotEqual(t, tt.expectedCode, code)
+				assert.NotEqual(t, tt.expectedBody.Code, body.Code)
+				assert.NotEqual(t, tt.expectedBody.Status, body.Status)
+				return
+			}
 			assert.Equal(t, tt.expectedCode, code)
 			if len(tt.expectedBody.ErrorsMessages) > 0 {
 				for _, v := range tt.expectedBody.ErrorsMessages {
@@ -823,6 +862,15 @@ func AkuntansiGetAllTransaksi(t *testing.T) {
 			},
 		},
 		{
+			name:         "authorization " + entity.RolesById[2] + " passed",
+			token:        tokens[entity.RolesById[2]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
 			name:         "err: authorization " + entity.RolesById[3],
 			token:        tokens[entity.RolesById[3]],
 			expectedCode: 401,
@@ -855,6 +903,12 @@ func AkuntansiGetAllTransaksi(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			code, body, err := test.GetJsonTestRequestResponse(app, "GET", "/api/v1/akuntansi/transaksi"+tt.queryBody, nil, &tt.token)
 			assert.NoError(t, err)
+			if strings.Contains(tt.name, "passed") {
+				assert.NotEqual(t, tt.expectedCode, code)
+				assert.NotEqual(t, tt.expectedBody.Code, body.Code)
+				assert.NotEqual(t, tt.expectedBody.Status, body.Status)
+				return
+			}
 			assert.Equal(t, tt.expectedCode, code)
 
 			var res []map[string]interface{}
@@ -952,6 +1006,15 @@ func AkuntansiGetTransaksi(t *testing.T) {
 			},
 		},
 		{
+			name:         "authorization " + entity.RolesById[2] + " passed",
+			token:        tokens[entity.RolesById[2]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
 			name:         "err: authorization " + entity.RolesById[3],
 			id:           idTransaksi,
 			token:        tokens[entity.RolesById[3]],
@@ -987,6 +1050,12 @@ func AkuntansiGetTransaksi(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			code, body, err := test.GetJsonTestRequestResponse(app, "GET", "/api/v1/akuntansi/transaksi/"+tt.id, nil, &tt.token)
 			assert.NoError(t, err)
+			if strings.Contains(tt.name, "passed") {
+				assert.NotEqual(t, tt.expectedCode, code)
+				assert.NotEqual(t, tt.expectedBody.Code, body.Code)
+				assert.NotEqual(t, tt.expectedBody.Status, body.Status)
+				return
+			}
 			assert.Equal(t, tt.expectedCode, code)
 
 			var res map[string]any
@@ -1068,6 +1137,16 @@ func AkuntansiDeleteTransaksi(t *testing.T) {
 			},
 		},
 		{
+			name:         "authorization " + entity.RolesById[2] + " passed",
+			token:        tokens[entity.RolesById[2]],
+			id:           idAkun,
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
 			name:         "err: authorization " + entity.RolesById[3],
 			id:           idTransaksi,
 			token:        tokens[entity.RolesById[3]],
@@ -1103,6 +1182,12 @@ func AkuntansiDeleteTransaksi(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			code, body, err := test.GetJsonTestRequestResponse(app, "DELETE", "/api/v1/akuntansi/transaksi/"+tt.id, nil, &tt.token)
 			assert.NoError(t, err)
+			if strings.Contains(tt.name, "passed") {
+				assert.NotEqual(t, tt.expectedCode, code)
+				assert.NotEqual(t, tt.expectedBody.Code, body.Code)
+				assert.NotEqual(t, tt.expectedBody.Status, body.Status)
+				return
+			}
 			assert.Equal(t, tt.expectedCode, code)
 			if len(tt.expectedBody.ErrorsMessages) > 0 {
 				for _, v := range tt.expectedBody.ErrorsMessages {
@@ -1145,6 +1230,15 @@ func AkuntansiGetHistoryTransaksi(t *testing.T) {
 			},
 		},
 		{
+			name:         "authorization " + entity.RolesById[2] + " passed",
+			token:        tokens[entity.RolesById[2]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
 			name:         "err: authorization " + entity.RolesById[3],
 			token:        tokens[entity.RolesById[3]],
 			expectedCode: 401,
@@ -1177,6 +1271,12 @@ func AkuntansiGetHistoryTransaksi(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			code, body, err := test.GetJsonTestRequestResponse(app, "GET", "/api/v1/akuntansi/transaksi"+tt.queryBody, nil, &tt.token)
 			assert.NoError(t, err)
+			if strings.Contains(tt.name, "passed") {
+				assert.NotEqual(t, tt.expectedCode, code)
+				assert.NotEqual(t, tt.expectedBody.Code, body.Code)
+				assert.NotEqual(t, tt.expectedBody.Status, body.Status)
+				return
+			}
 			assert.Equal(t, tt.expectedCode, code)
 
 			var res []map[string]interface{}

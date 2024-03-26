@@ -90,6 +90,16 @@ func AkuntansiCreateAkun(t *testing.T) {
 			},
 		},
 		{
+			name:         "authorization " + entity.RolesById[2] + " passed",
+			payload:      req_akuntansi_akun.Create{},
+			token:        tokens[entity.RolesById[2]],
+			expectedCode: 400,
+			expectedBody: test.Response{
+				Status: fiber.ErrBadRequest.Message,
+				Code:   400,
+			},
+		},
+		{
 			name:         "err: authorization " + entity.RolesById[3],
 			payload:      req_akuntansi_akun.Create{},
 			token:        tokens[entity.RolesById[3]],
@@ -132,6 +142,9 @@ func AkuntansiCreateAkun(t *testing.T) {
 				}
 				assert.Equal(t, tt.expectedBody.Status, body.Status)
 			} else {
+				if strings.Contains(tt.name, "passed") {
+					return
+				}
 				assert.Equal(t, tt.expectedBody, body)
 			}
 		})
@@ -278,6 +291,18 @@ func AkuntansiUpdateAkun(t *testing.T) {
 			},
 		},
 		{
+			name: "authorization " + entity.RolesById[2] + " passed",
+			payload: req_akuntansi_akun.Update{
+				ID: idAkun,
+			},
+			token:        tokens[entity.RolesById[2]],
+			expectedCode: 200,
+			expectedBody: test.Response{
+				Status: message.OK,
+				Code:   200,
+			},
+		},
+		{
 			name:         "err: authorization " + entity.RolesById[3],
 			payload:      req_akuntansi_akun.Update{},
 			token:        tokens[entity.RolesById[3]],
@@ -320,6 +345,9 @@ func AkuntansiUpdateAkun(t *testing.T) {
 				}
 				assert.Equal(t, tt.expectedBody.Status, body.Status)
 			} else {
+				if strings.Contains(tt.name, "passed") {
+					return
+				}
 				assert.Equal(t, tt.expectedBody, body)
 			}
 		})
@@ -382,6 +410,15 @@ func AkuntansiGetAllAkun(t *testing.T) {
 				Status:         fiber.ErrBadRequest.Message,
 				Code:           400,
 				ErrorsMessages: []string{"next tidak berupa ulid yang valid"},
+			},
+		},
+		{
+			name:         "authorization " + entity.RolesById[2] + " passed",
+			token:        tokens[entity.RolesById[2]],
+			expectedCode: 200,
+			expectedBody: test.Response{
+				Status: fiber.ErrBadRequest.Message,
+				Code:   200,
 			},
 		},
 		{
@@ -460,6 +497,9 @@ func AkuntansiGetAllAkun(t *testing.T) {
 					}
 					assert.Equal(t, tt.expectedBody.Status, body.Status)
 				} else {
+					if strings.Contains(tt.name, "passed") {
+						return
+					}
 					assert.Equal(t, tt.expectedBody, body)
 				}
 			}
@@ -505,6 +545,16 @@ func AkuntansiGetAkun(t *testing.T) {
 				Status:         fiber.ErrBadRequest.Message,
 				Code:           400,
 				ErrorsMessages: []string{"id tidak berupa ulid yang valid"},
+			},
+		},
+		{
+			name:         "authorization " + entity.RolesById[2] + " passed",
+			id:           "asdfsadfasdfasdfsd",
+			token:        tokens[entity.RolesById[2]],
+			expectedCode: 400,
+			expectedBody: test.Response{
+				Status: fiber.ErrBadRequest.Message,
+				Code:   400,
 			},
 		},
 		{
@@ -568,6 +618,9 @@ func AkuntansiGetAkun(t *testing.T) {
 					}
 					assert.Equal(t, tt.expectedBody.Status, body.Status)
 				} else {
+					if strings.Contains(tt.name, "passed") {
+						return
+					}
 					assert.Equal(t, tt.expectedBody, body)
 				}
 			}
@@ -591,6 +644,16 @@ func AkuntansiDeleteAkun(t *testing.T) {
 			expectedBody: test.Response{
 				Status: message.OK,
 				Code:   200,
+			},
+		},
+		{
+			name:         "authorization " + entity.RolesById[2] + " passed",
+			id:           "asdfasdfasdfsf",
+			token:        tokens[entity.RolesById[2]],
+			expectedCode: 400,
+			expectedBody: test.Response{
+				Status: fiber.ErrBadRequest.Message,
+				Code:   400,
 			},
 		},
 		{
@@ -668,6 +731,9 @@ func AkuntansiDeleteAkun(t *testing.T) {
 				}
 				assert.Equal(t, tt.expectedBody.Status, body.Status)
 			} else {
+				if strings.Contains(tt.name, "passed") {
+					return
+				}
 				assert.Equal(t, tt.expectedBody, body)
 			}
 		})
