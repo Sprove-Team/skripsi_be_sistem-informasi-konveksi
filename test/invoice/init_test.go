@@ -240,4 +240,5 @@ func TestEndPointInvoice(t *testing.T) {
 	InvoiceCreate(t)
 	InvoiceUpdate(t)
 	InvoiceGetAll(t)
+	InvoiceGet(t)
 }

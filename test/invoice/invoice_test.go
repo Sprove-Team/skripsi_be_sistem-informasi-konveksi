@@ -1035,16 +1035,6 @@ func InvoiceGet(t *testing.T) {
 				Code:   200,
 			},
 		},
-		// {
-		// 	name:         "err: all format filter",
-		// 	token:        tokens[entity.RolesById[1]],
-		// 	expectedCode: 400,
-		// 	expectedBody: test.Response{
-		// 		Status:         fiber.ErrBadRequest.Message,
-		// 		Code:           400,
-		// 		ErrorsMessages: []string{"status produksi harus berupa salah satu dari [BELUM_DIKERJAKAN,DIPROSES,SELESAI]", "kontak id tidak berupa ulid yang valid", "tanggal deadline harus berformat RFC3339", "tanggal kirim harus berformat RFC3339", "sort by harus berupa salah satu dari [TANGGAL_DEADLINE,TANGGAL_KIRIM]", "order by harus berupa salah satu dari [ASC,DESC]", "next tidak berupa ulid yang valid"},
-		// 	},
-		// },
 		{
 			name:         "authorization " + entity.RolesById[2] + " passed",
 			token:        tokens[entity.RolesById[2]],
