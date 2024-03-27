@@ -540,7 +540,6 @@ func (u *invoiceUsecase) GetAll(param ParamGetAll) ([]entity.Invoice, error) {
 		KontakID:       param.Req.KontakID,
 		Limit:          param.Req.Limit,
 		Next:           param.Req.Next,
-		Order:          param.Req.OrderBy,
 	}
 
 	if !tglDeadline.IsZero() {

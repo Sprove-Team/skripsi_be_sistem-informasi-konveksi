@@ -166,13 +166,14 @@ func (r *invoiceRepo) GetByIdFullAssoc(param ParamGetById) (*entity.Invoice, err
 func (r *invoiceRepo) GetAll(param ParamGetAll) ([]entity.Invoice, error) {
 	tx := r.DB.WithContext(param.Ctx).Model(&entity.Invoice{})
 
+	order := strings.Split(param.Order, " ")
 	if param.Order == "" {
 		tx = tx.Order("id ASC")
-		param.Order = "id ASC"
+		// param.Order = "id ASC"
 	}
 
 	s := reflect.ValueOf(param)
-	orderBy := strings.Split(param.Order, " ")[1]
+
 	for i := 0; i < s.NumField(); i++ {
 		key := s.Type().Field(i).Name
 		value := s.Field(i).Interface()
@@ -182,15 +183,35 @@ func (r *invoiceRepo) GetAll(param ParamGetAll) ([]entity.Invoice, error) {
 			if value != "" {
 				switch key {
 				case "Next":
-					if orderBy == "DESC" {
-						tx = tx.Where("id < ?", value)
+					if param.Order != "" {
+						invoice := new(entity.Invoice)
+						if err := r.DB.Model(&entity.Invoice{}).Where("id = ?", value).First(invoice).Error; err != nil {
+							if err != gorm.ErrRecordNotFound {
+								return nil, err
+							}
+						}
+						if invoice.ID != "" {
+							switch order[0] {
+							case "tanggal_kirim":
+								if order[1] == "DESC" {
+									tx = tx.Where("tanggal_kirim < ?", invoice.TanggalKirim)
+								} else {
+									tx = tx.Where("tanggal_kirim > ?", invoice.TanggalKirim)
+								}
+							case "tanggal_deadline":
+								if order[1] == "DESC" {
+									tx = tx.Where("tanggal_deadline < ?", invoice.TanggalDeadline)
+								} else {
+									tx = tx.Where("tanggal_deadline > ?", invoice.TanggalDeadline)
+								}
+							}
+						}
 					} else {
 						tx = tx.Where("id > ?", value)
 					}
 				case "Order":
 					tx = tx.Order(value)
 				case "KontakID":
-
 					tx = tx.Where("kontak_id = ?", value)
 				case "StatusProduksi":
 					tx = tx.Where("status_produksi = ?", value)

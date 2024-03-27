@@ -52,7 +52,7 @@ type Update struct {
 
 type GetAll struct {
 	StatusProduksi  string `query:"status_produksi" validate:"omitempty,oneof=BELUM_DIKERJAKAN DIPROSES SELESAI"`
-	KontakID        string `query:"kontak_id" validate:"omitempty"`
+	KontakID        string `query:"kontak_id" validate:"omitempty,ulid"`
 	TanggalDeadline string `query:"tanggal_deadline" validate:"omitempty,datetime=2006-01-02T15:04:05Z07:00"`
 	TanggalKirim    string `query:"tanggal_kirim" validate:"omitempty,datetime=2006-01-02T15:04:05Z07:00"`
 	SortBy          string `query:"sort_by" validate:"omitempty,oneof=TANGGAL_DEADLINE TANGGAL_KIRIM"`
