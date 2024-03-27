@@ -134,9 +134,11 @@ func (r *invoiceRepo) GetById(param ParamGetById) (*entity.Invoice, error) {
 		Preload("DetailInvoice.Sablon", func(db *gorm.DB) *gorm.DB {
 			return db.Omit("created_at")
 		}).
-		Preload("Kontak").
-		Preload("User").
-		First(data, "id = ?", param.ID)
+		Preload("Kontak", func(db *gorm.DB) *gorm.DB {
+			return db.Omit("created_at")
+		}).Preload("User", func(db *gorm.DB) *gorm.DB {
+		return db.Omit("no_telp", "alamat", "created_at")
+	}).First(data, "id = ?", param.ID)
 
 	if err := tx.Error; err != nil {
 		helper.LogsError(err)

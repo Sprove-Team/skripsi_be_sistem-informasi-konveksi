@@ -1017,100 +1017,210 @@ func InvoiceGetAll(t *testing.T) {
 	}
 }
 
-// func BordirDelete(t *testing.T) {
-// 	tests := []struct {
-// 		name         string
-// 		token        string
-// 		id           string
-// 		expectedBody test.Response
-// 		expectedCode int
-// 	}{
-// 		{
-// 			name:         "sukses",
-// 			token:        tokens[entity.RolesById[1]],
-// 			id:           idBordir,
-// 			expectedCode: 200,
-// 			expectedBody: test.Response{
-// 				Status: message.OK,
-// 				Code:   200,
-// 			},
-// 		},
-// 		{
-// 			name:         "err: tidak ditemukan",
-// 			token:        tokens[entity.RolesById[1]],
-// 			id:           "01HM4B8QBH7MWAVAYP10WN6PKA",
-// 			expectedCode: 404,
-// 			expectedBody: test.Response{
-// 				Status: fiber.ErrNotFound.Message,
-// 				Code:   404,
-// 			},
-// 		},
-// 		{
-// 			name:         "err: ulid tidak valid",
-// 			token:        tokens[entity.RolesById[1]],
-// 			id:           idBordir + "123",
-// 			expectedCode: 400,
-// 			expectedBody: test.Response{
-// 				Status:         fiber.ErrBadRequest.Message,
-// 				Code:           400,
-// 				ErrorsMessages: []string{"id tidak berupa ulid yang valid"},
-// 			},
-// 		},
-// 		{
-// 			name:         "err: authorization " + entity.RolesById[2],
-// 			id:           idBordir,
-// 			token:        tokens[entity.RolesById[2]],
-// 			expectedCode: 401,
-// 			expectedBody: test.Response{
-// 				Status: fiber.ErrUnauthorized.Message,
-// 				Code:   401,
-// 			},
-// 		},
-// 		{
-// 			name:         "err: authorization " + entity.RolesById[3],
-// 			id:           idBordir,
-// 			token:        tokens[entity.RolesById[3]],
-// 			expectedCode: 401,
-// 			expectedBody: test.Response{
-// 				Status: fiber.ErrUnauthorized.Message,
-// 				Code:   401,
-// 			},
-// 		},
-// 		{
-// 			name:         "err: authorization " + entity.RolesById[4],
-// 			id:           idBordir,
-// 			token:        tokens[entity.RolesById[4]],
-// 			expectedCode: 401,
-// 			expectedBody: test.Response{
-// 				Status: fiber.ErrUnauthorized.Message,
-// 				Code:   401,
-// 			},
-// 		},
-// 		{
-// 			name:         "err: authorization " + entity.RolesById[5],
-// 			id:           idBordir,
-// 			token:        tokens[entity.RolesById[5]],
-// 			expectedCode: 401,
-// 			expectedBody: test.Response{
-// 				Status: fiber.ErrUnauthorized.Message,
-// 				Code:   401,
-// 			},
-// 		},
-// 	}
+func InvoiceGet(t *testing.T) {
+	tests := []struct {
+		name         string
+		token        string
+		id           string
+		expectedBody test.Response
+		expectedCode int
+	}{
+		{
+			name:         "sukses",
+			token:        tokens[entity.RolesById[1]],
+			id:           idInvoice,
+			expectedCode: 200,
+			expectedBody: test.Response{
+				Status: message.OK,
+				Code:   200,
+			},
+		},
+		// {
+		// 	name:         "err: all format filter",
+		// 	token:        tokens[entity.RolesById[1]],
+		// 	expectedCode: 400,
+		// 	expectedBody: test.Response{
+		// 		Status:         fiber.ErrBadRequest.Message,
+		// 		Code:           400,
+		// 		ErrorsMessages: []string{"status produksi harus berupa salah satu dari [BELUM_DIKERJAKAN,DIPROSES,SELESAI]", "kontak id tidak berupa ulid yang valid", "tanggal deadline harus berformat RFC3339", "tanggal kirim harus berformat RFC3339", "sort by harus berupa salah satu dari [TANGGAL_DEADLINE,TANGGAL_KIRIM]", "order by harus berupa salah satu dari [ASC,DESC]", "next tidak berupa ulid yang valid"},
+		// 	},
+		// },
+		{
+			name:         "authorization " + entity.RolesById[2] + " passed",
+			token:        tokens[entity.RolesById[2]],
+			id:           idInvoice,
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "authorization " + entity.RolesById[3] + " passed",
+			token:        tokens[entity.RolesById[3]],
+			id:           idInvoice,
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "authorization " + entity.RolesById[4] + " passed",
+			token:        tokens[entity.RolesById[4]],
+			id:           idInvoice,
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "authorization " + entity.RolesById[5] + " passed",
+			token:        tokens[entity.RolesById[5]],
+			id:           idInvoice,
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+	}
 
-// 	for _, tt := range tests {
-// 		t.Run(tt.name, func(t *testing.T) {
-// 			code, body, err := test.GetJsonTestRequestResponse(app, "DELETE", "/api/v1/bordir/"+tt.id, nil, &tt.token)
-// 			assert.NoError(t, err)
-// 			assert.Equal(t, tt.expectedCode, code)
-// 			if len(tt.expectedBody.ErrorsMessages) > 0 {
-// 				for _, v := range tt.expectedBody.ErrorsMessages {
-// 					assert.Contains(t, body.ErrorsMessages, v)
-// 				}
-// 				assert.Equal(t, tt.expectedBody.Status, body.Status)
-// 			} else {
-// 				assert.Equal(t, tt.expectedBody, body)
-// 			}
-// 		})
-// 	}
-// }
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			code, body, err := test.GetJsonTestRequestResponse(app, "GET", "/api/v1/invoice/"+tt.id, nil, &tt.token)
+			assert.NoError(t, err)
+			if strings.Contains(tt.name, "passed") {
+				assert.NotEqual(t, tt.expectedCode, code)
+				assert.NotEqual(t, tt.expectedBody.Code, body.Code)
+				assert.NotEqual(t, tt.expectedBody.Status, body.Status)
+				return
+			}
+			assert.Equal(t, tt.expectedCode, code)
+			var r map[string]interface{}
+			if strings.Contains(tt.name, "sukses") {
+				err = mapstructure.Decode(body.Data, &r)
+				assert.NoError(t, err)
+				assert.Greater(t, len(r), 0)
+				if len(r) <= 0 {
+					return
+				}
+
+				assert.NotEmpty(t, r)
+				assert.NotEmpty(t, r["id"])
+				assert.NotEmpty(t, r["created_at"])
+				assert.NotEmpty(t, r["status_produksi"])
+				assert.NotEmpty(t, r["nomor_referensi"])
+				assert.NotEmpty(t, r["total_qty"])
+				assert.NotEmpty(t, r["total_harga"])
+				assert.NotEmpty(t, r["keterangan"])
+				assert.NotEmpty(t, r["tanggal_deadline"])
+				assert.NotEmpty(t, r["tanggal_kirim"])
+				assert.NotEmpty(t, r["kontak"])
+				assert.NotEmpty(t, r["user_editor"])
+				kontak, ok := r["kontak"].(map[string]any)
+				assert.True(t, ok)
+				assert.NotEmpty(t, kontak["id"])
+				assert.NotEmpty(t, kontak["nama"])
+				assert.NotEmpty(t, kontak["no_telp"])
+				assert.NotEmpty(t, kontak["alamat"])
+				assert.NotEmpty(t, kontak["email"])
+				assert.NotEmpty(t, kontak["keterangan"])
+				user, ok := r["user_editor"].(map[string]any)
+				assert.True(t, ok)
+				assert.NotEmpty(t, user["id"])
+				assert.NotEmpty(t, user["nama"])
+				assert.NotEmpty(t, user["role"])
+				assert.NotEmpty(t, user["username"])
+
+				detailInvoices, ok := r["detail_invoice"].([]interface{})
+				assert.True(t, ok)
+
+				for _, detail := range detailInvoices {
+					detailInvoice, ok := detail.(map[string]interface{})
+					assert.True(t, ok)
+
+					assert.NotEmpty(t, detailInvoice["id"])
+					assert.NotEmpty(t, detailInvoice["created_at"])
+					assert.NotEmpty(t, detailInvoice["invoice_id"])
+					assert.NotEmpty(t, detailInvoice["produk"])
+
+					produk, ok := detailInvoice["produk"].(map[string]interface{})
+					assert.True(t, ok)
+					assert.NotEmpty(t, produk["id"])
+					assert.NotEmpty(t, produk["nama"])
+					assert.NotEmpty(t, produk["harga_detail"])
+
+					hargaDetails, ok := produk["harga_detail"].([]interface{})
+					assert.True(t, ok)
+
+					for _, hargaDetail := range hargaDetails {
+						hargaDetailMap, ok := hargaDetail.(map[string]interface{})
+						assert.True(t, ok)
+						assert.NotEmpty(t, hargaDetailMap["id"])
+						assert.NotEmpty(t, hargaDetailMap["produk_id"])
+						assert.NotEmpty(t, hargaDetailMap["qty"])
+						assert.NotEmpty(t, hargaDetailMap["harga"])
+					}
+
+					assert.NotEmpty(t, detailInvoice["sablon"])
+					sablon, ok := detailInvoice["sablon"].(map[string]interface{})
+					assert.True(t, ok)
+					assert.NotEmpty(t, sablon["id"])
+					assert.NotEmpty(t, sablon["nama"])
+					assert.NotEmpty(t, sablon["harga"])
+
+					assert.NotEmpty(t, detailInvoice["bordir"])
+					bordir, ok := detailInvoice["bordir"].(map[string]interface{})
+					assert.True(t, ok)
+					assert.NotEmpty(t, bordir["id"])
+					assert.NotEmpty(t, bordir["nama"])
+					assert.NotEmpty(t, bordir["harga"])
+
+					assert.NotEmpty(t, detailInvoice["gambar_design"])
+					assert.NotEmpty(t, detailInvoice["qty"])
+					assert.NotEmpty(t, detailInvoice["total"])
+				}
+
+				dataBayar, ok := r["data_bayar"].([]interface{})
+				assert.True(t, ok)
+
+				for _, bayar := range dataBayar {
+					dataBayarEntry, ok := bayar.(map[string]interface{})
+					assert.True(t, ok)
+
+					assert.NotEmpty(t, dataBayarEntry["id"])
+					assert.NotEmpty(t, dataBayarEntry["created_at"])
+					assert.NotEmpty(t, dataBayarEntry["invoice_id"])
+					assert.NotEmpty(t, dataBayarEntry["akun"])
+
+					akun, ok := dataBayarEntry["akun"].(map[string]interface{})
+					assert.True(t, ok)
+					assert.NotEmpty(t, akun["id"])
+					assert.NotEmpty(t, akun["nama"])
+					assert.NotEmpty(t, akun["kode"])
+					assert.NotEmpty(t, akun["saldo_normal"])
+					assert.NotEmpty(t, akun["deskripsi"])
+
+					assert.NotEmpty(t, dataBayarEntry["keterangan"])
+					assert.NotEmpty(t, dataBayarEntry["bukti_pembayaran"])
+					assert.NotEmpty(t, dataBayarEntry["total"])
+					assert.NotEmpty(t, dataBayarEntry["status"])
+				}
+
+				assert.Equal(t, tt.expectedBody.Status, body.Status)
+			} else {
+				if len(tt.expectedBody.ErrorsMessages) > 0 {
+					for _, v := range tt.expectedBody.ErrorsMessages {
+						assert.Contains(t, body.ErrorsMessages, v)
+					}
+					assert.Equal(t, tt.expectedBody.Status, body.Status)
+				} else {
+					assert.Equal(t, tt.expectedBody, body)
+				}
+			}
+
+		})
+	}
+}
