@@ -72,7 +72,7 @@ func NewValidator() Validator {
 		var format string
 		switch fe.Param() {
 		case "2006-01-02T15:04:05Z07:00":
-			format = "RFC3999"
+			format = "RFC3339"
 		case "2006-01-02":
 			format = "Tahun-Bulan-Tanggal"
 		case "2006-01":

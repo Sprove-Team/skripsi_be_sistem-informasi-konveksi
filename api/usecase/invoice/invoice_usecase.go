@@ -201,10 +201,11 @@ func (u *invoiceUsecase) CreateDataInvoice(param ParamCreateDataInvoice) (*entit
 				Base: entity.Base{
 					ID: param.Req.KontakID,
 				},
-				Nama:   param.Req.NewKontak.Nama,
-				NoTelp: param.Req.NewKontak.NoTelp,
-				Alamat: param.Req.NewKontak.Alamat,
-				Email:  param.Req.NewKontak.Email,
+				Nama:       param.Req.NewKontak.Nama,
+				NoTelp:     param.Req.NewKontak.NoTelp,
+				Alamat:     param.Req.NewKontak.Alamat,
+				Email:      param.Req.NewKontak.Email,
+				Keterangan: "pelanggan pengguna jasa",
 			},
 		})
 		if err != nil {
@@ -533,16 +534,20 @@ func (u *invoiceUsecase) GetAll(param ParamGetAll) ([]entity.Invoice, error) {
 			return nil, err
 		}
 	}
-
 	paramRepo := repo.ParamGetAll{
-		Ctx:             param.Ctx,
-		StatusProduksi:  param.Req.StatusProduksi,
-		TanggalDeadline: tglDeadline,
-		TanggalKirim:    tglKirim,
-		KontakID:        param.Req.KontakID,
-		Limit:           param.Req.Limit,
-		Next:            param.Req.Next,
-		Order:           param.Req.OrderBy,
+		Ctx:            param.Ctx,
+		StatusProduksi: param.Req.StatusProduksi,
+		KontakID:       param.Req.KontakID,
+		Limit:          param.Req.Limit,
+		Next:           param.Req.Next,
+		Order:          param.Req.OrderBy,
+	}
+
+	if !tglDeadline.IsZero() {
+		paramRepo.TanggalDeadline = tglDeadline
+	}
+	if !tglKirim.IsZero() {
+		paramRepo.TanggalKirim = tglKirim
 	}
 
 	if param.Req.SortBy != "" {

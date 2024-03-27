@@ -190,6 +190,7 @@ func (r *invoiceRepo) GetAll(param ParamGetAll) ([]entity.Invoice, error) {
 				case "Order":
 					tx = tx.Order(value)
 				case "KontakID":
+
 					tx = tx.Where("kontak_id = ?", value)
 				case "StatusProduksi":
 					tx = tx.Where("status_produksi = ?", value)
@@ -197,11 +198,12 @@ func (r *invoiceRepo) GetAll(param ParamGetAll) ([]entity.Invoice, error) {
 			}
 		case time.Time:
 			if !value.(time.Time).IsZero() {
+				t := value.(time.Time).Format(time.RFC3339)
 				switch key {
 				case "TanggalDeadline":
-					tx = tx.Where("DATE(tanggal_deadline) = ?", value)
+					tx = tx.Where("DATE_FORMAT(tanggal_deadline, '%Y-%m-%dT%H:%i:%sZ') = ?", t)
 				case "TanggalKirim":
-					tx = tx.Where("DATE(tanggal_kirim) = ?", value)
+					tx = tx.Where("DATE_FORMAT(tanggal_kirim, '%Y-%m-%dT%H:%i:%sZ') = ?", t)
 				}
 			}
 		}
