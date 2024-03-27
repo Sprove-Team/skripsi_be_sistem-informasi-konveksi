@@ -1,7 +1,6 @@
 package test_akuntansi
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/url"
@@ -231,7 +230,7 @@ func InvoiceCreate(t *testing.T) {
 			expectedBody: test.Response{
 				Status:         fiber.ErrBadRequest.Message,
 				Code:           400,
-				ErrorsMessages: []string{"tanggal deadline harus berformat RFC3999", "tanggal kirim harus berformat RFC3999"},
+				ErrorsMessages: []string{"tanggal deadline harus berformat RFC3339", "tanggal kirim harus berformat RFC3339"},
 			},
 		},
 		{
@@ -268,8 +267,8 @@ func InvoiceCreate(t *testing.T) {
 					AkunID:          "01HP7DVBGTC06PXWT6FD66VERC", // kas
 					Total:           (detailInvoice2[0].Total + detailInvoice2[0].Total) / 2,
 				},
-				TanggalDeadline: "2024-10-15T12:00:00Z",
-				TanggalKirim:    "2024-10-15T12:00:00Z",
+				TanggalDeadline: time.Now().Format(time.RFC3339),
+				TanggalKirim:    time.Now().Format(time.RFC3339),
 				Keterangan:      "ket invoice 2",
 				DetailInvoice:   detailInvoice2,
 			},
@@ -441,7 +440,7 @@ func InvoiceCreate(t *testing.T) {
 	}
 }
 
-var dataInvoice entity.Invoice
+var idInvoice string
 
 // []string{"DIREKTUR", "ADMIN", "MANAJER_PRODUKSI", "BENDAHARA"} - allowed,
 // []string{"DIREKTUR", "MANAJER_PRODUKSI"} - allowed to modified statusProduksi
@@ -457,7 +456,7 @@ func InvoiceUpdate(t *testing.T) {
 		helper.LogsError(errors.New("err: invoices less than 2"))
 		return
 	}
-	dataInvoice = invoices[0]
+	idInvoice = invoices[0].ID
 	tests := []struct {
 		name         string
 		token        string
@@ -545,7 +544,7 @@ func InvoiceUpdate(t *testing.T) {
 			name:  "err: status produksi",
 			token: tokens[entity.RolesById[1]],
 			payload: req_invoice.Update{
-				ID:             dataInvoice.ID,
+				ID:             idInvoice,
 				StatusProduksi: "asdfasdf",
 			},
 			expectedCode: 400,
@@ -559,7 +558,7 @@ func InvoiceUpdate(t *testing.T) {
 			name:  "err: format tanggal kirim & deadline",
 			token: tokens[entity.RolesById[1]],
 			payload: req_invoice.Update{
-				ID:              dataInvoice.ID,
+				ID:              idInvoice,
 				TanggalDeadline: "asdfasdf",
 				TanggalKirim:    "asdfsadf",
 			},
@@ -567,14 +566,14 @@ func InvoiceUpdate(t *testing.T) {
 			expectedBody: test.Response{
 				Status:         fiber.ErrBadRequest.Message,
 				Code:           400,
-				ErrorsMessages: []string{"tanggal deadline harus berformat RFC3999", "tanggal kirim harus berformat RFC3999"},
+				ErrorsMessages: []string{"tanggal deadline harus berformat RFC3339", "tanggal kirim harus berformat RFC3339"},
 			},
 		},
 		{
 			name:  "err: detail invoice harus berisi lebih dari 0 item",
 			token: tokens[entity.RolesById[1]],
 			payload: req_invoice.Update{
-				ID:            dataInvoice.ID,
+				ID:            idInvoice,
 				DetailInvoice: []req_invoice.ReqUpdateDetailInvoice{},
 			},
 			expectedCode: 400,
@@ -588,7 +587,7 @@ func InvoiceUpdate(t *testing.T) {
 			name:  "err: total dan qty lebih besar dari 0",
 			token: tokens[entity.RolesById[1]],
 			payload: req_invoice.Update{
-				ID: dataInvoice.ID,
+				ID: idInvoice,
 				DetailInvoice: []req_invoice.ReqUpdateDetailInvoice{
 					{
 						ID:    invoices[0].DetailInvoice[0].ID,
@@ -608,7 +607,7 @@ func InvoiceUpdate(t *testing.T) {
 			name:  "err: wajib diisi",
 			token: tokens[entity.RolesById[1]],
 			payload: req_invoice.Update{
-				ID: dataInvoice.ID,
+				ID: idInvoice,
 				DetailInvoice: []req_invoice.ReqUpdateDetailInvoice{
 					{
 						Total: 1,
@@ -627,10 +626,10 @@ func InvoiceUpdate(t *testing.T) {
 			name:  "err: ulid tidak valid",
 			token: tokens[entity.RolesById[1]],
 			payload: req_invoice.Update{
-				ID: dataInvoice.ID,
+				ID: idInvoice,
 				DetailInvoice: []req_invoice.ReqUpdateDetailInvoice{
 					{
-						ID:    dataInvoice.ID + "123",
+						ID:    idInvoice + "123",
 						Total: 1,
 						Qty:   1,
 					},
@@ -647,10 +646,10 @@ func InvoiceUpdate(t *testing.T) {
 			name:  "err: detail invoice tidak ditemukan",
 			token: tokens[entity.RolesById[1]],
 			payload: req_invoice.Update{
-				ID: dataInvoice.ID,
+				ID: idInvoice,
 				DetailInvoice: []req_invoice.ReqUpdateDetailInvoice{
 					{
-						ID:    dataInvoice.ID,
+						ID:    idInvoice,
 						Total: 1,
 						Qty:   1,
 					},
@@ -666,7 +665,7 @@ func InvoiceUpdate(t *testing.T) {
 		{
 			name: "authorization " + entity.RolesById[2] + " passed",
 			payload: req_invoice.Update{
-				ID: dataInvoice.ID + "123",
+				ID: idInvoice + "123",
 			},
 			token:        tokens[entity.RolesById[2]],
 			expectedCode: 401,
@@ -678,7 +677,7 @@ func InvoiceUpdate(t *testing.T) {
 		{
 			name: "authorization " + entity.RolesById[3] + " passed",
 			payload: req_invoice.Update{
-				ID: dataInvoice.ID + "123",
+				ID: idInvoice + "123",
 			},
 			token:        tokens[entity.RolesById[3]],
 			expectedCode: 401,
@@ -690,7 +689,7 @@ func InvoiceUpdate(t *testing.T) {
 		{
 			name: "authorization " + entity.RolesById[4] + " passed",
 			payload: req_invoice.Update{
-				ID: dataInvoice.ID + "123",
+				ID: idInvoice + "123",
 			},
 			token:        tokens[entity.RolesById[4]],
 			expectedCode: 401,
@@ -702,7 +701,7 @@ func InvoiceUpdate(t *testing.T) {
 		{
 			name: "err: authorization " + entity.RolesById[5],
 			payload: req_invoice.Update{
-				ID: dataInvoice.ID + "123",
+				ID: idInvoice + "123",
 			},
 			token:        tokens[entity.RolesById[5]],
 			expectedCode: 401,
@@ -737,6 +736,12 @@ func InvoiceUpdate(t *testing.T) {
 }
 
 func InvoiceGetAll(t *testing.T) {
+	dataInvoice := new(entity.Invoice)
+	err := dbt.Preload("DetailInvoice").Order("id ASC").First(dataInvoice).Error
+	if err != nil {
+		helper.LogsError(err)
+		return
+	}
 	tests := []struct {
 		name         string
 		token        string
@@ -754,13 +759,14 @@ func InvoiceGetAll(t *testing.T) {
 			},
 		},
 		{
-			name:  "sukses with filter tanggal deadline, kirim dan kontak id",
+			name:  "sukses with filter tanggal deadline, kirim, kontak id dan status_produksi",
 			token: tokens[entity.RolesById[1]],
 			queryBody: fmt.Sprintf(
-				"?tanggal_deadline=%s&tanggal_kirim=%s&kontak_id=%s",
-				dataInvoice.TanggalDeadline.Format(time.RFC3339),
-				dataInvoice.TanggalKirim.Format(time.RFC3339),
+				"?tanggal_deadline=%s&tanggal_kirim=%s&kontak_id=%s&status_produksi=%s",
+				dataInvoice.TanggalDeadline.Format("2006-01-02T15:04:05Z"),
+				dataInvoice.TanggalKirim.Format("2006-01-02T15:04:05Z"),
 				dataInvoice.KontakID,
+				dataInvoice.StatusProduksi,
 			),
 			expectedCode: 200,
 			expectedBody: test.Response{
@@ -768,35 +774,112 @@ func InvoiceGetAll(t *testing.T) {
 				Code:   200,
 			},
 		},
-		// {
-		// 	name:         "sukses with next",
-		// 	token:        tokens[entity.RolesById[1]],
-		// 	queryBody:    "?next=" + dataInvoice.ID,
-		// 	expectedCode: 200,
-		// 	expectedBody: test.Response{
-		// 		Status: message.OK,
-		// 		Code:   200,
-		// 	},
-		// },
-		// {
-		// 	name:         "sukses with: filter nama",
-		// 	token:        tokens[entity.RolesById[1]],
-		// 	queryBody:    "?nama=Bordir+1+baris",
-		// 	expectedCode: 200,
-		// 	expectedBody: test.Response{
-		// 		Status: message.OK,
-		// 		Code:   200,
-		// 	},
-		// },
 		{
-			name:         "err: ulid tidak valid",
+			name:  "sukses with filter sort_by dan order_by, dengan nilai TANGGALL_KIRIM dan DESC",
+			token: tokens[entity.RolesById[1]],
+			queryBody: fmt.Sprintf(
+				"?order_by=%s&sort_by=%s",
+				"DESC",
+				"TANGGAL_KIRIM",
+			),
+			expectedCode: 200,
+			expectedBody: test.Response{
+				Status: message.OK,
+				Code:   200,
+			},
+		},
+		{
+			name:  "sukses with filter sort_by dan order_by, dengan nilai TANGGALL_KIRIM dan ASC",
+			token: tokens[entity.RolesById[1]],
+			queryBody: fmt.Sprintf(
+				"?order_by=%s&sort_by=%s",
+				"ASC",
+				"TANGGAL_KIRIM",
+			),
+			expectedCode: 200,
+			expectedBody: test.Response{
+				Status: message.OK,
+				Code:   200,
+			},
+		},
+		{
+			name:  "sukses with filter sort_by tanpa order_by, dengan nilai TANGGAL_KIRIM",
+			token: tokens[entity.RolesById[1]],
+			queryBody: fmt.Sprintf(
+				"?sort_by=%s",
+				"TANGGAL_KIRIM",
+			),
+			expectedCode: 200,
+			expectedBody: test.Response{
+				Status: message.OK,
+				Code:   200,
+			},
+		},
+		{
+			name:  "sukses with filter sort_by dan order_by, dengan nilai TANGGAL_DEADLINE dan DESC",
+			token: tokens[entity.RolesById[1]],
+			queryBody: fmt.Sprintf(
+				"?order_by=%s&sort_by=%s",
+				"DESC",
+				"TANGGAL_DEADLINE",
+			),
+			expectedCode: 200,
+			expectedBody: test.Response{
+				Status: message.OK,
+				Code:   200,
+			},
+		},
+		{
+			name:  "sukses with filter sort_by dan order_by, dengan nilai TANGGAL_DEADLINE dan ASC",
+			token: tokens[entity.RolesById[1]],
+			queryBody: fmt.Sprintf(
+				"?order_by=%s&sort_by=%s",
+				"ASC",
+				"TANGGAL_DEADLINE",
+			),
+			expectedCode: 200,
+			expectedBody: test.Response{
+				Status: message.OK,
+				Code:   200,
+			},
+		},
+		{
+			name:  "sukses with filter sort_by tanpa order_by, dengan nilai TANGGAL_DEADLINE",
+			token: tokens[entity.RolesById[1]],
+			queryBody: fmt.Sprintf(
+				"?sort_by=%s",
+				"TANGGAL_DEADLINE",
+			),
+			expectedCode: 200,
+			expectedBody: test.Response{
+				Status: message.OK,
+				Code:   200,
+			},
+		},
+		{
+			name:  "sukses with next, limit, sort_by dan order_by dengan nilai TANGGAL_KIRIM dan DESC",
+			token: tokens[entity.RolesById[1]],
+			queryBody: fmt.Sprintf("?next=%s&limit=%s&sort_by=%s&order_by=%s",
+				dataInvoice.ID,
+				"1",
+				"TANGGAL_KIRIM",
+				"ASC",
+			),
+			expectedCode: 200,
+			expectedBody: test.Response{
+				Status: message.OK,
+				Code:   200,
+			},
+		},
+		{
+			name:         "err: all format filter",
 			token:        tokens[entity.RolesById[1]],
 			expectedCode: 400,
-			queryBody:    "?next=01HQVTTJ1S2606JGTYYZ5NDKNR123",
+			queryBody:    "?tanggal_deadline=123&limit=1&tanggal_kirim=123&kontak_id=213&sort_by=123&order_by=123&status_produksi=123&next=123",
 			expectedBody: test.Response{
 				Status:         fiber.ErrBadRequest.Message,
 				Code:           400,
-				ErrorsMessages: []string{"next tidak berupa ulid yang valid"},
+				ErrorsMessages: []string{"status produksi harus berupa salah satu dari [BELUM_DIKERJAKAN,DIPROSES,SELESAI]", "kontak id tidak berupa ulid yang valid", "tanggal deadline harus berformat RFC3339", "tanggal kirim harus berformat RFC3339", "sort by harus berupa salah satu dari [TANGGAL_DEADLINE,TANGGAL_KIRIM]", "order by harus berupa salah satu dari [ASC,DESC]", "next tidak berupa ulid yang valid"},
 			},
 		},
 		{
@@ -809,7 +892,7 @@ func InvoiceGetAll(t *testing.T) {
 			},
 		},
 		{
-			name:         "err: authorization " + entity.RolesById[3],
+			name:         "authorization " + entity.RolesById[3] + " passed",
 			token:        tokens[entity.RolesById[3]],
 			expectedCode: 401,
 			expectedBody: test.Response{
@@ -818,7 +901,7 @@ func InvoiceGetAll(t *testing.T) {
 			},
 		},
 		{
-			name:         "err: authorization " + entity.RolesById[4],
+			name:         "authorization " + entity.RolesById[4] + " passed",
 			token:        tokens[entity.RolesById[4]],
 			expectedCode: 401,
 			expectedBody: test.Response{
@@ -827,7 +910,7 @@ func InvoiceGetAll(t *testing.T) {
 			},
 		},
 		{
-			name:         "err: authorization " + entity.RolesById[5],
+			name:         "authorization " + entity.RolesById[5] + " passed",
 			token:        tokens[entity.RolesById[5]],
 			expectedCode: 401,
 			expectedBody: test.Response{
@@ -848,7 +931,6 @@ func InvoiceGetAll(t *testing.T) {
 				return
 			}
 			assert.Equal(t, tt.expectedCode, code)
-
 			var res []map[string]interface{}
 			if strings.Contains(tt.name, "sukses") {
 				err = mapstructure.Decode(body.Data, &res)
@@ -857,8 +939,6 @@ func InvoiceGetAll(t *testing.T) {
 				if len(res) <= 0 {
 					return
 				}
-				d, _ := json.MarshalIndent(res, "", " ")
-				fmt.Println("dat -> ", string(d))
 				for _, r := range res {
 					assert.NotEmpty(t, r)
 					assert.NotEmpty(t, r["id"])
@@ -872,7 +952,6 @@ func InvoiceGetAll(t *testing.T) {
 					assert.NotEmpty(t, r["tanggal_kirim"])
 					assert.NotEmpty(t, r["kontak"])
 					assert.NotEmpty(t, r["user_editor"])
-
 					kontak, ok := r["kontak"].(map[string]any)
 					assert.True(t, ok)
 					assert.NotEmpty(t, kontak["id"])
@@ -890,19 +969,39 @@ func InvoiceGetAll(t *testing.T) {
 
 					assert.Equal(t, tt.expectedBody.Status, body.Status)
 					switch tt.name {
-					case "sukses with: filter nama":
+					case "sukses with filter tanggal deadline, kirim, kontak id dan status_produksi":
 						v, err := url.ParseQuery(tt.queryBody[1:])
 						assert.NoError(t, err)
-						assert.Equal(t, v.Get("tanggal_deadline"), r["tanggal_deadline"])
-						assert.Equal(t, v.Get("tanggal_kirim"), r["tanggal_kirim"])
-						assert.Equal(t, v.Get("kontak_id"), r["kontak_id"])
-					case "sukses with next":
-						// assert.NotEmpty(t, r)
-						// assert.NotEqual(t, idBordir, res[0]["id"])
+						tt, _ := time.Parse(time.RFC3339, r["tanggal_deadline"].(string))
+						tt2, _ := time.Parse(time.RFC3339, r["tanggal_kirim"].(string))
+						assert.Equal(t, v.Get("tanggal_deadline"), tt.Format("2006-01-02T15:04:05Z"))
+						assert.Equal(t, v.Get("tanggal_kirim"), tt2.Format("2006-01-02T15:04:05Z"))
+						assert.Equal(t, v.Get("kontak_id"), r["kontak"].(map[string]any)["id"])
+						assert.Equal(t, v.Get("status_produksi"), r["status_produksi"])
 					}
 				}
-				// case "sukses limit 1":
-				// 		assert.Len(t, res, 1)
+				if strings.Contains(tt.name, "sukses with filter sort_by") {
+					assert.GreaterOrEqual(t, len(res), 2)
+					if len(res) < 2 {
+						fmt.Println("Err les than 2")
+						return
+					}
+					v, err := url.ParseQuery(tt.queryBody[1:])
+					assert.NoError(t, err)
+					field := strings.ToLower(v.Get("sort_by"))
+					tt, _ := time.Parse(time.RFC3339, res[0][field].(string))
+					tt2, _ := time.Parse(time.RFC3339, res[1][field].(string))
+					if v.Get("order_by") == "DESC" {
+						assert.True(t, tt.After(tt2))
+					} else {
+						assert.True(t, tt.Before(tt2))
+					}
+				} else if strings.Contains(tt.name, "sukses with next, limit") {
+					assert.Len(t, res, 1)
+					v, err := url.ParseQuery(tt.queryBody[1:])
+					assert.NoError(t, err)
+					assert.NotEqual(t, v.Get("next"), res[0]["id"])
+				}
 			} else {
 				if len(tt.expectedBody.ErrorsMessages) > 0 {
 					for _, v := range tt.expectedBody.ErrorsMessages {

@@ -201,7 +201,7 @@ func AkuntansiCreateTransaksi(t *testing.T) {
 			},
 		},
 		{
-			name:  "err: tanggal harus berformat RFC3999",
+			name:  "err: tanggal harus berformat RFC3339",
 			token: tokens[entity.RolesById[1]],
 			payload: req_akuntansi_transaksi.Create{
 				BuktiPembayaran: []string{"bukti-pembayaran3.webp"},
@@ -223,7 +223,7 @@ func AkuntansiCreateTransaksi(t *testing.T) {
 			expectedBody: test.Response{
 				Status:         fiber.ErrBadRequest.Message,
 				Code:           400,
-				ErrorsMessages: []string{"tanggal harus berformat RFC3999"},
+				ErrorsMessages: []string{"tanggal harus berformat RFC3339"},
 			},
 		},
 		{
@@ -588,7 +588,7 @@ func AkuntansiUpdateTransaksi(t *testing.T) {
 			},
 		},
 		{
-			name:  "err: tanggal harus berformat RFC3999",
+			name:  "err: tanggal harus berformat RFC3339",
 			token: tokens[entity.RolesById[1]],
 			payload: req_akuntansi_transaksi.Update{
 				ID:              idTransaksi,
@@ -610,7 +610,7 @@ func AkuntansiUpdateTransaksi(t *testing.T) {
 			expectedBody: test.Response{
 				Status:         fiber.ErrBadRequest.Message,
 				Code:           400,
-				ErrorsMessages: []string{"tanggal harus berformat RFC3999"},
+				ErrorsMessages: []string{"tanggal harus berformat RFC3339"},
 			},
 		},
 		{

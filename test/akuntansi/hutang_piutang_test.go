@@ -709,7 +709,7 @@ func AkuntansiCreateBayarHP(t *testing.T) {
 			expectedBody: test.Response{
 				Status:         fiber.ErrBadRequest.Message,
 				Code:           400,
-				ErrorsMessages: []string{"tanggal harus berformat RFC3999"},
+				ErrorsMessages: []string{"tanggal harus berformat RFC3339"},
 			},
 		},
 		{
