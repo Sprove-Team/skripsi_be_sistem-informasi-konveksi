@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	repo_akuntansi_hp "github.com/be-sistem-informasi-konveksi/api/repository/akuntansi/mysql/gorm/hutang_piutang"
 	repoInvoice "github.com/be-sistem-informasi-konveksi/api/repository/invoice/mysql/gorm"
 	repo "github.com/be-sistem-informasi-konveksi/api/repository/invoice/mysql/gorm/data_bayar"
 	"github.com/be-sistem-informasi-konveksi/common/message"
@@ -49,11 +50,12 @@ type DataBayarInvoice interface {
 type dataBayarInvoice struct {
 	repo        repo.DataBayarInvoiceRepo
 	repoInvoice repoInvoice.InvoiceRepo
+	repoHP      repo_akuntansi_hp.HutangPiutangRepo
 	ulid        pkg.UlidPkg
 }
 
-func NewDataInvoice(repo repo.DataBayarInvoiceRepo, repoInvoice repoInvoice.InvoiceRepo, ulid pkg.UlidPkg) DataBayarInvoice {
-	return &dataBayarInvoice{repo, repoInvoice, ulid}
+func NewDataInvoice(repo repo.DataBayarInvoiceRepo, repoInvoice repoInvoice.InvoiceRepo, repoHP repo_akuntansi_hp.HutangPiutangRepo, ulid pkg.UlidPkg) DataBayarInvoice {
+	return &dataBayarInvoice{repo, repoInvoice, repoHP, ulid}
 }
 
 func (u *dataBayarInvoice) IsInvoiceExist(ctx context.Context, id string) error {
@@ -85,11 +87,31 @@ func (u *dataBayarInvoice) IsStatusTerkonfirmasi(ctx context.Context, id string)
 }
 
 func (u *dataBayarInvoice) CreateByInvoiceID(param ParamCreateByInvoiceID) error {
+	// invoice, err := u.repoInvoice.GetByIdWithoutPreload(repoInvoice.ParamGetByIdWithoutPreload{
+	// 	Ctx: param.Ctx,
+	// 	ID:  param.Req.InvoiceID,
+	// })
 	if err := u.IsInvoiceExist(param.Ctx, param.Req.InvoiceID); err != nil {
 		if err.Error() == "record not found" {
 			return errors.New(message.InvoiceNotFound)
 		}
+	}
+
+	hp, err := u.repoHP.GetByInvoiceId(repo_akuntansi_hp.ParamGetByInvoiceId{
+		Ctx: param.Ctx,
+		ID:  param.Req.InvoiceID,
+	})
+
+	if err != nil {
 		return err
+	}
+	if hp.ID != "" {
+		return errors.New("hp not found")
+	}
+
+	sisa := hp.Sisa - param.Req.Total
+	if sisa < 0 {
+		return errors.New(message.BayarMustLessThanSisaTagihan)
 	}
 
 	dataBayar := entity.DataBayarInvoice{

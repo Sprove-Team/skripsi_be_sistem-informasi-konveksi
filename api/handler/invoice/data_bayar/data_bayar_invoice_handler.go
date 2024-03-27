@@ -54,6 +54,7 @@ func errResponse(c *fiber.Ctx, err error) error {
 	switch err.Error() {
 	case
 		message.InvoiceNotFound,
+		message.BayarMustLessThanSisaTagihan,
 		message.CannotModifiedTerkonfirmasiDataBayar:
 		badRequest = append(badRequest, err.Error())
 	}

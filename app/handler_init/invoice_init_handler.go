@@ -66,7 +66,7 @@ func NewInvoiceHandlerInit(DB *gorm.DB, validator pkg.Validator, ulid pkg.UlidPk
 		ucUser:             ucUser.NewUserUsecase(userRepo, ulid, encryptor),
 		ucKontak:           ucKontak.NewKontakUsecase(kontakRepo, ulid),
 		ucHP:               ucHP.NewHutangPiutangUsecase(hpRepo, bayarRepo, akunRepo, kontakRepo, ulid),
-		ucDataBayarInvoice: uc_invoice_data_bayar.NewDataInvoice(dataBayarInvoiceRepo, repo, ulid),
+		ucDataBayarInvoice: uc_invoice_data_bayar.NewDataInvoice(dataBayarInvoiceRepo, repo, hpRepo, ulid),
 	}
 
 	return &invoiceHandlerInit{DB, validator, ulid, uc}
