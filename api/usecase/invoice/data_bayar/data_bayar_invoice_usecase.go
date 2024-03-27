@@ -87,14 +87,15 @@ func (u *dataBayarInvoice) IsStatusTerkonfirmasi(ctx context.Context, id string)
 }
 
 func (u *dataBayarInvoice) CreateByInvoiceID(param ParamCreateByInvoiceID) error {
-	// invoice, err := u.repoInvoice.GetByIdWithoutPreload(repoInvoice.ParamGetByIdWithoutPreload{
-	// 	Ctx: param.Ctx,
-	// 	ID:  param.Req.InvoiceID,
-	// })
-	if err := u.IsInvoiceExist(param.Ctx, param.Req.InvoiceID); err != nil {
+	invoice, err := u.repoInvoice.GetByIdWithoutPreload(repoInvoice.ParamGetByIdWithoutPreload{
+		Ctx: param.Ctx,
+		ID:  param.Req.InvoiceID,
+	})
+	if err != nil {
 		if err.Error() == "record not found" {
 			return errors.New(message.InvoiceNotFound)
 		}
+		return err
 	}
 
 	hp, err := u.repoHP.GetByInvoiceId(repo_akuntansi_hp.ParamGetByInvoiceId{
@@ -105,13 +106,23 @@ func (u *dataBayarInvoice) CreateByInvoiceID(param ParamCreateByInvoiceID) error
 	if err != nil {
 		return err
 	}
-	if hp.ID != "" {
-		return errors.New("hp not found")
+
+	var sisa float64
+	var errValidate error
+	if hp.ID == "" {
+		sisa = invoice.TotalHarga - param.Req.Total
+		if sisa < 0 {
+			errValidate = errors.New(message.BayarMustLessThanTotalHargaInvoice)
+		}
+	} else {
+		sisa = hp.Sisa - param.Req.Total
+		if sisa < 0 {
+			errValidate = errors.New(message.BayarMustLessThanSisaTagihan)
+		}
 	}
 
-	sisa := hp.Sisa - param.Req.Total
-	if sisa < 0 {
-		return errors.New(message.BayarMustLessThanSisaTagihan)
+	if errValidate != nil {
+		return errValidate
 	}
 
 	dataBayar := entity.DataBayarInvoice{

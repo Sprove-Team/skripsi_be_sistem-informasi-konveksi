@@ -2,6 +2,7 @@ package handler_invoice_data_bayar
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	uc_akuntansi_hp "github.com/be-sistem-informasi-konveksi/api/usecase/akuntansi/hutang_piutang"
@@ -37,6 +38,7 @@ func NewDataBayarInvoiceHandler(
 }
 
 func errResponse(c *fiber.Ctx, err error) error {
+	fmt.Println("err -> ", err.Error())
 	if err == context.DeadlineExceeded {
 		return c.Status(fiber.StatusRequestTimeout).JSON(res_global.ErrorRes(fiber.ErrRequestTimeout.Code, fiber.ErrRequestTimeout.Message, nil))
 	}
@@ -55,6 +57,7 @@ func errResponse(c *fiber.Ctx, err error) error {
 	case
 		message.InvoiceNotFound,
 		message.BayarMustLessThanSisaTagihan,
+		message.BayarMustLessThanTotalHargaInvoice,
 		message.CannotModifiedTerkonfirmasiDataBayar:
 		badRequest = append(badRequest, err.Error())
 	}
@@ -89,30 +92,6 @@ func (h *dataBayarInvoiceHandler) GetByInvoiceId(c *fiber.Ctx) error {
 	// Respond with success status
 	return c.Status(fiber.StatusOK).JSON(res_global.SuccessRes(fiber.StatusOK, message.OK, datas))
 }
-
-// func (h *dataBayarInvoiceHandler) GetById(c *fiber.Ctx) error {
-// 	req := new(reqGlobal.ParamByID)
-
-// 	c.ParamsParser(req)
-
-// 	errValidate := h.validator.Validate(req)
-// 	if errValidate != nil {
-// 		return c.Status(fiber.StatusBadRequest).JSON(errValidate)
-// 	}
-
-// 	ctx := c.UserContext()
-// 	datas, err := h.uc.GetById(usecase.ParamGetById{
-// 		Ctx: ctx,
-// 		ID:  req.ID,
-// 	})
-// 	// Handle errors
-// 	if err != nil {
-// 		return errResponse(c, err)
-// 	}
-
-// 	// Respond with success status
-// 	return c.Status(fiber.StatusOK).JSON(response.SuccessRes(fiber.StatusOK, message.OK, datas))
-// }
 
 func (h *dataBayarInvoiceHandler) CreateByInvoiceId(c *fiber.Ctx) error {
 	req := new(req.CreateByInvoiceId)

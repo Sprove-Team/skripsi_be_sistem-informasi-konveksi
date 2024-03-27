@@ -6,7 +6,7 @@ import (
 
 type CreateByInvoiceId struct {
 	InvoiceID       string                 `params:"invoice_id" validate:"required,ulid"`
-	BuktiPembayaran entity.BuktiPembayaran `json:"bukti_pembayaran" validate:"required"`
+	BuktiPembayaran entity.BuktiPembayaran `json:"bukti_pembayaran" validate:"required,gt=0"`
 	Keterangan      string                 `json:"keterangan" validate:"required"`
 	AkunID          string                 `json:"akun_id" validate:"required,ulid"`
 	Total           float64                `json:"total" validate:"required,number,gt=0"`
