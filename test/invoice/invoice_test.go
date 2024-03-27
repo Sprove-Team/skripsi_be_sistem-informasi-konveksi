@@ -234,6 +234,29 @@ func InvoiceCreate(t *testing.T) {
 			},
 		},
 		{
+			name:  "err: total bayar harus lebih kecil dari total harga invoice",
+			token: tokens[entity.RolesById[1]],
+			payload: req_invoice.Create{
+				KontakID: kontak[0].ID,
+				Bayar: req_invoice.ReqBayar{
+					BuktiPembayaran: []string{"img-bukti-2.webp"},
+					Keterangan:      "DP 2",
+					AkunID:          "01HP7DVBGTC06PXWT6FD66VERN", // kas
+					Total:           (detailInvoice2[0].Total + detailInvoice2[0].Total) * 3,
+				},
+				TanggalDeadline: time.Now().Format(time.RFC3339),
+				TanggalKirim:    time.Now().Format(time.RFC3339),
+				Keterangan:      "ket invoice 2",
+				DetailInvoice:   detailInvoice2,
+			},
+			expectedCode: 400,
+			expectedBody: test.Response{
+				Status:         fiber.ErrBadRequest.Message,
+				Code:           400,
+				ErrorsMessages: []string{message.BayarMustLessThanTotalHargaInvoice},
+			},
+		},
+		{
 			name:  "err: kontak tidak ditemukan",
 			token: tokens[entity.RolesById[1]],
 			payload: req_invoice.Create{
