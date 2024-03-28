@@ -125,7 +125,7 @@ func (u *authUsecase) RefreshToken(param ParamRefreshToken) (newToken *string, e
 	claims.Username = userData.Username
 	claims.Role = userData.Role
 
-	newTokenData, err := u.jwt.CreateToken(false, claims, time.Now().Add(time.Hour*8))
+	newTokenData, err := u.jwt.CreateToken(false, claims, time.Now().Add(time.Second*30))
 
 	if err != nil {
 		return nil, err
