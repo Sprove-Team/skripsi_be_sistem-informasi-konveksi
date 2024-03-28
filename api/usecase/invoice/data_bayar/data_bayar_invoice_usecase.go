@@ -176,7 +176,7 @@ func (u *dataBayarInvoice) UpdateDataBayarInvoice(param ParamUpdateDataBayarInvo
 	}
 
 	switch param.Claims.Role {
-	case "BENDAHARA", "DIREKTUR":
+	case entity.RolesById[2], entity.RolesById[1]:
 		dataBayarInvoice.Status = param.Req.Status
 	}
 

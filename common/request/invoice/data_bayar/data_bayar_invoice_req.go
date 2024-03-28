@@ -15,7 +15,7 @@ type CreateByInvoiceId struct {
 type Update struct {
 	ID              string                 `params:"id" validate:"required,ulid"`
 	Status          string                 `json:"status" validate:"omitempty,oneof=TERKONFIRMASI BELUM_TERKONFIRMASI"`
-	BuktiPembayaran entity.BuktiPembayaran `json:"bukti_pembayaran" validate:"omitempty"`
+	BuktiPembayaran entity.BuktiPembayaran `json:"bukti_pembayaran" validate:"omitempty,gt=0"`
 	Keterangan      string                 `json:"keterangan" validate:"omitempty"`
 	AkunID          string                 `json:"akun_id" validate:"omitempty,ulid"`
 	Total           float64                `json:"total" validate:"omitempty,number,gt=0"`
