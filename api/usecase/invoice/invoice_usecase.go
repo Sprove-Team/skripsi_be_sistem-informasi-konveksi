@@ -148,33 +148,34 @@ func (u *invoiceUsecase) CheckDataDetails(param ParamCheckDataDetails) error {
 		}
 		return nil
 	})
-
-	g.Go(func() error {
-		count := helper.CountUniqueElements(param.BordirIds)
-		d, err := u.repoBordir.GetByIds(param.Ctx, param.BordirIds)
-		if err != nil {
-			return err
-		}
-		if len(d) != count {
-			return errors.New(message.BordirNotFound)
-		}
-		return nil
-	})
-
-	g.Go(func() error {
-		count := helper.CountUniqueElements(param.BordirIds)
-		d, err := u.repoSablon.GetByIds(param.Ctx, param.SablonIds)
-		if err != nil {
-			return err
-		}
-		if len(d) != count {
-			return errors.New(message.SablonNotFound)
-		}
-		return nil
-	})
+	if len(param.SablonIds) > 0 {
+		g.Go(func() error {
+			count := helper.CountUniqueElements(param.BordirIds)
+			d, err := u.repoBordir.GetByIds(param.Ctx, param.BordirIds)
+			if err != nil {
+				return err
+			}
+			if len(d) != count {
+				return errors.New(message.BordirNotFound)
+			}
+			return nil
+		})
+	}
+	if len(param.SablonIds) > 0 {
+		g.Go(func() error {
+			count := helper.CountUniqueElements(param.SablonIds)
+			d, err := u.repoSablon.GetByIds(param.Ctx, param.SablonIds)
+			if err != nil {
+				return err
+			}
+			if len(d) != count {
+				return errors.New(message.SablonNotFound)
+			}
+			return nil
+		})
+	}
 
 	if err := g.Wait(); err != nil {
-
 		return err
 	}
 	return nil
