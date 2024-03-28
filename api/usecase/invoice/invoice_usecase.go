@@ -250,12 +250,18 @@ func (u *invoiceUsecase) CreateDataInvoice(param ParamCreateDataInvoice) (*entit
 	g := new(errgroup.Group)
 	g.SetLimit(10)
 	g.Go(func() error {
-		return u.CheckDataDetails(ParamCheckDataDetails{
+		param := ParamCheckDataDetails{
 			Ctx:       param.Ctx,
 			ProdukIds: produkIds,
-			BordirIds: bordirIds,
-			SablonIds: sablonIds,
-		})
+		}
+		if len(bordirIds) > 0 {
+			param.BordirIds = bordirIds
+		}
+		if len(sablonIds) > 0 {
+			param.BordirIds = sablonIds
+		}
+
+		return u.CheckDataDetails(param)
 	})
 	var ref string
 	g.Go(func() error {

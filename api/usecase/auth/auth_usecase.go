@@ -66,7 +66,7 @@ func (u *authUsecase) Login(param ParamLogin) (token *string, refreshToken *stri
 		claims.Username = userData.Username
 		claims.Role = userData.Role
 		claims.Subject = "access_token"
-		tokenData, err := u.jwt.CreateToken(false, claims, time.Now().Add(time.Hour*8))
+		tokenData, err := u.jwt.CreateToken(false, claims, time.Now().Add(time.Second*30))
 		if err != nil {
 			return err
 		}
@@ -78,7 +78,7 @@ func (u *authUsecase) Login(param ParamLogin) (token *string, refreshToken *stri
 		claims := new(pkg.Claims)
 		claims.ID = userData.ID
 		claims.Subject = "refresh_token"
-		refTokenData, err := u.jwt.CreateToken(true, claims, time.Now().Add(time.Hour*24*7))
+		refTokenData, err := u.jwt.CreateToken(true, claims, time.Now().Add(time.Minute))
 		if err != nil {
 			return err
 		}
