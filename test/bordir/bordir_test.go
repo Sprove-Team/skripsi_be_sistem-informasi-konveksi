@@ -280,7 +280,7 @@ func BordirGetAll(t *testing.T) {
 			},
 		},
 		{
-			name:         "sukses with next",
+			name:         "sukses dengan next",
 			token:        tokens[entity.RolesById[1]],
 			queryBody:    "?next=" + idBordir,
 			expectedCode: 200,
@@ -290,7 +290,7 @@ func BordirGetAll(t *testing.T) {
 			},
 		},
 		{
-			name:         "sukses with: filter nama",
+			name:         "sukses dengan: filter nama",
 			token:        tokens[entity.RolesById[1]],
 			queryBody:    "?nama=Bordir+1+baris",
 			expectedCode: 200,
@@ -369,13 +369,13 @@ func BordirGetAll(t *testing.T) {
 				assert.NotEmpty(t, res[0]["harga"])
 				assert.Equal(t, tt.expectedBody.Status, body.Status)
 				switch tt.name {
-				case "sukses with: filter nama":
+				case "sukses dengan: filter nama":
 					v, err := url.ParseQuery(tt.queryBody[1:])
 					assert.NoError(t, err)
 					assert.Contains(t, res[0]["nama"], v.Get("nama"))
 				case "sukses limit 1":
 					assert.Len(t, res, 1)
-				case "sukses with next":
+				case "sukses dengan next":
 					assert.NotEmpty(t, res[0])
 					assert.NotEqual(t, idBordir, res[0]["id"])
 				}

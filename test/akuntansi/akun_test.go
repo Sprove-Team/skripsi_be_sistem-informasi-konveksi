@@ -372,7 +372,7 @@ func AkuntansiGetAllAkun(t *testing.T) {
 			},
 		},
 		{ // same data with idAkun2
-			name:         "sukses with filter",
+			name:         "sukses dengan filter",
 			token:        tokens[entity.RolesById[1]],
 			queryBody:    "?nama=akun+update+test&kode=1123499",
 			expectedCode: 200,
@@ -392,7 +392,7 @@ func AkuntansiGetAllAkun(t *testing.T) {
 			},
 		},
 		{
-			name:         "sukses with next",
+			name:         "sukses dengan next",
 			token:        tokens[entity.RolesById[1]],
 			queryBody:    "?next=" + idAkun,
 			expectedCode: 200,
@@ -478,7 +478,7 @@ func AkuntansiGetAllAkun(t *testing.T) {
 				assert.NotEmpty(t, res[0]["kelompok_akun"].(map[string]any)["nama"])
 				assert.Equal(t, tt.expectedBody.Status, body.Status)
 				switch tt.name {
-				case "sukses with filter":
+				case "sukses dengan filter":
 					v, err := url.ParseQuery(tt.queryBody[1:])
 					assert.NoError(t, err)
 					assert.NotEmpty(t, res)
@@ -486,7 +486,7 @@ func AkuntansiGetAllAkun(t *testing.T) {
 					assert.Equal(t, res[0]["kode"], v.Get("kode"))
 				case "sukses limit 1":
 					assert.Len(t, res, 1)
-				case "sukses with next":
+				case "sukses dengan next":
 					assert.NotEmpty(t, res[0])
 					assert.NotEqual(t, idAkun, res[0]["id"])
 				}

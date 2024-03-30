@@ -134,7 +134,7 @@ func createRefNumber(repo repo.InvoiceRepo, ctx context.Context) (string, error)
 func (u *invoiceUsecase) CheckDataDetails(param ParamCheckDataDetails) error {
 
 	g := new(errgroup.Group)
-
+	g.SetLimit(4)
 	g.Go(func() error {
 		count := helper.CountUniqueElements(param.ProdukIds)
 
@@ -146,34 +146,39 @@ func (u *invoiceUsecase) CheckDataDetails(param ParamCheckDataDetails) error {
 		if len(d) != count {
 			return errors.New(message.ProdukNotFound)
 		}
+
 		return nil
 	})
-	if len(param.SablonIds) > 0 {
-		g.Go(func() error {
-			count := helper.CountUniqueElements(param.BordirIds)
-			d, err := u.repoBordir.GetByIds(param.Ctx, param.BordirIds)
-			if err != nil {
-				return err
-			}
-			if len(d) != count {
-				return errors.New(message.BordirNotFound)
-			}
+
+	g.Go(func() error {
+		if len(param.BordirIds) == 0 || param.BordirIds == nil {
 			return nil
-		})
-	}
-	if len(param.SablonIds) > 0 {
-		g.Go(func() error {
-			count := helper.CountUniqueElements(param.SablonIds)
-			d, err := u.repoSablon.GetByIds(param.Ctx, param.SablonIds)
-			if err != nil {
-				return err
-			}
-			if len(d) != count {
-				return errors.New(message.SablonNotFound)
-			}
+		}
+		count := helper.CountUniqueElements(param.BordirIds)
+		d, err := u.repoBordir.GetByIds(param.Ctx, param.BordirIds)
+		if err != nil {
+			return err
+		}
+		if len(d) != count {
+			return errors.New(message.BordirNotFound)
+		}
+		return nil
+	})
+
+	g.Go(func() error {
+		if len(param.SablonIds) == 0 || param.SablonIds == nil {
 			return nil
-		})
-	}
+		}
+		count := helper.CountUniqueElements(param.SablonIds)
+		d, err := u.repoSablon.GetByIds(param.Ctx, param.SablonIds)
+		if err != nil {
+			return err
+		}
+		if len(d) != count {
+			return errors.New(message.SablonNotFound)
+		}
+		return nil
+	})
 
 	if err := g.Wait(); err != nil {
 		return err
@@ -222,8 +227,8 @@ func (u *invoiceUsecase) CreateDataInvoice(param ParamCreateDataInvoice) (*entit
 
 	detailInvoice := make([]entity.DetailInvoice, lengthDetail)
 	var produkIds = make([]string, lengthDetail)
-	var bordirIds = make([]string, lengthDetail)
-	var sablonIds = make([]string, lengthDetail)
+	var bordirIds = make([]string, 0, lengthDetail)
+	var sablonIds = make([]string, 0, lengthDetail)
 
 	var totalHarga float64
 	var totalQty int
@@ -241,8 +246,12 @@ func (u *invoiceUsecase) CreateDataInvoice(param ParamCreateDataInvoice) (*entit
 			Total:        v.Total,
 		}
 		produkIds[i] = v.ProdukID
-		bordirIds[i] = v.BordirID
-		sablonIds[i] = v.SablonID
+		if v.BordirID != "" {
+			bordirIds = append(bordirIds, v.BordirID)
+		}
+		if v.SablonID != "" {
+			sablonIds = append(sablonIds, v.SablonID)
+		}
 		totalHarga += v.Total
 		totalQty += v.Qty
 	}
@@ -250,18 +259,17 @@ func (u *invoiceUsecase) CreateDataInvoice(param ParamCreateDataInvoice) (*entit
 	g := new(errgroup.Group)
 	g.SetLimit(10)
 	g.Go(func() error {
-		param := ParamCheckDataDetails{
+		paramCheckDetail := ParamCheckDataDetails{
 			Ctx:       param.Ctx,
 			ProdukIds: produkIds,
-		}
-		if len(bordirIds) > 0 {
-			param.BordirIds = bordirIds
-		}
-		if len(sablonIds) > 0 {
-			param.BordirIds = sablonIds
+			BordirIds: bordirIds,
+			SablonIds: sablonIds,
 		}
 
-		return u.CheckDataDetails(param)
+		if err := u.CheckDataDetails(paramCheckDetail); err != nil {
+			return err
+		}
+		return nil
 	})
 	var ref string
 	g.Go(func() error {

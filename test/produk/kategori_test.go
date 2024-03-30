@@ -266,7 +266,7 @@ func ProdukGetAllKategori(t *testing.T) {
 			},
 		},
 		{
-			name:         "sukses with next",
+			name:         "sukses dengan next",
 			token:        tokens[entity.RolesById[1]],
 			queryBody:    "?next=" + idProduk,
 			expectedCode: 200,
@@ -276,7 +276,7 @@ func ProdukGetAllKategori(t *testing.T) {
 			},
 		},
 		{
-			name:         "sukses with: filter nama",
+			name:         "sukses dengan: filter nama",
 			token:        tokens[entity.RolesById[1]],
 			queryBody:    "?nama=jaket",
 			expectedCode: 200,
@@ -354,11 +354,11 @@ func ProdukGetAllKategori(t *testing.T) {
 				assert.NotEmpty(t, res[0]["nama"])
 				assert.Equal(t, tt.expectedBody.Status, body.Status)
 				switch tt.name {
-				case "sukses with: filter nama":
+				case "sukses dengan: filter nama":
 					assert.Contains(t, res[0]["nama"], "jaket")
 				case "sukses limit 1":
 					assert.Len(t, res, 1)
-				case "sukses with next":
+				case "sukses dengan next":
 					assert.NotEmpty(t, res[0])
 					assert.NotEqual(t, idProduk, res[0]["id"])
 				}

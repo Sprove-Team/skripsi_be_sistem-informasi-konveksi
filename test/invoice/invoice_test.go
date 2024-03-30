@@ -85,7 +85,36 @@ func InvoiceCreate(t *testing.T) {
 			},
 		},
 		{
-			name:  "sukses with new kontak",
+			name:  "sukses tanpa bordir dan sablon",
+			token: tokens[entity.RolesById[1]],
+			payload: req_invoice.Create{
+				KontakID: kontak[0].ID,
+				Bayar: req_invoice.ReqBayar{
+					BuktiPembayaran: []string{"img-bukti.webp"},
+					Keterangan:      "DP 1",
+					AkunID:          "01HP7DVBGTC06PXWT6FD66VERN", // kas
+					Total:           (produk[1].HargaDetails[0].Harga * 5) / 2,
+				},
+				TanggalDeadline: "2024-10-17T12:00:00Z",
+				TanggalKirim:    "2024-10-17T12:00:00Z",
+				Keterangan:      "ket invoice 1",
+				DetailInvoice: []req_invoice.ReqDetailInvoice{
+					{
+						ProdukID:     produk[1].ID,
+						GambarDesign: "img-design-tanpa-bordir-sablon.webp",
+						Qty:          5,
+						Total:        produk[1].HargaDetails[0].Harga * 5,
+					},
+				},
+			},
+			expectedCode: 201,
+			expectedBody: test.Response{
+				Status: message.Created,
+				Code:   201,
+			},
+		},
+		{
+			name:  "sukses dengan new kontak",
 			token: tokens[entity.RolesById[1]],
 			payload: req_invoice.Create{
 				NewKontak: req_invoice.ReqNewKontak{
@@ -474,7 +503,7 @@ func InvoiceUpdate(t *testing.T) {
 		helper.LogsError(err)
 		return
 	}
-	if len(invoices) != 2 {
+	if len(invoices) < 2 {
 		fmt.Println("inv -> ", invoices)
 		helper.LogsError(errors.New("err: invoices less than 2"))
 		return
@@ -782,7 +811,7 @@ func InvoiceGetAll(t *testing.T) {
 			},
 		},
 		{
-			name:  "sukses with filter tanggal deadline, kirim, kontak id dan status_produksi",
+			name:  "sukses dengan filter tanggal deadline, kirim, kontak id dan status_produksi",
 			token: tokens[entity.RolesById[1]],
 			queryBody: fmt.Sprintf(
 				"?tanggal_deadline=%s&tanggal_kirim=%s&kontak_id=%s&status_produksi=%s",
@@ -798,7 +827,7 @@ func InvoiceGetAll(t *testing.T) {
 			},
 		},
 		{
-			name:  "sukses with filter sort_by dan order_by, dengan nilai TANGGALL_KIRIM dan DESC",
+			name:  "sukses dengan filter sort_by dan order_by, dengan nilai TANGGALL_KIRIM dan DESC",
 			token: tokens[entity.RolesById[1]],
 			queryBody: fmt.Sprintf(
 				"?order_by=%s&sort_by=%s",
@@ -812,7 +841,7 @@ func InvoiceGetAll(t *testing.T) {
 			},
 		},
 		{
-			name:  "sukses with filter sort_by dan order_by, dengan nilai TANGGALL_KIRIM dan ASC",
+			name:  "sukses dengan filter sort_by dan order_by, dengan nilai TANGGALL_KIRIM dan ASC",
 			token: tokens[entity.RolesById[1]],
 			queryBody: fmt.Sprintf(
 				"?order_by=%s&sort_by=%s",
@@ -826,7 +855,7 @@ func InvoiceGetAll(t *testing.T) {
 			},
 		},
 		{
-			name:  "sukses with filter sort_by tanpa order_by, dengan nilai TANGGAL_KIRIM",
+			name:  "sukses dengan filter sort_by tanpa order_by, dengan nilai TANGGAL_KIRIM",
 			token: tokens[entity.RolesById[1]],
 			queryBody: fmt.Sprintf(
 				"?sort_by=%s",
@@ -839,7 +868,7 @@ func InvoiceGetAll(t *testing.T) {
 			},
 		},
 		{
-			name:  "sukses with filter sort_by dan order_by, dengan nilai TANGGAL_DEADLINE dan DESC",
+			name:  "sukses dengan filter sort_by dan order_by, dengan nilai TANGGAL_DEADLINE dan DESC",
 			token: tokens[entity.RolesById[1]],
 			queryBody: fmt.Sprintf(
 				"?order_by=%s&sort_by=%s",
@@ -853,7 +882,7 @@ func InvoiceGetAll(t *testing.T) {
 			},
 		},
 		{
-			name:  "sukses with filter sort_by dan order_by, dengan nilai TANGGAL_DEADLINE dan ASC",
+			name:  "sukses dengan filter sort_by dan order_by, dengan nilai TANGGAL_DEADLINE dan ASC",
 			token: tokens[entity.RolesById[1]],
 			queryBody: fmt.Sprintf(
 				"?order_by=%s&sort_by=%s",
@@ -867,7 +896,7 @@ func InvoiceGetAll(t *testing.T) {
 			},
 		},
 		{
-			name:  "sukses with filter sort_by tanpa order_by, dengan nilai TANGGAL_DEADLINE",
+			name:  "sukses dengan filter sort_by tanpa order_by, dengan nilai TANGGAL_DEADLINE",
 			token: tokens[entity.RolesById[1]],
 			queryBody: fmt.Sprintf(
 				"?sort_by=%s",
@@ -880,7 +909,7 @@ func InvoiceGetAll(t *testing.T) {
 			},
 		},
 		{
-			name:  "sukses with next, limit, sort_by dan order_by dengan nilai TANGGAL_KIRIM dan DESC",
+			name:  "sukses dengan next, limit, sort_by dan order_by dengan nilai TANGGAL_KIRIM dan DESC",
 			token: tokens[entity.RolesById[1]],
 			queryBody: fmt.Sprintf("?next=%s&limit=%s&sort_by=%s&order_by=%s",
 				dataInvoice.ID,
@@ -992,7 +1021,7 @@ func InvoiceGetAll(t *testing.T) {
 
 					assert.Equal(t, tt.expectedBody.Status, body.Status)
 					switch tt.name {
-					case "sukses with filter tanggal deadline, kirim, kontak id dan status_produksi":
+					case "sukses dengan filter tanggal deadline, kirim, kontak id dan status_produksi":
 						v, err := url.ParseQuery(tt.queryBody[1:])
 						assert.NoError(t, err)
 						tt, _ := time.Parse(time.RFC3339, r["tanggal_deadline"].(string))
@@ -1003,7 +1032,7 @@ func InvoiceGetAll(t *testing.T) {
 						assert.Equal(t, v.Get("status_produksi"), r["status_produksi"])
 					}
 				}
-				if strings.Contains(tt.name, "sukses with filter sort_by") {
+				if strings.Contains(tt.name, "sukses dengan filter sort_by") {
 					assert.GreaterOrEqual(t, len(res), 2)
 					if len(res) < 2 {
 						fmt.Println("Err les than 2")
@@ -1012,14 +1041,18 @@ func InvoiceGetAll(t *testing.T) {
 					v, err := url.ParseQuery(tt.queryBody[1:])
 					assert.NoError(t, err)
 					field := strings.ToLower(v.Get("sort_by"))
-					tt, _ := time.Parse(time.RFC3339, res[0][field].(string))
-					tt2, _ := time.Parse(time.RFC3339, res[1][field].(string))
-					if v.Get("order_by") == "DESC" {
-						assert.True(t, tt.After(tt2))
-					} else {
-						assert.True(t, tt.Before(tt2))
+
+					// Check time ordering between consecutive elements in `res` based on order (DESC or ASC).
+					for i := 1; i < len(res); i++ {
+						ttPrev, _ := time.Parse(time.RFC3339, res[i-1][field].(string))
+						ttCurrent, _ := time.Parse(time.RFC3339, res[i][field].(string))
+						if v.Get("order_by") == "DESC" {
+							assert.True(t, ttPrev.After(ttCurrent) || ttPrev.Equal(ttCurrent))
+						} else {
+							assert.True(t, ttPrev.Before(ttCurrent) || ttPrev.Equal(ttCurrent))
+						}
 					}
-				} else if strings.Contains(tt.name, "sukses with next, limit") {
+				} else if strings.Contains(tt.name, "sukses dengan next, limit") {
 					assert.Len(t, res, 1)
 					v, err := url.ParseQuery(tt.queryBody[1:])
 					assert.NoError(t, err)

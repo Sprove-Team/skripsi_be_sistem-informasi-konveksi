@@ -503,7 +503,7 @@ func UserGetAll(t *testing.T) {
 			},
 		},
 		{
-			name:         "sukses with filter search",
+			name:         "sukses dengan filter search",
 			token:        tokens[entity.RolesById[1]],
 			queryBody:    fmt.Sprintf("?search[nama]=supervisorbelanja&search[jenis_spv_id]=%s&search[role]=SUPERVISOR&search[username]=supervisorbelanja&search[alamat]=test123&search[no_telp]=%s6289589729", idSpv2, "%2B"),
 			expectedCode: 200,
@@ -513,7 +513,7 @@ func UserGetAll(t *testing.T) {
 			},
 		},
 		{
-			name:         "sukses with next",
+			name:         "sukses dengan next",
 			token:        tokens[entity.RolesById[1]],
 			queryBody:    "?next=" + idUser,
 			expectedCode: 200,
@@ -627,7 +627,7 @@ func UserGetAll(t *testing.T) {
 				assert.NotEmpty(t, res[0]["alamat"])
 				assert.Equal(t, tt.expectedBody.Status, body.Status)
 				switch tt.name {
-				case "sukses with filter search":
+				case "sukses dengan filter search":
 					v, err := url.ParseQuery(tt.queryBody[1:])
 					assert.NoError(t, err)
 					assert.Contains(t, res[0]["nama"], v.Get("search[nama]"))
@@ -643,7 +643,7 @@ func UserGetAll(t *testing.T) {
 					assert.Equal(t, jenisSpv["id"], v.Get("search[jenis_spv_id]"))
 				case "sukses limit 1":
 					assert.Len(t, res, 1)
-				case "sukses with next":
+				case "sukses dengan next":
 					assert.NotEqual(t, idUser, res[0]["id"])
 				}
 			} else {

@@ -341,7 +341,7 @@ func ProdukGetAll(t *testing.T) {
 			},
 		},
 		{
-			name:         "sukses with: filter nama",
+			name:         "sukses dengan: filter nama",
 			token:        tokens[entity.RolesById[1]],
 			queryBody:    "?nama=apparel",
 			expectedCode: 200,
@@ -351,7 +351,7 @@ func ProdukGetAll(t *testing.T) {
 			},
 		},
 		{
-			name:         "sukses with: filter harga detail `NOT_EMPTY`",
+			name:         "sukses dengan: filter harga detail `NOT_EMPTY`",
 			token:        tokens[entity.RolesById[1]],
 			queryBody:    "?harga_detail=NOT_EMPTY",
 			expectedCode: 200,
@@ -361,7 +361,7 @@ func ProdukGetAll(t *testing.T) {
 			},
 		},
 		{
-			name:         "sukses with: filter harga detail `EMPTY`",
+			name:         "sukses dengan: filter harga detail `EMPTY`",
 			token:        tokens[entity.RolesById[1]],
 			queryBody:    "?harga_detail=EMPTY",
 			expectedCode: 200,
@@ -371,7 +371,7 @@ func ProdukGetAll(t *testing.T) {
 			},
 		},
 		{
-			name:         "sukses with next",
+			name:         "sukses dengan next",
 			token:        tokens[entity.RolesById[1]],
 			queryBody:    "?next=" + idProduk,
 			expectedCode: 200,
@@ -473,7 +473,7 @@ func ProdukGetAll(t *testing.T) {
 				assert.NotEmpty(t, res[0]["kategori"].(map[string]any)["nama"])
 				assert.Equal(t, tt.expectedBody.Status, body.Status)
 				switch tt.name {
-				case "sukses with: filter harga detail `NOT_EMPTY`":
+				case "sukses dengan: filter harga detail `NOT_EMPTY`":
 					assert.NotEmpty(t, res[0]["harga_detail"])
 					hargaDetail := res[0]["harga_detail"].([]any)
 					assert.Greater(t, len(hargaDetail), 0)
@@ -483,13 +483,13 @@ func ProdukGetAll(t *testing.T) {
 						assert.NotEmpty(t, v.(map[string]any)["qty"])
 						assert.NotEmpty(t, v.(map[string]any)["harga"])
 					}
-				case "sukses with: filter harga detail `EMPTY`":
+				case "sukses dengan: filter harga detail `EMPTY`":
 					assert.Empty(t, res[0]["harga_detail"])
-				case "sukses with: filter nama":
+				case "sukses dengan: filter nama":
 					assert.Contains(t, res[0]["nama"], "apparel")
 				case "sukses limit 1":
 					assert.Len(t, res, 1)
-				case "sukses with next":
+				case "sukses dengan next":
 					assert.NotEmpty(t, res[0])
 					assert.NotEqual(t, idProduk, res[0]["id"])
 				}
@@ -517,7 +517,7 @@ func ProdukGet(t *testing.T) {
 		expectedCode int
 	}{
 		{
-			name:         "sukses without: harga detail",
+			name:         "sukses denganout: harga detail",
 			token:        tokens[entity.RolesById[1]],
 			id:           idProduk,
 			expectedCode: 200,
@@ -527,7 +527,7 @@ func ProdukGet(t *testing.T) {
 			},
 		},
 		{
-			name:         "sukses with: harga detail",
+			name:         "sukses dengan: harga detail",
 			token:        tokens[entity.RolesById[1]],
 			id:           idProdukHasHargaDetail,
 			expectedCode: 200,
@@ -623,9 +623,9 @@ func ProdukGet(t *testing.T) {
 				assert.NotEmpty(t, res["kategori"].(map[string]any)["nama"])
 				assert.Equal(t, tt.expectedBody.Status, body.Status)
 				switch tt.name {
-				case "sukses without: harga detail":
+				case "sukses denganout: harga detail":
 					assert.Empty(t, res["harga_detail"])
-				case "sukses with: harga detail":
+				case "sukses dengan: harga detail":
 					assert.NotEmpty(t, res["harga_detail"])
 					hargaDetail := res["harga_detail"].([]any)
 					assert.Greater(t, len(hargaDetail), 0)

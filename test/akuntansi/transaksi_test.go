@@ -24,7 +24,7 @@ func AkuntansiCreateTransaksi(t *testing.T) {
 		expectedCode int
 	}{
 		{
-			name:  "sukses without kontak",
+			name:  "sukses denganout kontak",
 			token: tokens[entity.RolesById[1]],
 			payload: req_akuntansi_transaksi.Create{
 				BuktiPembayaran: []string{"bukti-pembayaran.webp"},
@@ -49,7 +49,7 @@ func AkuntansiCreateTransaksi(t *testing.T) {
 			},
 		},
 		{
-			name:  "sukses with kontak",
+			name:  "sukses dengan kontak",
 			token: tokens[entity.RolesById[1]],
 			payload: req_akuntansi_transaksi.Create{
 				BuktiPembayaran: []string{"bukti-pembayaran2.webp"},
@@ -965,7 +965,7 @@ func AkuntansiGetTransaksi(t *testing.T) {
 		expectedCode int
 	}{
 		{
-			name:         "sukses without kontak",
+			name:         "sukses denganout kontak",
 			token:        tokens[entity.RolesById[1]],
 			id:           idTransaksi,
 			expectedCode: 200,
@@ -975,7 +975,7 @@ func AkuntansiGetTransaksi(t *testing.T) {
 			},
 		},
 		{
-			name:         "sukses with kontak",
+			name:         "sukses dengan kontak",
 			token:        tokens[entity.RolesById[1]],
 			id:           idTransaksiWithKontak,
 			expectedCode: 200,
@@ -1071,9 +1071,9 @@ func AkuntansiGetTransaksi(t *testing.T) {
 				assert.NotEmpty(t, res["tanggal"])
 				assert.Equal(t, tt.expectedBody.Status, body.Status)
 				switch tt.name {
-				case "sukses without kontak":
+				case "sukses denganout kontak":
 					assert.Empty(t, res["kontak"])
-				case "sukses with kontak":
+				case "sukses dengan kontak":
 					assert.NotEmpty(t, res["kontak"])
 					assert.NotEmpty(t, res["kontak"].(map[string]any)["id"])
 					assert.NotEmpty(t, res["kontak"].(map[string]any)["created_at"])

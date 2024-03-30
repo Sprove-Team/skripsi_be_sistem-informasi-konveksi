@@ -172,7 +172,7 @@ func AkuntansiGetBB(t *testing.T) {
 			},
 		},
 		{
-			name:         "sukses with filter",
+			name:         "sukses dengan filter",
 			token:        tokens[entity.RolesById[1]],
 			expectedCode: 200,
 			queryBody:    fmt.Sprintf("?start_date=2023-10-20&end_date=2024-12-30&akun_id=01HP7DVBGTC06PXWT6FD66VERN%s01HP7DVBGTC06PXWT6FF89WRAB", "%2C"),
@@ -289,7 +289,7 @@ func AkuntansiGetBB(t *testing.T) {
 					if v["total_saldo"].(float64) != 0 {
 						assert.Equal(t, totalSaldo, v["total_saldo"].(float64))
 					}
-					if tt.name == "sukses with filter" {
+					if tt.name == "sukses dengan filter" {
 						akunNama := []string{"kas", "piutang usaha"} // fit with the query akun
 						assert.Contains(t, akunNama, v["nama_akun"])
 					}

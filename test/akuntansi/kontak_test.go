@@ -312,7 +312,7 @@ func AkuntansiGetAllKontak(t *testing.T) {
 			},
 		},
 		{ // same data with idKontak2
-			name:         "sukses with filter",
+			name:         "sukses dengan filter",
 			token:        tokens[entity.RolesById[1]],
 			queryBody:    "?nama=test&no_telp=%2B628289123&email=megabaran",
 			expectedCode: 200,
@@ -332,7 +332,7 @@ func AkuntansiGetAllKontak(t *testing.T) {
 			},
 		},
 		{
-			name:         "sukses with next",
+			name:         "sukses dengan next",
 			token:        tokens[entity.RolesById[1]],
 			queryBody:    "?next=" + idKontak,
 			expectedCode: 200,
@@ -421,7 +421,7 @@ func AkuntansiGetAllKontak(t *testing.T) {
 				assert.NotEmpty(t, res[0]["created_at"])
 				assert.Equal(t, tt.expectedBody.Status, body.Status)
 				switch tt.name {
-				case "sukses with filter":
+				case "sukses dengan filter":
 					v, err := url.ParseQuery(tt.queryBody[1:])
 					assert.NoError(t, err)
 					assert.NotEmpty(t, res)
@@ -431,7 +431,7 @@ func AkuntansiGetAllKontak(t *testing.T) {
 
 				case "sukses limit 1":
 					assert.Len(t, res, 1)
-				case "sukses with next":
+				case "sukses dengan next":
 					assert.NotEmpty(t, res[0])
 					assert.NotEqual(t, idKontak, res[0]["id"])
 				}

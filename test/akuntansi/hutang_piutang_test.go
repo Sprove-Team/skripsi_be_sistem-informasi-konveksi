@@ -25,7 +25,7 @@ func AkuntansiCreateHutangPiutang(t *testing.T) {
 		expectedCode int
 	}{
 		{
-			name:  "sukses with jenis PIUTANG",
+			name:  "sukses dengan jenis PIUTANG",
 			token: tokens[entity.RolesById[1]],
 			payload: req_akuntansi_hp.Create{
 				KontakID:   idKontak,
@@ -53,7 +53,7 @@ func AkuntansiCreateHutangPiutang(t *testing.T) {
 			},
 		},
 		{
-			name:  "sukses with jenis HUTANG",
+			name:  "sukses dengan jenis HUTANG",
 			token: tokens[entity.RolesById[1]],
 			payload: req_akuntansi_hp.Create{
 				KontakID:   idKontak,
@@ -418,7 +418,7 @@ func AkuntansiGetAllHutangPiutang(t *testing.T) {
 			},
 		},
 		{ // same data with idKelompokAkun2
-			name:         "sukses with filter",
+			name:         "sukses dengan filter",
 			token:        tokens[entity.RolesById[1]],
 			queryBody:    "?status=BELUM_LUNAS&jenis=HUTANG&kontak_id=" + dataKontak.ID,
 			expectedCode: 200,
@@ -438,7 +438,7 @@ func AkuntansiGetAllHutangPiutang(t *testing.T) {
 			},
 		},
 		{
-			name:         "sukses with next",
+			name:         "sukses dengan next",
 			token:        tokens[entity.RolesById[1]],
 			queryBody:    "?next=" + idKontak,
 			expectedCode: 200,
@@ -530,7 +530,7 @@ func AkuntansiGetAllHutangPiutang(t *testing.T) {
 							totalHutang += int(hp2["total"].(float64))
 							sisaHutang += int(hp2["sisa"].(float64))
 						}
-						if tt.name == "sukses with filter" {
+						if tt.name == "sukses dengan filter" {
 							vq, err := url.ParseQuery(tt.queryBody[1:])
 							assert.NoError(t, err)
 							assert.Equal(t, hp2["status"], vq.Get("status"))
@@ -551,7 +551,7 @@ func AkuntansiGetAllHutangPiutang(t *testing.T) {
 						if dat, ok := v["sisa_hutang"].(float64); ok && dat != 0 {
 							assert.Greater(t, int(dat), 0)
 						}
-					case "sukses with filter":
+					case "sukses dengan filter":
 						// karna jenis yg difilter HUTANG
 						assert.Empty(t, v["total_piutang"])
 						assert.Empty(t, v["sisa_piutang"])
@@ -559,7 +559,7 @@ func AkuntansiGetAllHutangPiutang(t *testing.T) {
 						assert.NotEmpty(t, v["sisa_hutang"])
 						assert.Equal(t, v["nama"], dataKontak.Nama)
 						assert.Equal(t, v["kontak_id"], dataKontak.ID)
-					case "sukses with next":
+					case "sukses dengan next":
 						assert.NotEqual(t, dataKontak.ID, v["id"])
 					}
 				}
