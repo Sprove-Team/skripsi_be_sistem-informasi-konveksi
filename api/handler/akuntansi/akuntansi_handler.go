@@ -31,7 +31,6 @@ func NewAkuntansiHandler(uc usecase.AkuntansiUsecase, validator pkg.Validator) A
 func (h *akuntansiHandler) GetAllJU(c *fiber.Ctx) error {
 	reqU := new(req.GetAllJU)
 	c.QueryParser(reqU)
-
 	errValidate := h.validator.Validate(reqU)
 	if errValidate != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(errValidate)
@@ -54,6 +53,7 @@ func (h *akuntansiHandler) GetAllJU(c *fiber.Ctx) error {
 func (h *akuntansiHandler) GetAllBB(c *fiber.Ctx) error {
 	reqU := new(req.GetAllBB)
 	c.QueryParser(reqU)
+	reqU.AkunID = nil
 	akunIds := c.Query("akun_id")
 	if akunIds != "" {
 		reqU.AkunID = strings.Split(strings.Trim(akunIds, " "), ",")
