@@ -43,6 +43,7 @@ func cleanUp() {
 func TestMain(m *testing.M) {
 	test.GetDB()
 	dbt = test.DBT
+	// cleanUp()
 	akuntansiH := handler_init.NewAkuntansiHandlerInit(dbt, test.Validator, test.UlidPkg)
 
 	userRepo := repo_user.NewUserRepo(dbt)

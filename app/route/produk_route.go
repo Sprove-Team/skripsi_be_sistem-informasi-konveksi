@@ -23,21 +23,23 @@ func NewProdukRoute(h handler_init.ProdukHandlerInit, auth middleware_auth.AuthM
 }
 
 func (ro *produkRoute) Produk(router fiber.Router) {
-	router.Use(ro.auth.Authorization([]string{"DIREKTUR"}))
-	router.Get("", ro.h.ProdukHandler().GetAll)
-	router.Get("/:id", ro.h.ProdukHandler().GetById)
-	router.Post("", ro.h.ProdukHandler().Create)
-	router.Put("/:id", ro.h.ProdukHandler().Update)
-	router.Delete("/:id", ro.h.ProdukHandler().Delete)
+	auth := ro.auth.Authorization([]string{"DIREKTUR"})
+	auth2 := ro.auth.Authorization([]string{"DIREKTUR", "ADMIN"})
+	router.Get("", auth2, ro.h.ProdukHandler().GetAll)
+	router.Get("/:id", auth, ro.h.ProdukHandler().GetById)
+	router.Post("", auth, ro.h.ProdukHandler().Create)
+	router.Put("/:id", auth, ro.h.ProdukHandler().Update)
+	router.Delete("/:id", auth, ro.h.ProdukHandler().Delete)
 }
 
 func (ro *produkRoute) KategoriProduk(router fiber.Router) {
-	router.Use(ro.auth.Authorization([]string{"DIREKTUR"}))
-	router.Get("", ro.h.KategoriProdukHandler().GetAll)
-	router.Get("/:id", ro.h.KategoriProdukHandler().GetById)
-	router.Post("", ro.h.KategoriProdukHandler().Create)
-	router.Put("/:id", ro.h.KategoriProdukHandler().Update)
-	router.Delete("/:id", ro.h.KategoriProdukHandler().Delete)
+	auth := ro.auth.Authorization([]string{"DIREKTUR"})
+	auth2 := ro.auth.Authorization([]string{"DIREKTUR", "ADMIN"})
+	router.Get("", auth2, ro.h.KategoriProdukHandler().GetAll)
+	router.Get("/:id", auth, ro.h.KategoriProdukHandler().GetById)
+	router.Post("", auth, ro.h.KategoriProdukHandler().Create)
+	router.Put("/:id", auth, ro.h.KategoriProdukHandler().Update)
+	router.Delete("/:id", auth, ro.h.KategoriProdukHandler().Delete)
 }
 
 func (ro *produkRoute) HargaDetailProduk(router fiber.Router) {

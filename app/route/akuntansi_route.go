@@ -27,12 +27,13 @@ func NewAkuntansiRoute(h handler_init.AkuntansiHandlerInit, auth middleware_auth
 func (ro *akuntansiRoute) Akun(router fiber.Router) {
 	// this is how to use the authorization function
 	// ~ router.Get("", ro.auth.Authorization([]string{"direktur", "bendahara"}), ro.h.AkunHandler().GetAll)
-	router.Use(ro.auth.Authorization([]string{"DIREKTUR", "BENDAHARA"}))
-	router.Get("", ro.h.Akun().GetAll)
-	router.Get("/:id", ro.h.Akun().GetById)
-	router.Post("", ro.h.Akun().Create)
-	router.Put("/:id", ro.h.Akun().Update)
-	router.Delete("/:id", ro.h.Akun().Delete)
+	auth := ro.auth.Authorization([]string{"DIREKTUR", "BENDAHARA"})
+	auth2 := ro.auth.Authorization([]string{"DIREKTUR", "BENDAHARA", "ADMIN"})
+	router.Get("", auth2, ro.h.Akun().GetAll)
+	router.Get("/:id", auth, ro.h.Akun().GetById)
+	router.Post("", auth, ro.h.Akun().Create)
+	router.Put("/:id", auth, ro.h.Akun().Update)
+	router.Delete("/:id", auth, ro.h.Akun().Delete)
 }
 
 func (ro *akuntansiRoute) KelompokAkun(router fiber.Router) {
@@ -62,12 +63,13 @@ func (ro *akuntansiRoute) HutangPiutang(router fiber.Router) {
 }
 
 func (ro *akuntansiRoute) Kontak(router fiber.Router) {
-	router.Use(ro.auth.Authorization([]string{"DIREKTUR", "BENDAHARA"}))
-	router.Post("", ro.h.Kontak().Create)
-	router.Put("/:id", ro.h.Kontak().Update)
-	router.Get("", ro.h.Kontak().GetAll)
-	router.Get("/:id", ro.h.Kontak().GetById)
-	router.Delete("/:id", ro.h.Kontak().Delete)
+	auth := ro.auth.Authorization([]string{"DIREKTUR", "BENDAHARA"})
+	auth2 := ro.auth.Authorization([]string{"DIREKTUR", "BENDAHARA", "ADMIN"})
+	router.Get("", auth2, ro.h.Kontak().GetAll)
+	router.Post("", auth, ro.h.Kontak().Create)
+	router.Put("/:id", auth, ro.h.Kontak().Update)
+	router.Get("/:id", auth, ro.h.Kontak().GetById)
+	router.Delete("/:id", auth, ro.h.Kontak().Delete)
 }
 
 func (ro *akuntansiRoute) Akuntansi(router fiber.Router) {

@@ -183,8 +183,10 @@ func SablonUpdate(t *testing.T) {
 			},
 		},
 		{
-			name:         "err: authorization " + entity.RolesById[2],
-			payload:      req_sablon.Update{},
+			name: "err: authorization " + entity.RolesById[2],
+			payload: req_sablon.Update{
+				ID: idSablon,
+			},
 			token:        tokens[entity.RolesById[2]],
 			expectedCode: 401,
 			expectedBody: test.Response{
@@ -193,8 +195,10 @@ func SablonUpdate(t *testing.T) {
 			},
 		},
 		{
-			name:         "err: authorization " + entity.RolesById[3],
-			payload:      req_sablon.Update{},
+			name: "err: authorization " + entity.RolesById[3],
+			payload: req_sablon.Update{
+				ID: idSablon,
+			},
 			token:        tokens[entity.RolesById[3]],
 			expectedCode: 401,
 			expectedBody: test.Response{
@@ -203,8 +207,10 @@ func SablonUpdate(t *testing.T) {
 			},
 		},
 		{
-			name:         "err: authorization " + entity.RolesById[4],
-			payload:      req_sablon.Update{},
+			name: "err: authorization " + entity.RolesById[4],
+			payload: req_sablon.Update{
+				ID: idSablon,
+			},
 			token:        tokens[entity.RolesById[4]],
 			expectedCode: 401,
 			expectedBody: test.Response{
@@ -213,8 +219,10 @@ func SablonUpdate(t *testing.T) {
 			},
 		},
 		{
-			name:         "err: authorization " + entity.RolesById[5],
-			payload:      req_sablon.Update{},
+			name: "err: authorization " + entity.RolesById[5],
+			payload: req_sablon.Update{
+				ID: idSablon,
+			},
 			token:        tokens[entity.RolesById[5]],
 			expectedCode: 401,
 			expectedBody: test.Response{
@@ -320,7 +328,7 @@ func SablonGetAll(t *testing.T) {
 			},
 		},
 		{
-			name:         "err: authorization " + entity.RolesById[3],
+			name:         "authorization " + entity.RolesById[3] + " passed",
 			token:        tokens[entity.RolesById[3]],
 			expectedCode: 401,
 			expectedBody: test.Response{
@@ -352,6 +360,12 @@ func SablonGetAll(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			code, body, err := test.GetJsonTestRequestResponse(app, "GET", "/api/v1/sablon"+tt.queryBody, nil, &tt.token)
 			assert.NoError(t, err)
+			if strings.Contains(tt.name, "passed") {
+				assert.NotEqual(t, tt.expectedCode, code)
+				assert.NotEqual(t, tt.expectedBody.Code, body.Code)
+				assert.NotEqual(t, tt.expectedBody.Status, body.Status)
+				return
+			}
 			assert.Equal(t, tt.expectedCode, code)
 
 			var res []map[string]interface{}

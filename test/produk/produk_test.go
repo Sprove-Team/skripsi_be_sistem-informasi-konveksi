@@ -239,8 +239,12 @@ func ProdukUpdate(t *testing.T) {
 			},
 		},
 		{
-			name:         "err: authorization " + entity.RolesById[2],
-			payload:      req_produk.Update{},
+			name: "err: authorization " + entity.RolesById[2],
+			payload: req_produk.Update{
+				Nama:       "apparel premium jaket 25",
+				ID:         "01HQVTTJ1S2606JGTYYZ5NDKNZ123",
+				KategoriID: "01HQVTTJ1S2606JGTYYZ5NDKNZ123",
+			},
 			token:        tokens[entity.RolesById[2]],
 			expectedCode: 401,
 			expectedBody: test.Response{
@@ -249,8 +253,10 @@ func ProdukUpdate(t *testing.T) {
 			},
 		},
 		{
-			name:         "err: authorization " + entity.RolesById[3],
-			payload:      req_produk.Update{},
+			name: "err: authorization " + entity.RolesById[3],
+			payload: req_produk.Update{
+				ID: "01HQVTTJ1S2606JGTYYZ5NDKNZ123",
+			},
 			token:        tokens[entity.RolesById[3]],
 			expectedCode: 401,
 			expectedBody: test.Response{
@@ -259,8 +265,10 @@ func ProdukUpdate(t *testing.T) {
 			},
 		},
 		{
-			name:         "err: authorization " + entity.RolesById[4],
-			payload:      req_produk.Update{},
+			name: "err: authorization " + entity.RolesById[4],
+			payload: req_produk.Update{
+				ID: "01HQVTTJ1S2606JGTYYZ5NDKNZ123",
+			},
 			token:        tokens[entity.RolesById[4]],
 			expectedCode: 401,
 			expectedBody: test.Response{
@@ -269,8 +277,10 @@ func ProdukUpdate(t *testing.T) {
 			},
 		},
 		{
-			name:         "err: authorization " + entity.RolesById[5],
-			payload:      req_produk.Update{},
+			name: "err: authorization " + entity.RolesById[5],
+			payload: req_produk.Update{
+				ID: "01HQVTTJ1S2606JGTYYZ5NDKNZ123",
+			},
 			token:        tokens[entity.RolesById[5]],
 			expectedCode: 401,
 			expectedBody: test.Response{
@@ -422,7 +432,7 @@ func ProdukGetAll(t *testing.T) {
 			},
 		},
 		{
-			name:         "err: authorization " + entity.RolesById[3],
+			name:         "authorization " + entity.RolesById[3] + " passed",
 			token:        tokens[entity.RolesById[3]],
 			expectedCode: 401,
 			expectedBody: test.Response{
@@ -454,6 +464,12 @@ func ProdukGetAll(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			code, body, err := test.GetJsonTestRequestResponse(app, "GET", "/api/v1/produk"+tt.queryBody, nil, &tt.token)
 			assert.NoError(t, err)
+			if strings.Contains(tt.name, "passed") {
+				assert.NotEqual(t, tt.expectedCode, code)
+				assert.NotEqual(t, tt.expectedBody.Code, body.Code)
+				assert.NotEqual(t, tt.expectedBody.Status, body.Status)
+				return
+			}
 			assert.Equal(t, tt.expectedCode, code)
 			var res []map[string]any
 			if strings.Contains(tt.name, "sukses") {

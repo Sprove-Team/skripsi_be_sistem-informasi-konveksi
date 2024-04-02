@@ -1,6 +1,7 @@
 package test_akuntansi
 
 import (
+	"fmt"
 	"net/url"
 	"strings"
 	"testing"
@@ -411,6 +412,7 @@ func AkuntansiGetAllHutangPiutang(t *testing.T) {
 		{
 			name:         "sukses",
 			token:        tokens[entity.RolesById[1]],
+			queryBody:    "",
 			expectedCode: 200,
 			expectedBody: test.Response{
 				Status: message.OK,
@@ -491,23 +493,25 @@ func AkuntansiGetAllHutangPiutang(t *testing.T) {
 			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedCode, code)
 
-			var res []map[string]interface{}
+			var res []any
 			if strings.Contains(tt.name, "sukses") {
 				err = mapstructure.Decode(body.Data, &res)
 				assert.NoError(t, err)
 				length := len(res)
+				fmt.Println(tt.name, body.Data)
 				assert.Greater(t, length, 0)
 				if length <= 0 {
 					return
 				}
 
 				for _, v := range res {
-					assert.NotEmpty(t, v)
-					assert.NotEmpty(t, v["nama"])
-					assert.NotEmpty(t, v["kontak_id"])
-					assert.NotEmpty(t, v["hutang_piutang"])
+					v2 := v.(map[string]any)
+					assert.NotEmpty(t, v2)
+					assert.NotEmpty(t, v2["nama"])
+					assert.NotEmpty(t, v2["kontak_id"])
+					assert.NotEmpty(t, v2["hutang_piutang"])
 					var totalPiutang, totalHutang, sisaPiutang, sisaHutang int
-					for _, hp := range v["hutang_piutang"].([]any) {
+					for _, hp := range v2["hutang_piutang"].([]any) {
 						hp2 := hp.(map[string]any)
 						assert.NotEmpty(t, hp2["id"])
 						assert.NotEmpty(t, hp2["jenis"])
@@ -539,28 +543,28 @@ func AkuntansiGetAllHutangPiutang(t *testing.T) {
 					}
 					switch tt.name {
 					case "sukses":
-						if dat, ok := v["total_piutang"].(float64); ok && dat != 0 {
+						if dat, ok := v2["total_piutang"].(float64); ok && dat != 0 {
 							assert.Greater(t, int(dat), 0)
 						}
-						if dat, ok := v["total_hutang"].(float64); ok && dat != 0 {
+						if dat, ok := v2["total_hutang"].(float64); ok && dat != 0 {
 							assert.Greater(t, int(dat), 0)
 						}
-						if dat, ok := v["sisa_piutang"].(float64); ok && dat != 0 {
+						if dat, ok := v2["sisa_piutang"].(float64); ok && dat != 0 {
 							assert.Greater(t, int(dat), 0)
 						}
-						if dat, ok := v["sisa_hutang"].(float64); ok && dat != 0 {
+						if dat, ok := v2["sisa_hutang"].(float64); ok && dat != 0 {
 							assert.Greater(t, int(dat), 0)
 						}
 					case "sukses dengan filter":
 						// karna jenis yg difilter HUTANG
-						assert.Empty(t, v["total_piutang"])
-						assert.Empty(t, v["sisa_piutang"])
-						assert.NotEmpty(t, v["total_hutang"])
-						assert.NotEmpty(t, v["sisa_hutang"])
-						assert.Equal(t, v["nama"], dataKontak.Nama)
-						assert.Equal(t, v["kontak_id"], dataKontak.ID)
+						assert.Empty(t, v2["total_piutang"])
+						assert.Empty(t, v2["sisa_piutang"])
+						assert.NotEmpty(t, v2["total_hutang"])
+						assert.NotEmpty(t, v2["sisa_hutang"])
+						assert.Equal(t, v2["nama"], dataKontak.Nama)
+						assert.Equal(t, v2["kontak_id"], dataKontak.ID)
 					case "sukses dengan next":
-						assert.NotEqual(t, dataKontak.ID, v["id"])
+						assert.NotEqual(t, dataKontak.ID, v2["id"])
 					}
 				}
 
@@ -584,18 +588,6 @@ func AkuntansiGetAllHutangPiutang(t *testing.T) {
 			}
 
 		})
-	}
-	if err := dbt.Unscoped().Delete(hpWithInvoiceId).Error; err != nil {
-		helper.LogsError(err)
-		return
-	}
-	if err := dbt.Unscoped().Delete(invoice).Error; err != nil {
-		helper.LogsError(err)
-		return
-	}
-	if err := dbt.Unscoped().Delete(tr).Error; err != nil {
-		helper.LogsError(err)
-		return
 	}
 }
 

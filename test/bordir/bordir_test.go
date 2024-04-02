@@ -109,6 +109,7 @@ func BordirCreate(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			code, body, err := test.GetJsonTestRequestResponse(app, "POST", "/api/v1/bordir", tt.payload, &tt.token)
 			assert.NoError(t, err)
+
 			assert.Equal(t, tt.expectedCode, code)
 			if len(tt.expectedBody.ErrorsMessages) > 0 {
 				for _, v := range tt.expectedBody.ErrorsMessages {
@@ -183,8 +184,10 @@ func BordirUpdate(t *testing.T) {
 			},
 		},
 		{
-			name:         "err: authorization " + entity.RolesById[2],
-			payload:      req_bordir.Update{},
+			name: "err: authorization " + entity.RolesById[2],
+			payload: req_bordir.Update{
+				ID: idBordir,
+			},
 			token:        tokens[entity.RolesById[2]],
 			expectedCode: 401,
 			expectedBody: test.Response{
@@ -193,8 +196,10 @@ func BordirUpdate(t *testing.T) {
 			},
 		},
 		{
-			name:         "err: authorization " + entity.RolesById[3],
-			payload:      req_bordir.Update{},
+			name: "err: authorization " + entity.RolesById[3],
+			payload: req_bordir.Update{
+				ID: idBordir,
+			},
 			token:        tokens[entity.RolesById[3]],
 			expectedCode: 401,
 			expectedBody: test.Response{
@@ -203,8 +208,10 @@ func BordirUpdate(t *testing.T) {
 			},
 		},
 		{
-			name:         "err: authorization " + entity.RolesById[4],
-			payload:      req_bordir.Update{},
+			name: "err: authorization " + entity.RolesById[4],
+			payload: req_bordir.Update{
+				ID: idBordir,
+			},
 			token:        tokens[entity.RolesById[4]],
 			expectedCode: 401,
 			expectedBody: test.Response{
@@ -213,8 +220,10 @@ func BordirUpdate(t *testing.T) {
 			},
 		},
 		{
-			name:         "err: authorization " + entity.RolesById[5],
-			payload:      req_bordir.Update{},
+			name: "err: authorization " + entity.RolesById[5],
+			payload: req_bordir.Update{
+				ID: idBordir,
+			},
 			token:        tokens[entity.RolesById[5]],
 			expectedCode: 401,
 			expectedBody: test.Response{
@@ -320,7 +329,7 @@ func BordirGetAll(t *testing.T) {
 			},
 		},
 		{
-			name:         "err: authorization " + entity.RolesById[3],
+			name:         "authorization " + entity.RolesById[3] + " passed",
 			token:        tokens[entity.RolesById[3]],
 			expectedCode: 401,
 			expectedBody: test.Response{
@@ -352,8 +361,13 @@ func BordirGetAll(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			code, body, err := test.GetJsonTestRequestResponse(app, "GET", "/api/v1/bordir"+tt.queryBody, nil, &tt.token)
 			assert.NoError(t, err)
+			if strings.Contains(tt.name, "passed") {
+				assert.NotEqual(t, tt.expectedCode, code)
+				assert.NotEqual(t, tt.expectedBody.Code, body.Code)
+				assert.NotEqual(t, tt.expectedBody.Status, body.Status)
+				return
+			}
 			assert.Equal(t, tt.expectedCode, code)
-
 			var res []map[string]interface{}
 			if strings.Contains(tt.name, "sukses") {
 				err = mapstructure.Decode(body.Data, &res)

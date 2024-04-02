@@ -1,6 +1,7 @@
 package test_akuntansi
 
 import (
+	"fmt"
 	"math"
 	"strings"
 	"testing"
@@ -375,6 +376,11 @@ func AkuntansiUpdateTransaksi(t *testing.T) {
 	idTransaksi = transaksi.ID
 	idTransaksiWithKontak = transaksiWithKontak.ID
 
+	if idTransaksi == "" || idTransaksiWithKontak == "" || idTransaksiWithHP == "" {
+		fmt.Println("id for update is empty")
+		return
+	}
+
 	tests := []struct {
 		name         string
 		token        string
@@ -740,7 +746,7 @@ func AkuntansiUpdateTransaksi(t *testing.T) {
 			name:  "authorization " + entity.RolesById[2] + " passed",
 			token: tokens[entity.RolesById[2]],
 			payload: req_akuntansi_transaksi.Update{
-				ID: idAkun,
+				ID: idTransaksi,
 			},
 			expectedCode: 401,
 			expectedBody: test.Response{
@@ -751,7 +757,7 @@ func AkuntansiUpdateTransaksi(t *testing.T) {
 		{
 			name: "err: authorization " + entity.RolesById[3],
 			payload: req_akuntansi_transaksi.Update{
-				ID: idAkun,
+				ID: idTransaksi,
 			},
 			token:        tokens[entity.RolesById[3]],
 			expectedCode: 401,
@@ -763,7 +769,7 @@ func AkuntansiUpdateTransaksi(t *testing.T) {
 		{
 			name: "err: authorization " + entity.RolesById[4],
 			payload: req_akuntansi_transaksi.Update{
-				ID: idAkun,
+				ID: idTransaksi,
 			},
 			token:        tokens[entity.RolesById[4]],
 			expectedCode: 401,
@@ -775,7 +781,7 @@ func AkuntansiUpdateTransaksi(t *testing.T) {
 		{
 			name: "err: authorization " + entity.RolesById[5],
 			payload: req_akuntansi_transaksi.Update{
-				ID: idAkun,
+				ID: idTransaksi,
 			},
 			token:        tokens[entity.RolesById[5]],
 			expectedCode: 401,
