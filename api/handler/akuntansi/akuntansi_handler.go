@@ -2,6 +2,7 @@ package handler_akuntansi
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	usecase "github.com/be-sistem-informasi-konveksi/api/usecase/akuntansi"
@@ -47,6 +48,15 @@ func (h *akuntansiHandler) GetAllJU(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(res_global.ErrorRes(fiber.ErrInternalServerError.Code, fiber.ErrInternalServerError.Message, nil))
 	}
+	if reqU.Download == "1" {
+		buf, err := h.uc.DownloadJU(*reqU, datasJU)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(res_global.ErrorRes(fiber.ErrInternalServerError.Code, fiber.ErrInternalServerError.Message, nil))
+		}
+		name := fmt.Sprintf("Jurnal Umum (%s sampai %s).xlsx", reqU.StartDate, reqU.EndDate)
+		c.Set("Content-Disposition", "attachment; filename="+name)
+		return c.Status(fiber.StatusOK).Send(buf.Bytes())
+	}
 	return c.Status(fiber.StatusOK).JSON(res_global.SuccessRes(fiber.StatusOK, message.OK, datasJU))
 }
 
@@ -73,6 +83,15 @@ func (h *akuntansiHandler) GetAllBB(c *fiber.Ctx) error {
 
 	if err != nil {
 		return c.Status(fiber.StatusRequestTimeout).JSON(res_global.ErrorRes(fiber.ErrRequestTimeout.Code, fiber.ErrRequestTimeout.Message, nil))
+	}
+	if reqU.Download == "1" {
+		buf, err := h.uc.DownloadBB(*reqU, datasBB)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(res_global.ErrorRes(fiber.ErrInternalServerError.Code, fiber.ErrInternalServerError.Message, nil))
+		}
+		name := fmt.Sprintf("Buku Besar (%s sampai %s).xlsx", reqU.StartDate, reqU.EndDate)
+		c.Set("Content-Disposition", "attachment; filename="+name)
+		return c.Status(fiber.StatusOK).Send(buf.Bytes())
 	}
 	return c.Status(fiber.StatusOK).JSON(res_global.SuccessRes(fiber.StatusOK, message.OK, datasBB))
 }

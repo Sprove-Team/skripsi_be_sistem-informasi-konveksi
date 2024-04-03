@@ -22,6 +22,7 @@ func main() {
 	// pkg
 	validator := pkg.NewValidator()
 	ulidPkg := pkg.NewUlidPkg()
+	excelize := pkg.NewExcelizePkg()
 	jwtPkg := pkg.NewJwt(os.Getenv("JWT_TOKEN"), os.Getenv("JWT_REFTOKEN"))
 	dbGormConf := config.DBGorm{
 		DB_Username: os.Getenv("DB_USERNAME"),
@@ -101,7 +102,7 @@ func main() {
 		}
 
 		// akuntansi
-		akuntansiHandler := handler_init.NewAkuntansiHandlerInit(dbGorm, validator, ulidPkg)
+		akuntansiHandler := handler_init.NewAkuntansiHandlerInit(dbGorm, validator, ulidPkg, excelize)
 		akuntansiRoute := route.NewAkuntansiRoute(akuntansiHandler, authMid)
 		akuntansiGroup := v1.Group("/akuntansi")
 		{

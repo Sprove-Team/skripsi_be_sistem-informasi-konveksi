@@ -53,10 +53,11 @@ type akuntansiHandlerInit struct {
 	DB        *gorm.DB
 	validator pkg.Validator
 	ulid      pkg.UlidPkg
+	excelize  pkg.ExcelizePkg
 	repo      repoAkuntanInit
 }
 
-func NewAkuntansiHandlerInit(DB *gorm.DB, validator pkg.Validator, ulid pkg.UlidPkg) AkuntansiHandlerInit {
+func NewAkuntansiHandlerInit(DB *gorm.DB, validator pkg.Validator, ulid pkg.UlidPkg, excelize pkg.ExcelizePkg) AkuntansiHandlerInit {
 	r := repoAkuntanInit{
 		akun:                   akunRepo.NewAkunRepo(DB),
 		kelompokAkun:           kelompokAkunRepo.NewKelompokAkunRepo(DB),
@@ -66,7 +67,7 @@ func NewAkuntansiHandlerInit(DB *gorm.DB, validator pkg.Validator, ulid pkg.Ulid
 		akuntansi:              akuntansiRepo.NewAkuntansiRepo(DB),
 		kontak:                 kontakRepo.NewKontakRepo(DB),
 	}
-	return &akuntansiHandlerInit{DB, validator, ulid, r}
+	return &akuntansiHandlerInit{DB, validator, ulid, excelize, r}
 }
 
 func (d *akuntansiHandlerInit) Akun() akunHandler.AkunHandler {
@@ -99,7 +100,7 @@ func (d *akuntansiHandlerInit) Kontak() kontakHandler.KontakHandler {
 }
 
 func (d *akuntansiHandlerInit) Akuntansi() akuntansiHandler.AkuntansiHandler {
-	uc := akuntansiUsecase.NewAkuntansiUsecase(d.repo.akuntansi)
+	uc := akuntansiUsecase.NewAkuntansiUsecase(d.repo.akuntansi, d.excelize)
 	h := akuntansiHandler.NewAkuntansiHandler(uc, d.validator)
 	return h
 }
