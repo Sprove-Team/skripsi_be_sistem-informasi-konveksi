@@ -44,7 +44,7 @@ func TestMain(m *testing.M) {
 	test.GetDB()
 	dbt = test.DBT
 	// cleanUp()
-	akuntansiH := handler_init.NewAkuntansiHandlerInit(dbt, test.Validator, test.UlidPkg)
+	akuntansiH := handler_init.NewAkuntansiHandlerInit(dbt, test.Validator, test.UlidPkg, test.Excelize)
 
 	userRepo := repo_user.NewUserRepo(dbt)
 	authMid := middleware_auth.NewAuthMiddleware(userRepo)
@@ -100,6 +100,7 @@ func TestEndPointAkuntansi(t *testing.T) {
 	AkuntansiGetHistoryTransaksi(t)
 
 	// akuntansi
+	// TODO: add test download excel
 	AkuntansiGetJU(t)
 	AkuntansiGetBB(t)
 	AkuntansiGetNC(t)

@@ -59,11 +59,9 @@ type (
 
 type (
 	DataAkunLBR struct {
-		NamaAkun    string  `json:"nama_akun"`
-		KodeAkun    string  `json:"kode_akun"`
-		SaldoKredit float64 `json:"saldo_kredit"`
-		SaldoDebit  float64 `json:"saldo_debit"`
-		Saldo       float64 `json:"saldo"`
+		NamaAkun string  `json:"nama_akun"`
+		KodeAkun string  `json:"kode_akun"`
+		Total    float64 `json:"total"`
 	}
 	LabaRugiRes struct {
 		NamaKategori string        `json:"kategori_akun"`

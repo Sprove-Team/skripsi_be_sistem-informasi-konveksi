@@ -7,7 +7,6 @@ import (
 	"math"
 	"strconv"
 	"time"
-	"unicode/utf8"
 
 	// "github.com/360EntSecGroup-Skylar/excelize"
 	repo "github.com/be-sistem-informasi-konveksi/api/repository/akuntansi/mysql/gorm"
@@ -18,9 +17,11 @@ import (
 )
 
 type AkuntansiUsecase interface {
-	GetAllJU(ctx context.Context, reqGetAllJU req.GetAllJU) (res.JurnalUmumRes, error)
 	DownloadJU(req req.GetAllJU, JU res.JurnalUmumRes) (*bytes.Buffer, error)
 	DownloadBB(req req.GetAllBB, BB []res.BukuBesarRes) (*bytes.Buffer, error)
+	DownloadNC(req req.GetAllNC, NC res.NeracaSaldoRes) (*bytes.Buffer, error)
+	DownloadLBR(req req.GetAllLBR, LBR []res.LabaRugiRes) (*bytes.Buffer, error)
+	GetAllJU(ctx context.Context, reqGetAllJU req.GetAllJU) (res.JurnalUmumRes, error)
 	GetAllBB(ctx context.Context, reqGetAllBB req.GetAllBB) ([]res.BukuBesarRes, error)
 	GetAllNC(ctx context.Context, reqGetAllNC req.GetAllNC) (res.NeracaSaldoRes, error)
 	GetAllLBR(ctx context.Context, reqGetAllLBR req.GetAllLBR) ([]res.LabaRugiRes, error)
@@ -52,6 +53,430 @@ func getLastDateOfPreviousMonth(startDate string) (string, error) {
 	result := lastDayOfPreviousMonth.Format("2006-01-02")
 
 	return result, nil
+}
+
+func (u *akuntansiUsecase) DownloadJU(req req.GetAllJU, JU res.JurnalUmumRes) (*bytes.Buffer, error) {
+	f, sheetName := u.excelize.InitExcelize("Jurnal Umum")
+	// Create a new Excel file
+	startDate, _ := time.Parse(time.DateOnly, req.StartDate)
+	endDate, _ := time.Parse(time.DateOnly, req.EndDate)
+	title := fmt.Sprintf("Dalam Rupiah (%s - %s)", startDate.Format("01 Jan 2006"), endDate.Format("01 Jan 2006"))
+	f.SetCellValue(sheetName, "A1", title)
+	f.SetCellStyle(sheetName, "A1", "A1", u.excelize.StyleBold(f))
+
+	// Create headers
+	headers := []string{"Tanggal", "Keterangan", "Kode Akun", "Nama Akun", "Debit", "Kredit"}
+	// Apply gray styleHeader to header
+	maxLength := make([]int, len(headers))
+	alpha := "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	styleHeader := u.excelize.StyleHeader(f, "center", "#E0E0E0")
+	for i, header := range headers {
+		cell := string(alpha[i]) + "3"
+		f.SetCellValue(sheetName, cell, header)
+		if cellWidth := u.excelize.GetCellWidth(header, 2); maxLength[i] < cellWidth {
+			maxLength[i] = cellWidth
+		}
+		f.SetCellStyle(sheetName, cell, cell, styleHeader)
+	}
+
+	// Freeze the header row
+	// `{"freeze":true,"split":false,"x_split":0,"y_split":3,"top_left_cell":"A4"}`
+	// xlsx.SetPanes(sheetName, )
+	// Populate data
+	row := 4 // Start from row 3
+	formatCurrency := u.excelize.StyleCurrencyRpIndo(f, false, "", "", false, "")
+	for _, transaksi := range JU.Transaksi {
+		for _, ayat := range transaksi.AyatJurnal {
+			rowStr := strconv.Itoa(row)
+			parse, _ := time.Parse(time.RFC3339, transaksi.Tanggal)
+			tanggal := parse.Format(time.DateTime)
+			f.SetCellValue(sheetName, "A"+rowStr, tanggal)
+			if cellWidth := u.excelize.GetCellWidth(tanggal, 2); maxLength[0] < cellWidth {
+				maxLength[0] = cellWidth
+			}
+			f.SetCellValue(sheetName, "B"+rowStr, transaksi.Keterangan)
+			if cellWidth := u.excelize.GetCellWidth(transaksi.Keterangan, 2); maxLength[1] < cellWidth {
+				maxLength[1] = cellWidth
+			}
+			f.SetCellValue(sheetName, "C"+rowStr, string(ayat.KodeAkun))
+			if cellWidth := u.excelize.GetCellWidth(ayat.KodeAkun, 2); maxLength[2] < cellWidth {
+				maxLength[2] = cellWidth
+			}
+			f.SetCellValue(sheetName, "D"+rowStr, ayat.NamaAkun)
+			if cellWidth := u.excelize.GetCellWidth(ayat.NamaAkun, 2); maxLength[3] < cellWidth {
+				maxLength[3] = cellWidth
+			}
+			f.SetCellValue(sheetName, "E"+rowStr, ayat.Debit)
+			f.SetCellStyle(sheetName, "E"+rowStr, "E"+rowStr, formatCurrency)
+			debit, _ := f.GetCellValue(sheetName, "E"+rowStr)
+			if cellWidth := u.excelize.GetCellWidth(debit, 2); maxLength[4] < cellWidth {
+				maxLength[4] = cellWidth
+			}
+			f.SetCellValue(sheetName, "F"+rowStr, ayat.Kredit)
+			f.SetCellStyle(sheetName, "F"+rowStr, "F"+rowStr, formatCurrency)
+			kredit, _ := f.GetCellValue(sheetName, "F"+rowStr)
+			if cellWidth := u.excelize.GetCellWidth(kredit, 2); maxLength[5] < cellWidth {
+				maxLength[5] = cellWidth
+			}
+			row++
+		}
+	}
+	for i, v := range maxLength {
+		cell := string(alpha[i])
+		f.SetColWidth(sheetName, cell, cell, float64(v))
+	}
+	rowStr := strconv.Itoa(row)
+	f.MergeCell(sheetName, "A"+rowStr, "D"+rowStr)
+	f.SetCellValue(sheetName, "A"+rowStr, "Total")
+	f.SetCellStyle(sheetName, "A"+rowStr, "A"+rowStr, styleHeader)
+
+	formatCurrencyWithColor := u.excelize.StyleCurrencyRpIndo(f, true, "", "", true, "#E0E0E0")
+	f.SetCellFormula(sheetName, "E"+rowStr, fmt.Sprintf("=SUM(E4:E%d)", row-1))
+	f.SetCellStyle(sheetName, "E"+rowStr, "E"+rowStr, formatCurrencyWithColor)
+
+	f.SetCellFormula(sheetName, "F"+rowStr, fmt.Sprintf("=SUM(F4:F%d)", row-1))
+	f.SetCellStyle(sheetName, "F"+rowStr, "F"+rowStr, formatCurrencyWithColor)
+	buf, err := f.WriteToBuffer()
+	if err != nil {
+		helper.LogsError(err)
+		return nil, err
+	}
+	return buf, nil
+}
+
+func (u *akuntansiUsecase) DownloadBB(req req.GetAllBB, BB []res.BukuBesarRes) (*bytes.Buffer, error) {
+	f, sheetName := u.excelize.InitExcelize("Buku Besar")
+	// Create a new Excel file
+	startDate, _ := time.Parse(time.DateOnly, req.StartDate)
+	endDate, _ := time.Parse(time.DateOnly, req.EndDate)
+	title := fmt.Sprintf("Dalam IDR (%s - %s)", startDate.Format("01 Jan 2006"), endDate.Format("01 Jan 2006"))
+	f.SetCellValue(sheetName, "A1", title)
+
+	// Make the first cell bold
+	styleBold := u.excelize.StyleBold(f)
+
+	f.SetCellStyle(sheetName, "A1", "A1", styleBold)
+
+	alpha := "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	// Populate data
+	row := 4 // Start from row 3
+	headers := []string{"Kode Akun", "Nama Akun", "Saldo Normal"}
+	// style
+	formatCurrency := u.excelize.StyleCurrencyRpIndo(f, false, "", "", false, "")
+	styleHeader := u.excelize.StyleHeader(f, "center", "#E0E0E0")
+	formatCurrencyWithColor := u.excelize.StyleCurrencyRpIndo(f, true, "", "", true, "#E0E0E0")
+	formatCurrencyWithColorCenter := u.excelize.StyleCurrencyRpIndo(f, true, "", "center", true, "#E0E0E0")
+	formatCurrencyWithColorRedCenter := u.excelize.StyleCurrencyRpIndo(f, true, "#EEEEEE", "center", true, "#E6340E")
+	styleFill := u.excelize.StyleFill(f, "#E0E0E0")
+	headers2 := []string{"Tanggal", "Keterangan", "Debit", "Kredit", "Saldo"}
+	maxLength := make([]int, len(headers2))
+
+	for _, bb := range BB {
+		// rowStr := strconv.Itoa(row)
+		for _, header := range headers {
+			cell := "A" + strconv.Itoa(row)
+			cell2 := "B" + strconv.Itoa(row)
+			f.SetCellValue(sheetName, cell, header)
+			f.SetCellStyle(sheetName, cell, cell, styleBold)
+			switch header {
+			case "Kode Akun":
+				f.SetCellValue(sheetName, cell2, bb.KodeAkun)
+			case "Nama Akun":
+				f.SetCellValue(sheetName, cell2, bb.NamaAkun)
+			case "Saldo Normal":
+				f.SetCellValue(sheetName, cell2, bb.SaldoNormal)
+			}
+			row++
+		}
+		row++ // margin
+
+		for j, header := range headers2 {
+			cell := string(alpha[j]) + strconv.Itoa(row)
+			f.SetCellValue(sheetName, cell, header)
+			if cellWidth := u.excelize.GetCellWidth(header, 2); maxLength[j] < cellWidth {
+				maxLength[j] = cellWidth
+			}
+			// Apply gray style to header
+			f.SetCellStyle(sheetName, cell, cell, styleHeader)
+		}
+		row++
+		for _, content := range bb.AyatJurnal {
+			var parse time.Time
+			if content.Keterangan != "saldo awal" {
+				parse, _ = time.Parse(time.RFC3339, content.Tanggal)
+			} else {
+				parse, _ = time.Parse("2006-01-02", content.Tanggal)
+			}
+			tanggal := parse.Format(time.DateTime)
+			rowStr := strconv.Itoa(row)
+			f.SetCellValue(sheetName, "A"+rowStr, tanggal)
+			if cellWidth := u.excelize.GetCellWidth(tanggal, 2); cellWidth > maxLength[0] {
+				maxLength[0] = cellWidth
+			}
+			f.SetCellValue(sheetName, "B"+rowStr, content.Keterangan)
+			if cellWidth := u.excelize.GetCellWidth(content.Keterangan, 2); cellWidth > maxLength[1] {
+				maxLength[1] = cellWidth
+			}
+			f.SetCellValue(sheetName, "C"+rowStr, content.Debit)
+			f.SetCellStyle(sheetName, "C"+rowStr, "C"+rowStr, formatCurrency)
+			debit, _ := f.GetCellValue(sheetName, "C"+rowStr)
+			if cellWidth := u.excelize.GetCellWidth(debit, 2); cellWidth > maxLength[2] {
+				maxLength[2] = cellWidth
+			}
+			f.SetCellValue(sheetName, "D"+rowStr, content.Kredit)
+			f.SetCellStyle(sheetName, "D"+rowStr, "D"+rowStr, formatCurrency)
+			kredit, _ := f.GetCellValue(sheetName, "D"+rowStr)
+			if cellWidth := u.excelize.GetCellWidth(kredit, 2); cellWidth > maxLength[3] {
+				maxLength[3] = cellWidth
+			}
+			f.SetCellValue(sheetName, "E"+rowStr, content.Saldo)
+			f.SetCellStyle(sheetName, "E"+rowStr, "E"+rowStr, formatCurrency)
+			saldo, _ := f.GetCellValue(sheetName, "E"+rowStr)
+			if cellWidth := u.excelize.GetCellWidth(saldo, 2); cellWidth > maxLength[4] {
+				maxLength[4] = cellWidth
+			}
+			row++
+		}
+		{
+			rowStr := strconv.Itoa(row)
+			f.MergeCell(sheetName, "A"+rowStr, "B"+rowStr)
+			f.SetCellValue(sheetName, "A"+rowStr, "Total")
+			f.SetCellStyle(sheetName, "A"+rowStr, "A"+rowStr, styleHeader)
+			//? total debit
+			cellTotalDebit := "C" + rowStr
+			f.SetCellValue(sheetName, cellTotalDebit, bb.TotalDebit)
+			f.SetCellStyle(sheetName, cellTotalDebit, cellTotalDebit, formatCurrencyWithColor)
+			totalDebit, _ := f.GetCellValue(sheetName, cellTotalDebit)
+			if cellWidth := u.excelize.GetCellWidth(totalDebit, 2); cellWidth > maxLength[2] {
+				maxLength[2] = cellWidth
+			}
+
+			//? total kredit
+			cellTotalKredit := "D" + rowStr
+			f.SetCellValue(sheetName, cellTotalKredit, bb.TotalKredit)
+			f.SetCellStyle(sheetName, cellTotalKredit, cellTotalKredit, formatCurrencyWithColor)
+			totalKredit, _ := f.GetCellValue(sheetName, cellTotalKredit)
+			if cellWidth := u.excelize.GetCellWidth(totalKredit, 2); cellWidth > maxLength[3] {
+				maxLength[3] = cellWidth
+			}
+			f.SetCellStyle(sheetName, "E"+rowStr, "E"+rowStr, styleFill)
+			row++
+		}
+
+		{
+			//? total saldo yang telah di kurangi debit dan kredit
+			rowStr := strconv.Itoa(row)
+			f.MergeCell(sheetName, "A"+rowStr, "B"+rowStr)
+			f.SetCellValue(sheetName, "A"+rowStr, "Perubahan Saldo")
+			f.SetCellStyle(sheetName, "A"+rowStr, "A"+rowStr, styleHeader)
+
+			f.MergeCell(sheetName, "C"+rowStr, "D"+rowStr)
+			f.SetCellValue(sheetName, "C"+rowStr, bb.TotalSaldo)
+
+			if bb.TotalSaldo >= 0 {
+				f.SetCellStyle(sheetName, "C"+rowStr, "C"+rowStr, formatCurrencyWithColorCenter)
+			} else {
+				f.SetCellStyle(sheetName, "C"+rowStr, "C"+rowStr, formatCurrencyWithColorRedCenter)
+			}
+			f.SetCellStyle(sheetName, "E"+rowStr, "E"+rowStr, styleFill)
+		}
+		for i, v := range maxLength {
+			cell := string(alpha[i])
+			f.SetColWidth(sheetName, cell, cell, float64(v))
+		}
+
+		row += 3 // margin
+	}
+	buf, err := f.WriteToBuffer()
+	if err != nil {
+		helper.LogsError(err)
+		return nil, err
+	}
+	return buf, nil
+}
+
+func (u *akuntansiUsecase) DownloadNC(req req.GetAllNC, NC res.NeracaSaldoRes) (*bytes.Buffer, error) {
+	f, sheetName := u.excelize.InitExcelize("Neraca Saldo")
+	// Create a new Excel file
+	date, _ := time.Parse("2006-01", req.Date)
+	title := fmt.Sprintf("Dalam Rupiah (%s)", date.Format("Jan 2006"))
+	f.SetCellValue(sheetName, "A1", title)
+	f.SetCellStyle(sheetName, "A1", "A1", u.excelize.StyleBold(f))
+
+	// Create headers
+	headers := []string{"Kode Akun", "Nama Akun", "Saldo Debit", "Saldo Kredit"}
+	// Apply gray styleHeader to header
+	maxLength := make([]int, len(headers))
+	alpha := "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	styleHeader := u.excelize.StyleHeader(f, "center", "#E0E0E0")
+	for i, header := range headers {
+		cell := string(alpha[i]) + "3"
+		f.SetCellValue(sheetName, cell, header)
+		if cellWidth := u.excelize.GetCellWidth(header, 2); maxLength[i] < cellWidth {
+			maxLength[i] = cellWidth
+		}
+		f.SetCellStyle(sheetName, cell, cell, styleHeader)
+	}
+
+	// Populate data
+	row := 4 // Start from row 3
+	formatCurrency := u.excelize.StyleCurrencyRpIndo(f, false, "", "", false, "")
+	for _, saldoAkun := range NC.DataSaldoAkuns {
+		rowStr := strconv.Itoa(row)
+		f.SetCellValue(sheetName, "A"+rowStr, saldoAkun.KodeAkun)
+		if cellWidth := u.excelize.GetCellWidth(saldoAkun.KodeAkun, 2); maxLength[0] < cellWidth {
+			maxLength[0] = cellWidth
+		}
+		f.SetCellValue(sheetName, "B"+rowStr, saldoAkun.NamaAkun)
+		if cellWidth := u.excelize.GetCellWidth(saldoAkun.NamaAkun, 2); maxLength[1] < cellWidth {
+			maxLength[1] = cellWidth
+		}
+		f.SetCellValue(sheetName, "C"+rowStr, saldoAkun.SaldoDebit)
+		f.SetCellStyle(sheetName, "C"+rowStr, "C"+rowStr, formatCurrency)
+		saldoDebit, _ := f.GetCellValue(sheetName, "C"+rowStr)
+		if cellWidth := u.excelize.GetCellWidth(saldoDebit, 2); maxLength[2] < cellWidth {
+			maxLength[2] = cellWidth
+		}
+		f.SetCellValue(sheetName, "D"+rowStr, saldoAkun.SaldoKredit)
+		f.SetCellStyle(sheetName, "D"+rowStr, "D"+rowStr, formatCurrency)
+		kredit, _ := f.GetCellValue(sheetName, "D"+rowStr)
+		if cellWidth := u.excelize.GetCellWidth(kredit, 2); maxLength[3] < cellWidth {
+			maxLength[3] = cellWidth
+		}
+		row++
+	}
+	for i, v := range maxLength {
+		cell := string(alpha[i])
+		f.SetColWidth(sheetName, cell, cell, float64(v))
+	}
+	rowStr := strconv.Itoa(row)
+	f.MergeCell(sheetName, "A"+rowStr, "B"+rowStr)
+	f.SetCellValue(sheetName, "A"+rowStr, "Total")
+	f.SetCellStyle(sheetName, "A"+rowStr, "A"+rowStr, styleHeader)
+
+	formatCurrencyWithColor := u.excelize.StyleCurrencyRpIndo(f, true, "", "", true, "#E0E0E0")
+	f.SetCellValue(sheetName, "C"+rowStr, NC.TotalDebit)
+	f.SetCellStyle(sheetName, "C"+rowStr, "C"+rowStr, formatCurrencyWithColor)
+
+	f.SetCellValue(sheetName, "D"+rowStr, NC.TotalKredit)
+	f.SetCellStyle(sheetName, "D"+rowStr, "D"+rowStr, formatCurrencyWithColor)
+	buf, err := f.WriteToBuffer()
+	if err != nil {
+		helper.LogsError(err)
+		return nil, err
+	}
+	return buf, nil
+}
+
+func (u *akuntansiUsecase) DownloadLBR(req req.GetAllLBR, LBR []res.LabaRugiRes) (*bytes.Buffer, error) {
+	f, sheetName := u.excelize.InitExcelize("Laba Rugi")
+
+	// Create a new Excel file
+	startDate, _ := time.Parse(time.DateOnly, req.StartDate)
+	endDate, _ := time.Parse(time.DateOnly, req.EndDate)
+
+	title := fmt.Sprintf("Dalam IDR (%s - %s)", startDate.Format("01 Jan 2006"), endDate.Format("01 Jan 2006"))
+	// Make the first cell bold
+	styleBold := u.excelize.StyleBold(f)
+	f.SetCellValue(sheetName, "A1", title)
+	f.SetCellStyle(sheetName, "A1", "A1", styleBold)
+
+	alpha := "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+	headers := []string{"Kategori Akun"}
+	headers2 := []string{"Kode Akun", "Nama Akun", "Total"}
+	maxLength := make([]int, len(headers2))
+	row := 5 // Start from row 4
+
+	// style
+	formatCurrency := u.excelize.StyleCurrencyRpIndo(f, false, "", "", false, "")
+	styleHeader := u.excelize.StyleHeader(f, "center", "#E0E0E0")
+	formatCurrencyWithColor := u.excelize.StyleCurrencyRpIndo(f, true, "", "", true, "#E0E0E0")
+
+	var labaRugi float64
+	for _, lb := range LBR {
+		labaRugi += lb.Total
+
+		cell := "A" + strconv.Itoa(row)
+		cell2 := "B" + strconv.Itoa(row)
+		f.SetCellValue(sheetName, cell, headers[0])
+		if cellWidth := u.excelize.GetCellWidth(headers[0], 2); cellWidth > maxLength[0] {
+			maxLength[0] = cellWidth
+		}
+		f.SetCellStyle(sheetName, cell, cell, styleBold)
+		f.SetCellValue(sheetName, cell2, lb.NamaKategori)
+
+		row++ // margin
+
+		for j, header := range headers2 {
+			cell := string(alpha[j]) + strconv.Itoa(row)
+			f.SetCellValue(sheetName, cell, header)
+			if cellWidth := u.excelize.GetCellWidth(header, 2); maxLength[j] < cellWidth {
+				maxLength[j] = cellWidth
+			}
+			// Apply gray style to header
+			f.SetCellStyle(sheetName, cell, cell, styleHeader)
+		}
+		row++
+		for _, content := range lb.DataAkunLBR {
+			rowStr := strconv.Itoa(row)
+			f.SetCellValue(sheetName, "A"+rowStr, content.KodeAkun)
+			if cellWidth := u.excelize.GetCellWidth(content.KodeAkun, 2); cellWidth > maxLength[0] {
+				maxLength[0] = cellWidth
+			}
+			f.SetCellValue(sheetName, "B"+rowStr, content.NamaAkun)
+			if cellWidth := u.excelize.GetCellWidth(content.NamaAkun, 2); cellWidth > maxLength[1] {
+				maxLength[1] = cellWidth
+			}
+			f.SetCellValue(sheetName, "C"+rowStr, content.Total)
+			f.SetCellStyle(sheetName, "C"+rowStr, "C"+rowStr, formatCurrency)
+			total, _ := f.GetCellValue(sheetName, "C"+rowStr)
+			if cellWidth := u.excelize.GetCellWidth(total, 2); cellWidth > maxLength[2] {
+				maxLength[2] = cellWidth
+			}
+			row++
+		}
+		{
+			rowStr := strconv.Itoa(row)
+			f.MergeCell(sheetName, "A"+rowStr, "B"+rowStr)
+			f.SetCellValue(sheetName, "A"+rowStr, "Total")
+			f.SetCellStyle(sheetName, "A"+rowStr, "A"+rowStr, styleHeader)
+
+			//? total
+			cellTotal := "C" + rowStr
+			f.SetCellValue(sheetName, cellTotal, lb.Total)
+			f.SetCellStyle(sheetName, cellTotal, cellTotal, formatCurrencyWithColor)
+			totalKredit, _ := f.GetCellValue(sheetName, cellTotal)
+			if cellWidth := u.excelize.GetCellWidth(totalKredit, 2); cellWidth > maxLength[2] {
+				maxLength[2] = cellWidth
+			}
+
+			for i, v := range maxLength {
+				cell := string(alpha[i])
+				f.SetColWidth(sheetName, cell, cell, float64(v))
+			}
+			row++
+		}
+
+		row += 2 // margin
+	}
+	// set laba rugi
+	f.SetCellValue(sheetName, "A2", "Laba/Rugi")
+	f.SetCellStyle(sheetName, "A2", "A2", styleBold)
+
+	f.MergeCell(sheetName, "B2", "C2")
+	f.SetCellValue(sheetName, "B2", labaRugi)
+	if labaRugi < 0 {
+		f.SetCellStyle(sheetName, "B2", "B2", u.excelize.StyleCurrencyRpIndo(f, true, "#EEEEEE", "center", true, "#E6340E")) // red
+	} else {
+		f.SetCellStyle(sheetName, "B2", "B2", u.excelize.StyleCurrencyRpIndo(f, true, "#EEEEEE", "center", true, "#37C24A")) // green
+	}
+	buf, err := f.WriteToBuffer()
+	if err != nil {
+		helper.LogsError(err)
+		return nil, err
+	}
+	return buf, nil
 }
 
 func (u *akuntansiUsecase) GetAllJU(ctx context.Context, reqGetAllJU req.GetAllJU) (res.JurnalUmumRes, error) {
@@ -114,246 +539,6 @@ func (u *akuntansiUsecase) GetAllJU(ctx context.Context, reqGetAllJU req.GetAllJ
 	return res, nil
 }
 
-func (u *akuntansiUsecase) DownloadJU(req req.GetAllJU, JU res.JurnalUmumRes) (*bytes.Buffer, error) {
-	f, sheetName := u.excelize.InitExcelize("Jurnal Umum")
-	// Create a new Excel file
-	startDate, _ := time.Parse(time.DateOnly, req.StartDate)
-	endDate, _ := time.Parse(time.DateOnly, req.EndDate)
-	title := fmt.Sprintf("Dalam Rupiah (%s - %s)", startDate.Format("01 Jan 2006"), endDate.Format("01 Jan 2006"))
-	f.SetCellValue(sheetName, "A1", title)
-	f.SetCellStyle(sheetName, "A1", "A1", u.excelize.StyleBold(f))
-
-	// Create headers
-	headers := []string{"Tanggal", "Keterangan", "Kode Akun", "Nama Akun", "Debit", "Kredit"}
-	// Apply gray styleHeader to header
-	maxLength := make([]int, len(headers))
-	alpha := "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-	styleHeader := u.excelize.StyleHeader(f, "center", "#E0E0E0")
-	for i, header := range headers {
-		cell := string(alpha[i]) + "3"
-		f.SetCellValue(sheetName, cell, header)
-		if cellWidth := utf8.RuneCountInString(header) + 2; maxLength[i] < cellWidth {
-			maxLength[i] = cellWidth
-		}
-		f.SetCellStyle(sheetName, cell, cell, styleHeader)
-	}
-
-	// Freeze the header row
-	// `{"freeze":true,"split":false,"x_split":0,"y_split":3,"top_left_cell":"A4"}`
-	// xlsx.SetPanes(sheetName, )
-	// Populate data
-	row := 4 // Start from row 3
-	formatCurrency := u.excelize.StyleCurrencyRpIndo(f, false, "", "", false, "")
-	for _, transaksi := range JU.Transaksi {
-		for _, ayat := range transaksi.AyatJurnal {
-			rowStr := strconv.Itoa(row)
-			parse, _ := time.Parse(time.RFC3339, transaksi.Tanggal)
-			tanggal := parse.Format(time.DateTime)
-			f.SetCellValue(sheetName, "A"+rowStr, tanggal)
-			if cellWidth := u.excelize.GetCellWidth(tanggal, 2); maxLength[0] < cellWidth {
-				maxLength[0] = cellWidth
-			}
-			f.SetCellValue(sheetName, "B"+rowStr, transaksi.Keterangan)
-			if cellWidth := u.excelize.GetCellWidth(transaksi.Keterangan, 2); maxLength[1] < cellWidth {
-				maxLength[1] = cellWidth
-			}
-			f.SetCellValue(sheetName, "C"+rowStr, string(ayat.KodeAkun))
-			if cellWidth := u.excelize.GetCellWidth(ayat.KodeAkun, 2); maxLength[2] < cellWidth {
-				maxLength[2] = cellWidth
-			}
-			f.SetCellValue(sheetName, "D"+rowStr, ayat.NamaAkun)
-			if cellWidth := u.excelize.GetCellWidth(ayat.NamaAkun, 2) + 2; maxLength[3] < cellWidth {
-				maxLength[3] = cellWidth
-			}
-			f.SetCellValue(sheetName, "E"+rowStr, ayat.Debit)
-			f.SetCellStyle(sheetName, "E"+rowStr, "E"+rowStr, formatCurrency)
-			debit, _ := f.GetCellValue(sheetName, "E"+rowStr)
-			if cellWidth := u.excelize.GetCellWidth(debit, 2) + 2; maxLength[4] < cellWidth {
-				maxLength[4] = cellWidth
-			}
-			f.SetCellValue(sheetName, "F"+rowStr, ayat.Kredit)
-			f.SetCellStyle(sheetName, "F"+rowStr, "F"+rowStr, formatCurrency)
-			kredit, _ := f.GetCellValue(sheetName, "F"+rowStr)
-			if cellWidth := u.excelize.GetCellWidth(kredit, 2) + 2; maxLength[5] < cellWidth {
-				maxLength[5] = cellWidth
-			}
-			row++
-		}
-	}
-	for i, v := range maxLength {
-		cell := string(alpha[i])
-		f.SetColWidth(sheetName, cell, cell, float64(v))
-	}
-	rowStr := strconv.Itoa(row)
-	f.MergeCell(sheetName, "A"+rowStr, "D"+rowStr)
-	f.SetCellValue(sheetName, "A"+rowStr, "Total")
-	f.SetCellStyle(sheetName, "A"+rowStr, "A"+rowStr, styleHeader)
-
-	formatCurrencyWithColor := u.excelize.StyleCurrencyRpIndo(f, true, "", "", true, "#E0E0E0")
-	f.SetCellFormula(sheetName, "E"+rowStr, fmt.Sprintf("=SUM(E4:E%d)", row-1))
-	f.SetCellStyle(sheetName, "E"+rowStr, "E"+rowStr, formatCurrencyWithColor)
-
-	f.SetCellFormula(sheetName, "F"+rowStr, fmt.Sprintf("=SUM(F4:F%d)", row-1))
-	f.SetCellStyle(sheetName, "F"+rowStr, "F"+rowStr, formatCurrencyWithColor)
-	buf, err := f.WriteToBuffer()
-	if err != nil {
-		helper.LogsError(err)
-		return nil, err
-	}
-	return buf, nil
-}
-
-func (u *akuntansiUsecase) DownloadBB(req req.GetAllBB, BB []res.BukuBesarRes) (*bytes.Buffer, error) {
-	f, sheetName := u.excelize.InitExcelize("Buku Besar")
-	// Create a new Excel file
-	startDate, _ := time.Parse(time.DateOnly, req.StartDate)
-	endDate, _ := time.Parse(time.DateOnly, req.EndDate)
-	title := fmt.Sprintf("Dalam IDR (%s - %s)", startDate.Format("01 Jan 2006"), endDate.Format("01 Jan 2006"))
-	f.SetCellValue(sheetName, "A1", title)
-
-	// Make the first cell bold
-	styleBold := u.excelize.StyleBold(f)
-
-	f.SetCellStyle(sheetName, "A1", "A1", styleBold)
-
-	alpha := "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-	// Populate data
-	row := 4 // Start from row 3
-	headers := []string{"Kode Akun", "Nama Akun", "Saldo Normal"}
-	// style
-	formatCurrency := u.excelize.StyleCurrencyRpIndo(f, false, "", "", false, "")
-	styleHeader := u.excelize.StyleHeader(f, "center", "#E0E0E0")
-	formatCurrencyWithColor := u.excelize.StyleCurrencyRpIndo(f, true, "", "", true, "#E0E0E0")
-	formatCurrencyWithColorCenter := u.excelize.StyleCurrencyRpIndo(f, true, "", "center", true, "#E0E0E0")
-	formatCurrencyWithColorRedCenter := u.excelize.StyleCurrencyRpIndo(f, true, "", "center", true, "#E6340E")
-
-	for _, bb := range BB {
-		// rowStr := strconv.Itoa(row)
-		for _, header := range headers {
-			cell := "A" + strconv.Itoa(row)
-			cell2 := "B" + strconv.Itoa(row)
-			f.SetCellValue(sheetName, cell, header)
-			f.SetCellStyle(sheetName, cell, cell, styleBold)
-			switch header {
-			case "Kode Akun":
-				f.SetCellValue(sheetName, cell2, bb.KodeAkun)
-			case "Nama Akun":
-				f.SetCellValue(sheetName, cell2, bb.NamaAkun)
-			case "Saldo Normal":
-				f.SetCellValue(sheetName, cell2, bb.SaldoNormal)
-			}
-			row++
-		}
-		row++ // margin
-
-		headers2 := []string{"Tanggal", "Keterangan", "Debit", "Kredit", "Saldo"}
-		maxLength := make([]int, len(headers2))
-		for j, header := range headers2 {
-			cell := string(alpha[j]) + strconv.Itoa(row)
-			f.SetCellValue(sheetName, cell, header)
-			if cellWidth := u.excelize.GetCellWidth(header, 2); maxLength[j] < cellWidth {
-				maxLength[j] = cellWidth
-			}
-			// Apply gray style to header
-			f.SetCellStyle(sheetName, cell, cell, styleHeader)
-		}
-		row++
-		rowStart := row
-		for _, content := range bb.AyatJurnal {
-			parse, _ := time.Parse(time.RFC3339, content.Tanggal)
-			tanggal := parse.Format(time.DateTime)
-			rowStr := strconv.Itoa(row)
-			f.SetCellValue(sheetName, "A"+rowStr, tanggal)
-			if cellWidth := u.excelize.GetCellWidth(tanggal, 4); cellWidth > maxLength[0] {
-				maxLength[0] = cellWidth
-			}
-			f.SetCellValue(sheetName, "B"+rowStr, content.Keterangan)
-			if cellWidth := u.excelize.GetCellWidth(content.Keterangan, 4); cellWidth > maxLength[1] {
-				maxLength[1] = cellWidth
-			}
-			f.SetCellValue(sheetName, "C"+rowStr, content.Debit)
-			f.SetCellStyle(sheetName, "C"+rowStr, "C"+rowStr, formatCurrency)
-			debit, _ := f.GetCellValue(sheetName, "C"+rowStr)
-			if cellWidth := u.excelize.GetCellWidth(debit, 4); cellWidth > maxLength[2] {
-				maxLength[2] = cellWidth
-			}
-			f.SetCellValue(sheetName, "D"+rowStr, content.Kredit)
-			f.SetCellStyle(sheetName, "D"+rowStr, "D"+rowStr, formatCurrency)
-			kredit, _ := f.GetCellValue(sheetName, "D"+rowStr)
-			if cellWidth := u.excelize.GetCellWidth(kredit, 4); cellWidth > maxLength[3] {
-				maxLength[3] = cellWidth
-			}
-			f.SetCellValue(sheetName, "E"+rowStr, content.Saldo)
-			f.SetCellStyle(sheetName, "E"+rowStr, "E"+rowStr, formatCurrency)
-			saldo, _ := f.GetCellValue(sheetName, "E"+rowStr)
-			if cellWidth := u.excelize.GetCellWidth(saldo, 4); cellWidth > maxLength[4] {
-				maxLength[4] = cellWidth
-			}
-			row++
-		}
-		{
-			rowStr := strconv.Itoa(row)
-			f.MergeCell(sheetName, "A"+rowStr, "B"+rowStr)
-			f.SetCellValue(sheetName, "A"+rowStr, "Total")
-			f.SetCellStyle(sheetName, "A"+rowStr, "A"+rowStr, styleHeader)
-			//? total debit
-			cellTotalDebit := "C" + rowStr
-			f.SetCellValue(sheetName, cellTotalDebit, bb.TotalDebit)
-			f.SetCellStyle(sheetName, cellTotalDebit, cellTotalDebit, formatCurrencyWithColor)
-			totalDebit, _ := f.GetCellValue(sheetName, cellTotalDebit)
-			if cellWidth := u.excelize.GetCellWidth(totalDebit, 4); cellWidth > maxLength[2] {
-				maxLength[2] = cellWidth
-			}
-
-			//? total kredit
-			cellTotalKredit := "D" + rowStr
-			f.SetCellValue(sheetName, cellTotalKredit, bb.TotalKredit)
-			f.SetCellStyle(sheetName, cellTotalKredit, cellTotalKredit, formatCurrencyWithColor)
-			totalKredit, _ := f.GetCellValue(sheetName, cellTotalKredit)
-			if cellWidth := u.excelize.GetCellWidth(totalKredit, 4); cellWidth > maxLength[3] {
-				maxLength[3] = cellWidth
-			}
-
-			//? total saldo
-			cellTotalSaldo := "E" + rowStr
-			f.SetCellFormula(sheetName, cellTotalSaldo, fmt.Sprintf("=SUM(E%d:E%d)", rowStart, row-1))
-			f.SetCellStyle(sheetName, cellTotalSaldo, cellTotalSaldo, formatCurrencyWithColor)
-			totalSaldo, _ := f.GetCellValue(sheetName, cellTotalSaldo)
-			if cellWidth := u.excelize.GetCellWidth(totalSaldo, 4); cellWidth > maxLength[4] {
-				maxLength[4] = cellWidth
-			}
-			row++
-		}
-		{
-			//? total saldo yang telah di kurangi debit dan kredit
-			rowStr := strconv.Itoa(row)
-			f.MergeCell(sheetName, "A"+rowStr, "B"+rowStr)
-			f.SetCellValue(sheetName, "A"+rowStr, "Total Saldo Setelah Debit - Kredit (Note: Berdasarkan Saldo Normal)")
-			f.SetCellStyle(sheetName, "A"+rowStr, "A"+rowStr, styleHeader)
-
-			f.MergeCell(sheetName, "C"+rowStr, "D"+rowStr)
-			f.SetCellValue(sheetName, "C"+rowStr, bb.TotalSaldo)
-
-			if bb.TotalSaldo >= 0 {
-				f.SetCellStyle(sheetName, "C"+rowStr, "C"+rowStr, formatCurrencyWithColorCenter)
-			} else {
-				f.SetCellStyle(sheetName, "C"+rowStr, "C"+rowStr, formatCurrencyWithColorRedCenter)
-			}
-		}
-		for i, v := range maxLength {
-			cell := string(alpha[i])
-			f.SetColWidth(sheetName, cell, cell, float64(v))
-		}
-		row += 3 // margin
-	}
-	buf, err := f.WriteToBuffer()
-	if err != nil {
-		helper.LogsError(err)
-		return nil, err
-	}
-	return buf, nil
-}
-
 func (u *akuntansiUsecase) GetAllBB(ctx context.Context, reqGetAllBB req.GetAllBB) ([]res.BukuBesarRes, error) {
 	startDate, err := time.Parse(time.DateOnly, reqGetAllBB.StartDate)
 	if err != nil {
@@ -410,7 +595,6 @@ func (u *akuntansiUsecase) GetAllBB(ctx context.Context, reqGetAllBB req.GetAllB
 		akunDataMap[v.AkunID] = dataAkun
 	}
 
-	// fmt.Println(ayatJurnals)
 	for _, ay := range dataAyatJurnals {
 		dataAkun, exist := akunDataMap[ay.AkunID]
 		ayatJurnal := res.DataAyatJurnalBB{
@@ -419,6 +603,7 @@ func (u *akuntansiUsecase) GetAllBB(ctx context.Context, reqGetAllBB req.GetAllB
 			Keterangan:  ay.Keterangan,
 			Kredit:      ay.Kredit,
 			Debit:       ay.Debit,
+			Saldo:       dataAkun.TotalSaldo + ay.Saldo,
 		}
 
 		if !exist {
@@ -432,12 +617,10 @@ func (u *akuntansiUsecase) GetAllBB(ctx context.Context, reqGetAllBB req.GetAllB
 		dataAkun.TotalKredit += ay.Kredit
 		dataAkun.TotalDebit += ay.Debit
 		dataAkun.TotalSaldo += ay.Saldo
-		ayatJurnal.Saldo = dataAkun.TotalSaldo
 
 		dataAkun.AyatJurnal = append(dataAkun.AyatJurnal, ayatJurnal)
 
 		akunDataMap[ay.AkunID] = dataAkun
-
 	}
 
 	bukuBesarRes := make([]res.BukuBesarRes, len(akunDataMap))
@@ -503,7 +686,6 @@ func (u *akuntansiUsecase) GetAllLBR(ctx context.Context, reqGetAllLBR req.GetAl
 	}
 
 	labaRugiMap := make(map[string]res.LabaRugiRes)
-	var saldoKreditDebit float64
 	for _, v := range lbrRes {
 		labaRugi, ok := labaRugiMap[v.KategoriAkun]
 		if !ok {
@@ -515,15 +697,7 @@ func (u *akuntansiUsecase) GetAllLBR(ctx context.Context, reqGetAllLBR req.GetAl
 		dataAkunLBR := res.DataAkunLBR{
 			KodeAkun: v.KodeAkun,
 			NamaAkun: v.NamaAkun,
-			Saldo:    v.Saldo,
-		}
-
-		saldoKreditDebit = math.Abs(v.Saldo)
-
-		if v.SaldoNormal == "DEBIT" {
-			dataAkunLBR.SaldoDebit = saldoKreditDebit
-		} else {
-			dataAkunLBR.SaldoKredit = saldoKreditDebit
+			Total:    v.Saldo,
 		}
 
 		labaRugi.DataAkunLBR = append(labaRugi.DataAkunLBR, dataAkunLBR)

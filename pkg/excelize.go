@@ -13,6 +13,7 @@ type ExcelizePkg interface {
 	StyleBold(f *excelize.File) int
 	StyleHeader(f *excelize.File, align string, colorFill string) int
 	StyleCurrencyRpIndo(f *excelize.File, bold bool, colorFont string, alignFont string, fill bool, colorFill string) int
+	StyleFill(f *excelize.File, colorFill string) int
 }
 type excelizePkg struct{}
 
@@ -83,6 +84,21 @@ func (e *excelizePkg) StyleCurrencyRpIndo(f *excelize.File, bold bool, colorFont
 		}
 	}
 
+	id, err := f.NewStyle(style)
+	if err != nil {
+		helper.LogsError(err)
+		return 0
+	}
+	return id
+}
+func (e *excelizePkg) StyleFill(f *excelize.File, colorFill string) int {
+	style := &excelize.Style{
+		Fill: excelize.Fill{
+			Type:    "pattern",
+			Pattern: 1,
+			Color:   []string{colorFill},
+		},
+	}
 	id, err := f.NewStyle(style)
 	if err != nil {
 		helper.LogsError(err)

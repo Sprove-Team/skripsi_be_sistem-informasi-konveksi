@@ -535,13 +535,7 @@ func AkuntansiGetLB(t *testing.T) {
 							ay2 := ay.(map[string]any)
 							assert.NotEmpty(t, ay2["nama_akun"])
 							assert.NotEmpty(t, ay2["kode_akun"])
-							total += ay2["saldo"].(float64)
-							if dat, ok := ay2["saldo_kredit"].(float64); ok && dat != 0 {
-								assert.Greater(t, dat, float64(0))
-							}
-							if dat, ok := ay2["saldo_debit"].(float64); ok && dat != 0 {
-								assert.Greater(t, dat, float64(0))
-							}
+							total += ay2["total"].(float64)
 						}
 					}
 					if v["total"].(float64) != 0 {

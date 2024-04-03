@@ -30,6 +30,7 @@ type Response struct {
 
 var Validator = pkg.NewValidator()
 var UlidPkg = pkg.NewUlidPkg()
+var Excelize = pkg.NewExcelizePkg()
 var Encryptor = helper.NewEncryptor()
 var Tokens = make(map[string]string)
 var DBT *gorm.DB

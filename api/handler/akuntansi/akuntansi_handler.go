@@ -116,6 +116,15 @@ func (h *akuntansiHandler) GetAllNC(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(res_global.ErrorRes(fiber.ErrInternalServerError.Code, fiber.ErrInternalServerError.Message, nil))
 	}
+	if reqU.Download == "1" {
+		buf, err := h.uc.DownloadNC(*reqU, datasNC)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(res_global.ErrorRes(fiber.ErrInternalServerError.Code, fiber.ErrInternalServerError.Message, nil))
+		}
+		name := fmt.Sprintf("Neraca Saldo (%s).xlsx", reqU.Date)
+		c.Set("Content-Disposition", "attachment; filename="+name)
+		return c.Status(fiber.StatusOK).Send(buf.Bytes())
+	}
 	return c.Status(fiber.StatusOK).JSON(res_global.SuccessRes(fiber.StatusOK, message.OK, datasNC))
 }
 
@@ -130,7 +139,7 @@ func (h *akuntansiHandler) GetAllLBR(c *fiber.Ctx) error {
 
 	ctx := c.UserContext()
 
-	datasJU, err := h.uc.GetAllLBR(ctx, *reqU)
+	datasLbr, err := h.uc.GetAllLBR(ctx, *reqU)
 
 	if ctx.Err() == context.DeadlineExceeded {
 		return c.Status(fiber.StatusRequestTimeout).JSON(res_global.ErrorRes(fiber.ErrRequestTimeout.Code, fiber.ErrRequestTimeout.Message, nil))
@@ -139,5 +148,14 @@ func (h *akuntansiHandler) GetAllLBR(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(res_global.ErrorRes(fiber.ErrInternalServerError.Code, fiber.ErrInternalServerError.Message, nil))
 	}
-	return c.Status(fiber.StatusOK).JSON(res_global.SuccessRes(fiber.StatusOK, message.OK, datasJU))
+	if reqU.Download == "1" {
+		buf, err := h.uc.DownloadLBR(*reqU, datasLbr)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(res_global.ErrorRes(fiber.ErrInternalServerError.Code, fiber.ErrInternalServerError.Message, nil))
+		}
+		name := fmt.Sprintf("Laba Rugi (%s sampai %s).xlsx", reqU.StartDate, reqU.EndDate)
+		c.Set("Content-Disposition", "attachment; filename="+name)
+		return c.Status(fiber.StatusOK).Send(buf.Bytes())
+	}
+	return c.Status(fiber.StatusOK).JSON(res_global.SuccessRes(fiber.StatusOK, message.OK, datasLbr))
 }
