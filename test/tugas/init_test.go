@@ -143,7 +143,6 @@ func cleanUp() {
 func TestMain(m *testing.M) {
 	test.GetDB()
 	dbt = test.DBT
-	cleanUp()
 	setUpData()
 	tugasH := handler_init.NewTugasHandlerInit(dbt, test.Validator, test.UlidPkg)
 
