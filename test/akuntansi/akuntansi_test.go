@@ -2,6 +2,7 @@ package test_akuntansi
 
 import (
 	"fmt"
+	"os"
 	"strings"
 	"testing"
 
@@ -30,6 +31,12 @@ func AkuntansiGetJU(t *testing.T) {
 				Status: message.OK,
 				Code:   200,
 			},
+		},
+		{
+			name:         "sukses download excel",
+			token:        tokens[entity.RolesById[1]],
+			expectedCode: 200,
+			queryBody:    "?start_date=2023-10-20&end_date=2024-12-30&download=1",
 		},
 		{
 			name:         "err: format start date & end date",
@@ -92,6 +99,17 @@ func AkuntansiGetJU(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			if tt.name == "sukses download excel" {
+				code, err := test.GetAttachTestRequestResponse(app, "GET", "/api/v1/akuntansi/jurnal_umum"+tt.queryBody, nil, "ju.xlsx", &tt.token)
+				assert.NoError(t, err)
+				assert.Equal(t, tt.expectedCode, code)
+				info, err := os.Stat("ju.xlsx")
+				assert.False(t, os.IsNotExist(err))
+				assert.Greater(t, info.Size(), int64(0))
+				err = os.Remove("ju.xlsx")
+				assert.NoError(t, err)
+				return
+			}
 			code, body, err := test.GetJsonTestRequestResponse(app, "GET", "/api/v1/akuntansi/jurnal_umum"+tt.queryBody, nil, &tt.token)
 			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedCode, code)
@@ -149,6 +167,7 @@ func AkuntansiGetJU(t *testing.T) {
 					assert.Equal(t, tt.expectedBody, body)
 				}
 			}
+
 		})
 	}
 }
@@ -180,6 +199,12 @@ func AkuntansiGetBB(t *testing.T) {
 				Status: message.OK,
 				Code:   200,
 			},
+		},
+		{
+			name:         "sukses download excel",
+			token:        tokens[entity.RolesById[1]],
+			expectedCode: 200,
+			queryBody:    fmt.Sprintf("?start_date=2023-10-20&end_date=2024-12-30&akun_id=01HP7DVBGTC06PXWT6FD66VERN%s01HP7DVBGTC06PXWT6FF89WRAB&download=1", "%2C"),
 		},
 		{
 			name:         "err: format start date & end date",
@@ -243,6 +268,17 @@ func AkuntansiGetBB(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			if tt.name == "sukses download excel" {
+				code, err := test.GetAttachTestRequestResponse(app, "GET", "/api/v1/akuntansi/buku_besar"+tt.queryBody, nil, "bb.xlsx", &tt.token)
+				assert.NoError(t, err)
+				assert.Equal(t, tt.expectedCode, code)
+				info, err := os.Stat("bb.xlsx")
+				assert.False(t, os.IsNotExist(err))
+				assert.Greater(t, info.Size(), int64(0))
+				err = os.Remove("bb.xlsx")
+				assert.NoError(t, err)
+				return
+			}
 			code, body, err := test.GetJsonTestRequestResponse(app, "GET", "/api/v1/akuntansi/buku_besar"+tt.queryBody, nil, &tt.token)
 			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedCode, code)
@@ -332,6 +368,12 @@ func AkuntansiGetNC(t *testing.T) {
 			},
 		},
 		{
+			name:         "sukses download excel",
+			token:        tokens[entity.RolesById[1]],
+			expectedCode: 200,
+			queryBody:    "?date=2024-01&download=?",
+		},
+		{
 			name:         "err: format date",
 			token:        tokens[entity.RolesById[1]],
 			expectedCode: 400,
@@ -392,6 +434,17 @@ func AkuntansiGetNC(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			if tt.name == "sukses download excel" {
+				code, err := test.GetAttachTestRequestResponse(app, "GET", "/api/v1/akuntansi/neraca_saldo"+tt.queryBody, nil, "nc.xlsx", &tt.token)
+				assert.NoError(t, err)
+				assert.Equal(t, tt.expectedCode, code)
+				info, err := os.Stat("nc.xlsx")
+				assert.False(t, os.IsNotExist(err))
+				assert.Greater(t, info.Size(), int64(0))
+				err = os.Remove("nc.xlsx")
+				assert.NoError(t, err)
+				return
+			}
 			code, body, err := test.GetJsonTestRequestResponse(app, "GET", "/api/v1/akuntansi/neraca_saldo"+tt.queryBody, nil, &tt.token)
 			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedCode, code)
@@ -454,6 +507,12 @@ func AkuntansiGetLB(t *testing.T) {
 			},
 		},
 		{
+			name:         "sukses download excel",
+			token:        tokens[entity.RolesById[1]],
+			expectedCode: 200,
+			queryBody:    "?start_date=2023-01-20&end_date=2024-12-30&download=1",
+		},
+		{
 			name:         "err: format start date & end date",
 			token:        tokens[entity.RolesById[1]],
 			expectedCode: 400,
@@ -514,6 +573,17 @@ func AkuntansiGetLB(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			if tt.name == "sukses download excel" {
+				code, err := test.GetAttachTestRequestResponse(app, "GET", "/api/v1/akuntansi/laba_rugi"+tt.queryBody, nil, "lb.xlsx", &tt.token)
+				assert.NoError(t, err)
+				assert.Equal(t, tt.expectedCode, code)
+				info, err := os.Stat("lb.xlsx")
+				assert.False(t, os.IsNotExist(err))
+				assert.Greater(t, info.Size(), int64(0))
+				err = os.Remove("lb.xlsx")
+				assert.NoError(t, err)
+				return
+			}
 			code, body, err := test.GetJsonTestRequestResponse(app, "GET", "/api/v1/akuntansi/laba_rugi"+tt.queryBody, nil, &tt.token)
 			assert.NoError(t, err)
 			assert.Equal(t, tt.expectedCode, code)

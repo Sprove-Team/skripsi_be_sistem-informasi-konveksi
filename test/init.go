@@ -3,6 +3,7 @@ package test
 import (
 	"bytes"
 	"encoding/json"
+	"io"
 	"log"
 	"net/http/httptest"
 	"os"
@@ -91,6 +92,53 @@ func GetJsonTestRequestResponse(app *fiber.App, method string, url string, reqBo
 	bodyData := make([]byte, resp.ContentLength)
 	_, _ = resp.Body.Read(bodyData)
 	err = json.Unmarshal(bodyData, &respBody)
+	return
+}
+
+func GetAttachTestRequestResponse(app *fiber.App, method string, url string, reqBody any, fileName string, token *string) (code int, err error) {
+	bodyJson := []byte("")
+	if reqBody != nil {
+		bodyJson, _ = json.Marshal(reqBody)
+	}
+
+	req := httptest.NewRequest(method, url, bytes.NewReader(bodyJson))
+	if method == "POST" || method == "PUT" {
+		req.Header.Set("Content-Type", "application/json")
+	}
+	if token != nil {
+		req.Header.Set("Authorization", "Bearer "+*token)
+	}
+
+	resp, err := app.Test(req)
+	if err != nil {
+		return
+	}
+	defer resp.Body.Close()
+	code = resp.StatusCode
+	// If error we're done
+	if err != nil {
+		return
+	}
+	// If no body content, we're done
+	if resp.ContentLength == 0 {
+		return
+	}
+
+	resBuf := bytes.Buffer{}
+	_, err = io.Copy(&resBuf, resp.Body)
+	if err != nil {
+		return
+	}
+	// save
+	file, err := os.Create(fileName)
+	defer file.Close()
+	if err != nil {
+		return
+	}
+	_, err = resBuf.WriteTo(file)
+	if err != nil {
+		return
+	}
 	return
 }
 

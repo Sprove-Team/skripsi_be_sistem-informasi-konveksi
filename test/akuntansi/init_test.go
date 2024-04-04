@@ -100,7 +100,6 @@ func TestEndPointAkuntansi(t *testing.T) {
 	AkuntansiGetHistoryTransaksi(t)
 
 	// akuntansi
-	// TODO: add test download excel
 	AkuntansiGetJU(t)
 	AkuntansiGetBB(t)
 	AkuntansiGetNC(t)
