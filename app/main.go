@@ -133,7 +133,7 @@ func main() {
 		}
 
 		// profile
-		profileHandler := handler_init.NewProfileHandlerInit(dbGorm, validator, ulidPkg, encryptor, jwtPkg)
+		profileHandler := handler_init.NewProfileHandlerInit(dbGorm, validator, ulidPkg, encryptor)
 		profileRoute := route.NewProfileRoute(profileHandler, authMid)
 		profileGroup := v1.Group("/profile")
 		{

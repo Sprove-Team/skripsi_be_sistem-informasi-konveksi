@@ -98,6 +98,13 @@ func NewValidator() Validator {
 		return t
 	})
 
+	validate.RegisterTranslation("nefield", trans, func(ut ut.Translator) error {
+		return ut.Add("nefield", "{0} tidak sama dengan {1}", true)
+	}, func(ut ut.Translator, fe validator.FieldError) string {
+		t, _ := ut.T("nefield", fe.Field(), convToReadAble(fe.Param()))
+		return t
+	})
+
 	validate.RegisterTranslation("oneof", trans, func(ut ut.Translator) error {
 		return ut.Add("oneof", "{0} harus berupa salah satu dari [{1}]", true)
 	}, func(ut ut.Translator, fe validator.FieldError) string {

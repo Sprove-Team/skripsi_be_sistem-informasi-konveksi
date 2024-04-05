@@ -3,7 +3,6 @@ package handler_profile
 import (
 	"context"
 
-	uc_auth "github.com/be-sistem-informasi-konveksi/api/usecase/auth"
 	uc_profile "github.com/be-sistem-informasi-konveksi/api/usecase/profile"
 	uc_user "github.com/be-sistem-informasi-konveksi/api/usecase/user"
 	"github.com/be-sistem-informasi-konveksi/common/message"
@@ -21,7 +20,6 @@ type ProfileHandler interface {
 type profileHandler struct {
 	uc        uc_profile.ProfileUsecase
 	ucUser    uc_user.UserUsecase
-	ucAuth    uc_auth.AuthUsecase
 	validator pkg.Validator
 }
 
@@ -53,8 +51,8 @@ func errResponse(c *fiber.Ctx, err error) error {
 	return c.Status(fiber.StatusInternalServerError).JSON(res_global.ErrorRes(fiber.ErrInternalServerError.Code, fiber.ErrInternalServerError.Message, nil))
 }
 
-func NewProfileHandler(uc uc_profile.ProfileUsecase, ucUser uc_user.UserUsecase, ucAuth uc_auth.AuthUsecase, validator pkg.Validator) ProfileHandler {
-	return &profileHandler{uc, ucUser, ucAuth, validator}
+func NewProfileHandler(uc uc_profile.ProfileUsecase, ucUser uc_user.UserUsecase, validator pkg.Validator) ProfileHandler {
+	return &profileHandler{uc, ucUser, validator}
 }
 
 func (h *profileHandler) GetProfile(c *fiber.Ctx) error {
@@ -102,11 +100,5 @@ func (h *profileHandler) Update(c *fiber.Ctx) error {
 		return errResponse(c, err)
 	}
 
-	// h.ucAuth.Login(uc_auth.ParamLogin{
-	// 	Ctx: ctx,
-	// 	Req: req_auth.Login{
-	// 		Username: ,
-	// 	},
-	// })
 	return c.Status(fiber.StatusOK).JSON(res_global.SuccessRes(fiber.StatusOK, message.OK, nil))
 }
