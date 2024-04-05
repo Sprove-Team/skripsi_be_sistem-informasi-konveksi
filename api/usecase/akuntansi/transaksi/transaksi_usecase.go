@@ -10,6 +10,7 @@ import (
 	repoDataBayarHutangPiutang "github.com/be-sistem-informasi-konveksi/api/repository/akuntansi/mysql/gorm/data_bayar_hutang_piutang"
 	repoHutangPiutang "github.com/be-sistem-informasi-konveksi/api/repository/akuntansi/mysql/gorm/hutang_piutang"
 	repo "github.com/be-sistem-informasi-konveksi/api/repository/akuntansi/mysql/gorm/transaksi"
+	repo_invoice_data_bayar "github.com/be-sistem-informasi-konveksi/api/repository/invoice/mysql/gorm/data_bayar"
 	pkgAkuntansiLogic "github.com/be-sistem-informasi-konveksi/api/usecase/akuntansi"
 	"github.com/be-sistem-informasi-konveksi/common/message"
 	req "github.com/be-sistem-informasi-konveksi/common/request/akuntansi/transaksi"
@@ -32,6 +33,7 @@ type transaksiUsecase struct {
 	repoAkun                   repoAkun.AkunRepo
 	repoHutangPiutang          repoHutangPiutang.HutangPiutangRepo
 	repoDataBayarHutangPiutang repoDataBayarHutangPiutang.DataBayarHutangPiutangRepo
+	repoDataBayarInvoice       repo_invoice_data_bayar.DataBayarInvoiceRepo
 	ulid                       pkg.UlidPkg
 }
 
@@ -40,11 +42,37 @@ func NewTransaksiUsecase(
 	repoAkun repoAkun.AkunRepo,
 	repoHutangPiutang repoHutangPiutang.HutangPiutangRepo,
 	repoDataBayarHutangPiutang repoDataBayarHutangPiutang.DataBayarHutangPiutangRepo,
+	repoDataBayarInvoice repo_invoice_data_bayar.DataBayarInvoiceRepo,
 	ulid pkg.UlidPkg) TransaksiUsecase {
-	return &transaksiUsecase{repo, repoAkun, repoHutangPiutang, repoDataBayarHutangPiutang, ulid}
+	return &transaksiUsecase{repo, repoAkun, repoHutangPiutang, repoDataBayarHutangPiutang, repoDataBayarInvoice, ulid}
 }
 
 func (u *transaksiUsecase) Delete(ctx context.Context, id string) error {
+	hp, err := u.repoHutangPiutang.GetByTrId(repoHutangPiutang.ParamGetByTrId{
+		Ctx: ctx,
+		ID:  id,
+	})
+	if err != nil {
+		if err.Error() != "record not found" {
+			return err
+		}
+	}
+
+	dataByarInvoice, err := u.repoDataBayarInvoice.GetByInvoiceID(repo_invoice_data_bayar.ParamGetByInvoiceID{
+		Ctx:       ctx,
+		Status:    "BELUM_TERKONFIRMASI",
+		InvoiceID: hp.InvoiceID,
+	})
+	if err != nil {
+		if err.Error() != "record not found" {
+			return err
+		}
+	}
+
+	if len(dataByarInvoice) > 0 {
+		return errors.New(message.CantDeleteTrIfDataByrBlmTerkonfirmasiExist)
+	}
+
 	return u.repo.Delete(ctx, id)
 }
 

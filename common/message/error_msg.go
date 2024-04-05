@@ -76,11 +76,12 @@ var (
 // akuntansi
 var (
 	// transaksi
-	CreditDebitNotSame        = "total debit dan kredit harus sama"
-	AkunCannotBeSame          = "akun tidak boleh sama"
-	AkunCannotDeleted         = "tidak bisa menghapus akun karena akun masih digunakan pada ayat jurnal"
-	AkunHutangPiutangNotEq2   = "transaksi merupakan hutang piutang, data ayat_jurnal harus berjumlah 2"
-	AkunNotMatchWithJenisHPTr = "transaksi merupakan hutang piutang, akun harus sama dengan jenis hutang piutang"
+	CreditDebitNotSame                         = "total debit dan kredit harus sama"
+	AkunCannotBeSame                           = "akun tidak boleh sama"
+	AkunCannotDeleted                          = "tidak bisa menghapus akun karena akun masih digunakan pada ayat jurnal"
+	AkunHutangPiutangNotEq2                    = "transaksi merupakan hutang piutang, data ayat_jurnal harus berjumlah 2"
+	AkunNotMatchWithJenisHPTr                  = "transaksi merupakan hutang piutang, akun harus sama dengan jenis hutang piutang"
+	CantDeleteTrIfDataByrBlmTerkonfirmasiExist = "transaksi tidak dapat di hapus bila masih terdapat data bayar yang berstatus belum terkonfirmasi"
 	// kategori akun
 	KategoriAkunNotFound = "kategori akun tidak ditemukan"
 	// kelompok akun

@@ -153,7 +153,7 @@ func AkuntansiUpdateKelompokAkun(t *testing.T) {
 	kelompokAkun := new(entity.KelompokAkun)
 	err := dbt.Model(kelompokAkun).Order("id DESC").First(kelompokAkun).Error
 	if err != nil {
-		helper.LogsError(err)
+		panic(helper.LogsError(err))
 		return
 	}
 	kelompokAkun2 := &entity.KelompokAkun{
@@ -165,7 +165,7 @@ func AkuntansiUpdateKelompokAkun(t *testing.T) {
 		KategoriAkun: kelompokAkun.KategoriAkun,
 	}
 	if err := dbt.Create(kelompokAkun2).Error; err != nil {
-		helper.LogsError(err)
+		panic(helper.LogsError(err))
 		return
 	}
 	idKelompokAkun = kelompokAkun.ID

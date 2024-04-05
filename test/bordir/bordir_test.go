@@ -129,7 +129,7 @@ func BordirUpdate(t *testing.T) {
 	bordir := new(entity.Bordir)
 	err := dbt.Select("id").First(bordir).Error
 	if err != nil {
-		helper.LogsError(err)
+		panic(helper.LogsError(err))
 		return
 	}
 	idBordir = bordir.ID
@@ -259,7 +259,7 @@ func BordirGetAll(t *testing.T) {
 		Harga: 20000,
 	}
 	if err := dbt.Create(bordir).Error; err != nil {
-		helper.LogsError(err)
+		panic(helper.LogsError(err))
 		return
 	}
 	tests := []struct {

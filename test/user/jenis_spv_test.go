@@ -123,7 +123,7 @@ func UserUpdateSpv(t *testing.T) {
 	spv := new(entity.JenisSpv)
 	err := dbt.Where("id NOT IN (?)", idsDefaultSpv).Select("id").First(spv).Error
 	if err != nil {
-		helper.LogsError(err)
+		panic(helper.LogsError(err))
 		return
 	}
 
@@ -135,7 +135,7 @@ func UserUpdateSpv(t *testing.T) {
 	}
 	err = dbt.Create(spvConflict).Error
 	if err != nil {
-		helper.LogsError(err)
+		panic(helper.LogsError(err))
 		return
 	}
 	idSpv = spv.ID

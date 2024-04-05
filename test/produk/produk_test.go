@@ -156,7 +156,7 @@ func ProdukUpdate(t *testing.T) {
 	produk := new(entity.Produk)
 	err := dbt.Select("id").First(produk).Error
 	if err != nil {
-		helper.LogsError(err)
+		panic(helper.LogsError(err))
 		return
 	}
 	idProduk = produk.ID
@@ -170,7 +170,7 @@ func ProdukUpdate(t *testing.T) {
 	}).Error
 
 	if err != nil {
-		helper.LogsError(err)
+		panic(helper.LogsError(err))
 		return
 	}
 	tests := []struct {
@@ -330,7 +330,7 @@ func ProdukGetAll(t *testing.T) {
 
 	err := dbt.Create(produkCreate).Error
 	if err != nil {
-		helper.LogsError(err)
+		panic(helper.LogsError(err))
 		return
 	}
 

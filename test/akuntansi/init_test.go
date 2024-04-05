@@ -27,16 +27,19 @@ func cleanUp() {
 		ids = append(ids, kelompok.ID)
 	}
 	if err := dbt.Unscoped().Delete(&entity.KelompokAkun{}, "id NOT IN (?)", ids).Error; err != nil {
-		helper.LogsError(err)
+		panic(helper.LogsError(err))
+	}
+	if err := dbt.Unscoped().Where("id = ?", idDataBayarInvoice).Delete(&entity.DataBayarInvoice{}).Error; err != nil {
+		panic(helper.LogsError(err))
 	}
 	if err := dbt.Unscoped().Where("1 = 1").Delete(&entity.HutangPiutang{}).Error; err != nil {
-		helper.LogsError(err)
+		panic(helper.LogsError(err))
 	}
 	if err := dbt.Unscoped().Where("1 = 1").Delete(&entity.Transaksi{}).Error; err != nil {
-		helper.LogsError(err)
+		panic(helper.LogsError(err))
 	}
 	if err := dbt.Unscoped().Where("1 = 1").Delete(&entity.Kontak{}).Error; err != nil {
-		helper.LogsError(err)
+		panic(helper.LogsError(err))
 	}
 }
 

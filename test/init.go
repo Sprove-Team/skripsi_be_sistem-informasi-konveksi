@@ -53,8 +53,8 @@ func GetTokens(dbt *gorm.DB, authMid middleware_auth.AuthMidleware) {
 		token, err := pkgJwt.CreateToken(false, claims, time.Now().Add(time.Hour*8))
 
 		if err != nil {
-			helper.LogsError(err)
-			os.Exit(1)
+			panic(helper.LogsError(err))
+
 		} else {
 			Tokens[v.Role] = token
 		}

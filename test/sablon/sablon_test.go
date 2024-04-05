@@ -128,7 +128,7 @@ func SablonUpdate(t *testing.T) {
 	sablon := new(entity.Sablon)
 	err := dbt.Select("id").First(sablon).Error
 	if err != nil {
-		helper.LogsError(err)
+		panic(helper.LogsError(err))
 		return
 	}
 	idSablon = sablon.ID
@@ -258,7 +258,7 @@ func SablonGetAll(t *testing.T) {
 		Harga: 20000,
 	}
 	if err := dbt.Create(sablon).Error; err != nil {
-		helper.LogsError(err)
+		panic(helper.LogsError(err))
 		return
 	}
 	tests := []struct {

@@ -3,6 +3,7 @@ package handler_init
 import (
 	akuntansiHandler "github.com/be-sistem-informasi-konveksi/api/handler/akuntansi"
 	akuntansiRepo "github.com/be-sistem-informasi-konveksi/api/repository/akuntansi/mysql/gorm"
+	repo_invoice_data_bayar "github.com/be-sistem-informasi-konveksi/api/repository/invoice/mysql/gorm/data_bayar"
 	akuntansiUsecase "github.com/be-sistem-informasi-konveksi/api/usecase/akuntansi"
 
 	transaksiHandler "github.com/be-sistem-informasi-konveksi/api/handler/akuntansi/transaksi"
@@ -47,6 +48,7 @@ type repoAkuntanInit struct {
 	kontak                 kontakRepo.KontakRepo
 	dataBayarHutangPiutang dataBayarHutangPiutangRepo.DataBayarHutangPiutangRepo
 	akuntansi              akuntansiRepo.AkuntansiRepo
+	invoice                repo_invoice_data_bayar.DataBayarInvoiceRepo
 }
 
 type akuntansiHandlerInit struct {
@@ -66,6 +68,7 @@ func NewAkuntansiHandlerInit(DB *gorm.DB, validator pkg.Validator, ulid pkg.Ulid
 		dataBayarHutangPiutang: dataBayarHutangPiutangRepo.NewDataBayarHutangPiutangRepo(DB),
 		akuntansi:              akuntansiRepo.NewAkuntansiRepo(DB),
 		kontak:                 kontakRepo.NewKontakRepo(DB),
+		invoice:                repo_invoice_data_bayar.NewDataBayarInvoiceRepo(DB),
 	}
 	return &akuntansiHandlerInit{DB, validator, ulid, excelize, r}
 }
@@ -83,7 +86,7 @@ func (d *akuntansiHandlerInit) KelompokAkun() kelompokAkunHandler.KelompokAkunHa
 }
 
 func (d *akuntansiHandlerInit) Transaksi() transaksiHandler.TransaksiHandler {
-	uc := transaksiUsecase.NewTransaksiUsecase(d.repo.transaksi, d.repo.akun, d.repo.hutangPiutang, d.repo.dataBayarHutangPiutang, d.ulid)
+	uc := transaksiUsecase.NewTransaksiUsecase(d.repo.transaksi, d.repo.akun, d.repo.hutangPiutang, d.repo.dataBayarHutangPiutang, d.repo.invoice, d.ulid)
 	h := transaksiHandler.NewTransaksiHandler(uc, d.validator)
 	return h
 }

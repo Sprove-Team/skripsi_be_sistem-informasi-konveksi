@@ -159,7 +159,7 @@ var idSubTugas string
 func SubTugasUpdate(t *testing.T) {
 	subTugas := new(entity.SubTugas)
 	if err := dbt.First(subTugas).Error; err != nil {
-		helper.LogsError(err)
+		panic(helper.LogsError(err))
 		return
 	}
 	idSubTugas = subTugas.ID
@@ -282,7 +282,7 @@ func SubTugasUpdate(t *testing.T) {
 			if tt.name == "sukses spv" {
 				sbtugas := new(entity.SubTugas)
 				if err := dbt.First(sbtugas, "id = ?", idSubTugas).Error; err != nil {
-					helper.LogsError(err)
+					panic(helper.LogsError(err))
 					return
 				}
 				assert.NotEqual(t, tt.payload.Nama, sbtugas.Nama)

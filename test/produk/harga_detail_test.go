@@ -159,7 +159,7 @@ func ProdukUpdateHargaDetail(t *testing.T) {
 	hargaDetail := new(entity.HargaDetailProduk)
 	err := dbt.Select("id").First(hargaDetail).Error
 	if err != nil {
-		helper.LogsError(err)
+		panic(helper.LogsError(err))
 		return
 	}
 	idHargaDetail = hargaDetail.ID

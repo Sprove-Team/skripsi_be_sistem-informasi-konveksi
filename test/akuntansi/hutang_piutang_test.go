@@ -346,6 +346,8 @@ func AkuntansiCreateHutangPiutang(t *testing.T) {
 }
 
 var idTransaksiWithHP string
+var idTrWithDataByrInvoice string
+var idDataBayarInvoice string
 
 func AkuntansiGetAllHutangPiutang(t *testing.T) {
 	// create invoice for test data hp that invoice id
@@ -364,9 +366,23 @@ func AkuntansiGetAllHutangPiutang(t *testing.T) {
 		TotalHarga:      10000,
 	}
 	if err := dbt.Create(invoice).Error; err != nil {
-		helper.LogsError(err)
-		return
+		panic(helper.LogsError(err))
 	}
+	dataBayrInvoice := &entity.DataBayarInvoice{
+		Base: entity.Base{
+			ID: test.UlidPkg.MakeUlid().String(),
+		},
+		InvoiceID:       invoice.ID,
+		AkunID:          "01HP7DVBGTC06PXWT6FD66VERN",
+		Keterangan:      "byr di test hp",
+		BuktiPembayaran: []string{"123"},
+		Total:           5000,
+		Status:          "BELUM_TERKONFIRMASI",
+	}
+	if err := dbt.Create(dataBayrInvoice).Error; err != nil {
+		panic(helper.LogsError(err))
+	}
+	idDataBayarInvoice = dataBayrInvoice.ID
 	tr := &entity.Transaksi{
 		Base: entity.Base{
 			ID: test.UlidPkg.MakeUlid().String(),
@@ -377,8 +393,7 @@ func AkuntansiGetAllHutangPiutang(t *testing.T) {
 		Tanggal:    tt,
 	}
 	if err := dbt.Create(tr).Error; err != nil {
-		helper.LogsError(err)
-		return
+		panic(helper.LogsError(err))
 	}
 	hpWithInvoiceId := &entity.HutangPiutang{
 		Base: entity.Base{
@@ -392,14 +407,13 @@ func AkuntansiGetAllHutangPiutang(t *testing.T) {
 	}
 
 	if err := dbt.Create(hpWithInvoiceId).Error; err != nil {
-		helper.LogsError(err)
-		return
+		panic(helper.LogsError(err))
 	}
+	idTrWithDataByrInvoice = hpWithInvoiceId.TransaksiID
 
 	dataKontak := new(entity.Kontak)
 	if err := dbt.First(dataKontak, "id = ?", idKontak).Error; err != nil {
-		helper.LogsError(err)
-		return
+		panic(helper.LogsError(err))
 	}
 
 	tests := []struct {
@@ -596,8 +610,7 @@ var idTrWithBayarHP string
 func AkuntansiCreateBayarHP(t *testing.T) {
 	hp := new(entity.HutangPiutang)
 	if err := dbt.First(hp).Error; err != nil {
-		helper.LogsError(err)
-		return
+		panic(helper.LogsError(err))
 	}
 	tests := []struct {
 		name         string
@@ -807,8 +820,7 @@ func AkuntansiCreateBayarHP(t *testing.T) {
 				if tt.name == "sukses" {
 					datResAfterBayar := new(entity.HutangPiutang)
 					if err := dbt.Preload("DataBayarHutangPiutang").First(datResAfterBayar, "id = ?", hp.ID).Error; err != nil {
-						helper.LogsError(err)
-						return
+						panic(helper.LogsError(err))
 					}
 					assert.NotEmpty(t, datResAfterBayar.DataBayarHutangPiutang)
 					if len(datResAfterBayar.DataBayarHutangPiutang) > 0 {

@@ -500,13 +500,11 @@ func InvoiceUpdate(t *testing.T) {
 	invoices := make([]entity.Invoice, 2)
 	err := dbt.Preload("DetailInvoice").Order("id ASC").Find(&invoices).Error
 	if err != nil {
-		helper.LogsError(err)
-		return
+		panic(helper.LogsError(err))
 	}
 	if len(invoices) < 2 {
 		fmt.Println("inv -> ", invoices)
-		helper.LogsError(errors.New("err: invoices less than 2"))
-		return
+		panic(helper.LogsError(errors.New("err: invoices less than 2")))
 	}
 	idInvoice = invoices[0].ID
 	tests := []struct {
@@ -791,7 +789,7 @@ func InvoiceGetAll(t *testing.T) {
 	dataInvoice := new(entity.Invoice)
 	err := dbt.Preload("DetailInvoice").Order("id ASC").First(dataInvoice).Error
 	if err != nil {
-		helper.LogsError(err)
+		panic(helper.LogsError(err))
 		return
 	}
 	tests := []struct {

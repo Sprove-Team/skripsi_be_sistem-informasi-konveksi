@@ -104,7 +104,9 @@ func (u *dataBayarInvoice) CreateByInvoiceID(param ParamCreateByInvoiceID) error
 	})
 
 	if err != nil {
-		return err
+		if err.Error() != "record not found" {
+			return err
+		}
 	}
 
 	var sisa float64

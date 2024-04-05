@@ -363,19 +363,20 @@ func AkuntansiUpdateTransaksi(t *testing.T) {
 	transaksi := new(entity.Transaksi)
 	err := dbt.Model(transaksi).First(transaksi, "kontak_id IS NULL").Error
 	if err != nil {
-		helper.LogsError(err)
+		panic(helper.LogsError(err))
 		return
 	}
 	transaksiWithKontak := new(entity.Transaksi)
 	err = dbt.Model(transaksi).First(&transaksiWithKontak, "kontak_id IS NOT NULL").Error
 	if err != nil {
-		helper.LogsError(err)
+		panic(helper.LogsError(err))
 		return
 	}
 
 	idTransaksi = transaksi.ID
 	idTransaksiWithKontak = transaksiWithKontak.ID
 
+	fmt.Println("d->", idTransaksiWithHP)
 	if idTransaksi == "" || idTransaksiWithKontak == "" || idTransaksiWithHP == "" {
 		fmt.Println("id for update is empty")
 		return
@@ -812,7 +813,7 @@ func AkuntansiUpdateTransaksi(t *testing.T) {
 				if strings.Contains(tt.name, "sukses") {
 					hp := new(entity.HutangPiutang)
 					if err := dbt.First(hp, "transaksi_id = ?", idTransaksiWithHP).Error; err != nil {
-						helper.LogsError(err)
+						panic(helper.LogsError(err))
 						return
 					}
 
@@ -1129,6 +1130,17 @@ func AkuntansiDeleteTransaksi(t *testing.T) {
 			expectedBody: test.Response{
 				Status: fiber.ErrNotFound.Message,
 				Code:   404,
+			},
+		},
+		{
+			name:         "err: transaksi tidak dapat di hapus bila masih terdapat data bayar yang berstatus belum terkonfirmasi",
+			token:        tokens[entity.RolesById[1]],
+			id:           idTrWithDataByrInvoice,
+			expectedCode: 400,
+			expectedBody: test.Response{
+				Status:         fiber.ErrBadRequest.Message,
+				Code:           400,
+				ErrorsMessages: []string{"transaksi tidak dapat di hapus bila masih terdapat data bayar yang berstatus belum terkonfirmasi"},
 			},
 		},
 		{

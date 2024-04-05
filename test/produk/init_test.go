@@ -22,16 +22,13 @@ var app = fiber.New()
 
 func cleanUp() {
 	if err := dbt.Unscoped().Where("1 = 1").Delete(&entity.KategoriProduk{}).Error; err != nil {
-		helper.LogsError(err)
-		os.Exit(1)
+		panic(helper.LogsError(err))
 	}
 	if err := dbt.Unscoped().Where("1 = 1").Delete(&entity.HargaDetailProduk{}).Error; err != nil {
-		helper.LogsError(err)
-		os.Exit(1)
+		panic(helper.LogsError(err))
 	}
 	if err := dbt.Unscoped().Where("1 = 1").Delete(&entity.Produk{}).Error; err != nil {
-		helper.LogsError(err)
-		os.Exit(1)
+		panic(helper.LogsError(err))
 	}
 }
 

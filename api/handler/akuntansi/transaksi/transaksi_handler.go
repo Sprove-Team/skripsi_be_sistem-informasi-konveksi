@@ -49,6 +49,7 @@ func errResponse(c *fiber.Ctx, err error) error {
 	case message.AkunCannotBeSame,
 		message.CreditDebitNotSame,
 		message.AkunNotFound,
+		message.CantDeleteTrIfDataByrBlmTerkonfirmasiExist,
 		message.AkunHutangPiutangNotEq2,
 		message.BayarMustLessThanSisaTagihan,
 		message.TotalHPMustGeOrEqToTotalByr,

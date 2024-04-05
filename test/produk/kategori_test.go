@@ -118,7 +118,7 @@ func ProdukUpdateKategori(t *testing.T) {
 	kategori := new(entity.KategoriProduk)
 	err := dbt.Select("id").First(kategori).Error
 	if err != nil {
-		helper.LogsError(err)
+		panic(helper.LogsError(err))
 		return
 	}
 	idKategori = kategori.ID
@@ -236,7 +236,7 @@ func ProdukGetAllKategori(t *testing.T) {
 		Nama: "test next",
 	}
 	if err := dbt.Create(kategori).Error; err != nil {
-		helper.LogsError(err)
+		panic(helper.LogsError(err))
 		return
 	}
 	tests := []struct {

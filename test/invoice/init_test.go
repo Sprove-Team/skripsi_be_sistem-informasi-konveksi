@@ -143,78 +143,77 @@ func setUpData() {
 	}
 
 	if err := dbt.Create(kategori).Error; err != nil {
-		helper.LogsError(err)
-		os.Exit(1)
+		panic(helper.LogsError(err))
+
 	}
 	if err := dbt.Create(produk).Error; err != nil {
-		helper.LogsError(err)
-		os.Exit(1)
+		panic(helper.LogsError(err))
+
 	}
 	if err := dbt.Create(bordir).Error; err != nil {
-		helper.LogsError(err)
-		os.Exit(1)
+		panic(helper.LogsError(err))
+
 	}
 	if err := dbt.Create(sablon).Error; err != nil {
-		helper.LogsError(err)
-		os.Exit(1)
+		panic(helper.LogsError(err))
+
 	}
 	if err := dbt.Create(kontak).Error; err != nil {
-		helper.LogsError(err)
-		os.Exit(1)
+		panic(helper.LogsError(err))
+
 	}
 }
 
 func cleanUp() {
 	if err := dbt.Unscoped().Where("1 = 1").Delete(&entity.HutangPiutang{}).Error; err != nil {
-		helper.LogsError(err)
-		os.Exit(1)
+		panic(helper.LogsError(err))
+
 	}
 	if err := dbt.Unscoped().Where("1 = 1").Delete(&entity.Transaksi{}).Error; err != nil {
-		helper.LogsError(err)
-		os.Exit(1)
+		panic(helper.LogsError(err))
+
 	}
 	if err := dbt.Unscoped().Where("1 = 1").Delete(&entity.DataBayarInvoice{}).Error; err != nil {
-		helper.LogsError(err)
-		os.Exit(1)
+		panic(helper.LogsError(err))
+
 	}
 	if err := dbt.Unscoped().Where("1 = 1").Delete(&entity.DetailInvoice{}).Error; err != nil {
-		helper.LogsError(err)
-		os.Exit(1)
+		panic(helper.LogsError(err))
+
 	}
 	if err := dbt.Unscoped().Where("1 = 1").Delete(&entity.Invoice{}).Error; err != nil {
-		helper.LogsError(err)
-		os.Exit(1)
+		panic(helper.LogsError(err))
+
 	}
 	if err := dbt.Unscoped().Where("1 = 1").Delete(&entity.Kontak{}).Error; err != nil {
-		helper.LogsError(err)
-		os.Exit(1)
+		panic(helper.LogsError(err))
+
 	}
 	if err := dbt.Unscoped().Where("1 = 1").Delete(&entity.KategoriProduk{}).Error; err != nil {
-		helper.LogsError(err)
-		os.Exit(1)
+		panic(helper.LogsError(err))
+
 	}
 	if err := dbt.Unscoped().Where("1 = 1").Delete(&entity.HargaDetailProduk{}).Error; err != nil {
-		helper.LogsError(err)
-		os.Exit(1)
+		panic(helper.LogsError(err))
+
 	}
 	if err := dbt.Unscoped().Where("1 = 1").Delete(&entity.Produk{}).Error; err != nil {
-		helper.LogsError(err)
-		os.Exit(1)
+		panic(helper.LogsError(err))
+
 	}
 	if err := dbt.Unscoped().Where("1 = 1").Delete(&entity.Bordir{}).Error; err != nil {
-		helper.LogsError(err)
-		os.Exit(1)
+		panic(helper.LogsError(err))
+
 	}
 	if err := dbt.Unscoped().Where("1 = 1").Delete(&entity.Sablon{}).Error; err != nil {
-		helper.LogsError(err)
-		os.Exit(1)
+		panic(helper.LogsError(err))
+
 	}
 }
 
 func TestMain(m *testing.M) {
 	test.GetDB()
 	dbt = test.DBT
-	// cleanUp()
 	setUpData()
 	invoiceH := handler_init.NewInvoiceHandlerInit(dbt, test.Validator, test.UlidPkg, test.Encryptor)
 	userRepo := repo_user.NewUserRepo(dbt)
@@ -247,4 +246,7 @@ func TestEndPointInvoice(t *testing.T) {
 	InvoiceCreateDataBayar(t)
 	InvoiceUpdateDataBayar(t)
 	InvoiceGetAllByInvoiceIdDataBayar(t)
+
+	// delete data bayar
+	InvoiceDeleteDataBayar(t)
 }

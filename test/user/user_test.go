@@ -242,13 +242,13 @@ func UserUpdate(t *testing.T) {
 	user := new(entity.User)
 	err := dbt.Select("id").First(user, "ROLE NOT IN (?) AND id NOT IN (?)", []string{entity.RolesById[1], entity.RolesById[5]}, idsDefaultUser).Error
 	if err != nil {
-		helper.LogsError(err)
+		panic(helper.LogsError(err))
 		return
 	}
 	userSpv := new(entity.User)
 	err = dbt.Select("id").First(userSpv, "jenis_spv_id = ? AND id NOT IN (?)", idSpv, idsDefaultUser).Error
 	if err != nil {
-		helper.LogsError(err)
+		panic(helper.LogsError(err))
 		return
 	}
 	spv2 := &entity.JenisSpv{
@@ -259,7 +259,7 @@ func UserUpdate(t *testing.T) {
 	}
 	err = dbt.Create(spv2).Error
 	if err != nil {
-		helper.LogsError(err)
+		panic(helper.LogsError(err))
 		return
 	}
 

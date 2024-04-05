@@ -208,7 +208,7 @@ var idTugas string
 func TugasUpdate(t *testing.T) {
 	tugas := new(entity.Tugas)
 	if err := dbt.Select("id").First(tugas).Error; err != nil {
-		helper.LogsError(err)
+		panic(helper.LogsError(err))
 		return
 	}
 	idTugas = tugas.ID
@@ -642,7 +642,7 @@ func TugasGet(t *testing.T) {
 		TugasID:   idTugas,
 	}
 	if err := dbt.Create(&subTugas).Error; err != nil {
-		helper.LogsError(err)
+		panic(helper.LogsError(err))
 		return
 	}
 

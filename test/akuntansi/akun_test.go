@@ -158,7 +158,7 @@ func AkuntansiUpdateAkun(t *testing.T) {
 	akun := new(entity.Akun)
 	err := dbt.Model(akun).Order("id DESC").Preload("KelompokAkun").First(akun).Error
 	if err != nil {
-		helper.LogsError(err)
+		panic(helper.LogsError(err))
 		return
 	}
 	akun2 := &entity.Akun{
@@ -172,7 +172,7 @@ func AkuntansiUpdateAkun(t *testing.T) {
 		Deskripsi:      "des akun conflict",
 	}
 	if err := dbt.Create(akun2).Error; err != nil {
-		helper.LogsError(err)
+		panic(helper.LogsError(err))
 		return
 	}
 	idAkun = akun.ID

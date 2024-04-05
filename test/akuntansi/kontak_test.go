@@ -142,7 +142,7 @@ func AkuntansiUpdateKontak(t *testing.T) {
 	kontak := new(entity.Kontak)
 	err := dbt.Model(kontak).Order("id DESC").First(kontak).Error
 	if err != nil {
-		helper.LogsError(err)
+		panic(helper.LogsError(err))
 		return
 	}
 	kontak2 := &entity.Kontak{
@@ -156,7 +156,7 @@ func AkuntansiUpdateKontak(t *testing.T) {
 		Email:      "megabaran2@gmail.com",
 	}
 	if err := dbt.Create(kontak2).Error; err != nil {
-		helper.LogsError(err)
+		panic(helper.LogsError(err))
 		return
 	}
 	idKontak = kontak.ID

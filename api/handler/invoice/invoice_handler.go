@@ -2,7 +2,6 @@ package handler_invoice
 
 import (
 	"context"
-	"fmt"
 	"strings"
 
 	ucHutangPiutang "github.com/be-sistem-informasi-konveksi/api/usecase/akuntansi/hutang_piutang"
@@ -44,7 +43,7 @@ func NewInvoiceHandler(
 }
 
 func errResponse(c *fiber.Ctx, err error) error {
-	fmt.Println("err -> ", err)
+	// fmt.Println("err -> ", err)
 	if err == context.DeadlineExceeded {
 		return c.Status(fiber.StatusRequestTimeout).JSON(res_global.ErrorRes(fiber.ErrRequestTimeout.Code, fiber.ErrRequestTimeout.Message, nil))
 	}

@@ -40,7 +40,7 @@ func setUpData() {
 	}
 
 	if err := dbt.Create(&kontak).Error; err != nil {
-		helper.LogsError(err)
+		panic(helper.LogsError(err))
 		return
 	}
 	userSpv := entity.JenisSpv{
@@ -81,7 +81,7 @@ func setUpData() {
 	}
 
 	if err := dbt.Create(&userSpv).Error; err != nil {
-		helper.LogsError(err)
+		panic(helper.LogsError(err))
 		return
 	}
 
@@ -113,30 +113,30 @@ func setUpData() {
 		},
 	}
 	if err := dbt.Create(&invoices).Error; err != nil {
-		helper.LogsError(err)
+		panic(helper.LogsError(err))
 		return
 	}
 }
 
 func cleanUp() {
 	if err := dbt.Unscoped().Where("1 = 1").Delete(&entity.Tugas{}).Error; err != nil {
-		helper.LogsError(err)
+		panic(helper.LogsError(err))
 		return
 	}
 	if err := dbt.Unscoped().Where("id = ?", spvId).Delete(&entity.JenisSpv{}).Error; err != nil {
-		helper.LogsError(err)
+		panic(helper.LogsError(err))
 		return
 	}
 	if err := dbt.Unscoped().Where("id IN (?)", userId).Delete(&entity.User{}).Error; err != nil {
-		helper.LogsError(err)
+		panic(helper.LogsError(err))
 		return
 	}
 	if err := dbt.Unscoped().Where("id = ?", kontakId).Delete(&entity.Kontak{}).Error; err != nil {
-		helper.LogsError(err)
+		panic(helper.LogsError(err))
 		return
 	}
 	if err := dbt.Unscoped().Where("id IN (?)", invoiceId).Delete(&entity.Invoice{}).Error; err != nil {
-		helper.LogsError(err)
+		panic(helper.LogsError(err))
 		return
 	}
 }

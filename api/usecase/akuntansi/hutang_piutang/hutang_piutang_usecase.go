@@ -250,6 +250,9 @@ func (u *hutangPiutangUsecase) GetHPByInvoiceID(ctx context.Context, id string) 
 		ID:  id,
 	})
 	if err != nil {
+		if err.Error() == "record not found" {
+			return nil, errors.New(message.HutangPiutangNotFound)
+		}
 		return nil, err
 	}
 	return dataHp, nil
