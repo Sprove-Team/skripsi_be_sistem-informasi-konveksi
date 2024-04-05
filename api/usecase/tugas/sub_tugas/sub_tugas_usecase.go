@@ -81,6 +81,7 @@ func (u *subTugasUsecase) Update(param ParamUpdate) error {
 		},
 	}
 
+	// supervisor can only update status
 	if param.Claims.Role == entity.RolesById[5] {
 		newSubTugas.Status = param.Req.Status
 	} else {

@@ -172,5 +172,10 @@ func TestEndPointTugas(t *testing.T) {
 	TugasGetAll(t)
 	TugasGetByInvoiceId(t)
 	TugasGet(t)
+	//? sub tugas
+	SubTugasCreate(t)
+	SubTugasUpdate(t)
+	//? delete
+	SubTugasDelete(t)
 	TugasDelete(t)
 }
