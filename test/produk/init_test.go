@@ -77,7 +77,7 @@ func TestEndPointProduk(t *testing.T) {
 	ProdukGetAllHargaDetailByProdukId(t)
 
 	//? delete
-	ProdukDeleteKategori(t)
 	ProdukDeleteHargaDetail(t)
 	ProdukDelete(t)
+	ProdukDeleteKategori(t)
 }

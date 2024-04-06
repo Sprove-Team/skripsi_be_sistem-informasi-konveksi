@@ -214,6 +214,7 @@ func cleanUp() {
 func TestMain(m *testing.M) {
 	test.GetDB()
 	dbt = test.DBT
+	// cleanUp()
 	setUpData()
 	invoiceH := handler_init.NewInvoiceHandlerInit(dbt, test.Validator, test.UlidPkg, test.Encryptor)
 	userRepo := repo_user.NewUserRepo(dbt)

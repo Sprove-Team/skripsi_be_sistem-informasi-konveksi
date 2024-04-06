@@ -103,7 +103,9 @@ func (dbgc *DBGorm) InitDBGorm(ulid pkg.UlidPkg) *gorm.DB {
 		err = addDefultValues(db, klmpkData, akun)
 
 		if err != nil {
-			return err
+			if err.Error() != "duplicated key not allowed" {
+				return err
+			}
 		}
 		return nil
 	})
@@ -142,6 +144,7 @@ func autoMigrateEntities(db *gorm.DB, entities ...interface{}) {
 		// if os.Getenv("ENVIRONMENT") == "PRODUCTION" {
 		// }
 		if err := db.AutoMigrate(entity); err != nil {
+			helper.LogsError(err)
 			panic(err)
 		}
 	}

@@ -107,7 +107,7 @@ func CreateDataBayarHP(trByr req.ReqBayar, ayTagihan entity.AyatJurnal, kontakId
 		},
 		Total: trByr.Total,
 		Transaksi: entity.Transaksi{
-			Base: entity.Base{
+			BaseSoftDelete: entity.BaseSoftDelete{
 				ID: ulid.MakeUlid().String(),
 			},
 			Keterangan:      keterangan,

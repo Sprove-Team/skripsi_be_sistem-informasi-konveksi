@@ -21,7 +21,7 @@ type KelompokAkun struct {
 	Kode         string `gorm:"type:varchar(10);uniqueIndex;not null" json:"kode,omitempty"`
 	Nama         string `gorm:"type:varchar(150);uniqueIndex;not null" json:"nama,omitempty"`
 	KategoriAkun string `gorm:"type:enum('ASET','KEWAJIBAN','MODAL','PENDAPATAN','BEBAN')" json:"kategori_akun,omitempty"`
-	Akuns        []Akun `gorm:"foreignKey:KelompokAkunID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"akun,omitempty"`
+	Akuns        []Akun `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE" json:"akun,omitempty"`
 }
 
 func (KelompokAkun) TableName() string {

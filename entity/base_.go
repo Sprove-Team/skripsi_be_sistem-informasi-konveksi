@@ -8,6 +8,12 @@ import (
 
 type BuktiPembayaran []string
 type Base struct {
+	ID        string     `gorm:"type:varchar(26);primaryKey;index:idx_id;not null" json:"id,omitempty"`
+	CreatedAt *time.Time `json:"created_at,omitempty"`
+	UpdatedAt *time.Time `json:"-"`
+}
+
+type BaseSoftDelete struct {
 	ID        string          `gorm:"type:varchar(26);primaryKey;index:idx_id;not null" json:"id,omitempty"`
 	CreatedAt *time.Time      `json:"created_at,omitempty"`
 	UpdatedAt *time.Time      `json:"-"`

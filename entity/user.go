@@ -25,4 +25,5 @@ type User struct {
 	Alamat     string    `gorm:"type:varchar(150)" json:"alamat,omitempty"`
 	JenisSpvID string    `gorm:"type:varchar(26);index:idx_jenis_spv_id;default:null" json:"-"`
 	JenisSpv   *JenisSpv `json:"jenis_spv,omitempty"`
+	Invoice    []Invoice `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE" json:"-"`
 }

@@ -7,6 +7,6 @@ type Kontak struct {
 	Alamat     string      `gorm:"type:varchar(225)" json:"alamat,omitempty"`
 	Email      string      `gorm:"type:varchar(225);default=''" json:"email,omitempty"`
 	Keterangan string      `gorm:"type:longtext" json:"keterangan,omitempty"`
-	Transaksi  []Transaksi `gorm:"foreignKey:KontakID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"transaksi,omitempty"`
-	Invoice    []Invoice   `gorm:"foreignKey:KontakID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"invoice,omitempty"`
+	Transaksi  []Transaksi `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL" json:"transaksi,omitempty"`
+	Invoice    []Invoice   `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL" json:"invoice,omitempty"`
 }

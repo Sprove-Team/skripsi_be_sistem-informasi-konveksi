@@ -384,7 +384,7 @@ func AkuntansiGetAllHutangPiutang(t *testing.T) {
 	}
 	idDataBayarInvoice = dataBayrInvoice.ID
 	tr := &entity.Transaksi{
-		Base: entity.Base{
+		BaseSoftDelete: entity.BaseSoftDelete{
 			ID: test.UlidPkg.MakeUlid().String(),
 		},
 		Keterangan: "test for hp",

@@ -8,6 +8,6 @@ type Akun struct {
 	Kode             string             `gorm:"type:varchar(10);uniqueIndex;not null" json:"kode,omitempty"`
 	SaldoNormal      string             `gorm:"type:enum('DEBIT','KREDIT');default:'DEBIT';not null" json:"saldo_normal,omitempty"`
 	Deskripsi        string             `gorm:"type:TEXT;default:null" json:"deskripsi,omitempty"`
-	AyatJurnal       []AyatJurnal       `gorm:"foreignKey:AkunID;references:ID" json:"ayat_jurnal,omitempty"`
-	DataBayarInvoice []DataBayarInvoice `gorm:"foreignKey:AkunID;references:ID" json:"data_bayar_invoice,omitempty"`
+	AyatJurnal       []AyatJurnal       `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE" json:"ayat_jurnal,omitempty"`
+	DataBayarInvoice []DataBayarInvoice `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE" json:"data_bayar_invoice,omitempty"`
 }

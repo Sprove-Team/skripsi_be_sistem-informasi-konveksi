@@ -141,7 +141,7 @@ func (u *hutangPiutangUsecase) CreateDataHP(param ParamCreateDataHp) (*entity.Hu
 
 	// create transaksi HP, based on ay1 and ay2 variable
 	transaksiHP := entity.Transaksi{
-		Base: entity.Base{
+		BaseSoftDelete: entity.BaseSoftDelete{
 			ID: u.ulid.MakeUlid().String(),
 		},
 		Keterangan:      param.Req.Keterangan,

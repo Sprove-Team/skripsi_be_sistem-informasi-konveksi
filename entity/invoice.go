@@ -13,9 +13,10 @@ type Invoice struct {
 	Keterangan       string             `gorm:"type:longtext" json:"keterangan,omitempty"`
 	TanggalDeadline  *time.Time         `gorm:"type:datetime(3)" json:"tanggal_deadline,omitempty"`
 	TanggalKirim     *time.Time         `gorm:"type:datetime(3)" json:"tanggal_kirim,omitempty"`
-	HutangPiutang    HutangPiutang      `gorm:"foreignKey:InvoiceID;references:ID;constraint:OnUpdate:CASCADE;OnDelete:CASCADE" json:"-"`
+	HutangPiutang    HutangPiutang      `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE" json:"-"`
 	Kontak           *Kontak            `json:"kontak,omitempty"`
 	User             *User              `json:"user_editor,omitempty"`
-	DetailInvoice    []DetailInvoice    `gorm:"foreignKey:InvoiceID;references:ID;constraint:OnUpdate:CASCADE;OnDelete:CASCADE" json:"detail_invoice,omitempty"`
-	DataBayarInvoice []DataBayarInvoice `gorm:"foreignKey:InvoiceID;references:ID;constraint:OnUpdate:CASCADE;OnDelete:CASCADE" json:"data_bayar,omitempty"`
+	DetailInvoice    []DetailInvoice    `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE" json:"detail_invoice,omitempty"`
+	DataBayarInvoice []DataBayarInvoice `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE" json:"data_bayar,omitempty"`
+	Tugas            []Tugas            `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE" json:"-"`
 }

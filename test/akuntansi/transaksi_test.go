@@ -810,7 +810,6 @@ func AkuntansiUpdateTransaksi(t *testing.T) {
 					hp := new(entity.HutangPiutang)
 					if err := dbt.First(hp, "transaksi_id = ?", idTransaksiWithHP).Error; err != nil {
 						panic(helper.LogsError(err))
-						return
 					}
 
 					totalUpdate := math.Abs(tt.payload.AyatJurnal[0].Debit - tt.payload.AyatJurnal[0].Kredit)

@@ -81,6 +81,6 @@ func TestEndPointUser(t *testing.T) {
 	UserGetAll(t)
 	UserGet(t)
 	//? delete
-	UserDeleteSpv(t)
 	UserDelete(t)
+	UserDeleteSpv(t)
 }

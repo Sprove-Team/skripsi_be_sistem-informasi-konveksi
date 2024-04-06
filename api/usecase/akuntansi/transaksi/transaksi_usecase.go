@@ -151,7 +151,7 @@ func (u *transaksiUsecase) Update(ctx context.Context, reqTransaksi req.Update) 
 	// setup param tr update
 	repoParam := repo.UpdateParam{
 		UpdateTr: &entity.Transaksi{
-			Base: entity.Base{
+			BaseSoftDelete: entity.BaseSoftDelete{
 				ID: reqTransaksi.ID,
 			},
 			Keterangan:      reqTransaksi.Keterangan,
@@ -386,7 +386,7 @@ func (u *transaksiUsecase) Create(ctx context.Context, reqTransaksi req.Create) 
 	}
 
 	dataTransaksi := entity.Transaksi{
-		Base: entity.Base{
+		BaseSoftDelete: entity.BaseSoftDelete{
 			ID: transaksiID,
 		},
 		Tanggal:         parsedTime,

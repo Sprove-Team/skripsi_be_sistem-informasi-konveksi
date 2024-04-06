@@ -6,5 +6,5 @@ type DataBayarHutangPiutang struct {
 	HutangPiutang   HutangPiutang `json:"-"`
 	Total           float64       `gorm:"type:decimal(10,2);default:0" json:"total,omitempty"`
 	TransaksiID     string        `gorm:"type:varchar(26);not null;uniqueIndex;" json:"transaksi_id,omitempty"`
-	Transaksi       Transaksi     `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"-"`
+	Transaksi       Transaksi     `json:"-"`
 }
