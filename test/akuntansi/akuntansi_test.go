@@ -26,7 +26,7 @@ func AkuntansiGetJU(t *testing.T) {
 			name:         "sukses",
 			token:        tokens[entity.RolesById[1]],
 			expectedCode: 200,
-			queryBody:    "?start_date=2023-10-20&end_date=2024-12-30",
+			queryBody:    fmt.Sprintf("?start_date=%s&end_date=%s", ttTrStartDateAkuntansi, ttTrEndDateAkuntansi),
 			expectedBody: test.Response{
 				Status: message.OK,
 				Code:   200,
@@ -36,7 +36,7 @@ func AkuntansiGetJU(t *testing.T) {
 			name:         "sukses download excel",
 			token:        tokens[entity.RolesById[1]],
 			expectedCode: 200,
-			queryBody:    "?start_date=2023-10-20&end_date=2024-12-30&download=1",
+			queryBody:    fmt.Sprintf("?start_date=%s&end_date=%s&download=1", ttTrStartDateAkuntansi, ttTrEndDateAkuntansi),
 		},
 		{
 			name:         "err: format start date & end date",
@@ -126,6 +126,8 @@ func AkuntansiGetJU(t *testing.T) {
 					return
 				}
 
+				var totalDebit float64
+				var totalKredit float64
 				for _, v := range tr {
 					v2 := v.(map[string]any)
 					assert.NotEmpty(t, v2["tanggal"])
@@ -145,14 +147,19 @@ func AkuntansiGetJU(t *testing.T) {
 						assert.NotEmpty(t, ay2["kode_akun"])
 						assert.NotEmpty(t, ay2["nama_akun"])
 						if dat, ok := ay2["debit"].(float64); ok && dat != 0 {
+							totalDebit += dat
 							assert.Greater(t, dat, float64(0))
 						}
 						if dat, ok := ay2["kredit"].(float64); ok && dat != 0 {
+							totalKredit += dat
 							assert.Greater(t, dat, float64(0))
 						}
 					}
 				}
 
+				assert.Equal(t, totalDebit, float64(45050000))
+				assert.Equal(t, totalKredit, float64(45050000))
+				assert.Equal(t, totalDebit, totalKredit)
 				assert.Equal(t, tt.expectedBody.Status, body.Status)
 			} else {
 				if len(tt.expectedBody.ErrorsMessages) > 0 {
@@ -194,7 +201,7 @@ func AkuntansiGetBB(t *testing.T) {
 			name:         "sukses dengan filter",
 			token:        tokens[entity.RolesById[1]],
 			expectedCode: 200,
-			queryBody:    fmt.Sprintf("?start_date=2023-10-20&end_date=2024-12-30&akun_id=01HP7DVBGTC06PXWT6FD66VERN%s01HP7DVBGTC06PXWT6FF89WRAB", "%2C"),
+			queryBody:    fmt.Sprintf("?start_date=%s&end_date=%s&akun_id=01HP7DVBGTC06PXWT6FD66VERN%s01HP7DVBGTC06PXWT6FF89WRAB", ttTrStartDateAkuntansi, ttTrEndDateAkuntansi, "%2C"),
 			expectedBody: test.Response{
 				Status: message.OK,
 				Code:   200,
@@ -204,7 +211,7 @@ func AkuntansiGetBB(t *testing.T) {
 			name:         "sukses download excel",
 			token:        tokens[entity.RolesById[1]],
 			expectedCode: 200,
-			queryBody:    fmt.Sprintf("?start_date=2023-10-20&end_date=2024-12-30&akun_id=01HP7DVBGTC06PXWT6FD66VERN%s01HP7DVBGTC06PXWT6FF89WRAB&download=1", "%2C"),
+			queryBody:    fmt.Sprintf("?start_date=%s&end_date=%s&akun_id=01HP7DVBGTC06PXWT6FD66VERN%s01HP7DVBGTC06PXWT6FF89WRAB&download=1", ttTrStartDateAkuntansi, ttTrEndDateAkuntansi, "%2C"),
 		},
 		{
 			name:         "err: format start date & end date",
@@ -329,6 +336,30 @@ func AkuntansiGetBB(t *testing.T) {
 						akunNama := []string{"kas", "piutang usaha"} // fit with the query akun
 						assert.Contains(t, akunNama, v["nama_akun"])
 					}
+
+					// check akuntansi sesuai dengan soal
+					if tt.name == "sukses" {
+						switch v["kode_akun"].(string) {
+						case "111":
+							assert.Equal(t, float64(34100000), totalSaldo)
+						case "121":
+							assert.Equal(t, float64(1050000), totalSaldo)
+						case "131":
+							assert.Equal(t, float64(350000), totalSaldo)
+						case "141":
+							assert.Equal(t, float64(5500000), totalSaldo)
+						case "271":
+							assert.Equal(t, float64(5500000), totalSaldo)
+						case "3101":
+							assert.Equal(t, float64(35000000), totalSaldo)
+						case "5141":
+							assert.Equal(t, float64(1000000), totalSaldo)
+						case "5144":
+							assert.Equal(t, float64(250000), totalSaldo)
+						case "5142":
+							assert.Equal(t, float64(600000), totalSaldo)
+						}
+					}
 				}
 
 				assert.Equal(t, tt.expectedBody.Status, body.Status)
@@ -361,7 +392,7 @@ func AkuntansiGetNC(t *testing.T) {
 			name:         "sukses",
 			token:        tokens[entity.RolesById[1]],
 			expectedCode: 200,
-			queryBody:    "?date=2024-01",
+			queryBody:    fmt.Sprintf("?date=%s", ttTrYearMonthAkuntansi),
 			expectedBody: test.Response{
 				Status: message.OK,
 				Code:   200,
@@ -371,7 +402,7 @@ func AkuntansiGetNC(t *testing.T) {
 			name:         "sukses download excel",
 			token:        tokens[entity.RolesById[1]],
 			expectedCode: 200,
-			queryBody:    "?date=2024-01&download=?",
+			queryBody:    fmt.Sprintf("?date=%s&download=?", ttTrYearMonthAkuntansi),
 		},
 		{
 			name:         "err: format date",
@@ -469,6 +500,10 @@ func AkuntansiGetNC(t *testing.T) {
 				}
 				assert.Equal(t, totalDebit, res["total_debit"].(float64))
 				assert.Equal(t, totalKredit, res["total_kredit"].(float64))
+				assert.Equal(t, res["total_debit"], res["total_kredit"])
+				// check sesuai dengan soal akuntansi
+				assert.Equal(t, float64(42850000), totalDebit)
+				assert.Equal(t, float64(42850000), totalKredit)
 
 				assert.Equal(t, tt.expectedBody.Status, body.Status)
 			} else {
@@ -596,6 +631,7 @@ func AkuntansiGetLB(t *testing.T) {
 					return
 				}
 
+				var labaRugi float64
 				for _, v := range res {
 					assert.NotEmpty(t, v["kategori_akun"])
 					assert.NotEmpty(t, v["akun"])
@@ -611,8 +647,13 @@ func AkuntansiGetLB(t *testing.T) {
 					if v["total"].(float64) != 0 {
 						assert.Equal(t, total, v["total"].(float64))
 					}
+					if v["kategori_akun"] == "PENDAPATAN" {
+						labaRugi += total
+					} else {
+						labaRugi -= total
+					}
 				}
-
+				assert.Equal(t, float64(500000), labaRugi)
 				assert.Equal(t, tt.expectedBody.Status, body.Status)
 			} else {
 				if len(tt.expectedBody.ErrorsMessages) > 0 {

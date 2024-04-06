@@ -364,22 +364,18 @@ func AkuntansiUpdateTransaksi(t *testing.T) {
 	err := dbt.Model(transaksi).First(transaksi, "kontak_id IS NULL").Error
 	if err != nil {
 		panic(helper.LogsError(err))
-		return
 	}
 	transaksiWithKontak := new(entity.Transaksi)
 	err = dbt.Model(transaksi).First(&transaksiWithKontak, "kontak_id IS NOT NULL").Error
 	if err != nil {
 		panic(helper.LogsError(err))
-		return
 	}
 
 	idTransaksi = transaksi.ID
 	idTransaksiWithKontak = transaksiWithKontak.ID
 
-	fmt.Println("d->", idTransaksiWithHP)
 	if idTransaksi == "" || idTransaksiWithKontak == "" || idTransaksiWithHP == "" {
-		fmt.Println("id for update is empty")
-		return
+		panic(fmt.Errorf("id for update is empty"))
 	}
 
 	tests := []struct {

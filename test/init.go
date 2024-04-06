@@ -77,20 +77,22 @@ func GetJsonTestRequestResponse(app *fiber.App, method string, url string, reqBo
 
 	resp, err := app.Test(req)
 	if err != nil {
+		helper.LogsError(err)
 		return
 	}
 	defer resp.Body.Close()
 	code = resp.StatusCode
-	// If error we're done
+
+	// Read the entire response body
+	bodyData, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return
 	}
 	// If no body content, we're done
-	if resp.ContentLength == 0 {
+	if len(bodyData) == 0 {
 		return
 	}
-	bodyData := make([]byte, resp.ContentLength)
-	_, _ = resp.Body.Read(bodyData)
+
 	err = json.Unmarshal(bodyData, &respBody)
 	return
 }
