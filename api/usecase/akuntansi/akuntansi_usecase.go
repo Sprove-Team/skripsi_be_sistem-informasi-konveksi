@@ -395,7 +395,11 @@ func (u *akuntansiUsecase) DownloadLBR(req req.GetAllLBR, LBR []res.LabaRugiRes)
 
 	var labaRugi float64
 	for _, lb := range LBR {
-		labaRugi += lb.Total
+		if lb.NamaKategori == "PENDAPATAN" {
+			labaRugi += lb.Total
+		} else {
+			labaRugi -= lb.Total
+		}
 
 		cell := "A" + strconv.Itoa(row)
 		cell2 := "B" + strconv.Itoa(row)
