@@ -2,6 +2,7 @@ package test_akuntansi
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 	"testing"
 
@@ -15,7 +16,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func InvoiceCreateDataBayar(t *testing.T) {
+func InvoiceCreateDataBayarByInvoiceId(t *testing.T) {
 	tests := []struct {
 		name         string
 		token        string
@@ -173,7 +174,7 @@ func InvoiceCreateDataBayar(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			code, body, err := test.GetJsonTestRequestResponse(app, "POST", "/api/v1/invoice/data_bayar/"+tt.payload.InvoiceID, tt.payload, &tt.token)
+			code, body, err := test.GetJsonTestRequestResponse(app, "POST", "/api/v1/invoice/"+tt.payload.InvoiceID+"/data_bayar", tt.payload, &tt.token)
 			assert.NoError(t, err)
 			if strings.Contains(tt.name, "passed") {
 				assert.NotEqual(t, tt.expectedCode, code)
@@ -409,7 +410,124 @@ func InvoiceUpdateDataBayar(t *testing.T) {
 	}
 }
 
-func InvoiceGetAllByInvoiceIdDataBayar(t *testing.T) {
+func InvoiceGetDataBayar(t *testing.T) {
+	fmt.Println("id",idDataBayar)
+	if idDataBayar == "" {
+		panic(fmt.Sprintf("empty id data bayar %s", idDataBayar))
+	}
+	tests := []struct {
+		name         string
+		token        string
+		id           string
+		expectedBody test.Response
+		expectedCode int
+	}{
+		{
+			name:         "sukses",
+			token:        tokens[entity.RolesById[1]],
+			id:           idDataBayar,
+			expectedCode: 200,
+			expectedBody: test.Response{
+				Status: message.OK,
+				Code:   200,
+			},
+		},
+		{
+			name:         "authorization " + entity.RolesById[2] + " passed",
+			token:        tokens[entity.RolesById[2]],
+			id:           idInvoice,
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "authorization " + entity.RolesById[3] + " passed",
+			token:        tokens[entity.RolesById[3]],
+			id:           idInvoice,
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[4],
+			token:        tokens[entity.RolesById[4]],
+			id:           idInvoice,
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[5],
+			token:        tokens[entity.RolesById[5]],
+			id:           idInvoice,
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			code, body, err := test.GetJsonTestRequestResponse(app, "GET", "/api/v1/invoice/data_bayar/"+tt.id, nil, &tt.token)
+			assert.NoError(t, err)
+			if strings.Contains(tt.name, "passed") {
+				assert.NotEqual(t, tt.expectedCode, code)
+				assert.NotEqual(t, tt.expectedBody.Code, body.Code)
+				assert.NotEqual(t, tt.expectedBody.Status, body.Status)
+				return
+			}
+			assert.Equal(t, tt.expectedCode, code)
+			var r map[string]interface{}
+			if strings.Contains(tt.name, "sukses") {
+				err = mapstructure.Decode(body.Data, &r)
+				assert.NoError(t, err)
+				assert.NotEmpty(t, r)
+				fmt.Println("data",r)
+
+				assert.NotEmpty(t, r)
+				assert.NotEmpty(t, r["id"])
+				assert.NotEmpty(t, r["created_at"])
+				assert.NotEmpty(t, r["invoice_id"])
+				assert.NotEmpty(t, r["akun"])
+				assert.NotEmpty(t, r["keterangan"])
+				assert.NotEmpty(t, r["bukti_pembayaran"])
+				assert.NotEmpty(t, r["total"])
+				assert.NotEmpty(t, r["status"])
+				akun, ok := r["akun"].(map[string]any)
+				assert.True(t, ok)
+				assert.NotEmpty(t, akun["id"])
+				assert.NotEmpty(t, akun["created_at"])
+				assert.NotEmpty(t, akun["nama"])
+				assert.NotEmpty(t, akun["kode"])
+				assert.NotEmpty(t, akun["saldo_normal"])
+				assert.NotEmpty(t, akun["deskripsi"])
+				
+
+				assert.Equal(t, tt.expectedBody.Status, body.Status)
+			} else {
+				if len(tt.expectedBody.ErrorsMessages) > 0 {
+					for _, v := range tt.expectedBody.ErrorsMessages {
+						assert.Contains(t, body.ErrorsMessages, v)
+					}
+					assert.Equal(t, tt.expectedBody.Status, body.Status)
+				} else {
+					assert.Equal(t, tt.expectedBody, body)
+				}
+			}
+
+		})
+	}
+}
+
+func InvoiceGetAllDataBayarByInvoiceId(t *testing.T) {
 	tests := []struct {
 		name         string
 		token        string
@@ -471,7 +589,7 @@ func InvoiceGetAllByInvoiceIdDataBayar(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			code, body, err := test.GetJsonTestRequestResponse(app, "GET", "/api/v1/invoice/data_bayar/"+tt.invoiceId, nil, &tt.token)
+			code, body, err := test.GetJsonTestRequestResponse(app, "GET", "/api/v1/invoice/"+tt.invoiceId+"/data_bayar", nil, &tt.token)
 			assert.NoError(t, err)
 			if strings.Contains(tt.name, "passed") {
 				assert.NotEqual(t, tt.expectedCode, code)

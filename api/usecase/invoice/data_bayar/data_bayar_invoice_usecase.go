@@ -9,6 +9,7 @@ import (
 	repo "github.com/be-sistem-informasi-konveksi/api/repository/invoice/mysql/gorm/data_bayar"
 	"github.com/be-sistem-informasi-konveksi/common/message"
 	reqGlobal "github.com/be-sistem-informasi-konveksi/common/request/global"
+	req_global "github.com/be-sistem-informasi-konveksi/common/request/global"
 	req "github.com/be-sistem-informasi-konveksi/common/request/invoice/data_bayar"
 	"github.com/be-sistem-informasi-konveksi/entity"
 	"github.com/be-sistem-informasi-konveksi/pkg"
@@ -37,6 +38,10 @@ type (
 		Ctx context.Context
 		Req req.GetByInvoiceID
 	}
+	ParamGetByID struct {
+		Ctx context.Context
+		Req req_global.ParamByID
+	}
 )
 
 type DataBayarInvoice interface {
@@ -45,6 +50,7 @@ type DataBayarInvoice interface {
 	UpdateCommitDB(param ParamUpdateCommitDB) error
 	Delete(param ParamDelete) error
 	GetByInvoiceID(param ParamGetByInvoiceID) ([]entity.DataBayarInvoice, error)
+	GetByID(param ParamGetByID) (*entity.DataBayarInvoice, error)
 }
 
 type dataBayarInvoice struct {
@@ -236,4 +242,15 @@ func (u *dataBayarInvoice) GetByInvoiceID(param ParamGetByInvoiceID) ([]entity.D
 		return nil, err
 	}
 	return datas, nil
+}
+func (u *dataBayarInvoice) GetByID(param ParamGetByID) (*entity.DataBayarInvoice, error) {
+	data, err := u.repo.GetByID(repo.ParamGetById{
+		Ctx: param.Ctx,
+		ID:  param.Req.ID,
+		PreloadAkun: true,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return data, nil
 }

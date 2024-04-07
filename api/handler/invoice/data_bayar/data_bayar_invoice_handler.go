@@ -17,6 +17,7 @@ import (
 )
 
 type DataBayarInvoiceHandler interface {
+	GetById(c *fiber.Ctx) error
 	GetByInvoiceId(c *fiber.Ctx) error
 	CreateByInvoiceId(c *fiber.Ctx) error
 	Update(c *fiber.Ctx) error
@@ -69,6 +70,30 @@ func errResponse(c *fiber.Ctx, err error) error {
 	return c.Status(fiber.StatusInternalServerError).JSON(res_global.ErrorRes(fiber.ErrInternalServerError.Code, fiber.ErrInternalServerError.Message, nil))
 }
 
+func (h *dataBayarInvoiceHandler) GetById(c *fiber.Ctx) error {
+	req := new(req_global.ParamByID)
+
+	c.ParamsParser(req)
+	c.BodyParser(req)
+
+	errValidate := h.validator.Validate(req)
+	if errValidate != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(errValidate)
+	}
+
+	ctx := c.UserContext()
+	data, err := h.uc.GetByID(uc_invoice_data_bayar.ParamGetByID{
+		Ctx: ctx,
+		Req: *req,
+	})
+	// Handle errors
+	if err != nil {
+		return errResponse(c, err)
+	}
+
+	// Respond with success status
+	return c.Status(fiber.StatusOK).JSON(res_global.SuccessRes(fiber.StatusOK, message.OK, data))
+}
 func (h *dataBayarInvoiceHandler) GetByInvoiceId(c *fiber.Ctx) error {
 	req := new(req.GetByInvoiceID)
 

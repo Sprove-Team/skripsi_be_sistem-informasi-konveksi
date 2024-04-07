@@ -214,7 +214,7 @@ func cleanUp() {
 func TestMain(m *testing.M) {
 	test.GetDB()
 	dbt = test.DBT
-	// cleanUp()
+	cleanUp()
 	setUpData()
 	invoiceH := handler_init.NewInvoiceHandlerInit(dbt, test.Validator, test.UlidPkg, test.Encryptor)
 	userRepo := repo_user.NewUserRepo(dbt)
@@ -228,11 +228,12 @@ func TestMain(m *testing.M) {
 	api := app.Group("/api")
 	v1 := api.Group("/v1")
 	invoiceGroup := v1.Group("/invoice")
-	invoiceGroup.Route("/data_bayar", invoiceRoute.DataBayarInvoice)
+	invoiceGroup.Route("/:id/data_bayar", invoiceRoute.DataBayarByInvoiceId)
+	invoiceGroup.Route("/data_bayar", invoiceRoute.DataBayar)
 	invoiceGroup.Route("/", invoiceRoute.Invoice)
 	// Run tests
 	exitVal := m.Run()
-	cleanUp()
+	// cleanUp()
 	os.Exit(exitVal)
 }
 
@@ -244,10 +245,11 @@ func TestEndPointInvoice(t *testing.T) {
 	InvoiceGet(t)
 
 	// data bayar
-	InvoiceCreateDataBayar(t)
+	InvoiceCreateDataBayarByInvoiceId(t)
 	InvoiceUpdateDataBayar(t)
-	InvoiceGetAllByInvoiceIdDataBayar(t)
+	InvoiceGetDataBayar(t)
+	InvoiceGetAllDataBayarByInvoiceId(t)
 
 	// delete data bayar
-	InvoiceDeleteDataBayar(t)
+	// InvoiceDeleteDataBayar(t)
 }

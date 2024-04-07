@@ -5,7 +5,7 @@ import (
 )
 
 type CreateByInvoiceId struct {
-	InvoiceID       string                 `params:"invoice_id" validate:"required,ulid"`
+	InvoiceID       string                 `params:"id" validate:"required,ulid"`
 	BuktiPembayaran entity.BuktiPembayaran `json:"bukti_pembayaran" validate:"required,gt=0"`
 	Keterangan      string                 `json:"keterangan" validate:"required"`
 	AkunID          string                 `json:"akun_id" validate:"required,ulid"`
@@ -22,7 +22,7 @@ type Update struct {
 }
 
 type GetByInvoiceID struct {
-	InvoiceID string `params:"invoice_id" validate:"required,ulid"`
+	InvoiceID string `params:"id" validate:"required,ulid"`
 	AkunID    string `query:"akun_id" validate:"omitempty,ulid"`
 	Status    string `query:"status" validate:"omitempty,oneof=TERKONFIRMASI BELUM_TERKONFIRMASI"`
 }

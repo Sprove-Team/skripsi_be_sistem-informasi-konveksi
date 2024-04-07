@@ -119,7 +119,8 @@ func main() {
 		invoiceRoute := route.NewInvoiceRoute(invoiceHandler, authMid)
 		invoiceGroup := v1.Group("/invoice")
 		{
-			invoiceGroup.Route("/data_bayar", invoiceRoute.DataBayarInvoice)
+			invoiceGroup.Route("/:id/data_bayar", invoiceRoute.DataBayarByInvoiceId)
+			invoiceGroup.Route("/data_bayar", invoiceRoute.DataBayar)
 			invoiceGroup.Route("", invoiceRoute.Invoice)
 		}
 

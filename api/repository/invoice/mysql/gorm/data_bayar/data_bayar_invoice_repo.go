@@ -30,6 +30,7 @@ type (
 	}
 	ParamGetById struct {
 		Ctx context.Context
+		PreloadAkun bool
 		ID  string
 	}
 )
@@ -94,8 +95,11 @@ func (r *dataBayarInvoiceRepo) Delete(param ParamDelete) error {
 
 func (r *dataBayarInvoiceRepo) GetByID(param ParamGetById) (*entity.DataBayarInvoice, error) {
 	data := new(entity.DataBayarInvoice)
-	if err := r.DB.WithContext(param.Ctx).Where("id = ?", param.ID).First(data).Error; err != nil {
-		helper.LogsError(err)
+	tx := r.DB.WithContext(param.Ctx).Where("id = ?", param.ID)
+	if param.PreloadAkun{
+		tx = tx.Preload("Akun")
+	}
+	if err := tx.First(data).Error; err != nil {
 		return nil, err
 	}
 	return data, nil

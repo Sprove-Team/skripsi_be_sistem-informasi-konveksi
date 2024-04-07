@@ -9,7 +9,8 @@ import (
 
 type InvoiceRoute interface {
 	Invoice(router fiber.Router)
-	DataBayarInvoice(router fiber.Router)
+	DataBayar(router fiber.Router)
+	DataBayarByInvoiceId(router fiber.Router)
 }
 
 type invoiceRoute struct {
@@ -33,11 +34,16 @@ func (ro *invoiceRoute) Invoice(router fiber.Router) {
 	router.Delete("/:id", auth2, ro.h.InvoiceHandler().Delete)
 }
 
-func (ro *invoiceRoute) DataBayarInvoice(router fiber.Router) {
+func (ro *invoiceRoute) DataBayar(router fiber.Router) {
+	auth := ro.auth.Authorization([]string{"DIREKTUR", "ADMIN", "BENDAHARA"})
+	router.Get("/:id", auth, ro.h.DataBayarInvoiceHandler().GetById)
+	router.Put("/:id", auth, ro.h.DataBayarInvoiceHandler().Update)
+	router.Delete("/:id", auth, ro.h.DataBayarInvoiceHandler().Delete)
+}
+
+func (ro *invoiceRoute) DataBayarByInvoiceId(router fiber.Router) {
 	auth := ro.auth.Authorization([]string{"DIREKTUR", "ADMIN"})
 	auth2 := ro.auth.Authorization([]string{"DIREKTUR", "ADMIN", "BENDAHARA"})
-	router.Get("/:invoice_id", auth2, ro.h.DataBayarInvoiceHandler().GetByInvoiceId)
-	router.Post("/:invoice_id", auth, ro.h.DataBayarInvoiceHandler().CreateByInvoiceId)
-	router.Put("/:id", auth2, ro.h.DataBayarInvoiceHandler().Update)
-	router.Delete("/:id", auth2, ro.h.DataBayarInvoiceHandler().Delete)
+	router.Get("", auth2, ro.h.DataBayarInvoiceHandler().GetByInvoiceId)
+	router.Post("", auth, ro.h.DataBayarInvoiceHandler().CreateByInvoiceId)
 }

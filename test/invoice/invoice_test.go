@@ -790,7 +790,6 @@ func InvoiceGetAll(t *testing.T) {
 	err := dbt.Preload("DetailInvoice").Order("id ASC").First(dataInvoice).Error
 	if err != nil {
 		panic(helper.LogsError(err))
-		return
 	}
 	tests := []struct {
 		name         string
