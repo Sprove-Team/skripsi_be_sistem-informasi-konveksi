@@ -64,7 +64,7 @@ func (ro *akuntansiRoute) HutangPiutang(router fiber.Router) {
 
 func (ro *akuntansiRoute) Kontak(router fiber.Router) {
 	auth := ro.auth.Authorization([]string{"DIREKTUR", "BENDAHARA"})
-	auth2 := ro.auth.Authorization([]string{"DIREKTUR", "BENDAHARA", "ADMIN"})
+	auth2 := ro.auth.Authorization([]string{})
 	router.Get("", auth2, ro.h.Kontak().GetAll)
 	router.Post("", auth, ro.h.Kontak().Create)
 	router.Put("/:id", auth, ro.h.Kontak().Update)

@@ -371,7 +371,7 @@ func AkuntansiGetAllKontak(t *testing.T) {
 			},
 		},
 		{
-			name:         "err: authorization " + entity.RolesById[4],
+			name:         "authorization " + entity.RolesById[4] + " passed",
 			token:        tokens[entity.RolesById[4]],
 			expectedCode: 401,
 			expectedBody: test.Response{
@@ -380,7 +380,7 @@ func AkuntansiGetAllKontak(t *testing.T) {
 			},
 		},
 		{
-			name:         "err: authorization " + entity.RolesById[5],
+			name:         "authorization " + entity.RolesById[5] + " passed",
 			token:        tokens[entity.RolesById[5]],
 			expectedCode: 401,
 			expectedBody: test.Response{
