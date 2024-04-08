@@ -243,13 +243,11 @@ func UserUpdate(t *testing.T) {
 	err := dbt.Select("id").First(user, "ROLE NOT IN (?) AND id NOT IN (?)", []string{entity.RolesById[1], entity.RolesById[5]}, idsDefaultUser).Error
 	if err != nil {
 		panic(helper.LogsError(err))
-		return
 	}
 	userSpv := new(entity.User)
 	err = dbt.Select("id").First(userSpv, "jenis_spv_id = ? AND id NOT IN (?)", idSpv, idsDefaultUser).Error
 	if err != nil {
 		panic(helper.LogsError(err))
-		return
 	}
 	spv2 := &entity.JenisSpv{
 		Base: entity.Base{
@@ -260,7 +258,6 @@ func UserUpdate(t *testing.T) {
 	err = dbt.Create(spv2).Error
 	if err != nil {
 		panic(helper.LogsError(err))
-		return
 	}
 
 	idUser = user.ID
@@ -428,7 +425,9 @@ func UserUpdate(t *testing.T) {
 
 		{
 			name:         "err: authorization " + entity.RolesById[2],
-			payload:      req_user.Update{},
+			payload:      req_user.Update{
+				ID: idSpv,
+			},
 			token:        tokens[entity.RolesById[2]],
 			expectedCode: 401,
 			expectedBody: test.Response{
@@ -438,7 +437,9 @@ func UserUpdate(t *testing.T) {
 		},
 		{
 			name:         "err: authorization " + entity.RolesById[3],
-			payload:      req_user.Update{},
+			payload:      req_user.Update{
+				ID: idSpv,
+			},
 			token:        tokens[entity.RolesById[3]],
 			expectedCode: 401,
 			expectedBody: test.Response{
@@ -448,7 +449,9 @@ func UserUpdate(t *testing.T) {
 		},
 		{
 			name:         "err: authorization " + entity.RolesById[4],
-			payload:      req_user.Update{},
+			payload:      req_user.Update{
+				ID: idSpv,
+			},
 			token:        tokens[entity.RolesById[4]],
 			expectedCode: 401,
 			expectedBody: test.Response{
@@ -458,7 +461,9 @@ func UserUpdate(t *testing.T) {
 		},
 		{
 			name:         "err: authorization " + entity.RolesById[5],
-			payload:      req_user.Update{},
+			payload:      req_user.Update{
+				ID: idSpv,
+			},
 			token:        tokens[entity.RolesById[5]],
 			expectedCode: 401,
 			expectedBody: test.Response{
@@ -472,6 +477,12 @@ func UserUpdate(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			code, body, err := test.GetJsonTestRequestResponse(app, "PUT", "/api/v1/user/"+tt.payload.ID, tt.payload, &tt.token)
 			assert.NoError(t, err)
+			if strings.Contains(tt.name, "passed") {
+				assert.NotEqual(t, tt.expectedCode, code)
+				assert.NotEqual(t, tt.expectedBody.Code, body.Code)
+				assert.NotEqual(t, tt.expectedBody.Status, body.Status)
+				return
+			}
 			assert.Equal(t, tt.expectedCode, code)
 			if len(tt.expectedBody.ErrorsMessages) > 0 {
 				for _, v := range tt.expectedBody.ErrorsMessages {
@@ -584,7 +595,7 @@ func UserGetAll(t *testing.T) {
 			},
 		},
 		{
-			name:         "err: authorization " + entity.RolesById[4],
+			name:         "authorization " + entity.RolesById[4] + " passed",
 			token:        tokens[entity.RolesById[4]],
 			expectedCode: 401,
 			expectedBody: test.Response{
@@ -607,8 +618,13 @@ func UserGetAll(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			code, body, err := test.GetJsonTestRequestResponse(app, "GET", "/api/v1/user"+tt.queryBody, nil, &tt.token)
 			assert.NoError(t, err)
+			if strings.Contains(tt.name, "passed") {
+				assert.NotEqual(t, tt.expectedCode, code)
+				assert.NotEqual(t, tt.expectedBody.Code, body.Code)
+				assert.NotEqual(t, tt.expectedBody.Status, body.Status)
+				return
+			}
 			assert.Equal(t, tt.expectedCode, code)
-
 			var res []map[string]any
 			if strings.Contains(tt.name, "sukses") {
 				err = mapstructure.Decode(body.Data, &res)
@@ -736,6 +752,12 @@ func UserGet(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			code, body, err := test.GetJsonTestRequestResponse(app, "GET", "/api/v1/user/"+tt.id, nil, &tt.token)
 			assert.NoError(t, err)
+			if strings.Contains(tt.name, "passed") {
+				assert.NotEqual(t, tt.expectedCode, code)
+				assert.NotEqual(t, tt.expectedBody.Code, body.Code)
+				assert.NotEqual(t, tt.expectedBody.Status, body.Status)
+				return
+			}
 			assert.Equal(t, tt.expectedCode, code)
 
 			var res map[string]any
@@ -854,6 +876,12 @@ func UserDelete(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			code, body, err := test.GetJsonTestRequestResponse(app, "DELETE", "/api/v1/user/"+tt.id, nil, &tt.token)
 			assert.NoError(t, err)
+			if strings.Contains(tt.name, "passed") {
+				assert.NotEqual(t, tt.expectedCode, code)
+				assert.NotEqual(t, tt.expectedBody.Code, body.Code)
+				assert.NotEqual(t, tt.expectedBody.Status, body.Status)
+				return
+			}
 			assert.Equal(t, tt.expectedCode, code)
 			if len(tt.expectedBody.ErrorsMessages) > 0 {
 				for _, v := range tt.expectedBody.ErrorsMessages {

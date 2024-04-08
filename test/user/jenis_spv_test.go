@@ -1,6 +1,7 @@
 package test_user
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/be-sistem-informasi-konveksi/common/message"
@@ -104,6 +105,12 @@ func UserCreateSpv(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			code, body, err := test.GetJsonTestRequestResponse(app, "POST", "/api/v1/user/jenis_spv", tt.payload, &tt.token)
 			assert.NoError(t, err)
+			if strings.Contains(tt.name, "passed") {
+				assert.NotEqual(t, tt.expectedCode, code)
+				assert.NotEqual(t, tt.expectedBody.Code, body.Code)
+				assert.NotEqual(t, tt.expectedBody.Status, body.Status)
+				return
+			}
 			assert.Equal(t, tt.expectedCode, code)
 			if len(tt.expectedBody.ErrorsMessages) > 0 {
 				for _, v := range tt.expectedBody.ErrorsMessages {
@@ -245,6 +252,12 @@ func UserUpdateSpv(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			code, body, err := test.GetJsonTestRequestResponse(app, "PUT", "/api/v1/user/jenis_spv/"+tt.payload.ID, tt.payload, &tt.token)
 			assert.NoError(t, err)
+			if strings.Contains(tt.name, "passed") {
+				assert.NotEqual(t, tt.expectedCode, code)
+				assert.NotEqual(t, tt.expectedBody.Code, body.Code)
+				assert.NotEqual(t, tt.expectedBody.Status, body.Status)
+				return
+			}
 			assert.Equal(t, tt.expectedCode, code)
 			if len(tt.expectedBody.ErrorsMessages) > 0 {
 				for _, v := range tt.expectedBody.ErrorsMessages {
@@ -274,28 +287,80 @@ func UserGetAllSpv(t *testing.T) {
 				Code:   200,
 			},
 		},
+		{
+			name:         "err: authorization " + entity.RolesById[2],
+			token:        tokens[entity.RolesById[2]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[3],
+			token:        tokens[entity.RolesById[3]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "authorization " + entity.RolesById[4] + " passed",
+			token:        tokens[entity.RolesById[4]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[5],
+			token:        tokens[entity.RolesById[5]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			code, body, err := test.GetJsonTestRequestResponse(app, "GET", "/api/v1/user/jenis_spv", nil, &tt.token)
 			assert.NoError(t, err)
-			assert.Equal(t, tt.expectedCode, code)
-			var res []any
-			err = mapstructure.Decode(body.Data, &res)
-			assert.NoError(t, err)
-			assert.Greater(t, len(res), 0)
-			if len(res) <= 0 {
+			if strings.Contains(tt.name, "passed") {
+				assert.NotEqual(t, tt.expectedCode, code)
+				assert.NotEqual(t, tt.expectedBody.Code, body.Code)
+				assert.NotEqual(t, tt.expectedBody.Status, body.Status)
 				return
 			}
-			assert.NotEmpty(t, res[0])
-			for _, v := range res {
-				assert.NotEmpty(t, v.(map[string]any)["id"])
-				assert.NotEmpty(t, v.(map[string]any)["created_at"])
-				assert.NotEmpty(t, v.(map[string]any)["nama"])
+			assert.Equal(t, tt.expectedCode, code)
+			if strings.Contains(tt.name, "sukses") {
+				var res []any
+				err = mapstructure.Decode(body.Data, &res)
+				assert.NoError(t, err)
+				assert.Greater(t, len(res), 0)
+				if len(res) <= 0 {
+					return
+				}
+				assert.NotEmpty(t, res[0])
+				for _, v := range res {
+					assert.NotEmpty(t, v.(map[string]any)["id"])
+					assert.NotEmpty(t, v.(map[string]any)["created_at"])
+					assert.NotEmpty(t, v.(map[string]any)["nama"])
+				}
+				assert.Equal(t, tt.expectedBody.Status, body.Status)
+			} else {
+				if len(tt.expectedBody.ErrorsMessages) > 0 {
+					for _, v := range tt.expectedBody.ErrorsMessages {
+						assert.Contains(t, body.ErrorsMessages, v)
+					}
+					assert.Equal(t, tt.expectedBody.Status, body.Status)
+				} else {
+					assert.Equal(t, tt.expectedBody, body)
+				}
 			}
-			assert.Equal(t, tt.expectedBody.Status, body.Status)
-
 		})
 	}
 }
@@ -385,6 +450,12 @@ func UserDeleteSpv(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			code, body, err := test.GetJsonTestRequestResponse(app, "DELETE", "/api/v1/user/jenis_spv/"+tt.id, nil, &tt.token)
 			assert.NoError(t, err)
+			if strings.Contains(tt.name, "passed") {
+				assert.NotEqual(t, tt.expectedCode, code)
+				assert.NotEqual(t, tt.expectedBody.Code, body.Code)
+				assert.NotEqual(t, tt.expectedBody.Status, body.Status)
+				return
+			}
 			assert.Equal(t, tt.expectedCode, code)
 			if len(tt.expectedBody.ErrorsMessages) > 0 {
 				for _, v := range tt.expectedBody.ErrorsMessages {
