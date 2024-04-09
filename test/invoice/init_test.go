@@ -214,7 +214,6 @@ func cleanUp() {
 func TestMain(m *testing.M) {
 	test.GetDB()
 	dbt = test.DBT
-	cleanUp()
 	setUpData()
 	invoiceH := handler_init.NewInvoiceHandlerInit(dbt, test.Validator, test.UlidPkg, test.Encryptor)
 	userRepo := repo_user.NewUserRepo(dbt)
@@ -233,7 +232,7 @@ func TestMain(m *testing.M) {
 	invoiceGroup.Route("/", invoiceRoute.Invoice)
 	// Run tests
 	exitVal := m.Run()
-	// cleanUp()
+	cleanUp()
 	os.Exit(exitVal)
 }
 
@@ -251,5 +250,5 @@ func TestEndPointInvoice(t *testing.T) {
 	InvoiceGetAllDataBayarByInvoiceId(t)
 
 	// delete data bayar
-	// InvoiceDeleteDataBayar(t)
+	InvoiceDeleteDataBayar(t)
 }

@@ -25,7 +25,7 @@ func AkuntansiCreateTransaksi(t *testing.T) {
 		expectedCode int
 	}{
 		{
-			name:  "sukses denganout kontak",
+			name:  "sukses tanpa kontak",
 			token: tokens[entity.RolesById[1]],
 			payload: req_akuntansi_transaksi.Create{
 				BuktiPembayaran: []string{"bukti-pembayaran.webp"},
@@ -967,7 +967,7 @@ func AkuntansiGetTransaksi(t *testing.T) {
 		expectedCode int
 	}{
 		{
-			name:         "sukses denganout kontak",
+			name:         "sukses tanpa kontak",
 			token:        tokens[entity.RolesById[1]],
 			id:           idTransaksi,
 			expectedCode: 200,
@@ -1073,7 +1073,7 @@ func AkuntansiGetTransaksi(t *testing.T) {
 				assert.NotEmpty(t, res["tanggal"])
 				assert.Equal(t, tt.expectedBody.Status, body.Status)
 				switch tt.name {
-				case "sukses denganout kontak":
+				case "sukses tanpa kontak":
 					assert.Empty(t, res["kontak"])
 				case "sukses dengan kontak":
 					assert.NotEmpty(t, res["kontak"])

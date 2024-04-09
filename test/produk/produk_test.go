@@ -533,7 +533,7 @@ func ProdukGet(t *testing.T) {
 		expectedCode int
 	}{
 		{
-			name:         "sukses denganout: harga detail",
+			name:         "sukses tanpa: harga detail",
 			token:        tokens[entity.RolesById[1]],
 			id:           idProduk,
 			expectedCode: 200,
@@ -639,7 +639,7 @@ func ProdukGet(t *testing.T) {
 				assert.NotEmpty(t, res["kategori"].(map[string]any)["nama"])
 				assert.Equal(t, tt.expectedBody.Status, body.Status)
 				switch tt.name {
-				case "sukses denganout: harga detail":
+				case "sukses tanpa: harga detail":
 					assert.Empty(t, res["harga_detail"])
 				case "sukses dengan: harga detail":
 					assert.NotEmpty(t, res["harga_detail"])

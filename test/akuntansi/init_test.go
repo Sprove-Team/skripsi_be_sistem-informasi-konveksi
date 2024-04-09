@@ -37,6 +37,9 @@ func cleanUp() {
 	if err := dbt.Unscoped().Where("1 = 1").Delete(&entity.HutangPiutang{}).Error; err != nil {
 		panic(helper.LogsError(err))
 	}
+	if err := dbt.Unscoped().Where("1 = 1").Delete(&entity.Invoice{}).Error; err != nil {
+		panic(helper.LogsError(err))
+	}
 	if err := dbt.Unscoped().Where("1 = 1").Delete(&entity.Transaksi{}).Error; err != nil {
 		panic(helper.LogsError(err))
 	}
