@@ -15,6 +15,7 @@ env:
   VERSION_SECRET_MANAGER: 1 # TODO: update Version Secret Manager
 
 jobs:
+
   build-deploy-gcloud:
     permissions:
       contents: 'read'
