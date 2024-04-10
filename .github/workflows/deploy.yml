@@ -56,16 +56,13 @@ jobs:
         with:
           service: ${{ env.SERVICE }}
           region: ${{ env.GAR_LOCATION }}
-          flags: "--service-account=${{secrets.SERVICE_ACCOUNT}}  \
-            --allow-unauthenticated\
-            --set-secrets=DB_Username=DB_Username:${{ env.VERSION_SECRET_MANAGER }},\
-            DB_Password=DB_Password:${{ env.VERSION_SECRET_MANAGER }},\
-            DB_Port=DB_Port:${{ env.VERSION_SECRET_MANAGER }},\
-            DB_Host=DB_Host:${{ env.VERSION_SECRET_MANAGER }},\
-            DB_Name=DB_Name:${{ env.VERSION_SECRET_MANAGER }},\
-            JWT_Secret=JWT_Secret:${{ env.VERSION_SECRET_MANAGER }},\
-            JWT_Secret_Refresh=JWT_Secret_Refresh:${{ env.VERSION_SECRET_MANAGER }},\
-            BUCKET_NAME=BUCKET_NAME:${{ env.VERSION_SECRET_MANAGER }}"
+          flags: "--allow-unauthenticated --set-secrets=DB_USERNAME=DB_USERNAME:${{ env.VERSION_SECRET_MANAGER }},\
+            DB_PASWORD=DB_PASWORD:${{ env.VERSION_SECRET_MANAGER }},\
+            DB_PORT=DB_PORT:${{ env.VERSION_SECRET_MANAGER }},\
+            DB_HOST=DB_HOST:${{ env.VERSION_SECRET_MANAGER }},\
+            DB_NAME=DB_NAME:${{ env.VERSION_SECRET_MANAGER }},\
+            JWT_TOKEN=JWT_TOKEN:${{ env.VERSION_SECRET_MANAGER }},\
+            JWT_REFTOKEN=JWT_REFTOKEN:${{ env.VERSION_SECRET_MANAGER }}"
           # NOTE: If using a pre-built image, update the image name here
           image: ${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.SERVICE }}:${{ steps.vars.outputs.sha_short }}
           # NOTE: You can also set env variables here:
@@ -80,6 +77,7 @@ jobs:
             DB_NAME=${{ secrets.DB_NAME }}
             JWT_TOKEN=${{ secrets.JWT_TOKEN }}
             JWT_REFTOKEN=${{ secrets.JWT_REFTOKEN }}
+
 
       # If required, use the Cloud Run url output in later steps
       - name: Show Output
