@@ -19,10 +19,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: code checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - id: auth
-        uses: google-github-actions/auth@v1
+        uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.GCP_CREDENTIALS }}
 
@@ -52,7 +52,7 @@ jobs:
         with:
           service: ${{ env.SERVICE }}
           region: ${{ env.GAR_LOCATION }}
-          flags: "--service-account=${{secrets.SERVICE_ACCOUNT}}\
+          flags: "--service-account=${{secrets.SERVICE_ACCOUNT}}  \
             --allow-unauthenticated\ 
             --set-secrets=DB_Username=DB_Username:${{ env.VERSION_SECRET_MANAGER }},\
               DB_Password=DB_Password:${{ env.VERSION_SECRET_MANAGER }},\
