@@ -15,6 +15,7 @@ env:
   VERSION_SECRET_MANAGER: 1 # TODO: update Version Secret Manager
 
 jobs:
+
   build-deploy-gcloud:
     permissions:
       contents: 'read'
@@ -56,7 +57,7 @@ jobs:
         with:
           service: ${{ env.SERVICE }}
           region: ${{ env.GAR_LOCATION }}
-          flags: "--service-account=${{secrets.SERVICE_ACCOUNT}}  \
+          flags: "--service-account=${{secrets.SERVICE_ACCOUNT}}\
             --allow-unauthenticated\
             --set-secrets=DB_Username=DB_Username:${{ env.VERSION_SECRET_MANAGER }},\
             DB_Password=DB_Password:${{ env.VERSION_SECRET_MANAGER }},\
