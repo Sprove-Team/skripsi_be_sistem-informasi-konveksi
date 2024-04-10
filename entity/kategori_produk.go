@@ -1,11 +1,7 @@
 package entity
 
 type KategoriProduk struct {
-	Nama    string   `gorm:"type:varchar(150);unique;not null"`
-	Produks []Produk `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"produk"`
-	ID      uint     `gorm:"primaryKey;not null"`
-}
-
-func (KategoriProduk) TableName() string {
-	return "kategori_produk"
+	Base
+	Nama    string   `gorm:"type:varchar(150);uniqueIndex;not null" json:"nama,omitempty"`
+	Produks []Produk `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE" json:"-"`
 }

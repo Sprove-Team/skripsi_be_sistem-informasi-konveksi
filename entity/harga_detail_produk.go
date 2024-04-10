@@ -1,12 +1,8 @@
 package entity
 
 type HargaDetailProduk struct {
-	ProdukID string  `gorm:"type:varchar(36)" json:"produk_id"`
-	ID       uint    `gorm:"primaryKey;not null" json:"id"`
-	QTY      uint    `gorm:"default:0" json:"qty"`
-	Harga    float64 `gorm:"type:decimal(10, 2);" json:"harga"`
-}
-
-func (HargaDetailProduk) TableName() string {
-	return "harga_detail_produk"
+	Base
+	ProdukID string  `gorm:"type:varchar(26);index:idx_produk_id;not null" json:"produk_id,omitempty"`
+	QTY      uint    `gorm:"type:int(10) unsigned;not null;" json:"qty,omitempty"`
+	Harga    float64 `gorm:"type:decimal(10, 2);" json:"harga,omitempty"`
 }
