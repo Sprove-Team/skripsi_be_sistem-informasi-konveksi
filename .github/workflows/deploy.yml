@@ -6,12 +6,13 @@ on:
     branches:
       - master
 env:
+  APP_PORT: 8080 # TODO: port running
   PROJECT_ID: sistem-informasi-konveksi # TODO: update Google Cloud project id
   GAR_LOCATION: asia-southeast2 # TODO: update Artifact Registry location
   REPOSITORY: registry-sistem-informasi-konveksi # TODO: update Artifact Registry repository name
   SERVICE: go-sistem-informasi-konveksi # TODO: update Cloud Run service name
   REGION: asia-southeast2 # TODO: update Cloud Run service region
-  ENVIRONMENT: PRODUCTION # TODO: update Status Application (PRODUCTION/DEVELOPMENT)
+  ENVIRONMENT: PRODUCTION # TODO: update Environment Application (PRODUCTION/DEVELOPMENT)
   VERSION_SECRET_MANAGER: 1 # TODO: update Version Secret Manager
 
 jobs:
@@ -70,15 +71,7 @@ jobs:
           env_vars: |
             ENVIRONMENT=${{ env.ENVIRONMENT }}
             PROJECT_ID=${{ env.PROJECT_ID }}
-            ALLOW_ORIGINS=${{ secrets.ALLOW_ORIGINS }}
-            DB_USERNAME=${{ secrets.DB_USERNAME }}
-            DB_HOST=${{ secrets.DB_HOST }}
-            DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-            DB_PORT=${{ secrets.DB_PORT }}
-            DB_NAME=${{ secrets.DB_NAME }}
-            JWT_TOKEN=${{ secrets.JWT_TOKEN }}
-            JWT_REFTOKEN=${{ secrets.JWT_REFTOKEN }}
-
+            APP_PORT=${{ env.APP_PORT }}
 
       # If required, use the Cloud Run url output in later steps
       - name: Show Output
