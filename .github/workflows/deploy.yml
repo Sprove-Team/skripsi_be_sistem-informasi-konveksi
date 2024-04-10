@@ -59,7 +59,7 @@ jobs:
           service: ${{ env.SERVICE }}
           region: ${{ env.GAR_LOCATION }}
           flags: "--allow-unauthenticated --set-secrets=DB_USERNAME=DB_USERNAME:${{ env.VERSION_SECRET_MANAGER }},\
-            DB_PASWORD=DB_PASWORD:${{ env.VERSION_SECRET_MANAGER }},\
+            DB_PASSWORD=DB_PASSWORD:${{ env.VERSION_SECRET_MANAGER }},\
             DB_PORT=DB_PORT:${{ env.VERSION_SECRET_MANAGER }},\
             DB_HOST=DB_HOST:${{ env.VERSION_SECRET_MANAGER }},\
             DB_NAME=DB_NAME:${{ env.VERSION_SECRET_MANAGER }},\
