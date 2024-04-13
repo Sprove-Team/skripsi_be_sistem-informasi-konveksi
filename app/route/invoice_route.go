@@ -39,6 +39,7 @@ func (ro *invoiceRoute) DataBayar(router fiber.Router) {
 	router.Get("/:id", auth, ro.h.DataBayarInvoiceHandler().GetById)
 	router.Put("/:id", auth, ro.h.DataBayarInvoiceHandler().Update)
 	router.Delete("/:id", auth, ro.h.DataBayarInvoiceHandler().Delete)
+	router.Get("", auth, ro.h.DataBayarInvoiceHandler().GetAll)
 }
 
 func (ro *invoiceRoute) DataBayarByInvoiceId(router fiber.Router) {

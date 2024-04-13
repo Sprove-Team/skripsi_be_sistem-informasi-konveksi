@@ -13,7 +13,7 @@ type Invoice struct {
 	Keterangan       string             `gorm:"type:longtext" json:"keterangan,omitempty"`
 	TanggalDeadline  *time.Time         `gorm:"type:datetime(3)" json:"tanggal_deadline,omitempty"`
 	TanggalKirim     *time.Time         `gorm:"type:datetime(3)" json:"tanggal_kirim,omitempty"`
-	HutangPiutang    HutangPiutang      `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE" json:"-"`
+	HutangPiutang    *HutangPiutang      `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE" json:"hutang_piutang,omitempty"`
 	Kontak           *Kontak            `json:"kontak,omitempty"`
 	User             *User              `json:"user_editor,omitempty"`
 	DetailInvoice    []DetailInvoice    `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE" json:"detail_invoice,omitempty"`

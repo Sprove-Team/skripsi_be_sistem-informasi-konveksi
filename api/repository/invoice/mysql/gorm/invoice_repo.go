@@ -117,6 +117,9 @@ func (r *invoiceRepo) GetByIdWithoutPreload(param ParamGetByIdWithoutPreload) (*
 func (r *invoiceRepo) GetById(param ParamGetById) (*entity.Invoice, error) {
 	data := new(entity.Invoice)
 	tx := r.DB.WithContext(param.Ctx).
+		Preload("HutangPiutang", func(db *gorm.DB) *gorm.DB {
+			return db.Select("invoice_id", "sisa")
+		}).
 		Preload("DataBayarInvoice").
 		Preload("DataBayarInvoice.Akun").
 		Preload("DetailInvoice", func(db *gorm.DB) *gorm.DB {
@@ -236,9 +239,12 @@ func (r *invoiceRepo) GetAll(param ParamGetAll) ([]entity.Invoice, error) {
 
 	if err := tx.Limit(param.Limit).Preload("Kontak", func(db *gorm.DB) *gorm.DB {
 		return db.Omit("created_at")
-	}).Preload("User", func(db *gorm.DB) *gorm.DB {
-		return db.Omit("no_telp", "alamat", "created_at")
-	}).Find(&invoices).Error; err != nil {
+	}).Preload("HutangPiutang", func(db *gorm.DB) *gorm.DB {
+		return db.Select("invoice_id", "sisa")
+	}).
+		Preload("User", func(db *gorm.DB) *gorm.DB {
+			return db.Omit("no_telp", "alamat", "created_at")
+		}).Find(&invoices).Error; err != nil {
 		return nil, err
 	}
 

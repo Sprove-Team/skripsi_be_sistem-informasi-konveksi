@@ -247,6 +247,7 @@ func TestEndPointInvoice(t *testing.T) {
 	InvoiceCreateDataBayarByInvoiceId(t)
 	InvoiceUpdateDataBayar(t)
 	InvoiceGetDataBayar(t)
+	InvoiceGetAllDataBayar(t)
 	InvoiceGetAllDataBayarByInvoiceId(t)
 
 	// delete data bayar

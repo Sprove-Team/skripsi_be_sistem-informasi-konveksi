@@ -2,7 +2,8 @@ package entity
 
 type DataBayarInvoice struct {
 	Base
-	InvoiceID       string          `gorm:"type:varchar(26);not null;index:idx_invoice_id" json:"invoice_id"`
+	InvoiceID       string          `gorm:"type:varchar(26);not null;index:idx_invoice_id" json:"invoice_id,omitempty"`
+	Invoice         *Invoice        `json:"invoice,omitempty"`
 	AkunID          string          `gorm:"type:varchar(26);not null;index:idx_akun_id" json:"-"`
 	Akun            *Akun           `json:"akun,omitempty"`
 	Keterangan      string          `gorm:"type:longtext" json:"keterangan,omitempty"`

@@ -1015,6 +1015,12 @@ func InvoiceGetAll(t *testing.T) {
 					assert.NotEmpty(t, user["nama"])
 					assert.NotEmpty(t, user["role"])
 					assert.NotEmpty(t, user["username"])
+					hp, ok := r["hutang_piutang"].(map[string]any)
+					assert.True(t, ok)
+					assert.NotEmpty(t, hp["invoice_id"])
+					if ok {
+						assert.Greater(t, hp["sisa"], float64(0))
+					}
 
 					assert.Equal(t, tt.expectedBody.Status, body.Status)
 					switch tt.name {

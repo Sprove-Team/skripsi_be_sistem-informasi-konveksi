@@ -29,9 +29,16 @@ type (
 		AkunID    string
 	}
 	ParamGetById struct {
-		Ctx context.Context
+		Ctx         context.Context
 		PreloadAkun bool
-		ID  string
+		ID          string
+	}
+	ParamGetAll struct {
+		Ctx      context.Context
+		KontakID string
+		Status   string
+		Next     string
+		Limit    int
 	}
 )
 
@@ -39,6 +46,7 @@ type DataBayarInvoiceRepo interface {
 	Create(param ParamCreate) error
 	Update(param ParamUpdate) error
 	Delete(param ParamDelete) error
+	GetAll(param ParamGetAll) ([]entity.DataBayarInvoice, error)
 	GetByID(param ParamGetById) (*entity.DataBayarInvoice, error)
 	GetByInvoiceID(param ParamGetByInvoiceID) ([]entity.DataBayarInvoice, error)
 }
@@ -93,10 +101,38 @@ func (r *dataBayarInvoiceRepo) Delete(param ParamDelete) error {
 	return nil
 }
 
+func (r *dataBayarInvoiceRepo) GetAll(param ParamGetAll) ([]entity.DataBayarInvoice, error) {
+	datas := make([]entity.DataBayarInvoice, 0, param.Limit)
+	tx := r.DB.WithContext(param.Ctx).Model(datas).Order("id ASC")
+	if param.Next != "" {
+		tx = tx.Where("id > ?", param.Next)
+	}
+
+	if param.Status != "" {
+		tx = tx.Where("status = ?", param.Status)
+	}
+
+	if param.KontakID != "" {
+		// Preload the Invoice relationship conditionally
+		tx = tx.Joins("JOIN invoice ON data_bayar_invoice.invoice_id = invoice.id AND invoice.kontak_id = ?", param.KontakID)
+	}
+
+	tx = tx.Preload("Invoice", func(db *gorm.DB) *gorm.DB {
+		return db.Select("id", "kontak_id", "nomor_referensi", "created_at")
+	}).Preload("Invoice.Kontak", func(db *gorm.DB) *gorm.DB {
+		return db.Select("id", "nama")
+	})
+
+	if err := tx.Limit(param.Limit).Find(&datas).Error; err != nil {
+		return nil, err
+	}
+	return datas, nil
+}
+
 func (r *dataBayarInvoiceRepo) GetByID(param ParamGetById) (*entity.DataBayarInvoice, error) {
 	data := new(entity.DataBayarInvoice)
 	tx := r.DB.WithContext(param.Ctx).Where("id = ?", param.ID)
-	if param.PreloadAkun{
+	if param.PreloadAkun {
 		tx = tx.Preload("Akun")
 	}
 	if err := tx.First(data).Error; err != nil {
