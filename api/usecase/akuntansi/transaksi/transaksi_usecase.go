@@ -418,20 +418,22 @@ func (u *transaksiUsecase) GetById(ctx context.Context, id string) (entity.Trans
 }
 
 func (u *transaksiUsecase) GetAll(ctx context.Context, reqTransaksi req.GetAll) ([]entity.Transaksi, error) {
-	endDate, err := time.Parse(time.DateOnly, reqTransaksi.EndDate)
+	timeZone, _ := time.LoadLocation(reqTransaksi.TimeZone)
+	endDate, err := time.ParseInLocation(time.DateOnly, reqTransaksi.EndDate, timeZone)
 	if err != nil {
 		helper.LogsError(err)
 		return nil, err
 	}
-	startDate, err := time.Parse(time.DateOnly, reqTransaksi.StartDate)
+	startDate, err := time.ParseInLocation(time.DateOnly, reqTransaksi.StartDate, timeZone)
 	if err != nil {
 		helper.LogsError(err)
 		return nil, err
 	}
-
+	
 	searchFilter := repo.SearchTransaksi{
 		EndDate:   endDate,
 		StartDate: startDate,
+		TimeZone:  reqTransaksi.TimeZone,
 	}
 
 	dataTransaksi, err := u.repo.GetAll(ctx, searchFilter)
@@ -444,20 +446,21 @@ func (u *transaksiUsecase) GetAll(ctx context.Context, reqTransaksi req.GetAll) 
 }
 
 func (u *transaksiUsecase) GetHistory(ctx context.Context, reqTransaksi req.GetHistory) ([]entity.Transaksi, error) {
-	endDate, err := time.Parse(time.DateOnly, reqTransaksi.EndDate)
+	timeZone, _ := time.LoadLocation(reqTransaksi.TimeZone)
+	endDate, err := time.ParseInLocation(time.DateOnly, reqTransaksi.EndDate, timeZone)
 	if err != nil {
 		helper.LogsError(err)
 		return nil, err
 	}
-	startDate, err := time.Parse(time.DateOnly, reqTransaksi.StartDate)
+	startDate, err := time.ParseInLocation(time.DateOnly, reqTransaksi.StartDate, timeZone)
 	if err != nil {
 		helper.LogsError(err)
 		return nil, err
 	}
-
 	searchFilter := repo.SearchTransaksi{
 		EndDate:   endDate,
 		StartDate: startDate,
+		TimeZone:  reqTransaksi.TimeZone,
 	}
 
 	dataHistory, err := u.repo.GetHistory(ctx, searchFilter)

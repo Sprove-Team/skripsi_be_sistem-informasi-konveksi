@@ -32,6 +32,14 @@ func main() {
 		DB_Port:     os.Getenv("DB_PORT"),
 		LogLevel:    logger.Info,
 	}
+	// dbGormConf := config.DBGorm{
+	// 	DB_Username: "root",
+	// 	DB_Password: os.Getenv("DB_PASSWORD_ROOT"),
+	// 	DB_Name:     os.Getenv("DB_NAME_TEST"),
+	// 	DB_HOST:     os.Getenv("DB_HOST_TEST"),
+	// 	DB_Port:     os.Getenv("DB_PORT_TEST"),
+	// 	LogLevel:    logger.Info,
+	// }
 	if os.Getenv("ENVIRONMENT") == "DEVELOPMENT" {
 		dbGormConf.DB_HOST = "localhost"
 		dbGormConf.LogLevel = logger.Info

@@ -3,6 +3,7 @@ package test_akuntansi
 import (
 	"fmt"
 	"math"
+	"net/url"
 	"strings"
 	"testing"
 
@@ -846,11 +847,22 @@ func AkuntansiGetAllTransaksi(t *testing.T) {
 		{
 			name:         "sukses",
 			token:        tokens[entity.RolesById[1]],
-			queryBody:    "?start_date=2023-10-01&end_date=2024-12-31",
+			queryBody:    fmt.Sprintf("?start_date=2023-10-01&end_date=2024-12-31&time_zone=%s", url.PathEscape("Asia/Makassar")),
 			expectedCode: 200,
 			expectedBody: test.Response{
 				Status: message.OK,
 				Code:   200,
+			},
+		},
+		{
+			name:         "err: time zone tidak diketahui",
+			token:        tokens[entity.RolesById[1]],
+			queryBody:    fmt.Sprintf("?start_date=2023-10-01&end_date=2024-12-31&time_zone=%s", "123123asdf"),
+			expectedCode: 400,
+			expectedBody: test.Response{
+				Status:         fiber.ErrBadRequest.Message,
+				Code:           400,
+				ErrorsMessages: []string{"time zone tidak diketahui"},
 			},
 		},
 		{
@@ -860,7 +872,7 @@ func AkuntansiGetAllTransaksi(t *testing.T) {
 			expectedBody: test.Response{
 				Status:         fiber.ErrBadRequest.Message,
 				Code:           400,
-				ErrorsMessages: []string{"start date wajib diisi", "end date wajib diisi"},
+				ErrorsMessages: []string{"start date wajib diisi", "end date wajib diisi", "time zone wajib diisi"},
 			},
 		},
 		{
@@ -1225,11 +1237,22 @@ func AkuntansiGetHistoryTransaksi(t *testing.T) {
 		{
 			name:         "sukses",
 			token:        tokens[entity.RolesById[1]],
-			queryBody:    "?start_date=2023-10-01&end_date=2024-12-31",
+			queryBody:    fmt.Sprintf("?start_date=2023-10-01&end_date=2024-12-31&time_zone=%s", url.PathEscape("Asia/Makassar")),
 			expectedCode: 200,
 			expectedBody: test.Response{
 				Status: message.OK,
 				Code:   200,
+			},
+		},
+			{
+			name:         "err: time zone tidak diketahui",
+			token:        tokens[entity.RolesById[1]],
+			queryBody:    fmt.Sprintf("?start_date=2023-10-01&end_date=2024-12-31&time_zone=%s", "123123asdf"),
+			expectedCode: 400,
+			expectedBody: test.Response{
+				Status:         fiber.ErrBadRequest.Message,
+				Code:           400,
+				ErrorsMessages: []string{"time zone tidak diketahui"},
 			},
 		},
 		{
@@ -1239,7 +1262,7 @@ func AkuntansiGetHistoryTransaksi(t *testing.T) {
 			expectedBody: test.Response{
 				Status:         fiber.ErrBadRequest.Message,
 				Code:           400,
-				ErrorsMessages: []string{"start date wajib diisi", "end date wajib diisi"},
+				ErrorsMessages: []string{"start date wajib diisi", "end date wajib diisi", "time zone wajib diisi"},
 			},
 		},
 		{

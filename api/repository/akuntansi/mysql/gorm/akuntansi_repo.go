@@ -62,10 +62,10 @@ type ResultDataLBR struct {
 }
 
 type AkuntansiRepo interface {
-	GetDataJU(ctx context.Context, startDate, endDate time.Time) ([]ResultDataJU, error)
-	GetDataBB(ctx context.Context, akunIDs []string, startDate, endDate time.Time) ([]ResultDataBB, []ResultSaldoAwalDataBB, error)
+	GetDataJU(ctx context.Context, startDate, endDate time.Time, timeZone string) ([]ResultDataJU, error)
+	GetDataBB(ctx context.Context, akunIDs []string, startDate, endDate time.Time, timeZone string) ([]ResultDataBB, []ResultSaldoAwalDataBB, error)
 	GetDataNC(ctx context.Context, date time.Time) ([]ResultDataNc, error)
-	GetDataLBR(ctx context.Context, startDate, endDate time.Time) ([]ResultDataLBR, error)
+	GetDataLBR(ctx context.Context, startDate, endDate time.Time, timeZone string) ([]ResultDataLBR, error)
 	// GetNeraca(ctx context.Context)
 }
 
@@ -77,12 +77,12 @@ func NewAkuntansiRepo(DB *gorm.DB) AkuntansiRepo {
 	return &akuntansiRepo{DB}
 }
 
-func (r *akuntansiRepo) GetDataJU(ctx context.Context, startDate, endDate time.Time) ([]ResultDataJU, error) {
+func (r *akuntansiRepo) GetDataJU(ctx context.Context, startDate, endDate time.Time, timeZone string) ([]ResultDataJU, error) {
 	resultDatasJU := []ResultDataJU{}
 
 	subQuery := r.DB.Model(&entity.Transaksi{}).
 		Select("id").
-		Where("DATE(tanggal) >= ? AND DATE(tanggal) <= ?", startDate, endDate)
+		Where("DATE(CONVERT_TZ(tanggal, 'UTC', ?)) >= ? AND DATE(CONVERT_TZ(tanggal,'UTC', ?)) <= ?", timeZone, startDate, timeZone, endDate)
 
 	err := r.DB.WithContext(ctx).Model(&entity.Akun{}).
 		Joins("JOIN ayat_jurnal ON akun.id = ayat_jurnal.akun_id").
@@ -98,7 +98,7 @@ func (r *akuntansiRepo) GetDataJU(ctx context.Context, startDate, endDate time.T
 	return resultDatasJU, nil
 }
 
-func (r *akuntansiRepo) GetDataBB(ctx context.Context, akunIDs []string, startDate, endDate time.Time) ([]ResultDataBB, []ResultSaldoAwalDataBB, error) {
+func (r *akuntansiRepo) GetDataBB(ctx context.Context, akunIDs []string, startDate, endDate time.Time, timeZone string) ([]ResultDataBB, []ResultSaldoAwalDataBB, error) {
 	resultDatasBB := []ResultDataBB{}
 	resultSaldoAwalDatasBB := []ResultSaldoAwalDataBB{}
 
@@ -106,7 +106,7 @@ func (r *akuntansiRepo) GetDataBB(ctx context.Context, akunIDs []string, startDa
 	err := r.DB.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		subQuery := tx.Model(&entity.Transaksi{}).
 			Select("id").
-			Where("DATE(tanggal) >= ? AND DATE(tanggal) <= ?", startDate, endDate)
+			Where("DATE(CONVERT_TZ(tanggal, 'UTC', ?)) >= ? AND DATE(CONVERT_TZ(tanggal,'UTC', ?)) <= ?", timeZone, startDate, timeZone, endDate)
 
 		tx2 := tx.Model(&entity.Akun{})
 
@@ -182,13 +182,13 @@ func (r *akuntansiRepo) GetDataNC(ctx context.Context, date time.Time) ([]Result
 	return resultDatasNc, nil
 }
 
-func (r *akuntansiRepo) GetDataLBR(ctx context.Context, startDate, endDate time.Time) ([]ResultDataLBR, error) {
+func (r *akuntansiRepo) GetDataLBR(ctx context.Context, startDate, endDate time.Time, timeZone string) ([]ResultDataLBR, error) {
 	datas := []ResultDataLBR{}
 
 	err := r.DB.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		subQueryTr := tx.Model(&entity.Transaksi{}).
 			Select("id").
-			Where("DATE(tanggal) >= ? AND DATE(tanggal) <= ?", startDate, endDate)
+			Where("DATE(CONVERT_TZ(tanggal, 'UTC', ?)) >= ? AND DATE(CONVERT_TZ(tanggal,'UTC', ?)) <= ?", timeZone, startDate, timeZone, endDate)
 
 			// Select("k.kategori_akun as KategoriAkun, akun.Nama as NamaAkun, akun.saldo as Saldo, COALESCE(sum(ay.debit), 0) as SaldoDebit, COALESCE(sum(ay.kredit), 0) as SaldoKredit, COALESCE(sum(ay.saldo), 0) as Saldo, akun.kode as KodeAkun").
 			// Select("akun.kode AS KodeAkun,k.kategori_akun AS KategoriAkun, akun.Nama AS NamaAkun, akun.saldo AS Saldo").

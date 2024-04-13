@@ -33,7 +33,8 @@ func (dbgc *DBGorm) InitDBGorm(ulid pkg.UlidPkg) *gorm.DB {
 		dbgc.DB_Password,
 		dbgc.DB_HOST,
 		dbgc.DB_Port,
-		dbgc.DB_Name)
+		dbgc.DB_Name,
+		)
 
 	newLogger := logger.New(
 		log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer

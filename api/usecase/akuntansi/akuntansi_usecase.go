@@ -484,19 +484,20 @@ func (u *akuntansiUsecase) DownloadLBR(req req.GetAllLBR, LBR []res.LabaRugiRes)
 }
 
 func (u *akuntansiUsecase) GetAllJU(ctx context.Context, reqGetAllJU req.GetAllJU) (res.JurnalUmumRes, error) {
-	startDate, err := time.Parse(time.DateOnly, reqGetAllJU.StartDate)
+	timeZone, _ := time.LoadLocation(reqGetAllJU.TimeZone)
+	startDate, err := time.ParseInLocation(time.DateOnly, reqGetAllJU.StartDate, timeZone)
 	if err != nil {
 		helper.LogsError(err)
 		return res.JurnalUmumRes{}, err
 	}
 
-	endDate, err := time.Parse(time.DateOnly, reqGetAllJU.EndDate)
+	endDate, err := time.ParseInLocation(time.DateOnly, reqGetAllJU.EndDate, timeZone)
 	if err != nil {
 		helper.LogsError(err)
 		return res.JurnalUmumRes{}, err
 	}
 
-	dataJU, err := u.repo.GetDataJU(ctx, startDate, endDate)
+	dataJU, err := u.repo.GetDataJU(ctx, startDate, endDate, reqGetAllJU.TimeZone)
 	if err != nil {
 		return res.JurnalUmumRes{}, err
 	}
@@ -544,18 +545,20 @@ func (u *akuntansiUsecase) GetAllJU(ctx context.Context, reqGetAllJU req.GetAllJ
 }
 
 func (u *akuntansiUsecase) GetAllBB(ctx context.Context, reqGetAllBB req.GetAllBB) ([]res.BukuBesarRes, error) {
-	startDate, err := time.Parse(time.DateOnly, reqGetAllBB.StartDate)
+	timeZone, _ := time.LoadLocation(reqGetAllBB.TimeZone)
+	startDate, err := time.ParseInLocation(time.DateOnly, reqGetAllBB.StartDate, timeZone)
 	if err != nil {
 		helper.LogsError(err)
 		return nil, err
 	}
 
-	endDate, err := time.Parse(time.DateOnly, reqGetAllBB.EndDate)
+	endDate, err := time.ParseInLocation(time.DateOnly, reqGetAllBB.EndDate, timeZone)
 	if err != nil {
 		helper.LogsError(err)
 		return nil, err
 	}
-	dataAyatJurnals, dataSaldoAwalJurnals, err := u.repo.GetDataBB(ctx, reqGetAllBB.AkunID, startDate, endDate)
+
+	dataAyatJurnals, dataSaldoAwalJurnals, err := u.repo.GetDataBB(ctx, reqGetAllBB.AkunID, startDate, endDate, reqGetAllBB.TimeZone)
 	if err != nil {
 		return nil, err
 	}
@@ -672,19 +675,20 @@ func (u *akuntansiUsecase) GetAllNC(ctx context.Context, reqGetAllNC req.GetAllN
 }
 
 func (u *akuntansiUsecase) GetAllLBR(ctx context.Context, reqGetAllLBR req.GetAllLBR) ([]res.LabaRugiRes, error) {
-	startDate, err := time.Parse(time.DateOnly, reqGetAllLBR.StartDate)
+	timeZone, _ := time.LoadLocation(reqGetAllLBR.TimeZone)
+	startDate, err := time.ParseInLocation(time.DateOnly, reqGetAllLBR.StartDate, timeZone)
 	if err != nil {
 		helper.LogsError(err)
 		return nil, err
 	}
 
-	endDate, err := time.Parse(time.DateOnly, reqGetAllLBR.EndDate)
+	endDate, err := time.ParseInLocation(time.DateOnly, reqGetAllLBR.EndDate, timeZone)
 	if err != nil {
 		helper.LogsError(err)
 		return nil, err
 	}
 
-	lbrRes, err := u.repo.GetDataLBR(ctx, startDate, endDate)
+	lbrRes, err := u.repo.GetDataLBR(ctx, startDate, endDate, reqGetAllLBR.TimeZone)
 	if err != nil {
 		return nil, err
 	}
