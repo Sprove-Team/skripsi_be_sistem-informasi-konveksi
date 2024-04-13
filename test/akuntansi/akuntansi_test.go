@@ -2,6 +2,7 @@ package test_akuntansi
 
 import (
 	"fmt"
+	"net/url"
 	"os"
 	"strings"
 	"testing"
@@ -26,7 +27,7 @@ func AkuntansiGetJU(t *testing.T) {
 			name:         "sukses",
 			token:        tokens[entity.RolesById[1]],
 			expectedCode: 200,
-			queryBody:    fmt.Sprintf("?start_date=%s&end_date=%s", ttTrStartDateAkuntansi, ttTrEndDateAkuntansi),
+			queryBody:    fmt.Sprintf("?start_date=%s&end_date=%s&time_zone=%s", ttTrStartDateAkuntansi, ttTrEndDateAkuntansi, url.PathEscape("Asia/Makassar")),
 			expectedBody: test.Response{
 				Status: message.OK,
 				Code:   200,
@@ -36,13 +37,13 @@ func AkuntansiGetJU(t *testing.T) {
 			name:         "sukses download excel",
 			token:        tokens[entity.RolesById[1]],
 			expectedCode: 200,
-			queryBody:    fmt.Sprintf("?start_date=%s&end_date=%s&download=1", ttTrStartDateAkuntansi, ttTrEndDateAkuntansi),
+			queryBody:    fmt.Sprintf("?start_date=%s&end_date=%s&download=1&time_zone=%s", ttTrStartDateAkuntansi, ttTrEndDateAkuntansi, url.PathEscape("Asia/Makassar")),
 		},
 		{
 			name:         "err: format start date & end date",
 			token:        tokens[entity.RolesById[1]],
 			expectedCode: 400,
-			queryBody:    "?start_date=2023-01-01T22:17:03.723+08:00&end_date=2024-01-01T22:17:03.723+08:00",
+			queryBody:    fmt.Sprintf("?start_date=2023-01-01T22:17:03.723+08:00&end_date=2024-01-01T22:17:03.723+08:00&time_zone=%s", url.PathEscape("Asia/Makassar")),
 			expectedBody: test.Response{
 				Status:         fiber.ErrBadRequest.Message,
 				Code:           400,
@@ -50,13 +51,24 @@ func AkuntansiGetJU(t *testing.T) {
 			},
 		},
 		{
-			name:         "err: wajib diisi",
+			name:         "err: time zone tidak diketahui",
+			token:        tokens[entity.RolesById[1]],
+			queryBody:    fmt.Sprintf("?start_date=2023-10-01&end_date=2024-12-31&time_zone=%s", "123123asdf"),
+			expectedCode: 400,
+			expectedBody: test.Response{
+				Status:         fiber.ErrBadRequest.Message,
+				Code:           400,
+				ErrorsMessages: []string{"time zone tidak diketahui"},
+			},
+		},
+		{
+			name:         "err: start_date & end_date wajib diisi",
 			token:        tokens[entity.RolesById[1]],
 			expectedCode: 400,
 			expectedBody: test.Response{
 				Status:         fiber.ErrBadRequest.Message,
 				Code:           400,
-				ErrorsMessages: []string{"start date wajib diisi", "end date wajib diisi"},
+				ErrorsMessages: []string{"start date wajib diisi", "end date wajib diisi", "time zone wajib diisi"},
 			},
 		},
 		{
@@ -191,7 +203,7 @@ func AkuntansiGetBB(t *testing.T) {
 			name:         "sukses",
 			token:        tokens[entity.RolesById[1]],
 			expectedCode: 200,
-			queryBody:    "?start_date=2023-01-20&end_date=2024-12-30",
+			queryBody:    fmt.Sprintf("?start_date=2023-01-20&end_date=2024-12-30&time_zone=%s", url.PathEscape("Asia/Makassar")),
 			expectedBody: test.Response{
 				Status: message.OK,
 				Code:   200,
@@ -201,7 +213,7 @@ func AkuntansiGetBB(t *testing.T) {
 			name:         "sukses dengan filter",
 			token:        tokens[entity.RolesById[1]],
 			expectedCode: 200,
-			queryBody:    fmt.Sprintf("?start_date=%s&end_date=%s&akun_id=01HP7DVBGTC06PXWT6FD66VERN%s01HP7DVBGTC06PXWT6FF89WRAB", ttTrStartDateAkuntansi, ttTrEndDateAkuntansi, "%2C"),
+			queryBody:    fmt.Sprintf("?start_date=%s&end_date=%s&time_zone=%s&akun_id=01HP7DVBGTC06PXWT6FD66VERN%s01HP7DVBGTC06PXWT6FF89WRAB", ttTrStartDateAkuntansi, ttTrEndDateAkuntansi, url.PathEscape("Asia/Makassar"), "%2C"),
 			expectedBody: test.Response{
 				Status: message.OK,
 				Code:   200,
@@ -211,13 +223,13 @@ func AkuntansiGetBB(t *testing.T) {
 			name:         "sukses download excel",
 			token:        tokens[entity.RolesById[1]],
 			expectedCode: 200,
-			queryBody:    fmt.Sprintf("?start_date=%s&end_date=%s&akun_id=01HP7DVBGTC06PXWT6FD66VERN%s01HP7DVBGTC06PXWT6FF89WRAB&download=1", ttTrStartDateAkuntansi, ttTrEndDateAkuntansi, "%2C"),
+			queryBody:    fmt.Sprintf("?start_date=%s&end_date=%s&time_zone=%s&akun_id=01HP7DVBGTC06PXWT6FD66VERN%s01HP7DVBGTC06PXWT6FF89WRAB&download=1", ttTrStartDateAkuntansi, ttTrEndDateAkuntansi, url.PathEscape("Asia/Makassar"), "%2C"),
 		},
 		{
 			name:         "err: format start date & end date",
 			token:        tokens[entity.RolesById[1]],
 			expectedCode: 400,
-			queryBody:    "?start_date=2023-01-01T22:17:03.723+08:00&end_date=2024-01-01T22:17:03.723+08:00",
+			queryBody:    fmt.Sprintf("?start_date=2023-01-01T22:17:03.723+08:00&end_date=2024-01-01T22:17:03.723+08:00&time_zone=%s", url.PathEscape("Asia/Makassar")),
 			expectedBody: test.Response{
 				Status:         fiber.ErrBadRequest.Message,
 				Code:           400,
@@ -225,13 +237,24 @@ func AkuntansiGetBB(t *testing.T) {
 			},
 		},
 		{
-			name:         "err: wajib diisi",
+			name:         "err: time zone tidak diketahui",
+			token:        tokens[entity.RolesById[1]],
+			queryBody:    fmt.Sprintf("?start_date=2023-10-01&end_date=2024-12-31&time_zone=%s", "123123asdf"),
+			expectedCode: 400,
+			expectedBody: test.Response{
+				Status:         fiber.ErrBadRequest.Message,
+				Code:           400,
+				ErrorsMessages: []string{"time zone tidak diketahui"},
+			},
+		},
+		{
+			name:         "err: start_date & end_date wajib diisi",
 			token:        tokens[entity.RolesById[1]],
 			expectedCode: 400,
 			expectedBody: test.Response{
 				Status:         fiber.ErrBadRequest.Message,
 				Code:           400,
-				ErrorsMessages: []string{"start date wajib diisi", "end date wajib diisi"},
+				ErrorsMessages: []string{"start date wajib diisi", "end date wajib diisi", "time zone wajib diisi"},
 			},
 		},
 		{
@@ -535,7 +558,7 @@ func AkuntansiGetLB(t *testing.T) {
 			name:         "sukses",
 			token:        tokens[entity.RolesById[1]],
 			expectedCode: 200,
-			queryBody:    "?start_date=2023-01-20&end_date=2024-12-30",
+			queryBody:    fmt.Sprintf("?start_date=2023-01-20&end_date=2024-12-30&time_zone=%s", url.PathEscape("Asia/Makassar")),
 			expectedBody: test.Response{
 				Status: message.OK,
 				Code:   200,
@@ -545,13 +568,13 @@ func AkuntansiGetLB(t *testing.T) {
 			name:         "sukses download excel",
 			token:        tokens[entity.RolesById[1]],
 			expectedCode: 200,
-			queryBody:    "?start_date=2023-01-20&end_date=2024-12-30&download=1",
+			queryBody:    fmt.Sprintf("?start_date=2023-01-20&end_date=2024-12-30&download=1&time_zone=%s", url.PathEscape("Asia/Makassar")),
 		},
 		{
 			name:         "err: format start date & end date",
 			token:        tokens[entity.RolesById[1]],
 			expectedCode: 400,
-			queryBody:    "?start_date=2023-01-01T22:17:03.723+08:00&end_date=2024-01-01T22:17:03.723+08:00",
+			queryBody:    fmt.Sprintf("?start_date=2023-01-01T22:17:03.723+08:00&end_date=2024-01-01T22:17:03.723+08:00&time_zone=%s", url.PathEscape("Asia/Makassar")),
 			expectedBody: test.Response{
 				Status:         fiber.ErrBadRequest.Message,
 				Code:           400,
@@ -559,13 +582,24 @@ func AkuntansiGetLB(t *testing.T) {
 			},
 		},
 		{
-			name:         "err: wajib diisi",
+			name:         "err: time zone tidak diketahui",
+			token:        tokens[entity.RolesById[1]],
+			queryBody:    fmt.Sprintf("?start_date=2023-10-01&end_date=2024-12-31&time_zone=%s", "123123asdf"),
+			expectedCode: 400,
+			expectedBody: test.Response{
+				Status:         fiber.ErrBadRequest.Message,
+				Code:           400,
+				ErrorsMessages: []string{"time zone tidak diketahui"},
+			},
+		},
+		{
+			name:         "err: start_date & end_date wajib diisi",
 			token:        tokens[entity.RolesById[1]],
 			expectedCode: 400,
 			expectedBody: test.Response{
 				Status:         fiber.ErrBadRequest.Message,
 				Code:           400,
-				ErrorsMessages: []string{"start date wajib diisi", "end date wajib diisi"},
+				ErrorsMessages: []string{"start date wajib diisi", "end date wajib diisi", "time zone wajib diisi"},
 			},
 		},
 		{

@@ -25,6 +25,7 @@ type UpdateParam struct {
 type SearchTransaksi struct {
 	StartDate time.Time
 	EndDate   time.Time
+	TimeZone    string
 }
 
 type TransaksiRepo interface {
@@ -157,7 +158,7 @@ func (r *transaksiRepo) GetAll(ctx context.Context, param SearchTransaksi) ([]en
 
 	tx := r.DB.WithContext(ctx).Model(&datas).Order("tanggal DESC").Omit("deleted_at", "updated_at", "bukti_pembayaran")
 
-	err := tx.Where("DATE(tanggal) >= ? AND DATE(tanggal) <= ?", param.StartDate, param.EndDate).
+	err := tx.Where("DATE(CONVERT_TZ(tanggal, 'UTC', ?)) >= ? AND DATE(CONVERT_TZ(tanggal,'UTC', ?)) <= ?", param.TimeZone, param.StartDate, param.TimeZone, param.EndDate).
 		Preload("Kontak").
 		Find(&datas).Error
 	if err != nil {
@@ -172,7 +173,7 @@ func (r *transaksiRepo) GetHistory(ctx context.Context, param SearchTransaksi) (
 
 	tx := r.DB.WithContext(ctx).Model(&datas).Unscoped().Order("tanggal DESC").Omit("deleted_at", "updated_at", "bukti_pembayaran")
 
-	err := tx.Where("DATE(tanggal) >= ? AND DATE(tanggal) <= ?", param.StartDate, param.EndDate).Find(&datas).Error
+	err := tx.Where("DATE(CONVERT_TZ(tanggal, 'UTC', ?)) >= ? AND DATE(CONVERT_TZ(tanggal,'UTC', ?)) <= ?", param.TimeZone, param.StartDate, param.TimeZone, param.EndDate).Find(&datas).Error
 	if err != nil {
 		helper.LogsError(err)
 		return datas, err
