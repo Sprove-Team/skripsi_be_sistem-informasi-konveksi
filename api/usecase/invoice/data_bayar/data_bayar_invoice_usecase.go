@@ -42,6 +42,10 @@ type (
 		Ctx context.Context
 		Req req_global.ParamByID
 	}
+	ParamGetAll struct {
+		Ctx context.Context
+		Req req.GetAll
+	}
 )
 
 type DataBayarInvoice interface {
@@ -51,6 +55,7 @@ type DataBayarInvoice interface {
 	Delete(param ParamDelete) error
 	GetByInvoiceID(param ParamGetByInvoiceID) ([]entity.DataBayarInvoice, error)
 	GetByID(param ParamGetByID) (*entity.DataBayarInvoice, error)
+	GetAll(param ParamGetAll) ([]entity.DataBayarInvoice, error)
 }
 
 type dataBayarInvoice struct {
@@ -245,12 +250,25 @@ func (u *dataBayarInvoice) GetByInvoiceID(param ParamGetByInvoiceID) ([]entity.D
 }
 func (u *dataBayarInvoice) GetByID(param ParamGetByID) (*entity.DataBayarInvoice, error) {
 	data, err := u.repo.GetByID(repo.ParamGetById{
-		Ctx: param.Ctx,
-		ID:  param.Req.ID,
+		Ctx:         param.Ctx,
+		ID:          param.Req.ID,
 		PreloadAkun: true,
 	})
 	if err != nil {
 		return nil, err
 	}
 	return data, nil
+}
+
+func (u *dataBayarInvoice) GetAll(param ParamGetAll) ([]entity.DataBayarInvoice, error) {
+	if param.Req.Limit <= 0 {
+		param.Req.Limit = 10
+	}
+	return u.repo.GetAll(repo.ParamGetAll{
+		Ctx:      param.Ctx,
+		KontakID: param.Req.KontakID,
+		Status:   param.Req.Status,
+		Next:     param.Req.Next,
+		Limit:    param.Req.Limit,
+	})
 }

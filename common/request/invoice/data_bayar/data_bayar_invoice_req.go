@@ -26,3 +26,10 @@ type GetByInvoiceID struct {
 	AkunID    string `query:"akun_id" validate:"omitempty,ulid"`
 	Status    string `query:"status" validate:"omitempty,oneof=TERKONFIRMASI BELUM_TERKONFIRMASI"`
 }
+
+type GetAll struct {
+	KontakID string `query:"kontak_id" validate:"omitempty,ulid"`
+	Status   string `query:"status" validate:"omitempty,oneof=TERKONFIRMASI BELUM_TERKONFIRMASI"`
+	Next     string `query:"next" validate:"omitempty,ulid"`
+	Limit    int    `query:"limit" validate:"omitempty,number"`
+}

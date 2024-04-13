@@ -3,6 +3,7 @@ package test_akuntansi
 import (
 	"errors"
 	"fmt"
+	"net/url"
 	"strings"
 	"testing"
 
@@ -14,6 +15,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/mitchellh/mapstructure"
 	"github.com/stretchr/testify/assert"
+	"gorm.io/gorm"
 )
 
 func InvoiceCreateDataBayarByInvoiceId(t *testing.T) {
@@ -196,11 +198,14 @@ func InvoiceCreateDataBayarByInvoiceId(t *testing.T) {
 }
 
 var idDataBayar string
+var dataBayar entity.DataBayarInvoice
 var idDataBayarTerkonfirmasi string
 
 func InvoiceUpdateDataBayar(t *testing.T) {
 	invoiceDataBayar := []entity.DataBayarInvoice{}
-	err := dbt.Find(&invoiceDataBayar).Error
+	err := dbt.Preload("Invoice", func(db *gorm.DB)*gorm.DB {
+		return db.Select("id", "kontak_id")
+	}).Find(&invoiceDataBayar).Error
 	assert.NoError(t, err)
 	if err != nil {
 		panic(helper.LogsError(err))
@@ -211,6 +216,7 @@ func InvoiceUpdateDataBayar(t *testing.T) {
 	}
 	idDataBayarTerkonfirmasi = invoiceDataBayar[0].ID
 	idDataBayar = invoiceDataBayar[2].ID
+	dataBayar = invoiceDataBayar[2]
 	tests := []struct {
 		name         string
 		idInvoice    string
@@ -410,8 +416,165 @@ func InvoiceUpdateDataBayar(t *testing.T) {
 	}
 }
 
+func InvoiceGetAllDataBayar(t *testing.T) {
+	tests := []struct {
+		name         string
+		token        string
+		queryBody    string
+		expectedBody test.Response
+		expectedCode int
+	}{
+		{
+			name:         "sukses",
+			token:        tokens[entity.RolesById[1]],
+			expectedCode: 200,
+			expectedBody: test.Response{
+				Status: message.OK,
+				Code:   200,
+			},
+		},
+		{
+			name:         "sukses limit 1",
+			token:        tokens[entity.RolesById[1]],
+			queryBody:    "?limit=1",
+			expectedCode: 200,
+			expectedBody: test.Response{
+				Status: message.OK,
+				Code:   200,
+			},
+		},
+		{
+			name:         "sukses dengan next",
+			token:        tokens[entity.RolesById[1]],
+			queryBody:    "?next=" + idDataBayarTerkonfirmasi,
+			expectedCode: 200,
+			expectedBody: test.Response{
+				Status: message.OK,
+				Code:   200,
+			},
+		},
+		{
+			name:         "sukses dengan: semua filter",
+			token:        tokens[entity.RolesById[1]],
+			queryBody:    fmt.Sprintf("?status=%s&kontak_id=%s", dataBayar.Status,dataBayar.Invoice.KontakID),
+			expectedCode: 200,
+			expectedBody: test.Response{
+				Status: message.OK,
+				Code:   200,
+			},
+		},
+		{
+			name:         "err: ulid tidak valid",
+			token:        tokens[entity.RolesById[1]],
+			expectedCode: 400,
+			queryBody:    "?next=01HQVTTJ1S2606JGTYYZ5NDKNR123",
+			expectedBody: test.Response{
+				Status:         fiber.ErrBadRequest.Message,
+				Code:           400,
+				ErrorsMessages: []string{"next tidak berupa ulid yang valid"},
+			},
+		},
+		{
+			name:         "authorization " + entity.RolesById[2] + " passed",
+			token:        tokens[entity.RolesById[2]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "authorization " + entity.RolesById[3] + " passed",
+			token:        tokens[entity.RolesById[3]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[4],
+			token:        tokens[entity.RolesById[4]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+		{
+			name:         "err: authorization " + entity.RolesById[5],
+			token:        tokens[entity.RolesById[5]],
+			expectedCode: 401,
+			expectedBody: test.Response{
+				Status: fiber.ErrUnauthorized.Message,
+				Code:   401,
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			code, body, err := test.GetJsonTestRequestResponse(app, "GET", "/api/v1/invoice/data_bayar"+tt.queryBody, nil, &tt.token)
+			assert.NoError(t, err)
+			if strings.Contains(tt.name, "passed") {
+				assert.NotEqual(t, tt.expectedCode, code)
+				assert.NotEqual(t, tt.expectedBody.Code, body.Code)
+				assert.NotEqual(t, tt.expectedBody.Status, body.Status)
+				return
+			}
+			assert.Equal(t, tt.expectedCode, code)
+			var res []map[string]interface{}
+			if strings.Contains(tt.name, "sukses") {
+				err = mapstructure.Decode(body.Data, &res)
+				assert.NoError(t, err)
+				assert.Greater(t, len(res), 0)
+				if len(res) <= 0 {
+					return
+				}
+				for _, v := range res {
+					assert.NotEmpty(t, v)
+					assert.NotEmpty(t, v["id"])
+					assert.NotEmpty(t, v["created_at"])
+					inv, ok := v["invoice"].(map[string]any)
+					assert.True(t, ok)
+					assert.NotEmpty(t, inv["id"])
+					assert.NotEmpty(t, inv["nomor_referensi"])
+					assert.NotEmpty(t, inv["created_at"])
+					assert.NotEmpty(t, inv["kontak"])
+					kontak, ok := inv["kontak"].(map[string]any)
+					assert.True(t, ok)
+					assert.NotEmpty(t, kontak["id"])
+					assert.NotEmpty(t, kontak["nama"])
+					assert.Equal(t, tt.expectedBody.Status, body.Status)
+					switch tt.name {
+					case "sukses dengan: semua filter":
+						v2, err := url.ParseQuery(tt.queryBody[1:])
+						assert.NoError(t, err)
+						assert.Equal(t, v2.Get("status"), v["status"])
+						assert.Equal(t, kontak["id"], v2.Get("kontak_id"))
+					case "sukses limit 1":
+						assert.Len(t, res, 1)
+					case "sukses dengan next":
+						assert.NotEmpty(t, v)
+						assert.NotEqual(t, idDataBayarTerkonfirmasi, v["id"])
+					}
+				}
+			} else {
+				if len(tt.expectedBody.ErrorsMessages) > 0 {
+					for _, v := range tt.expectedBody.ErrorsMessages {
+						assert.Contains(t, body.ErrorsMessages, v)
+					}
+					assert.Equal(t, tt.expectedBody.Status, body.Status)
+				} else {
+					assert.Equal(t, tt.expectedBody, body)
+				}
+			}
+
+		})
+	}
+}
+
 func InvoiceGetDataBayar(t *testing.T) {
-	fmt.Println("id",idDataBayar)
 	if idDataBayar == "" {
 		panic(fmt.Sprintf("empty id data bayar %s", idDataBayar))
 	}
@@ -490,7 +653,6 @@ func InvoiceGetDataBayar(t *testing.T) {
 				err = mapstructure.Decode(body.Data, &r)
 				assert.NoError(t, err)
 				assert.NotEmpty(t, r)
-				fmt.Println("data",r)
 
 				assert.NotEmpty(t, r)
 				assert.NotEmpty(t, r["id"])

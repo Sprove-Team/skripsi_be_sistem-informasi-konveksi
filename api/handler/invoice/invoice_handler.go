@@ -161,7 +161,7 @@ func (h *invoiceHandler) Create(c *fiber.Ctx) error {
 	}
 
 	// set data hp into invoice
-	dataInvoice.HutangPiutang = *dataHp
+	dataInvoice.HutangPiutang = dataHp
 
 	err = h.uc.CreateCommitDB(usecase.ParamCommitDB{
 		Ctx:     ctx,

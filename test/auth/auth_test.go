@@ -132,7 +132,7 @@ func AuthRefreshToken(t *testing.T) {
 		{
 			name: "err: refresh token expired",
 			payload: req_auth.GetNewToken{
-				RefreshToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJyZWZyZXNoX3Rva2VuIiwiZXhwIjoxNzExNjM1MjgxLCJpZCI6IjAxSFNOOEMxS1YwVFpCTUhQVFBUSk5UWTg4In0.sDMULOM7REW37GIqBss618j3UdXEk_VBiQ__yNEMcMc",
+				RefreshToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJyZWZyZXNoX3Rva2VuIiwiZXhwIjoxMDAwMDAwMDAwLCJpZCI6IjAxSFNOOEMxS1YwVFpCTUhQVFBUSk5UWTg4In0.709E6kJosXvEyhknlIL6wTOrrSrA2P9DSAyDelrE57k",
 			},
 			expectedCode: 400,
 			expectedBody: test.Response{

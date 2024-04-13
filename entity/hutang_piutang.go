@@ -3,7 +3,7 @@ package entity
 type HutangPiutang struct {
 	Base
 	InvoiceID              string                   `gorm:"type:varchar(26);index:idx_invoice_id,unique;default:null" json:"invoice_id,omitempty"`
-	TransaksiID            string                   `json:"transaksi_id"`
+	TransaksiID            string                   `json:"transaksi_id,omitempty"`
 	Jenis                  string                   `gorm:"type:enum('PIUTANG','HUTANG')" json:"jenis,omitempty"`
 	Transaksi              Transaksi                `json:"-"`
 	Status                 string                   `gorm:"type:enum('BELUM_LUNAS','LUNAS');default:'BELUM_LUNAS'" json:"status,omitempty"`
