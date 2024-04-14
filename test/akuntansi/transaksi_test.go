@@ -933,7 +933,7 @@ func AkuntansiGetAllTransaksi(t *testing.T) {
 				// data without kontak
 				assert.Greater(t, len(res), 0)
 				if len(res) <= 0 {
-					return
+					panic("res less than zero")
 				}
 				for _, v := range res {
 					assert.NotEmpty(t, v)
@@ -1321,7 +1321,7 @@ func AkuntansiGetHistoryTransaksi(t *testing.T) {
 				assert.NoError(t, err)
 				assert.Greater(t, len(res), 0)
 				if len(res) <= 0 {
-					return
+					panic("res less than zero")
 				}
 				for _, v := range res {
 					assert.NotEmpty(t, v)

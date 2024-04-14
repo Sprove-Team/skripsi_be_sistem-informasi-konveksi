@@ -418,7 +418,10 @@ func (u *transaksiUsecase) GetById(ctx context.Context, id string) (entity.Trans
 }
 
 func (u *transaksiUsecase) GetAll(ctx context.Context, reqTransaksi req.GetAll) ([]entity.Transaksi, error) {
-	timeZone, _ := time.LoadLocation(reqTransaksi.TimeZone)
+	timeZone, err := helper.GetTimezone(reqTransaksi.TimeZone)
+	if err != nil {
+		return nil, err
+	}
 	endDate, err := time.ParseInLocation(time.DateOnly, reqTransaksi.EndDate, timeZone)
 	if err != nil {
 		helper.LogsError(err)
@@ -446,7 +449,10 @@ func (u *transaksiUsecase) GetAll(ctx context.Context, reqTransaksi req.GetAll) 
 }
 
 func (u *transaksiUsecase) GetHistory(ctx context.Context, reqTransaksi req.GetHistory) ([]entity.Transaksi, error) {
-	timeZone, _ := time.LoadLocation(reqTransaksi.TimeZone)
+	timeZone, err := helper.GetTimezone(reqTransaksi.TimeZone)
+	if err != nil {
+		return nil, err
+	}
 	endDate, err := time.ParseInLocation(time.DateOnly, reqTransaksi.EndDate, timeZone)
 	if err != nil {
 		helper.LogsError(err)

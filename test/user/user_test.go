@@ -631,7 +631,7 @@ func UserGetAll(t *testing.T) {
 				assert.NoError(t, err)
 				assert.Greater(t, len(res), 0)
 				if len(res) <= 0 {
-					return
+					panic("res les than 0")
 				}
 				assert.NotEmpty(t, res[0])
 				assert.NotEmpty(t, res[0]["id"])
@@ -766,7 +766,7 @@ func UserGet(t *testing.T) {
 				assert.NoError(t, err)
 				assert.Greater(t, len(res), 0)
 				if len(res) <= 0 {
-					return
+					panic("res les than 0")
 				}
 				assert.NotEmpty(t, res)
 				assert.NotEmpty(t, res["id"])

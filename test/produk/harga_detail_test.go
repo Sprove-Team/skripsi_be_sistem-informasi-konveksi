@@ -160,7 +160,6 @@ func ProdukUpdateHargaDetail(t *testing.T) {
 	err := dbt.Select("id").First(hargaDetail).Error
 	if err != nil {
 		panic(helper.LogsError(err))
-		return
 	}
 	idHargaDetail = hargaDetail.ID
 
@@ -367,7 +366,7 @@ func ProdukGetAllHargaDetailByProdukId(t *testing.T) {
 				assert.NoError(t, err)
 				assert.Greater(t, len(res), 0)
 				if len(res) <= 0 {
-					return
+					panic("res les than 2")
 				}
 				for _, v := range res {
 					assert.NotEmpty(t, v)

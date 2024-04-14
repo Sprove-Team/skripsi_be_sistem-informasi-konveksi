@@ -484,7 +484,10 @@ func (u *akuntansiUsecase) DownloadLBR(req req.GetAllLBR, LBR []res.LabaRugiRes)
 }
 
 func (u *akuntansiUsecase) GetAllJU(ctx context.Context, reqGetAllJU req.GetAllJU) (res.JurnalUmumRes, error) {
-	timeZone, _ := time.LoadLocation(reqGetAllJU.TimeZone)
+	timeZone, err := helper.GetTimezone(reqGetAllJU.TimeZone)
+	if err != nil {
+		return res.JurnalUmumRes{}, err
+	}
 	startDate, err := time.ParseInLocation(time.DateOnly, reqGetAllJU.StartDate, timeZone)
 	if err != nil {
 		helper.LogsError(err)
@@ -545,7 +548,10 @@ func (u *akuntansiUsecase) GetAllJU(ctx context.Context, reqGetAllJU req.GetAllJ
 }
 
 func (u *akuntansiUsecase) GetAllBB(ctx context.Context, reqGetAllBB req.GetAllBB) ([]res.BukuBesarRes, error) {
-	timeZone, _ := time.LoadLocation(reqGetAllBB.TimeZone)
+	timeZone, err := helper.GetTimezone(reqGetAllBB.TimeZone)
+	if err != nil {
+		return nil, err
+	}
 	startDate, err := time.ParseInLocation(time.DateOnly, reqGetAllBB.StartDate, timeZone)
 	if err != nil {
 		helper.LogsError(err)
@@ -675,7 +681,10 @@ func (u *akuntansiUsecase) GetAllNC(ctx context.Context, reqGetAllNC req.GetAllN
 }
 
 func (u *akuntansiUsecase) GetAllLBR(ctx context.Context, reqGetAllLBR req.GetAllLBR) ([]res.LabaRugiRes, error) {
-	timeZone, _ := time.LoadLocation(reqGetAllLBR.TimeZone)
+	timeZone, err := helper.GetTimezone(reqGetAllLBR.TimeZone)
+	if err != nil {
+		return nil, err
+	}
 	startDate, err := time.ParseInLocation(time.DateOnly, reqGetAllLBR.StartDate, timeZone)
 	if err != nil {
 		helper.LogsError(err)

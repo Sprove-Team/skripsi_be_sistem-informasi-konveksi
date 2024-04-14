@@ -209,7 +209,6 @@ func TugasUpdate(t *testing.T) {
 	tugas := new(entity.Tugas)
 	if err := dbt.Select("id").First(tugas).Error; err != nil {
 		panic(helper.LogsError(err))
-		return
 	}
 	idTugas = tugas.ID
 
@@ -595,7 +594,7 @@ func TugasGetByInvoiceId(t *testing.T) {
 				assert.NoError(t, err)
 				assert.Greater(t, len(res), 0)
 				if len(res) <= 0 {
-					return
+					panic("res les than 0")
 				}
 				assert.NotEmpty(t, res[0])
 				assert.NotEmpty(t, res[0]["id"])
@@ -643,7 +642,6 @@ func TugasGet(t *testing.T) {
 	}
 	if err := dbt.Create(&subTugas).Error; err != nil {
 		panic(helper.LogsError(err))
-		return
 	}
 
 	tests := []struct {
@@ -722,7 +720,7 @@ func TugasGet(t *testing.T) {
 				assert.NoError(t, err)
 				assert.Greater(t, len(res), 0)
 				if len(res) <= 0 {
-					return
+					panic("res les than 0")
 				}
 				assert.NotEmpty(t, res)
 				assert.NotEmpty(t, res["id"])

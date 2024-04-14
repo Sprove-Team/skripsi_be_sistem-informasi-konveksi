@@ -159,7 +159,6 @@ func AkuntansiUpdateAkun(t *testing.T) {
 	err := dbt.Model(akun).Order("id DESC").Preload("KelompokAkun").First(akun).Error
 	if err != nil {
 		panic(helper.LogsError(err))
-		return
 	}
 	akun2 := &entity.Akun{
 		Base: entity.Base{
@@ -173,7 +172,6 @@ func AkuntansiUpdateAkun(t *testing.T) {
 	}
 	if err := dbt.Create(akun2).Error; err != nil {
 		panic(helper.LogsError(err))
-		return
 	}
 	idAkun = akun.ID
 	idAkun2 = akun2.ID
@@ -468,7 +466,7 @@ func AkuntansiGetAllAkun(t *testing.T) {
 
 				assert.Greater(t, len(res), 0)
 				if len(res) <= 0 {
-					return
+					panic("res les than zero")
 				}
 				assert.NotEmpty(t, res[0])
 				assert.NotEmpty(t, res[0]["id"])

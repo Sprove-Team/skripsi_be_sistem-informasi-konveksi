@@ -130,7 +130,6 @@ func BordirUpdate(t *testing.T) {
 	err := dbt.Select("id").First(bordir).Error
 	if err != nil {
 		panic(helper.LogsError(err))
-		return
 	}
 	idBordir = bordir.ID
 	tests := []struct {
@@ -259,8 +258,7 @@ func BordirGetAll(t *testing.T) {
 		Harga: 20000,
 	}
 	if err := dbt.Create(bordir).Error; err != nil {
-		panic(helper.LogsError(err))
-		return
+		panic(helper.LogsError(err))		
 	}
 	tests := []struct {
 		name         string
@@ -374,7 +372,7 @@ func BordirGetAll(t *testing.T) {
 				assert.NoError(t, err)
 				assert.Greater(t, len(res), 0)
 				if len(res) <= 0 {
-					return
+					panic("res less than zero")
 				}
 				assert.NotEmpty(t, res[0])
 				assert.NotEmpty(t, res[0]["id"])

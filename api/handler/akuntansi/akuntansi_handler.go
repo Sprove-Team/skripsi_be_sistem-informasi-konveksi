@@ -29,6 +29,32 @@ func NewAkuntansiHandler(uc usecase.AkuntansiUsecase, validator pkg.Validator) A
 	return &akuntansiHandler{uc, validator}
 }
 
+func errResponse(c *fiber.Ctx, err error) error {
+	if err == context.DeadlineExceeded {
+		return c.Status(fiber.StatusRequestTimeout).JSON(res_global.ErrorRes(fiber.ErrRequestTimeout.Code, fiber.ErrRequestTimeout.Message, nil))
+	}
+
+	if err.Error() == "record not found" {
+		return c.Status(fiber.StatusNotFound).JSON(res_global.ErrorRes(fiber.ErrNotFound.Code, fiber.ErrNotFound.Message, nil))
+	}
+
+	if err.Error() == "duplicated key not allowed" {
+		return c.Status(fiber.StatusConflict).JSON(res_global.ErrorRes(fiber.ErrConflict.Code, fiber.ErrConflict.Message, nil))
+	}
+
+	badRequest := make([]string, 0, 1)
+
+	switch err.Error() {
+	case message.Timezoneunknown:
+		badRequest = append(badRequest, err.Error())
+	}
+
+	if len(badRequest) > 0 {
+		return c.Status(fiber.StatusBadRequest).JSON(res_global.ErrorRes(fiber.ErrBadRequest.Code, fiber.ErrBadRequest.Message, badRequest))
+	}
+	return c.Status(fiber.StatusInternalServerError).JSON(res_global.ErrorRes(fiber.ErrInternalServerError.Code, fiber.ErrInternalServerError.Message, nil))
+}
+
 func (h *akuntansiHandler) GetAllJU(c *fiber.Ctx) error {
 	reqU := new(req.GetAllJU)
 	c.QueryParser(reqU)
@@ -41,17 +67,14 @@ func (h *akuntansiHandler) GetAllJU(c *fiber.Ctx) error {
 
 	datasJU, err := h.uc.GetAllJU(ctx, *reqU)
 
-	if ctx.Err() == context.DeadlineExceeded {
-		return c.Status(fiber.StatusRequestTimeout).JSON(res_global.ErrorRes(fiber.ErrRequestTimeout.Code, fiber.ErrRequestTimeout.Message, nil))
+	if err != nil {
+		return errResponse(c, err)
 	}
 
-	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(res_global.ErrorRes(fiber.ErrInternalServerError.Code, fiber.ErrInternalServerError.Message, nil))
-	}
 	if reqU.Download == "1" {
 		buf, err := h.uc.DownloadJU(*reqU, datasJU)
 		if err != nil {
-			return c.Status(fiber.StatusInternalServerError).JSON(res_global.ErrorRes(fiber.ErrInternalServerError.Code, fiber.ErrInternalServerError.Message, nil))
+			return errResponse(c, err)
 		}
 		name := fmt.Sprintf("Jurnal Umum (%s sampai %s).xlsx", reqU.StartDate, reqU.EndDate)
 		c.Set("Content-Disposition", "attachment; filename="+name)
@@ -77,17 +100,14 @@ func (h *akuntansiHandler) GetAllBB(c *fiber.Ctx) error {
 
 	datasBB, err := h.uc.GetAllBB(ctx, *reqU)
 
-	if ctx.Err() == context.DeadlineExceeded {
-		return c.Status(fiber.StatusRequestTimeout).JSON(res_global.ErrorRes(fiber.ErrRequestTimeout.Code, fiber.ErrRequestTimeout.Message, nil))
+	if err != nil {
+		return errResponse(c, err)
 	}
 
-	if err != nil {
-		return c.Status(fiber.StatusRequestTimeout).JSON(res_global.ErrorRes(fiber.ErrRequestTimeout.Code, fiber.ErrRequestTimeout.Message, nil))
-	}
 	if reqU.Download == "1" {
 		buf, err := h.uc.DownloadBB(*reqU, datasBB)
 		if err != nil {
-			return c.Status(fiber.StatusInternalServerError).JSON(res_global.ErrorRes(fiber.ErrInternalServerError.Code, fiber.ErrInternalServerError.Message, nil))
+			return errResponse(c, err)
 		}
 		name := fmt.Sprintf("Buku Besar (%s sampai %s).xlsx", reqU.StartDate, reqU.EndDate)
 		c.Set("Content-Disposition", "attachment; filename="+name)
@@ -109,17 +129,13 @@ func (h *akuntansiHandler) GetAllNC(c *fiber.Ctx) error {
 
 	datasNC, err := h.uc.GetAllNC(ctx, *reqU)
 
-	if ctx.Err() == context.DeadlineExceeded {
-		return c.Status(fiber.StatusRequestTimeout).JSON(res_global.ErrorRes(fiber.ErrRequestTimeout.Code, fiber.ErrRequestTimeout.Message, nil))
-	}
-
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(res_global.ErrorRes(fiber.ErrInternalServerError.Code, fiber.ErrInternalServerError.Message, nil))
+		return errResponse(c, err)
 	}
 	if reqU.Download == "1" {
 		buf, err := h.uc.DownloadNC(*reqU, datasNC)
 		if err != nil {
-			return c.Status(fiber.StatusInternalServerError).JSON(res_global.ErrorRes(fiber.ErrInternalServerError.Code, fiber.ErrInternalServerError.Message, nil))
+			return errResponse(c, err)
 		}
 		name := fmt.Sprintf("Neraca Saldo (%s).xlsx", reqU.Date)
 		c.Set("Content-Disposition", "attachment; filename="+name)
@@ -141,17 +157,13 @@ func (h *akuntansiHandler) GetAllLBR(c *fiber.Ctx) error {
 
 	datasLbr, err := h.uc.GetAllLBR(ctx, *reqU)
 
-	if ctx.Err() == context.DeadlineExceeded {
-		return c.Status(fiber.StatusRequestTimeout).JSON(res_global.ErrorRes(fiber.ErrRequestTimeout.Code, fiber.ErrRequestTimeout.Message, nil))
-	}
-
 	if err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(res_global.ErrorRes(fiber.ErrInternalServerError.Code, fiber.ErrInternalServerError.Message, nil))
+		return errResponse(c, err)
 	}
 	if reqU.Download == "1" {
 		buf, err := h.uc.DownloadLBR(*reqU, datasLbr)
 		if err != nil {
-			return c.Status(fiber.StatusInternalServerError).JSON(res_global.ErrorRes(fiber.ErrInternalServerError.Code, fiber.ErrInternalServerError.Message, nil))
+			return errResponse(c, err)
 		}
 		name := fmt.Sprintf("Laba Rugi (%s sampai %s).xlsx", reqU.StartDate, reqU.EndDate)
 		c.Set("Content-Disposition", "attachment; filename="+name)

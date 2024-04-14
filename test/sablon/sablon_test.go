@@ -129,7 +129,6 @@ func SablonUpdate(t *testing.T) {
 	err := dbt.Select("id").First(sablon).Error
 	if err != nil {
 		panic(helper.LogsError(err))
-		return
 	}
 	idSablon = sablon.ID
 	tests := []struct {
@@ -259,7 +258,6 @@ func SablonGetAll(t *testing.T) {
 	}
 	if err := dbt.Create(sablon).Error; err != nil {
 		panic(helper.LogsError(err))
-		return
 	}
 	tests := []struct {
 		name         string
@@ -374,7 +372,7 @@ func SablonGetAll(t *testing.T) {
 				assert.NoError(t, err)
 				assert.Greater(t, len(res), 0)
 				if len(res) <= 0 {
-					return
+					panic("res les than 0")
 				}
 				assert.NotEmpty(t, res[0])
 				assert.NotEmpty(t, res[0]["id"])

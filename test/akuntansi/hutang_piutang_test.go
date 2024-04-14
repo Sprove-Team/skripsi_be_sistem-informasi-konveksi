@@ -515,7 +515,7 @@ func AkuntansiGetAllHutangPiutang(t *testing.T) {
 				fmt.Println(tt.name, body.Data)
 				assert.Greater(t, length, 0)
 				if length <= 0 {
-					return
+					panic("length less than zero")
 				}
 
 				for _, v := range res {

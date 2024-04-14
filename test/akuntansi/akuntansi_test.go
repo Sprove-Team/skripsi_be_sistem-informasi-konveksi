@@ -135,7 +135,7 @@ func AkuntansiGetJU(t *testing.T) {
 				tr, ok := res["transaksi"].([]any)
 				assert.True(t, ok)
 				if len(tr) <= 0 {
-					return
+					panic("tr less than zero")
 				}
 
 				var totalDebit float64
@@ -149,7 +149,7 @@ func AkuntansiGetJU(t *testing.T) {
 					ays, ok := v2["ayat_jurnal"].([]any)
 					assert.True(t, ok)
 					if len(ays) <= 0 {
-						return
+						panic("ayat jurnal less than zero")
 					}
 					assert.GreaterOrEqual(t, len(ays), 2)
 					for _, ay := range ays {
@@ -318,7 +318,7 @@ func AkuntansiGetBB(t *testing.T) {
 				assert.NoError(t, err)
 				assert.NotEmpty(t, res)
 				if len(res) <= 0 {
-					return
+					panic("res less than zero")
 				}
 
 				for _, v := range res {
@@ -508,7 +508,7 @@ func AkuntansiGetNC(t *testing.T) {
 				assert.NoError(t, err)
 				assert.NotEmpty(t, res)
 				if len(res) <= 0 {
-					return
+					panic("res less than zero")
 				}
 
 				var totalDebit, totalKredit float64
@@ -662,7 +662,7 @@ func AkuntansiGetLB(t *testing.T) {
 				assert.NoError(t, err)
 				assert.NotEmpty(t, res)
 				if len(res) <= 0 {
-					return
+					panic("res less than zero")
 				}
 
 				var labaRugi float64
