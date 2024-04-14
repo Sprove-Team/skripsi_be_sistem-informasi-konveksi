@@ -3,6 +3,7 @@ package uc_invoice_data_bayar
 import (
 	"context"
 	"errors"
+	"sort"
 
 	repo_akuntansi_hp "github.com/be-sistem-informasi-konveksi/api/repository/akuntansi/mysql/gorm/hutang_piutang"
 	repoInvoice "github.com/be-sistem-informasi-konveksi/api/repository/invoice/mysql/gorm"
@@ -264,11 +265,25 @@ func (u *dataBayarInvoice) GetAll(param ParamGetAll) ([]entity.DataBayarInvoice,
 	if param.Req.Limit <= 0 {
 		param.Req.Limit = 10
 	}
-	return u.repo.GetAll(repo.ParamGetAll{
+	datas, err := u.repo.GetAll(repo.ParamGetAll{
 		Ctx:      param.Ctx,
 		KontakID: param.Req.KontakID,
 		Status:   param.Req.Status,
 		Next:     param.Req.Next,
 		Limit:    param.Req.Limit,
 	})
+	if err != nil {
+		return nil, err
+	}
+	
+	sort.Slice(datas, func(i, j int) bool {
+		switch param.Req.Sort {
+		case "DESC" :
+			return datas[i].CreatedAt.After(*datas[j].CreatedAt)
+		default:
+			return datas[i].CreatedAt.Before(*datas[j].CreatedAt)
+		}
+	})
+
+	return datas, nil
 }

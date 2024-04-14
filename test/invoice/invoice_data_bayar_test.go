@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/be-sistem-informasi-konveksi/common/message"
 	req_invoice_data_bayar "github.com/be-sistem-informasi-konveksi/common/request/invoice/data_bayar"
@@ -203,7 +204,7 @@ var idDataBayarTerkonfirmasi string
 
 func InvoiceUpdateDataBayar(t *testing.T) {
 	invoiceDataBayar := []entity.DataBayarInvoice{}
-	err := dbt.Preload("Invoice", func(db *gorm.DB)*gorm.DB {
+	err := dbt.Preload("Invoice", func(db *gorm.DB) *gorm.DB {
 		return db.Select("id", "kontak_id")
 	}).Find(&invoiceDataBayar).Error
 	assert.NoError(t, err)
@@ -456,7 +457,27 @@ func InvoiceGetAllDataBayar(t *testing.T) {
 		{
 			name:         "sukses dengan: semua filter",
 			token:        tokens[entity.RolesById[1]],
-			queryBody:    fmt.Sprintf("?status=%s&kontak_id=%s&akun_id=%s", dataBayar.Status,dataBayar.Invoice.KontakID, dataBayar.AkunID),
+			queryBody:    fmt.Sprintf("?status=%s&kontak_id=%s&akun_id=%s", dataBayar.Status, dataBayar.Invoice.KontakID, dataBayar.AkunID),
+			expectedCode: 200,
+			expectedBody: test.Response{
+				Status: message.OK,
+				Code:   200,
+			},
+		},
+		{
+			name:         "sukses dengan: filter sort ASC",
+			token:        tokens[entity.RolesById[1]],
+			queryBody:    fmt.Sprintf("?sort=%s", "ASC"),
+			expectedCode: 200,
+			expectedBody: test.Response{
+				Status: message.OK,
+				Code:   200,
+			},
+		},
+		{
+			name:         "sukses dengan: filter sort DESC",
+			token:        tokens[entity.RolesById[1]],
+			queryBody:    fmt.Sprintf("?sort=%s", "DESC"),
 			expectedCode: 200,
 			expectedBody: test.Response{
 				Status: message.OK,
@@ -472,6 +493,17 @@ func InvoiceGetAllDataBayar(t *testing.T) {
 				Status:         fiber.ErrBadRequest.Message,
 				Code:           400,
 				ErrorsMessages: []string{"next tidak berupa ulid yang valid"},
+			},
+		},
+		{
+			name:         "err: nilai sort",
+			token:        tokens[entity.RolesById[1]],
+			queryBody:    "?sort=asdf",
+			expectedCode: 400,
+			expectedBody: test.Response{
+				Status:         fiber.ErrBadRequest.Message,
+				Code:           400,
+				ErrorsMessages: []string{"sort harus berupa salah satu dari [ASC,DESC]"},
 			},
 		},
 		{
@@ -563,6 +595,22 @@ func InvoiceGetAllDataBayar(t *testing.T) {
 					case "sukses dengan next":
 						assert.NotEmpty(t, v)
 						assert.NotEqual(t, idDataBayarTerkonfirmasi, v["id"])
+					}
+				}
+				if strings.Contains(tt.name, "filter sort") {
+					if len(res) < 2 {
+						panic("res less than 2")
+					}
+					v2, err := url.ParseQuery(tt.queryBody[1:])
+					assert.NoError(t, err)
+					t1, err := time.Parse(time.RFC3339, res[0]["created_at"].(string))
+					assert.NoError(t, err)
+					t2, err := time.Parse(time.RFC3339, res[1]["created_at"].(string))
+					assert.NoError(t, err)
+					if v2.Get("sort") == "ASC" {
+						assert.True(t, t1.Before(t2))
+					} else {
+						assert.True(t, t1.After(t2))
 					}
 				}
 			} else {
@@ -677,7 +725,6 @@ func InvoiceGetDataBayar(t *testing.T) {
 				assert.NotEmpty(t, akun["kode"])
 				assert.NotEmpty(t, akun["saldo_normal"])
 				assert.NotEmpty(t, akun["deskripsi"])
-				
 
 				assert.Equal(t, tt.expectedBody.Status, body.Status)
 			} else {
