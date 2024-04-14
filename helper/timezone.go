@@ -3,6 +3,7 @@ package helper
 import (
 	"errors"
 	"time"
+	_ "time/tzdata"
 
 	"github.com/be-sistem-informasi-konveksi/common/message"
 )
