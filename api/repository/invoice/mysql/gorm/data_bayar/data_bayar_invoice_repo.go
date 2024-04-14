@@ -121,6 +121,8 @@ func (r *dataBayarInvoiceRepo) GetAll(param ParamGetAll) ([]entity.DataBayarInvo
 		return db.Select("id", "kontak_id", "nomor_referensi", "created_at")
 	}).Preload("Invoice.Kontak", func(db *gorm.DB) *gorm.DB {
 		return db.Select("id", "nama")
+	}).Preload("Akun", func(db *gorm.DB) *gorm.DB {
+		return db.Select("id", "nama")
 	})
 
 	if err := tx.Limit(param.Limit).Find(&datas).Error; err != nil {

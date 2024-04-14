@@ -456,7 +456,7 @@ func InvoiceGetAllDataBayar(t *testing.T) {
 		{
 			name:         "sukses dengan: semua filter",
 			token:        tokens[entity.RolesById[1]],
-			queryBody:    fmt.Sprintf("?status=%s&kontak_id=%s", dataBayar.Status,dataBayar.Invoice.KontakID),
+			queryBody:    fmt.Sprintf("?status=%s&kontak_id=%s&akun_id=%s", dataBayar.Status,dataBayar.Invoice.KontakID, dataBayar.AkunID),
 			expectedCode: 200,
 			expectedBody: test.Response{
 				Status: message.OK,
@@ -546,12 +546,18 @@ func InvoiceGetAllDataBayar(t *testing.T) {
 					assert.NotEmpty(t, kontak["id"])
 					assert.NotEmpty(t, kontak["nama"])
 					assert.Equal(t, tt.expectedBody.Status, body.Status)
+					akun, ok := v["akun"].(map[string]any)
+					assert.True(t, ok)
+					assert.NotEmpty(t, akun["id"])
+					assert.NotEmpty(t, akun["nama"])
+					assert.Equal(t, tt.expectedBody.Status, body.Status)
 					switch tt.name {
 					case "sukses dengan: semua filter":
 						v2, err := url.ParseQuery(tt.queryBody[1:])
 						assert.NoError(t, err)
 						assert.Equal(t, v2.Get("status"), v["status"])
 						assert.Equal(t, kontak["id"], v2.Get("kontak_id"))
+						assert.Equal(t, akun["id"], v2.Get("akun_id"))
 					case "sukses limit 1":
 						assert.Len(t, res, 1)
 					case "sukses dengan next":
