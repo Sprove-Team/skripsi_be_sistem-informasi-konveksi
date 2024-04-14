@@ -31,7 +31,7 @@ type Create struct {
 	Bayar           ReqBayar           `json:"bayar" validate:"required"`
 	TanggalDeadline string             `json:"tanggal_deadline" validate:"required,datetime=2006-01-02T15:04:05Z07:00"`
 	TanggalKirim    string             `json:"tanggal_kirim" validate:"required,datetime=2006-01-02T15:04:05Z07:00"`
-	Keterangan      string             `json:"keterangan" validate:"omitempty"`
+	Keterangan      string             `json:"keterangan" validate:"required"`
 	DetailInvoice   []ReqDetailInvoice `json:"detail_invoice" validate:"required,gt=0,dive"`
 }
 
