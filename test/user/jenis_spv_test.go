@@ -131,7 +131,6 @@ func UserUpdateSpv(t *testing.T) {
 	err := dbt.Where("id NOT IN (?)", idsDefaultSpv).Select("id").First(spv).Error
 	if err != nil {
 		panic(helper.LogsError(err))
-		return
 	}
 
 	spvConflict := &entity.JenisSpv{
@@ -143,7 +142,6 @@ func UserUpdateSpv(t *testing.T) {
 	err = dbt.Create(spvConflict).Error
 	if err != nil {
 		panic(helper.LogsError(err))
-		return
 	}
 	idSpv = spv.ID
 	tests := []struct {
@@ -342,7 +340,7 @@ func UserGetAllSpv(t *testing.T) {
 				assert.NoError(t, err)
 				assert.Greater(t, len(res), 0)
 				if len(res) <= 0 {
-					return
+					panic("res les than 0")
 				}
 				assert.NotEmpty(t, res[0])
 				for _, v := range res {

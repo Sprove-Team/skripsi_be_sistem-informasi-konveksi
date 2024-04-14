@@ -23,11 +23,9 @@ var app = fiber.New()
 func rollBackUpdate() {
 	if err := dbt.Updates(&static_data.DefaultUsers[0]).Error; err != nil {
 		panic(helper.LogsError(err))
-		return
 	}
 	if err := dbt.Updates(&static_data.DefaultUsers[1]).Error; err != nil {
 		panic(helper.LogsError(err))
-		return
 	}
 }
 

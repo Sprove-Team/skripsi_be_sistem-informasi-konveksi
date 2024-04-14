@@ -986,7 +986,7 @@ func InvoiceGetAll(t *testing.T) {
 				assert.NoError(t, err)
 				assert.Greater(t, len(res), 0)
 				if len(res) <= 0 {
-					return
+					panic("res less than zero")
 				}
 				for _, r := range res {
 					assert.NotEmpty(t, r)
@@ -1038,8 +1038,7 @@ func InvoiceGetAll(t *testing.T) {
 				if strings.Contains(tt.name, "sukses dengan filter sort_by") {
 					assert.GreaterOrEqual(t, len(res), 2)
 					if len(res) < 2 {
-						fmt.Println("Err les than 2")
-						return
+						panic("res les than 2")
 					}
 					v, err := url.ParseQuery(tt.queryBody[1:])
 					assert.NoError(t, err)
@@ -1153,7 +1152,7 @@ func InvoiceGet(t *testing.T) {
 				assert.NoError(t, err)
 				assert.Greater(t, len(r), 0)
 				if len(r) <= 0 {
-					return
+					panic("res less than zero")
 				}
 
 				assert.NotEmpty(t, r)

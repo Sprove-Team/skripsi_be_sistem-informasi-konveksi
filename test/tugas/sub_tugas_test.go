@@ -160,7 +160,6 @@ func SubTugasUpdate(t *testing.T) {
 	subTugas := new(entity.SubTugas)
 	if err := dbt.First(subTugas).Error; err != nil {
 		panic(helper.LogsError(err))
-		return
 	}
 	idSubTugas = subTugas.ID
 	tests := []struct {
@@ -283,7 +282,6 @@ func SubTugasUpdate(t *testing.T) {
 				sbtugas := new(entity.SubTugas)
 				if err := dbt.First(sbtugas, "id = ?", idSubTugas).Error; err != nil {
 					panic(helper.LogsError(err))
-					return
 				}
 				assert.NotEqual(t, tt.payload.Nama, sbtugas.Nama)
 				assert.NotEqual(t, tt.payload.Deskripsi, sbtugas.Deskripsi)

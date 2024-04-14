@@ -119,7 +119,6 @@ func ProdukUpdateKategori(t *testing.T) {
 	err := dbt.Select("id").First(kategori).Error
 	if err != nil {
 		panic(helper.LogsError(err))
-		return
 	}
 	idKategori = kategori.ID
 	tests := []struct {
@@ -237,7 +236,6 @@ func ProdukGetAllKategori(t *testing.T) {
 	}
 	if err := dbt.Create(kategori).Error; err != nil {
 		panic(helper.LogsError(err))
-		return
 	}
 	tests := []struct {
 		name         string
@@ -352,7 +350,7 @@ func ProdukGetAllKategori(t *testing.T) {
 				assert.NoError(t, err)
 				assert.Greater(t, len(res), 0)
 				if len(res) <= 0 {
-					return
+					panic("res les than 0")
 				}
 				assert.NotEmpty(t, res[0])
 				assert.NotEmpty(t, res[0]["id"])

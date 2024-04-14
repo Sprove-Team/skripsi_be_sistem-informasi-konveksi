@@ -143,7 +143,6 @@ func AkuntansiUpdateKontak(t *testing.T) {
 	err := dbt.Model(kontak).Order("id DESC").First(kontak).Error
 	if err != nil {
 		panic(helper.LogsError(err))
-		return
 	}
 	kontak2 := &entity.Kontak{
 		Base: entity.Base{
@@ -157,7 +156,6 @@ func AkuntansiUpdateKontak(t *testing.T) {
 	}
 	if err := dbt.Create(kontak2).Error; err != nil {
 		panic(helper.LogsError(err))
-		return
 	}
 	idKontak = kontak.ID
 	idKontak2 = kontak2.ID
@@ -409,7 +407,7 @@ func AkuntansiGetAllKontak(t *testing.T) {
 
 				assert.Greater(t, len(res), 0)
 				if len(res) <= 0 {
-					return
+					panic("res less than zero")
 				}
 				assert.NotEmpty(t, res[0])
 				assert.NotEmpty(t, res[0]["id"])
