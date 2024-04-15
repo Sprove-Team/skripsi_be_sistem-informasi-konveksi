@@ -23,6 +23,12 @@ var idsDefaultUser []string
 var idsDefaultSpv []string
 
 func cleanUp() {
+	// clean spv with tugas
+	dbt.Unscoped().Where("id = ?", idKontak).Delete(&entity.Kontak{})
+	dbt.Unscoped().Where("id = ?", idInvoice).Delete(&entity.Invoice{})
+	dbt.Unscoped().Where("id = ?", idTugas).Delete(&entity.Tugas{})
+	dbt.Unscoped().Where("id IN (?)", idSubTugas).Delete(&entity.SubTugas{})
+
 	idsSpv := make([]string, len(static_data.DefaultSupervisor))
 	for i, v := range static_data.DefaultSupervisor {
 		idsSpv[i] = v.ID
