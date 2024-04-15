@@ -5,6 +5,7 @@ import (
 	"net/url"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/be-sistem-informasi-konveksi/app/static_data"
 	"github.com/be-sistem-informasi-konveksi/common/message"
@@ -236,7 +237,6 @@ func UserCreate(t *testing.T) {
 var idUser string
 var idUserSpv string
 var idSpv2 string
-
 func UserUpdate(t *testing.T) {
 
 	user := new(entity.User)
@@ -424,8 +424,8 @@ func UserUpdate(t *testing.T) {
 		},
 
 		{
-			name:         "err: authorization " + entity.RolesById[2],
-			payload:      req_user.Update{
+			name: "err: authorization " + entity.RolesById[2],
+			payload: req_user.Update{
 				ID: idSpv,
 			},
 			token:        tokens[entity.RolesById[2]],
@@ -436,8 +436,8 @@ func UserUpdate(t *testing.T) {
 			},
 		},
 		{
-			name:         "err: authorization " + entity.RolesById[3],
-			payload:      req_user.Update{
+			name: "err: authorization " + entity.RolesById[3],
+			payload: req_user.Update{
 				ID: idSpv,
 			},
 			token:        tokens[entity.RolesById[3]],
@@ -448,8 +448,8 @@ func UserUpdate(t *testing.T) {
 			},
 		},
 		{
-			name:         "err: authorization " + entity.RolesById[4],
-			payload:      req_user.Update{
+			name: "err: authorization " + entity.RolesById[4],
+			payload: req_user.Update{
 				ID: idSpv,
 			},
 			token:        tokens[entity.RolesById[4]],
@@ -460,8 +460,8 @@ func UserUpdate(t *testing.T) {
 			},
 		},
 		{
-			name:         "err: authorization " + entity.RolesById[5],
-			payload:      req_user.Update{
+			name: "err: authorization " + entity.RolesById[5],
+			payload: req_user.Update{
 				ID: idSpv,
 			},
 			token:        tokens[entity.RolesById[5]],
@@ -496,7 +496,77 @@ func UserUpdate(t *testing.T) {
 	}
 }
 
+var idTugas string = "01HVGG7MR21ZY3AQPBXE8XSN8S"
+var idSubTugas = []string{"01HVGGMGPPFQV2QW9HZCFJAKW3", "01HVGGMMNTY9FYE9BTD3Z902G7", "01HVGGMSMQK161YSEJ39V98W0T"}
+var idInvoice string = "01HVGG875D1WXWFCTK0JWP62BN"
+var idKontak string = "01HVGGDNZZAXSWE6QPYWC653F5"
 func UserGetAll(t *testing.T) {
+	kontak := entity.Kontak{
+		Base: entity.Base{
+			ID: idKontak,
+		},
+		Nama: "test123",
+		NoTelp: "+62313",
+		Alamat: "tes1",
+		Email: "",
+		Keterangan: "adsf",
+	}
+	if err := dbt.Create(&kontak).Error; err != nil {
+		panic(err)
+	}
+
+	tim := time.Now()
+	invoice := entity.Invoice{
+		Base: entity.Base{
+			ID: idInvoice,
+		},
+		UserID: idUserSpv,
+		KontakID: idKontak,
+		StatusProduksi: "DIPROSES",
+		NomorReferensi: "111",
+		TotalQty: 10,
+		TotalHarga: 10000,
+		Keterangan: "t",
+		TanggalDeadline: &tim,
+		TanggalKirim: &tim,
+	}
+	if err := dbt.Create(&invoice).Error; err != nil {
+		panic(err)
+	}
+
+	tugas := entity.Tugas{
+		Base: entity.Base{
+			ID: idTugas,
+		},
+		InvoiceID: idInvoice,
+		JenisSpvID: idSpv2,
+		TanggalDeadline: &tim,
+		SubTugas: func() []entity.SubTugas {
+			var subtugass = make([]entity.SubTugas,3)
+			status := []string{"BELUM_DIKERJAKAN","DIPROSES","SELESAI"}
+			for i, v := range idSubTugas {
+				subtugass[i] = entity.SubTugas{
+					Base: entity.Base{
+						ID: v,
+					},
+					Nama: fmt.Sprintf("tugas-%d",i),
+					Deskripsi: fmt.Sprintf("tugas-%d deskripsi",i),
+					Status: status[i],
+				}
+			}
+			return subtugass
+		}(),
+	}
+	if err := dbt.Create(&tugas).Error; err != nil {
+		panic(err)
+	}
+	if err := dbt.Table("user_tugas").Create(map[string]any{
+		"user_id": idUserSpv,
+		"tugas_id": idTugas,
+	}).Error; err != nil {
+		panic(err)
+	}
+
 	tests := []struct {
 		name         string
 		token        string
@@ -656,6 +726,7 @@ func UserGetAll(t *testing.T) {
 					assert.NotEmpty(t, jenisSpv["id"])
 					assert.NotEmpty(t, jenisSpv["created_at"])
 					assert.NotEmpty(t, jenisSpv["nama"])
+					assert.Equal(t,res[0]["total_tugas"], float64(1))
 					assert.Equal(t, jenisSpv["id"], v.Get("search[jenis_spv_id]"))
 				case "sukses limit 1":
 					assert.Len(t, res, 1)
@@ -689,6 +760,16 @@ func UserGet(t *testing.T) {
 			name:         "sukses",
 			token:        tokens[entity.RolesById[1]],
 			id:           idUser,
+			expectedCode: 200,
+			expectedBody: test.Response{
+				Status: message.OK,
+				Code:   200,
+			},
+		},
+		{
+			name:         "sukses dengan user supervisor",
+			token:        tokens[entity.RolesById[1]],
+			id:           idUserSpv,
 			expectedCode: 200,
 			expectedBody: test.Response{
 				Status: message.OK,
@@ -761,7 +842,7 @@ func UserGet(t *testing.T) {
 			assert.Equal(t, tt.expectedCode, code)
 
 			var res map[string]any
-			if tt.name == "sukses" {
+			if strings.Contains(tt.name, "sukses") {
 				err = mapstructure.Decode(body.Data, &res)
 				assert.NoError(t, err)
 				assert.Greater(t, len(res), 0)
@@ -776,6 +857,9 @@ func UserGet(t *testing.T) {
 				assert.NotEmpty(t, res["username"])
 				assert.NotEmpty(t, res["no_telp"])
 				assert.NotEmpty(t, res["alamat"])
+				if strings.Contains(tt.name, "user supervisor") {
+					assert.Equal(t, res["total_tugas"], float64(1))
+				}
 				assert.Equal(t, tt.expectedBody.Status, body.Status)
 			} else {
 				if len(tt.expectedBody.ErrorsMessages) > 0 {

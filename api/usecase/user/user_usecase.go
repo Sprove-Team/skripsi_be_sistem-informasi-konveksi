@@ -7,6 +7,7 @@ import (
 	repo "github.com/be-sistem-informasi-konveksi/api/repository/user/mysql/gorm"
 	"github.com/be-sistem-informasi-konveksi/common/message"
 	req "github.com/be-sistem-informasi-konveksi/common/request/user"
+	res_user "github.com/be-sistem-informasi-konveksi/common/response/user"
 	"github.com/be-sistem-informasi-konveksi/entity"
 	"github.com/be-sistem-informasi-konveksi/helper"
 	"github.com/be-sistem-informasi-konveksi/pkg"
@@ -51,8 +52,8 @@ type UserUsecase interface {
 	CreateCommitDB(param ParamCreateCommitDB) error
 	UpdateUserData(param ParamUpdate) (*entity.User, error)
 	UpdateCommitDB(param ParamUpdateCommitDB) error
-	GetAll(param ParamGetAll) ([]entity.User, error)
-	GetById(param ParamGetById) (*entity.User, error)
+	GetAll(param ParamGetAll) ([]res_user.DataGetUserRes, error)
+	GetById(param ParamGetById) (*res_user.DataGetUserRes, error)
 	Delete(param ParamDelete) error
 }
 
@@ -149,7 +150,11 @@ func (u *userUsecase) UpdateCommitDB(param ParamUpdateCommitDB) error {
 }
 
 func (u *userUsecase) Delete(param ParamDelete) error {
-	_, err := u.repo.GetById(repo.ParamGetById(param))
+	_, err := u.repo.GetById(repo.ParamGetById{
+		Ctx: param.Ctx,
+		WithJoin: false,
+		ID: param.ID,
+	})
 	if err != nil {
 		return err
 	}
@@ -160,7 +165,7 @@ func (u *userUsecase) Delete(param ParamDelete) error {
 	return nil
 }
 
-func (u *userUsecase) GetAll(param ParamGetAll) ([]entity.User, error) {
+func (u *userUsecase) GetAll(param ParamGetAll) ([]res_user.DataGetUserRes, error) {
 	if param.Req.Limit <= 0 {
 		param.Req.Limit = 10
 	}
@@ -184,6 +189,10 @@ func (u *userUsecase) GetAll(param ParamGetAll) ([]entity.User, error) {
 	return datas, err
 }
 
-func (u *userUsecase) GetById(param ParamGetById) (*entity.User, error) {
-	return u.repo.GetById(repo.ParamGetById(param))
+func (u *userUsecase) GetById(param ParamGetById) (*res_user.DataGetUserRes, error) {
+	return u.repo.GetById(repo.ParamGetById{
+		Ctx: param.Ctx,
+		WithJoin: true,
+		ID: param.ID,
+	})
 }
