@@ -127,7 +127,7 @@ func (u *userUsecase) UpdateUserData(param ParamUpdate) (*entity.User, error) {
 }
 
 func (u *userUsecase) UpdateCommitDB(param ParamUpdateCommitDB) error {
-	_, err := u.repo.GetById(repo.ParamGetById{
+	_, err := u.repo.GetByIdWithJoin(repo.ParamGetByIdWithJoin{
 		Ctx: param.Ctx,
 		ID:  param.User.ID,
 	})
@@ -152,7 +152,6 @@ func (u *userUsecase) UpdateCommitDB(param ParamUpdateCommitDB) error {
 func (u *userUsecase) Delete(param ParamDelete) error {
 	_, err := u.repo.GetById(repo.ParamGetById{
 		Ctx: param.Ctx,
-		WithJoin: false,
 		ID: param.ID,
 	})
 	if err != nil {
@@ -190,9 +189,8 @@ func (u *userUsecase) GetAll(param ParamGetAll) ([]res_user.DataGetUserRes, erro
 }
 
 func (u *userUsecase) GetById(param ParamGetById) (*res_user.DataGetUserRes, error) {
-	return u.repo.GetById(repo.ParamGetById{
+	return u.repo.GetByIdWithJoin(repo.ParamGetByIdWithJoin{
 		Ctx: param.Ctx,
-		WithJoin: true,
 		ID: param.ID,
 	})
 }
