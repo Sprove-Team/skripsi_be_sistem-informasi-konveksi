@@ -58,8 +58,11 @@ func getLastDateOfPreviousMonth(startDate string) (string, error) {
 func (u *akuntansiUsecase) DownloadJU(req req.GetAllJU, JU res.JurnalUmumRes) (*bytes.Buffer, error) {
 	f, sheetName := u.excelize.InitExcelize("Jurnal Umum")
 	// Create a new Excel file
-	startDate, _ := time.Parse(time.DateOnly, req.StartDate)
-	endDate, _ := time.Parse(time.DateOnly, req.EndDate)
+	if req.TimeZone == "" {
+		req.TimeZone = "UTC"
+	}
+	timeLoad, _ := time.LoadLocation(req.TimeZone)
+	startDate, endDate, _ := helper.GetStartEndUTC(req.StartDate, req.EndDate)
 	title := fmt.Sprintf("Dalam Rupiah (%s - %s)", startDate.Format("01 Jan 2006"), endDate.Format("01 Jan 2006"))
 	f.SetCellValue(sheetName, "A1", title)
 	f.SetCellStyle(sheetName, "A1", "A1", u.excelize.StyleBold(f))
@@ -85,10 +88,11 @@ func (u *akuntansiUsecase) DownloadJU(req req.GetAllJU, JU res.JurnalUmumRes) (*
 	// Populate data
 	row := 4 // Start from row 3
 	formatCurrency := u.excelize.StyleCurrencyRpIndo(f, false, "", "", false, "")
+
 	for _, transaksi := range JU.Transaksi {
 		for _, ayat := range transaksi.AyatJurnal {
 			rowStr := strconv.Itoa(row)
-			parse, _ := time.Parse(time.RFC3339, transaksi.Tanggal)
+			parse, _ := time.ParseInLocation(time.RFC3339, transaksi.Tanggal, timeLoad)
 			tanggal := parse.Format(time.DateTime)
 			f.SetCellValue(sheetName, "A"+rowStr, tanggal)
 			if cellWidth := u.excelize.GetCellWidth(tanggal, 2); maxLength[0] < cellWidth {
@@ -120,22 +124,26 @@ func (u *akuntansiUsecase) DownloadJU(req req.GetAllJU, JU res.JurnalUmumRes) (*
 			}
 			row++
 		}
+
 	}
 	for i, v := range maxLength {
 		cell := string(alpha[i])
 		f.SetColWidth(sheetName, cell, cell, float64(v))
 	}
-	rowStr := strconv.Itoa(row)
-	f.MergeCell(sheetName, "A"+rowStr, "D"+rowStr)
-	f.SetCellValue(sheetName, "A"+rowStr, "Total")
-	f.SetCellStyle(sheetName, "A"+rowStr, "A"+rowStr, styleHeader)
+	
+	if len(JU.Transaksi) > 0 {
+		rowStr := strconv.Itoa(row)
+		f.MergeCell(sheetName, "A"+rowStr, "D"+rowStr)
+		f.SetCellValue(sheetName, "A"+rowStr, "Total")
+		f.SetCellStyle(sheetName, "A"+rowStr, "A"+rowStr, styleHeader)
 
-	formatCurrencyWithColor := u.excelize.StyleCurrencyRpIndo(f, true, "", "", true, "#E0E0E0")
-	f.SetCellFormula(sheetName, "E"+rowStr, fmt.Sprintf("=SUM(E4:E%d)", row-1))
-	f.SetCellStyle(sheetName, "E"+rowStr, "E"+rowStr, formatCurrencyWithColor)
+		formatCurrencyWithColor := u.excelize.StyleCurrencyRpIndo(f, true, "", "", true, "#E0E0E0")
+		f.SetCellFormula(sheetName, "E"+rowStr, fmt.Sprintf("=SUM(E4:E%d)", row-1))
+		f.SetCellStyle(sheetName, "E"+rowStr, "E"+rowStr, formatCurrencyWithColor)
 
-	f.SetCellFormula(sheetName, "F"+rowStr, fmt.Sprintf("=SUM(F4:F%d)", row-1))
-	f.SetCellStyle(sheetName, "F"+rowStr, "F"+rowStr, formatCurrencyWithColor)
+		f.SetCellFormula(sheetName, "F"+rowStr, fmt.Sprintf("=SUM(F4:F%d)", row-1))
+		f.SetCellStyle(sheetName, "F"+rowStr, "F"+rowStr, formatCurrencyWithColor)
+	}
 	buf, err := f.WriteToBuffer()
 	if err != nil {
 		helper.LogsError(err)
@@ -147,9 +155,12 @@ func (u *akuntansiUsecase) DownloadJU(req req.GetAllJU, JU res.JurnalUmumRes) (*
 func (u *akuntansiUsecase) DownloadBB(req req.GetAllBB, BB []res.BukuBesarRes) (*bytes.Buffer, error) {
 	f, sheetName := u.excelize.InitExcelize("Buku Besar")
 	// Create a new Excel file
-	startDate, _ := time.Parse(time.DateOnly, req.StartDate)
-	endDate, _ := time.Parse(time.DateOnly, req.EndDate)
-	title := fmt.Sprintf("Dalam IDR (%s - %s)", startDate.Format("01 Jan 2006"), endDate.Format("01 Jan 2006"))
+	if req.TimeZone == "" {
+		req.TimeZone = "UTC"
+	}
+	timeLoad, _ := time.LoadLocation(req.TimeZone)
+	startDate, endDate, _ := helper.GetStartEndUTC(req.StartDate, req.EndDate)
+	title := fmt.Sprintf("Dalam Rupiah (%s - %s)", startDate.Format("01 Jan 2006"), endDate.Format("01 Jan 2006"))
 	f.SetCellValue(sheetName, "A1", title)
 
 	// Make the first cell bold
@@ -203,9 +214,9 @@ func (u *akuntansiUsecase) DownloadBB(req req.GetAllBB, BB []res.BukuBesarRes) (
 		for _, content := range bb.AyatJurnal {
 			var parse time.Time
 			if content.Keterangan != "saldo awal" {
-				parse, _ = time.Parse(time.RFC3339, content.Tanggal)
+				parse, _ = time.ParseInLocation(time.RFC3339, content.Tanggal, timeLoad)
 			} else {
-				parse, _ = time.Parse("2006-01-02", content.Tanggal)
+				parse, _ = time.ParseInLocation("2006-01-02", content.Tanggal, timeLoad)
 			}
 			tanggal := parse.Format(time.DateTime)
 			rowStr := strconv.Itoa(row)
@@ -280,12 +291,12 @@ func (u *akuntansiUsecase) DownloadBB(req req.GetAllBB, BB []res.BukuBesarRes) (
 			}
 			f.SetCellStyle(sheetName, "E"+rowStr, "E"+rowStr, styleFill)
 		}
-		for i, v := range maxLength {
-			cell := string(alpha[i])
-			f.SetColWidth(sheetName, cell, cell, float64(v))
-		}
-
+		
 		row += 3 // margin
+	}
+	for i, v := range maxLength {
+		cell := string(alpha[i])
+		f.SetColWidth(sheetName, cell, cell, float64(v))
 	}
 	buf, err := f.WriteToBuffer()
 	if err != nil {
@@ -349,17 +360,19 @@ func (u *akuntansiUsecase) DownloadNC(req req.GetAllNC, NC res.NeracaSaldoRes) (
 		cell := string(alpha[i])
 		f.SetColWidth(sheetName, cell, cell, float64(v))
 	}
-	rowStr := strconv.Itoa(row)
-	f.MergeCell(sheetName, "A"+rowStr, "B"+rowStr)
-	f.SetCellValue(sheetName, "A"+rowStr, "Total")
-	f.SetCellStyle(sheetName, "A"+rowStr, "A"+rowStr, styleHeader)
+	if len(NC.DataSaldoAkuns) > 0 {
+		rowStr := strconv.Itoa(row)
+		f.MergeCell(sheetName, "A"+rowStr, "B"+rowStr)
+		f.SetCellValue(sheetName, "A"+rowStr, "Total")
+		f.SetCellStyle(sheetName, "A"+rowStr, "A"+rowStr, styleHeader)
 
-	formatCurrencyWithColor := u.excelize.StyleCurrencyRpIndo(f, true, "", "", true, "#E0E0E0")
-	f.SetCellValue(sheetName, "C"+rowStr, NC.TotalDebit)
-	f.SetCellStyle(sheetName, "C"+rowStr, "C"+rowStr, formatCurrencyWithColor)
+		formatCurrencyWithColor := u.excelize.StyleCurrencyRpIndo(f, true, "", "", true, "#E0E0E0")
+		f.SetCellValue(sheetName, "C"+rowStr, NC.TotalDebit)
+		f.SetCellStyle(sheetName, "C"+rowStr, "C"+rowStr, formatCurrencyWithColor)
 
-	f.SetCellValue(sheetName, "D"+rowStr, NC.TotalKredit)
-	f.SetCellStyle(sheetName, "D"+rowStr, "D"+rowStr, formatCurrencyWithColor)
+		f.SetCellValue(sheetName, "D"+rowStr, NC.TotalKredit)
+		f.SetCellStyle(sheetName, "D"+rowStr, "D"+rowStr, formatCurrencyWithColor)
+	}
 	buf, err := f.WriteToBuffer()
 	if err != nil {
 		helper.LogsError(err)
@@ -371,11 +384,13 @@ func (u *akuntansiUsecase) DownloadNC(req req.GetAllNC, NC res.NeracaSaldoRes) (
 func (u *akuntansiUsecase) DownloadLBR(req req.GetAllLBR, LBR []res.LabaRugiRes) (*bytes.Buffer, error) {
 	f, sheetName := u.excelize.InitExcelize("Laba Rugi")
 
-	// Create a new Excel file
-	startDate, _ := time.Parse(time.DateOnly, req.StartDate)
-	endDate, _ := time.Parse(time.DateOnly, req.EndDate)
+	if req.TimeZone == "" {
+		req.TimeZone = "UTC"
+	}
 
-	title := fmt.Sprintf("Dalam IDR (%s - %s)", startDate.Format("01 Jan 2006"), endDate.Format("01 Jan 2006"))
+	startDate, endDate, _ := helper.GetStartEndUTC(req.StartDate, req.EndDate)
+
+	title := fmt.Sprintf("Dalam Rupiah (%s - %s)", startDate.Format("01 Jan 2006"), endDate.Format("01 Jan 2006"))
 	// Make the first cell bold
 	styleBold := u.excelize.StyleBold(f)
 	f.SetCellValue(sheetName, "A1", title)
@@ -455,25 +470,29 @@ func (u *akuntansiUsecase) DownloadLBR(req req.GetAllLBR, LBR []res.LabaRugiRes)
 				maxLength[2] = cellWidth
 			}
 
-			for i, v := range maxLength {
-				cell := string(alpha[i])
-				f.SetColWidth(sheetName, cell, cell, float64(v))
-			}
 			row++
 		}
-
+		
 		row += 2 // margin
 	}
-	// set laba rugi
-	f.SetCellValue(sheetName, "A2", "Laba/Rugi")
-	f.SetCellStyle(sheetName, "A2", "A2", styleBold)
 
-	f.MergeCell(sheetName, "B2", "C2")
-	f.SetCellValue(sheetName, "B2", labaRugi)
-	if labaRugi < 0 {
-		f.SetCellStyle(sheetName, "B2", "B2", u.excelize.StyleCurrencyRpIndo(f, true, "#EEEEEE", "center", true, "#E6340E")) // red
-	} else {
-		f.SetCellStyle(sheetName, "B2", "B2", u.excelize.StyleCurrencyRpIndo(f, true, "#EEEEEE", "center", true, "#37C24A")) // green
+	for i, v := range maxLength {
+		cell := string(alpha[i])
+		f.SetColWidth(sheetName, cell, cell, float64(v))
+	}
+
+	if len(LBR) > 0 { 
+		// set laba rugi
+		f.SetCellValue(sheetName, "A2", "Laba/Rugi")
+		f.SetCellStyle(sheetName, "A2", "A2", styleBold)
+	
+		f.MergeCell(sheetName, "B2", "C2")
+		f.SetCellValue(sheetName, "B2", labaRugi)
+		if labaRugi < 0 {
+			f.SetCellStyle(sheetName, "B2", "B2", u.excelize.StyleCurrencyRpIndo(f, true, "#EEEEEE", "center", true, "#E6340E")) // red
+		} else {
+			f.SetCellStyle(sheetName, "B2", "B2", u.excelize.StyleCurrencyRpIndo(f, true, "#EEEEEE", "center", true, "#37C24A")) // green
+		}
 	}
 	buf, err := f.WriteToBuffer()
 	if err != nil {
