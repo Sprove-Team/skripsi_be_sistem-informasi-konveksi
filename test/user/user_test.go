@@ -858,6 +858,9 @@ func UserGet(t *testing.T) {
 				assert.NotEmpty(t, res["no_telp"])
 				assert.NotEmpty(t, res["alamat"])
 				if strings.Contains(tt.name, "user supervisor") {
+					dat, ok := res["jenis_spv"].(map[string]any)
+					assert.True(t,ok)
+					assert.NotEmpty(t, dat)
 					assert.Equal(t, res["total_tugas"], float64(1))
 				}
 				assert.Equal(t, tt.expectedBody.Status, body.Status)

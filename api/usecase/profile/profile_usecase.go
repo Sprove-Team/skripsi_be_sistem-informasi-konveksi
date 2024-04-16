@@ -7,7 +7,6 @@ import (
 	repo_user "github.com/be-sistem-informasi-konveksi/api/repository/user/mysql/gorm"
 	"github.com/be-sistem-informasi-konveksi/common/message"
 	req_profile "github.com/be-sistem-informasi-konveksi/common/request/profile"
-	res_user "github.com/be-sistem-informasi-konveksi/common/response/user"
 	"github.com/be-sistem-informasi-konveksi/entity"
 	"github.com/be-sistem-informasi-konveksi/helper"
 	"github.com/be-sistem-informasi-konveksi/pkg"
@@ -38,12 +37,11 @@ func NewProfileUsecase(userRepo repo_user.UserRepo, encryptor helper.Encryptor) 
 func (u *profileUsecase) Update(param ParamUpdate) error {
 	g := new(errgroup.Group)
 	g.SetLimit(10)
-	var userData *res_user.DataGetUserRes
+	var userData *entity.User
 	g.Go(func() error {
 		var err error
 		userData, err = u.userRepo.GetById(repo_user.ParamGetById{
 			Ctx: param.Ctx,
-			WithJoin: true,
 			ID:  param.Claims.ID,
 		})
 		if err != nil {

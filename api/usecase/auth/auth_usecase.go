@@ -107,7 +107,7 @@ func (u *authUsecase) RefreshToken(param ParamRefreshToken) (newToken *string, e
 
 	claims := parse.Claims.(*pkg.Claims)
 
-	userData, err := u.userRepo.GetById(userRepo.ParamGetById{
+	userData, err := u.userRepo.GetByIdWithJoin(userRepo.ParamGetByIdWithJoin{
 		Ctx: param.Ctx,
 		ID:  claims.ID,
 	})

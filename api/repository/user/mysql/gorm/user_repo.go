@@ -46,10 +46,14 @@ type (
 		Username string
 	}
 
-	// ParamGetById struct represents the parameters for GetById method.
+	// ParamGetByIdWithJoin struct represents the parameters for GetById method.
+	ParamGetByIdWithJoin struct {
+		Ctx      context.Context
+		ID       string
+	}
+
 	ParamGetById struct {
 		Ctx      context.Context
-		WithJoin bool
 		ID       string
 	}
 	ParamGetUserSpvByIds struct {
@@ -76,7 +80,8 @@ type UserRepo interface {
 	GetAll(param ParamGetAll) ([]res_user.DataGetUserRes, error)
 	GetByJenisSpvId(param ParamGetByJenisSpvId) (*entity.User, error)
 	GetByUsername(param ParamGetByUsername) (*entity.User, error)
-	GetById(param ParamGetById) (*res_user.DataGetUserRes, error)
+	GetByIdWithJoin(param ParamGetByIdWithJoin) (*res_user.DataGetUserRes, error)
+	GetById(param ParamGetById) (*entity.User, error)
 	GetUserSpvByIds(param ParamGetUserSpvByIds) ([]entity.User, error)
 }
 
@@ -151,41 +156,42 @@ func (r *userRepo) GetAll(param ParamGetAll) ([]res_user.DataGetUserRes, error) 
 	return datas, err
 }
 
-func (r *userRepo) GetById(param ParamGetById) (*res_user.DataGetUserRes, error) {
-    data := res_user.DataGetUserRes{}
-    // Start building the query with the base user model
-    tx := r.DB.WithContext(param.Ctx).Model(&entity.User{}).Where("user.id = ?", param.ID)
-
-    if param.WithJoin {
-        // The Joins and subquery need correct SQL syntax and string placement
-        tx = tx.
-			Preload("JenisSpv").
-            Joins("LEFT JOIN user_tugas ON user.id = user_tugas.user_id").
-            Joins(`LEFT JOIN (
+func (r *userRepo) GetByIdWithJoin(param ParamGetByIdWithJoin) (*res_user.DataGetUserRes, error) {
+	data := res_user.DataGetUserRes{}
+	// Start building the query with the base user model
+	tx := r.DB.WithContext(param.Ctx).Model(&entity.User{}).Where("user.id = ?", param.ID).Preload("JenisSpv").
+		Joins("LEFT JOIN user_tugas ON user.id = user_tugas.user_id").
+		Joins(`LEFT JOIN (
                 SELECT t.id 
                 FROM tugas t
                 LEFT JOIN sub_tugas st ON t.id = st.tugas_id
                 GROUP BY t.id
                 HAVING COUNT(*) <> SUM(CASE WHEN st.status = ? THEN 1 ELSE 0 END)
             ) AS filtered_tugas ON user_tugas.tugas_id = filtered_tugas.id`, "SELESAI").
-            Select("user.*, COALESCE(SUM(CASE WHEN filtered_tugas.id IS NOT NULL THEN 1 ELSE 0 END), 0) AS total_tugas").
-            Group("user.id")
-    }
+		Select("user.*, COALESCE(SUM(CASE WHEN filtered_tugas.id IS NOT NULL THEN 1 ELSE 0 END), 0) AS total_tugas").
+		Group("user.id")
 
-	result := tx.Scan(&data)
-    // Execute the query and handle the result
-    if err := result.Error; err != nil {
-        helper.LogsError(err)
-        return nil, err
-    }
-
-	if result.RowsAffected == 0{
-		return nil, gorm.ErrRecordNotFound
+	result := tx.First(&data)
+	if err := result.Error; err != nil {
+		helper.LogsError(err)
+		return nil, err
 	}
 
-    return &data, nil
+	return &data, nil
 }
+func (r *userRepo) GetById(param ParamGetById) (*entity.User, error) {
+	data := entity.User{}
+	// Start building the query with the base user model
+	tx := r.DB.WithContext(param.Ctx).Model(&entity.User{}).Where("id = ?", param.ID).Preload("JenisSpv")
 
+	result := tx.First(&data)
+	if err := result.Error; err != nil {
+		helper.LogsError(err)
+		return nil, err
+	}
+
+	return &data, nil
+}
 
 func (r *userRepo) Update(param ParamUpdate) error {
 	tx := r.DB.Session(&gorm.Session{
