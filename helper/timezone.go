@@ -1,18 +1,33 @@
 package helper
 
 import (
-	"errors"
 	"time"
 	_ "time/tzdata"
-
-	"github.com/be-sistem-informasi-konveksi/common/message"
 )
 
-func GetTimezone(timezone string) (*time.Location,error) {	
-	timeLoad, err := time.LoadLocation(timezone)
+// func GetTimezone(timezone string) (*time.Location, error) {
+// 	timeLoad, err := time.LoadLocation(timezone)
+// 	if err != nil {
+// 		LogsError(err)
+// 		return nil, errors.New(message.Timezoneunknown)
+// 	}
+// 	return timeLoad, nil
+// }
+
+func GetStartEndUTC(start, end string) (*time.Time, *time.Time, error) {
+	endDate, err := time.Parse(time.DateOnly, end)
 	if err != nil {
 		LogsError(err)
-		return nil, errors.New(message.Timezoneunknown)
+		return nil, nil, err
 	}
-	return timeLoad, nil
+	startDate, err := time.Parse(time.DateOnly, start)
+	if err != nil {
+		LogsError(err)
+		return nil, nil, err
+	}
+
+	startDateUTC := startDate.UTC()
+	endDateUTC := endDate.UTC()
+
+	return &startDateUTC, &endDateUTC, nil
 }

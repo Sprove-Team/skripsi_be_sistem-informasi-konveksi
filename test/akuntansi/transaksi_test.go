@@ -872,7 +872,7 @@ func AkuntansiGetAllTransaksi(t *testing.T) {
 			expectedBody: test.Response{
 				Status:         fiber.ErrBadRequest.Message,
 				Code:           400,
-				ErrorsMessages: []string{"start date wajib diisi", "end date wajib diisi", "time zone wajib diisi"},
+				ErrorsMessages: []string{"start date wajib diisi", "end date wajib diisi"},
 			},
 		},
 		{
@@ -1262,7 +1262,7 @@ func AkuntansiGetHistoryTransaksi(t *testing.T) {
 			expectedBody: test.Response{
 				Status:         fiber.ErrBadRequest.Message,
 				Code:           400,
-				ErrorsMessages: []string{"start date wajib diisi", "end date wajib diisi", "time zone wajib diisi"},
+				ErrorsMessages: []string{"start date wajib diisi", "end date wajib diisi"},
 			},
 		},
 		{

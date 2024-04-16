@@ -193,11 +193,13 @@ func (u *invoiceUsecase) CreateDataInvoice(param ParamCreateDataInvoice) (*entit
 		helper.LogsError(err)
 		return nil, nil, err
 	}
+	tanggalDeadline = tanggalDeadline.Local().UTC()
 	tanggalKirim, err := time.Parse(time.RFC3339, param.Req.TanggalKirim)
 	if err != nil {
 		helper.LogsError(err)
 		return nil, nil, err
 	}
+	tanggalKirim = tanggalKirim.Local().UTC()
 
 	if param.Req.NewKontak.Nama != "" {
 		param.Req.KontakID = u.ulid.MakeUlid().String()
@@ -427,6 +429,7 @@ func (u *invoiceUsecase) UpdateDataInvoice(param ParamUpdateDataInvoice) (*entit
 		if err != nil {
 			return nil, err
 		}
+		tanggalKirim = tanggalKirim.Local().UTC()
 		oldData.TanggalKirim = &tanggalKirim
 	}
 
@@ -435,6 +438,7 @@ func (u *invoiceUsecase) UpdateDataInvoice(param ParamUpdateDataInvoice) (*entit
 		if err != nil {
 			return nil, err
 		}
+		tanggalDeadline = tanggalDeadline.Local().UTC()
 		oldData.TanggalDeadline = &tanggalDeadline
 	}
 
@@ -542,12 +546,14 @@ func (u *invoiceUsecase) GetAll(param ParamGetAll) ([]entity.Invoice, error) {
 		if err != nil {
 			return nil, err
 		}
+		tglDeadline = tglDeadline.Local().UTC()
 	}
 	if param.Req.TanggalKirim != "" {
 		tglKirim, err = time.Parse(time.RFC3339, param.Req.TanggalKirim)
 		if err != nil {
 			return nil, err
 		}
+		tglKirim = tglKirim.Local().UTC()
 	}
 	paramRepo := repo.ParamGetAll{
 		Ctx:            param.Ctx,

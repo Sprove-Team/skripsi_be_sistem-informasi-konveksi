@@ -6,6 +6,8 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm/logger"
 
+	_ "time/tzdata"
+
 	middleware_auth "github.com/be-sistem-informasi-konveksi/api/middleware/auth"
 	corsMid "github.com/be-sistem-informasi-konveksi/api/middleware/cors"
 	timeoutMid "github.com/be-sistem-informasi-konveksi/api/middleware/timeout"
