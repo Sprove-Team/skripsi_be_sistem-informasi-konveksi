@@ -54,7 +54,6 @@ func errResponse(c *fiber.Ctx, err error) error {
 		message.BayarMustLessThanSisaTagihan,
 		message.TotalHPMustGeOrEqToTotalByr,
 		message.AkunHPDoesNotExist,
-		message.Timezoneunknown,
 		message.AkunNotMatchWithJenisHPTr:
 		badRequest = append(badRequest, err.Error())
 	}

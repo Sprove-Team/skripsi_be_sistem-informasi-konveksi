@@ -42,16 +42,10 @@ func errResponse(c *fiber.Ctx, err error) error {
 		return c.Status(fiber.StatusConflict).JSON(res_global.ErrorRes(fiber.ErrConflict.Code, fiber.ErrConflict.Message, nil))
 	}
 
-	badRequest := make([]string, 0, 1)
-
-	switch err.Error() {
-	case message.Timezoneunknown:
-		badRequest = append(badRequest, err.Error())
-	}
-
-	if len(badRequest) > 0 {
-		return c.Status(fiber.StatusBadRequest).JSON(res_global.ErrorRes(fiber.ErrBadRequest.Code, fiber.ErrBadRequest.Message, badRequest))
-	}
+	// badRequest := make([]string, 0, 1)
+	// if len(badRequest) > 0 {
+	// 	return c.Status(fiber.StatusBadRequest).JSON(res_global.ErrorRes(fiber.ErrBadRequest.Code, fiber.ErrBadRequest.Message, badRequest))
+	// }
 	return c.Status(fiber.StatusInternalServerError).JSON(res_global.ErrorRes(fiber.ErrInternalServerError.Code, fiber.ErrInternalServerError.Message, nil))
 }
 

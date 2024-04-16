@@ -110,6 +110,7 @@ func (u *tugasUsecase) Create(param ParamCreate) error {
 			helper.LogsError(err)
 			return err
 		}
+		tanggal_deadline = tanggal_deadline.Local().UTC()
 		return nil
 	})
 
@@ -159,6 +160,7 @@ func (u *tugasUsecase) Update(param ParamUpdate) error {
 				helper.LogsError(err)
 				return err
 			}
+			tanggalDeadline = tanggalDeadline.Local().UTC()
 			return nil
 		})
 	}

@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"log"
+	"net/url"
 	"os"
 	"time"
 
@@ -28,12 +29,13 @@ type DBGorm struct {
 }
 
 func (dbgc *DBGorm) InitDBGorm(ulid pkg.UlidPkg) *gorm.DB {
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8&parseTime=True&loc=Local",
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8&parseTime=True&loc=%s",
 		dbgc.DB_Username,
 		dbgc.DB_Password,
 		dbgc.DB_HOST,
 		dbgc.DB_Port,
 		dbgc.DB_Name,
+		url.PathEscape("UTC"),
 		)
 
 	newLogger := logger.New(

@@ -165,7 +165,7 @@ func (u *transaksiUsecase) Update(ctx context.Context, reqTransaksi req.Update) 
 		if err != nil {
 			return err
 		}
-		repoParam.UpdateTr.Tanggal = tanggalTr
+		repoParam.UpdateTr.Tanggal = tanggalTr.Local().UTC()
 	}
 
 	// change the saldo ayat jurnal if the ayat jurnals is difference
@@ -384,6 +384,7 @@ func (u *transaksiUsecase) Create(ctx context.Context, reqTransaksi req.Create) 
 		helper.LogsError(err)
 		return err
 	}
+	parsedTime = parsedTime.Local().UTC()
 
 	dataTransaksi := entity.Transaksi{
 		BaseSoftDelete: entity.BaseSoftDelete{
@@ -418,25 +419,20 @@ func (u *transaksiUsecase) GetById(ctx context.Context, id string) (entity.Trans
 }
 
 func (u *transaksiUsecase) GetAll(ctx context.Context, reqTransaksi req.GetAll) ([]entity.Transaksi, error) {
-	timeZone, err := helper.GetTimezone(reqTransaksi.TimeZone)
+	start, end, err := helper.GetStartEndUTC(reqTransaksi.StartDate, reqTransaksi.EndDate)
 	if err != nil {
 		return nil, err
 	}
-	endDate, err := time.ParseInLocation(time.DateOnly, reqTransaksi.EndDate, timeZone)
-	if err != nil {
-		helper.LogsError(err)
-		return nil, err
+
+	if reqTransaksi.TimeZone == "" {
+		reqTransaksi.TimeZone = "UTC"
 	}
-	startDate, err := time.ParseInLocation(time.DateOnly, reqTransaksi.StartDate, timeZone)
-	if err != nil {
-		helper.LogsError(err)
-		return nil, err
-	}
+
 	
 	searchFilter := repo.SearchTransaksi{
-		EndDate:   endDate,
-		StartDate: startDate,
-		TimeZone:  reqTransaksi.TimeZone,
+		EndDate:   *end,
+		StartDate: *start,
+		TimeZone: reqTransaksi.TimeZone,
 	}
 
 	dataTransaksi, err := u.repo.GetAll(ctx, searchFilter)
@@ -449,24 +445,19 @@ func (u *transaksiUsecase) GetAll(ctx context.Context, reqTransaksi req.GetAll) 
 }
 
 func (u *transaksiUsecase) GetHistory(ctx context.Context, reqTransaksi req.GetHistory) ([]entity.Transaksi, error) {
-	timeZone, err := helper.GetTimezone(reqTransaksi.TimeZone)
+	start, end, err := helper.GetStartEndUTC(reqTransaksi.StartDate, reqTransaksi.EndDate)
 	if err != nil {
 		return nil, err
 	}
-	endDate, err := time.ParseInLocation(time.DateOnly, reqTransaksi.EndDate, timeZone)
-	if err != nil {
-		helper.LogsError(err)
-		return nil, err
+
+	if reqTransaksi.TimeZone == "" {
+		reqTransaksi.TimeZone = "UTC"
 	}
-	startDate, err := time.ParseInLocation(time.DateOnly, reqTransaksi.StartDate, timeZone)
-	if err != nil {
-		helper.LogsError(err)
-		return nil, err
-	}
+
 	searchFilter := repo.SearchTransaksi{
-		EndDate:   endDate,
-		StartDate: startDate,
-		TimeZone:  reqTransaksi.TimeZone,
+		EndDate:   *end,
+		StartDate: *start,
+		TimeZone: reqTransaksi.TimeZone,
 	}
 
 	dataHistory, err := u.repo.GetHistory(ctx, searchFilter)

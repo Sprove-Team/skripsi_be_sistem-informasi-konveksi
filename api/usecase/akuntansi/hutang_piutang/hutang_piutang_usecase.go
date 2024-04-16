@@ -147,7 +147,7 @@ func (u *hutangPiutangUsecase) CreateDataHP(param ParamCreateDataHp) (*entity.Hu
 		Keterangan:      param.Req.Keterangan,
 		BuktiPembayaran: param.Req.Transaksi.BuktiPembayaran,
 		Total:           math.Abs(ayHP1.Saldo),
-		Tanggal:         tanggalTrHp,
+		Tanggal:         tanggalTrHp.Local().UTC(),
 		KontakID:        param.Req.KontakID,
 		AyatJurnals:     []entity.AyatJurnal{ayHP1, ayHP2},
 	}

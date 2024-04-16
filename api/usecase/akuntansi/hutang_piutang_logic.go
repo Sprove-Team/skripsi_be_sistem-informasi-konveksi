@@ -113,7 +113,7 @@ func CreateDataBayarHP(trByr req.ReqBayar, ayTagihan entity.AyatJurnal, kontakId
 			Keterangan:      keterangan,
 			BuktiPembayaran: trByr.BuktiPembayaran,
 			Total:           trByr.Total,
-			Tanggal:         tanggal,
+			Tanggal:         tanggal.Local().UTC(),
 			KontakID:        kontakId,
 			AyatJurnals:     ayatJurnals,
 		},

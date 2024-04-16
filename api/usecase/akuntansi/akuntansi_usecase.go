@@ -484,23 +484,16 @@ func (u *akuntansiUsecase) DownloadLBR(req req.GetAllLBR, LBR []res.LabaRugiRes)
 }
 
 func (u *akuntansiUsecase) GetAllJU(ctx context.Context, reqGetAllJU req.GetAllJU) (res.JurnalUmumRes, error) {
-	timeZone, err := helper.GetTimezone(reqGetAllJU.TimeZone)
+	start, end, err := helper.GetStartEndUTC(reqGetAllJU.StartDate, reqGetAllJU.EndDate)
 	if err != nil {
-		return res.JurnalUmumRes{}, err
-	}
-	startDate, err := time.ParseInLocation(time.DateOnly, reqGetAllJU.StartDate, timeZone)
-	if err != nil {
-		helper.LogsError(err)
 		return res.JurnalUmumRes{}, err
 	}
 
-	endDate, err := time.ParseInLocation(time.DateOnly, reqGetAllJU.EndDate, timeZone)
-	if err != nil {
-		helper.LogsError(err)
-		return res.JurnalUmumRes{}, err
+	if reqGetAllJU.TimeZone == "" {
+		reqGetAllJU.TimeZone = "UTC"
 	}
 
-	dataJU, err := u.repo.GetDataJU(ctx, startDate, endDate, reqGetAllJU.TimeZone)
+	dataJU, err := u.repo.GetDataJU(ctx, *start, *end, reqGetAllJU.TimeZone)
 	if err != nil {
 		return res.JurnalUmumRes{}, err
 	}
@@ -548,23 +541,16 @@ func (u *akuntansiUsecase) GetAllJU(ctx context.Context, reqGetAllJU req.GetAllJ
 }
 
 func (u *akuntansiUsecase) GetAllBB(ctx context.Context, reqGetAllBB req.GetAllBB) ([]res.BukuBesarRes, error) {
-	timeZone, err := helper.GetTimezone(reqGetAllBB.TimeZone)
+	start, end, err := helper.GetStartEndUTC(reqGetAllBB.StartDate, reqGetAllBB.EndDate)
 	if err != nil {
-		return nil, err
-	}
-	startDate, err := time.ParseInLocation(time.DateOnly, reqGetAllBB.StartDate, timeZone)
-	if err != nil {
-		helper.LogsError(err)
 		return nil, err
 	}
 
-	endDate, err := time.ParseInLocation(time.DateOnly, reqGetAllBB.EndDate, timeZone)
-	if err != nil {
-		helper.LogsError(err)
-		return nil, err
+	if reqGetAllBB.TimeZone == "" {
+		reqGetAllBB.TimeZone = "UTC"
 	}
 
-	dataAyatJurnals, dataSaldoAwalJurnals, err := u.repo.GetDataBB(ctx, reqGetAllBB.AkunID, startDate, endDate, reqGetAllBB.TimeZone)
+	dataAyatJurnals, dataSaldoAwalJurnals, err := u.repo.GetDataBB(ctx, reqGetAllBB.AkunID, *start, *end, reqGetAllBB.TimeZone)
 	if err != nil {
 		return nil, err
 	}
@@ -681,23 +667,16 @@ func (u *akuntansiUsecase) GetAllNC(ctx context.Context, reqGetAllNC req.GetAllN
 }
 
 func (u *akuntansiUsecase) GetAllLBR(ctx context.Context, reqGetAllLBR req.GetAllLBR) ([]res.LabaRugiRes, error) {
-	timeZone, err := helper.GetTimezone(reqGetAllLBR.TimeZone)
+	start, end, err := helper.GetStartEndUTC(reqGetAllLBR.StartDate, reqGetAllLBR.EndDate)
 	if err != nil {
-		return nil, err
-	}
-	startDate, err := time.ParseInLocation(time.DateOnly, reqGetAllLBR.StartDate, timeZone)
-	if err != nil {
-		helper.LogsError(err)
 		return nil, err
 	}
 
-	endDate, err := time.ParseInLocation(time.DateOnly, reqGetAllLBR.EndDate, timeZone)
-	if err != nil {
-		helper.LogsError(err)
-		return nil, err
+	if reqGetAllLBR.TimeZone == "" {
+		reqGetAllLBR.TimeZone = "UTC"
 	}
 
-	lbrRes, err := u.repo.GetDataLBR(ctx, startDate, endDate, reqGetAllLBR.TimeZone)
+	lbrRes, err := u.repo.GetDataLBR(ctx, *start, *end, reqGetAllLBR.TimeZone)
 	if err != nil {
 		return nil, err
 	}

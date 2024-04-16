@@ -28,7 +28,6 @@ var (
 // misc
 var (
 	InvalidImageFormat = "format gambar tidak valid"
-	Timezoneunknown = "time zone tidak diketahui"
 )
 
 // produk

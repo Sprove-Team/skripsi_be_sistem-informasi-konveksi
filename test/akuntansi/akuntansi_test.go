@@ -68,7 +68,7 @@ func AkuntansiGetJU(t *testing.T) {
 			expectedBody: test.Response{
 				Status:         fiber.ErrBadRequest.Message,
 				Code:           400,
-				ErrorsMessages: []string{"start date wajib diisi", "end date wajib diisi", "time zone wajib diisi"},
+				ErrorsMessages: []string{"start date wajib diisi", "end date wajib diisi"},
 			},
 		},
 		{
@@ -254,7 +254,7 @@ func AkuntansiGetBB(t *testing.T) {
 			expectedBody: test.Response{
 				Status:         fiber.ErrBadRequest.Message,
 				Code:           400,
-				ErrorsMessages: []string{"start date wajib diisi", "end date wajib diisi", "time zone wajib diisi"},
+				ErrorsMessages: []string{"start date wajib diisi", "end date wajib diisi"},
 			},
 		},
 		{
@@ -599,7 +599,7 @@ func AkuntansiGetLB(t *testing.T) {
 			expectedBody: test.Response{
 				Status:         fiber.ErrBadRequest.Message,
 				Code:           400,
-				ErrorsMessages: []string{"start date wajib diisi", "end date wajib diisi", "time zone wajib diisi"},
+				ErrorsMessages: []string{"start date wajib diisi", "end date wajib diisi"},
 			},
 		},
 		{
