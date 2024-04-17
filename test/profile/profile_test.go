@@ -122,8 +122,8 @@ func ProfileUpdate(t *testing.T) {
 			payload: req_profile.Update{
 				Nama:        "direktur2",
 				Username:    static_data.CredentialUsers[entity.RolesById[1]].Username + "123",
-				OldPassword: static_data.CredentialUsers[entity.RolesById[1]].Password,
-				NewPassword: static_data.CredentialUsers[entity.RolesById[1]].Password + "123",
+				PasswordLama: static_data.CredentialUsers[entity.RolesById[1]].Password,
+				PasswordBaru: static_data.CredentialUsers[entity.RolesById[1]].Password + "123",
 				NoTelp:      "+62895397290999",
 				Alamat:      "jln. botoijo heaven 1",
 			},
@@ -134,13 +134,13 @@ func ProfileUpdate(t *testing.T) {
 			},
 		},
 		{
-			name:  "err: format field old, new password dan no telp",
+			name:  "err: format field lama, password baru dan no telp",
 			token: tokens[entity.RolesById[2]],
 			payload: req_profile.Update{
 				Nama:        "bendahara",
 				Username:    static_data.CredentialUsers[entity.RolesById[2]].Username + "123",
-				OldPassword: static_data.CredentialUsers[entity.RolesById[2]].Password + "123",
-				NewPassword: static_data.CredentialUsers[entity.RolesById[2]].Password + "123",
+				PasswordLama: static_data.CredentialUsers[entity.RolesById[2]].Password + "123",
+				PasswordBaru: static_data.CredentialUsers[entity.RolesById[2]].Password + "123",
 				NoTelp:      "082895397290991",
 				Alamat:      "jln. botoijo heaven 1",
 			},
@@ -148,7 +148,43 @@ func ProfileUpdate(t *testing.T) {
 			expectedBody: test.Response{
 				Status:         fiber.ErrBadRequest.Message,
 				Code:           400,
-				ErrorsMessages: []string{"new password tidak boleh sama dengan old password", "no telp harus berformat e164"},
+				ErrorsMessages: []string{"password baru tidak boleh sama dengan password lama", "no telp harus berformat e164"},
+			},
+		},
+		{
+			name:  "err: password lama wajib diisi jika password baru diisi",
+			token: tokens[entity.RolesById[2]],
+			payload: req_profile.Update{
+				Nama:        "bendahara",
+				Username:    static_data.CredentialUsers[entity.RolesById[2]].Username + "123",
+				PasswordLama: "",
+				PasswordBaru: static_data.CredentialUsers[entity.RolesById[2]].Password + "123",
+				NoTelp:      "+62828953972909",
+				Alamat:      "jln. botoijo heaven 1",
+			},
+			expectedCode: 400,
+			expectedBody: test.Response{
+				Status:         fiber.ErrBadRequest.Message,
+				Code:           400,
+				ErrorsMessages: []string{"password lama wajib diisi jika password baru diisi"},
+			},
+		},
+		{
+			name:  "err: password lama wajib diisi jika password baru diisi",
+			token: tokens[entity.RolesById[2]],
+			payload: req_profile.Update{
+				Nama:        "bendahara",
+				Username:    static_data.CredentialUsers[entity.RolesById[2]].Username + "123",
+				PasswordLama: "asdfsf",
+				PasswordBaru: "",
+				NoTelp:      "+62828953972909",
+				Alamat:      "jln. botoijo heaven 1",
+			},
+			expectedCode: 400,
+			expectedBody: test.Response{
+				Status:         fiber.ErrBadRequest.Message,
+				Code:           400,
+				ErrorsMessages: []string{"password baru wajib diisi jika password lama diisi"},
 			},
 		},
 		{

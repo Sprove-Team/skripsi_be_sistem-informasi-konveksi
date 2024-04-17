@@ -47,8 +47,8 @@ func (u *profileUsecase) Update(param ParamUpdate) error {
 		if err != nil {
 			return err
 		}
-		if param.Req.OldPassword != "" {
-			if !u.encryptor.CheckPasswordHash(param.Req.OldPassword, userData.Password) {
+		if param.Req.PasswordLama != "" {
+			if !u.encryptor.CheckPasswordHash(param.Req.PasswordLama, userData.Password) {
 				return errors.New(message.NotFitOldPassword)
 			}
 		}
@@ -56,10 +56,10 @@ func (u *profileUsecase) Update(param ParamUpdate) error {
 	})
 
 	var newPass string
-	if param.Req.NewPassword != "" {
+	if param.Req.PasswordBaru != "" {
 		g.Go(func() error {
 			var err error
-			newPass, err = u.encryptor.HashPassword(param.Req.NewPassword)
+			newPass, err = u.encryptor.HashPassword(param.Req.PasswordBaru)
 			if err != nil {
 				helper.LogsError(err)
 				return err

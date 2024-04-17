@@ -201,7 +201,7 @@ func (u *invoiceUsecase) CreateDataInvoice(param ParamCreateDataInvoice) (*entit
 	}
 	tanggalKirim = tanggalKirim.Local().UTC()
 
-	if param.Req.NewKontak.Nama != "" {
+	if param.Req.NewKontak.NamaKontak != "" {
 		param.Req.KontakID = u.ulid.MakeUlid().String()
 		err := u.repoKontak.Create(kontakRepo.ParamCreate{
 			Ctx: param.Ctx,
@@ -209,10 +209,10 @@ func (u *invoiceUsecase) CreateDataInvoice(param ParamCreateDataInvoice) (*entit
 				Base: entity.Base{
 					ID: param.Req.KontakID,
 				},
-				Nama:       param.Req.NewKontak.Nama,
-				NoTelp:     param.Req.NewKontak.NoTelp,
-				Alamat:     param.Req.NewKontak.Alamat,
-				Email:      param.Req.NewKontak.Email,
+				Nama:       param.Req.NewKontak.NamaKontak,
+				NoTelp:     param.Req.NewKontak.NoTelpKontak,
+				Alamat:     param.Req.NewKontak.AlamatKontak,
+				Email:      param.Req.NewKontak.EmailKontak,
 				Keterangan: "pelanggan pengguna jasa",
 			},
 		})
@@ -244,8 +244,8 @@ func (u *invoiceUsecase) CreateDataInvoice(param ParamCreateDataInvoice) (*entit
 			BordirID:     v.BordirID,
 			SablonID:     v.SablonID,
 			GambarDesign: v.GambarDesign,
-			Qty:          v.Qty,
-			Total:        v.Total,
+			Qty:          v.QtyPesanan,
+			Total:        v.TotalPesanan,
 		}
 		produkIds[i] = v.ProdukID
 		if v.BordirID != "" {
@@ -254,8 +254,8 @@ func (u *invoiceUsecase) CreateDataInvoice(param ParamCreateDataInvoice) (*entit
 		if v.SablonID != "" {
 			sablonIds = append(sablonIds, v.SablonID)
 		}
-		totalHarga += v.Total
-		totalQty += v.Qty
+		totalHarga += v.TotalPesanan
+		totalQty += v.QtyPesanan
 	}
 
 	g := new(errgroup.Group)
@@ -284,7 +284,7 @@ func (u *invoiceUsecase) CreateDataInvoice(param ParamCreateDataInvoice) (*entit
 	})
 
 	g.Go(func() error {
-		_, err := u.repoAkun.GetById(param.Ctx, param.Req.Bayar.AkunID)
+		_, err := u.repoAkun.GetById(param.Ctx, param.Req.Bayar.MetodePembayaran)
 		if err != nil {
 			if err.Error() == "record not found" {
 				return errors.New(message.AkunNotFound)
@@ -312,7 +312,7 @@ func (u *invoiceUsecase) CreateDataInvoice(param ParamCreateDataInvoice) (*entit
 
 	tanggalTr := time.Now().Format(time.RFC3339)
 
-	sisa := totalHarga - param.Req.Bayar.Total
+	sisa := totalHarga - param.Req.Bayar.TotalBayar
 
 	if sisa < 0 {
 		return nil, nil, errors.New(message.BayarMustLessThanTotalHargaInvoice)
@@ -320,7 +320,7 @@ func (u *invoiceUsecase) CreateDataInvoice(param ParamCreateDataInvoice) (*entit
 	reqHpUC := reqHP.Create{
 		KontakID:   param.Req.KontakID,
 		Jenis:      "PIUTANG",
-		Keterangan: param.Req.Keterangan,
+		Keterangan: param.Req.KeteranganPesanan,
 		Transaksi: reqHP.ReqTransaksi{
 			Tanggal:         tanggalTr,
 			BuktiPembayaran: param.Req.Bayar.BuktiPembayaran,
@@ -345,10 +345,10 @@ func (u *invoiceUsecase) CreateDataInvoice(param ParamCreateDataInvoice) (*entit
 		Base: entity.Base{
 			ID: u.ulid.MakeUlid().String(),
 		},
-		AkunID:          param.Req.Bayar.AkunID,
-		Keterangan:      param.Req.Bayar.Keterangan,
+		AkunID:          param.Req.Bayar.MetodePembayaran,
+		Keterangan:      param.Req.Bayar.KeteranganPembayaran,
 		BuktiPembayaran: param.Req.Bayar.BuktiPembayaran,
-		Total:           param.Req.Bayar.Total,
+		Total:           param.Req.Bayar.TotalBayar,
 	}
 
 	dataInvoice = &entity.Invoice{
@@ -359,7 +359,7 @@ func (u *invoiceUsecase) CreateDataInvoice(param ParamCreateDataInvoice) (*entit
 		TotalQty:         totalQty,
 		TotalHarga:       totalHarga,
 		UserID:           param.Claims.ID,
-		Keterangan:       param.Req.Keterangan,
+		Keterangan:       param.Req.KeteranganPesanan,
 		TanggalDeadline:  &tanggalDeadline,
 		TanggalKirim:     &tanggalKirim,
 		NomorReferensi:   ref,

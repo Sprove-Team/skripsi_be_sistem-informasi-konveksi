@@ -25,16 +25,16 @@ func InvoiceCreate(t *testing.T) {
 			BordirID:     bordir[0].ID,
 			SablonID:     sablon[0].ID,
 			GambarDesign: "img-design.webp",
-			Qty:          10,
-			Total:        (produk[0].HargaDetails[1].Harga + bordir[0].Harga + sablon[0].Harga) * 10,
+			QtyPesanan:          10,
+			TotalPesanan:        (produk[0].HargaDetails[1].Harga + bordir[0].Harga + sablon[0].Harga) * 10,
 		},
 		{
 			ProdukID:     produk[1].ID,
 			BordirID:     bordir[1].ID,
 			SablonID:     sablon[1].ID,
 			GambarDesign: "img-design.webp",
-			Qty:          2,
-			Total:        (produk[1].HargaDetails[0].Harga + bordir[1].Harga + sablon[1].Harga) * 2,
+			QtyPesanan:          2,
+			TotalPesanan:        (produk[1].HargaDetails[0].Harga + bordir[1].Harga + sablon[1].Harga) * 2,
 		},
 	}
 	detailInvoice2 := []req_invoice.ReqDetailInvoice{
@@ -43,16 +43,16 @@ func InvoiceCreate(t *testing.T) {
 			BordirID:     bordir[1].ID,
 			SablonID:     sablon[1].ID,
 			GambarDesign: "img-design-2.webp",
-			Qty:          5,
-			Total:        (produk[1].HargaDetails[0].Harga + bordir[1].Harga + sablon[1].Harga) * 5,
+			QtyPesanan:          5,
+			TotalPesanan:        (produk[1].HargaDetails[0].Harga + bordir[1].Harga + sablon[1].Harga) * 5,
 		},
 		{
 			ProdukID:     produk[0].ID,
 			BordirID:     bordir[0].ID,
 			SablonID:     sablon[0].ID,
 			GambarDesign: "img-design-2.webp",
-			Qty:          10,
-			Total:        (produk[0].HargaDetails[1].Harga + bordir[0].Harga + sablon[0].Harga) * 10,
+			QtyPesanan:          10,
+			TotalPesanan:        (produk[0].HargaDetails[1].Harga + bordir[0].Harga + sablon[0].Harga) * 10,
 		},
 	}
 	tests := []struct {
@@ -69,13 +69,13 @@ func InvoiceCreate(t *testing.T) {
 				KontakID: kontak[0].ID,
 				Bayar: req_invoice.ReqBayar{
 					BuktiPembayaran: []string{"img-bukti.webp"},
-					Keterangan:      "DP 1",
-					AkunID:          "01HP7DVBGTC06PXWT6FD66VERN", // kas
-					Total:           (detailInvoice1[0].Total + detailInvoice1[1].Total) / 2,
+					KeteranganPembayaran:      "DP 1",
+					MetodePembayaran:          "01HP7DVBGTC06PXWT6FD66VERN", // kas
+					TotalBayar:           (detailInvoice1[0].TotalPesanan + detailInvoice1[1].TotalPesanan) / 2,
 				},
 				TanggalDeadline: "2024-10-15T12:00:00Z",
 				TanggalKirim:    "2024-10-15T12:00:00Z",
-				Keterangan:      "ket invoice 1",
+				KeteranganPesanan:      "ket invoice 1",
 				DetailInvoice:   detailInvoice1,
 			},
 			expectedCode: 201,
@@ -91,19 +91,19 @@ func InvoiceCreate(t *testing.T) {
 				KontakID: kontak[0].ID,
 				Bayar: req_invoice.ReqBayar{
 					BuktiPembayaran: []string{"img-bukti.webp"},
-					Keterangan:      "DP 1",
-					AkunID:          "01HP7DVBGTC06PXWT6FD66VERN", // kas
-					Total:           (produk[1].HargaDetails[0].Harga * 5) / 2,
+					KeteranganPembayaran:      "DP 1",
+					MetodePembayaran:          "01HP7DVBGTC06PXWT6FD66VERN", // kas
+					TotalBayar:           (produk[1].HargaDetails[0].Harga * 5) / 2,
 				},
 				TanggalDeadline: "2024-10-17T12:00:00Z",
 				TanggalKirim:    "2024-10-17T12:00:00Z",
-				Keterangan:      "ket invoice 1",
+				KeteranganPesanan:      "ket invoice 1",
 				DetailInvoice: []req_invoice.ReqDetailInvoice{
 					{
 						ProdukID:     produk[1].ID,
 						GambarDesign: "img-design-tanpa-bordir-sablon.webp",
-						Qty:          5,
-						Total:        produk[1].HargaDetails[0].Harga * 5,
+						QtyPesanan:          5,
+						TotalPesanan:        produk[1].HargaDetails[0].Harga * 5,
 					},
 				},
 			},
@@ -118,20 +118,20 @@ func InvoiceCreate(t *testing.T) {
 			token: tokens[entity.RolesById[1]],
 			payload: req_invoice.Create{
 				NewKontak: req_invoice.ReqNewKontak{
-					Nama:   "joni",
-					NoTelp: "+6281234567890",
-					Alamat: "123 Main Street",
-					Email:  "john.doe@example.com",
+					NamaKontak:   "joni",
+					NoTelpKontak: "+6281234567890",
+					AlamatKontak: "123 Main Street",
+					EmailKontak:  "john.doe@example.com",
 				},
 				Bayar: req_invoice.ReqBayar{
 					BuktiPembayaran: []string{"img-bukti-2.webp"},
-					Keterangan:      "DP 2",
-					AkunID:          "01HP7DVBGTC06PXWT6FD66VERN", // kas
-					Total:           (detailInvoice2[0].Total + detailInvoice2[0].Total) / 2,
+					KeteranganPembayaran:      "DP 2",
+					MetodePembayaran:          "01HP7DVBGTC06PXWT6FD66VERN", // kas
+					TotalBayar:           (detailInvoice2[0].TotalPesanan + detailInvoice2[0].TotalPesanan) / 2,
 				},
 				TanggalDeadline: "2024-10-15T12:00:00Z",
 				TanggalKirim:    "2024-10-15T12:00:00Z",
-				Keterangan:      "ket invoice 2",
+				KeteranganPesanan:      "ket invoice 2",
 				DetailInvoice:   detailInvoice2,
 			},
 			expectedCode: 201,
@@ -146,11 +146,11 @@ func InvoiceCreate(t *testing.T) {
 			payload: req_invoice.Create{
 				KontakID: "",
 				Bayar: req_invoice.ReqBayar{
-					Keterangan: "",
-					AkunID:     "",
-					Total:      0,
+					KeteranganPembayaran: "",
+					MetodePembayaran:     "",
+					TotalBayar:      0,
 				},
-				Keterangan:      "",
+				KeteranganPesanan:      "",
 				TanggalDeadline: "",
 				TanggalKirim:    "",
 			},
@@ -158,7 +158,7 @@ func InvoiceCreate(t *testing.T) {
 			expectedBody: test.Response{
 				Status:         fiber.ErrBadRequest.Message,
 				Code:           400,
-				ErrorsMessages: []string{"kontak id wajib diisi jika new kontak tidak diisi", "bukti pembayaran wajib diisi", "keterangan wajib diisi", "akun id wajib diisi", "total wajib diisi", "tanggal deadline wajib diisi", "tanggal kirim wajib diisi", "detail invoice wajib diisi", "bukti pembayaran wajib diisi"},
+				ErrorsMessages: []string{"kontak id wajib diisi jika new kontak tidak diisi", "bukti pembayaran wajib diisi", "keterangan pesanan wajib diisi", "metode pembayaran wajib diisi", "total bayar wajib diisi", "tanggal deadline wajib diisi", "tanggal kirim wajib diisi", "detail invoice wajib diisi", "bukti pembayaran wajib diisi"},
 			},
 		},
 		{
@@ -167,8 +167,8 @@ func InvoiceCreate(t *testing.T) {
 			payload: req_invoice.Create{
 				KontakID: "asdfsadfsd",
 				Bayar: req_invoice.ReqBayar{
-					AkunID: "asdfasdfsf",
-					Total:  0,
+					MetodePembayaran: "asdfasdfsf",
+					TotalBayar:  0,
 				},
 				DetailInvoice: []req_invoice.ReqDetailInvoice{
 					{
@@ -184,7 +184,7 @@ func InvoiceCreate(t *testing.T) {
 				Code:   400,
 				ErrorsMessages: []string{
 					"kontak id tidak berupa ulid yang valid",
-					"akun id tidak berupa ulid yang valid",
+					"metode pembayaran tidak berupa ulid yang valid",
 					"produk id tidak berupa ulid yang valid",
 					"bordir id tidak berupa ulid yang valid",
 					"sablon id tidak berupa ulid yang valid",
@@ -197,13 +197,13 @@ func InvoiceCreate(t *testing.T) {
 			payload: req_invoice.Create{
 				KontakID: "asdfsadfsd",
 				Bayar: req_invoice.ReqBayar{
-					AkunID: "asdfasdfsf",
-					Total:  -1,
+					MetodePembayaran: "asdfasdfsf",
+					TotalBayar:  -1,
 				},
 				DetailInvoice: []req_invoice.ReqDetailInvoice{
 					{
-						Total: -1,
-						Qty:   -1,
+						TotalPesanan: -1,
+						QtyPesanan:   -1,
 					},
 				},
 			},
@@ -212,7 +212,7 @@ func InvoiceCreate(t *testing.T) {
 				Status: fiber.ErrBadRequest.Message,
 				Code:   400,
 				ErrorsMessages: []string{
-					"total harus lebih besar dari 0", "qty harus lebih besar dari 0",
+					"total pesanan harus lebih besar dari 0", "qty pesanan harus lebih besar dari 0",
 				},
 			},
 		},
@@ -238,7 +238,7 @@ func InvoiceCreate(t *testing.T) {
 			payload: req_invoice.Create{
 				KontakID: kontak[0].ID,
 				NewKontak: req_invoice.ReqNewKontak{
-					Nama: "test",
+					NamaKontak: "test",
 				},
 			},
 			expectedCode: 400,
@@ -269,13 +269,13 @@ func InvoiceCreate(t *testing.T) {
 				KontakID: kontak[0].ID,
 				Bayar: req_invoice.ReqBayar{
 					BuktiPembayaran: []string{"img-bukti-2.webp"},
-					Keterangan:      "DP 2",
-					AkunID:          "01HP7DVBGTC06PXWT6FD66VERN", // kas
-					Total:           (detailInvoice2[0].Total + detailInvoice2[0].Total) * 3,
+					KeteranganPembayaran:      "DP 2",
+					MetodePembayaran:          "01HP7DVBGTC06PXWT6FD66VERN", // kas
+					TotalBayar:           (detailInvoice2[0].TotalPesanan + detailInvoice2[0].TotalPesanan) * 3,
 				},
 				TanggalDeadline: time.Now().Format(time.RFC3339),
 				TanggalKirim:    time.Now().Format(time.RFC3339),
-				Keterangan:      "ket invoice 2",
+				KeteranganPesanan:      "ket invoice 2",
 				DetailInvoice:   detailInvoice2,
 			},
 			expectedCode: 400,
@@ -292,13 +292,13 @@ func InvoiceCreate(t *testing.T) {
 				KontakID: "01HP7DVBGTC06PXWT6FD66VERN",
 				Bayar: req_invoice.ReqBayar{
 					BuktiPembayaran: []string{"img-bukti-2.webp"},
-					Keterangan:      "DP 2",
-					AkunID:          "01HP7DVBGTC06PXWT6FD66VERN", // kas
-					Total:           (detailInvoice2[0].Total + detailInvoice2[0].Total) / 2,
+					KeteranganPembayaran:      "DP 2",
+					MetodePembayaran:          "01HP7DVBGTC06PXWT6FD66VERN", // kas
+					TotalBayar:           (detailInvoice2[0].TotalPesanan + detailInvoice2[0].TotalPesanan) / 2,
 				},
 				TanggalDeadline: "2024-10-15T12:00:00Z",
 				TanggalKirim:    "2024-10-15T12:00:00Z",
-				Keterangan:      "ket invoice 2",
+				KeteranganPesanan:      "ket invoice 2",
 				DetailInvoice:   detailInvoice2,
 			},
 			expectedCode: 400,
@@ -315,13 +315,13 @@ func InvoiceCreate(t *testing.T) {
 				KontakID: kontak[0].ID,
 				Bayar: req_invoice.ReqBayar{
 					BuktiPembayaran: []string{"img-bukti-2.webp"},
-					Keterangan:      "DP 2",
-					AkunID:          "01HP7DVBGTC06PXWT6FD66VERC", // kas
-					Total:           (detailInvoice2[0].Total + detailInvoice2[0].Total) / 2,
+					KeteranganPembayaran:      "DP 2",
+					MetodePembayaran:          "01HP7DVBGTC06PXWT6FD66VERC", // kas
+					TotalBayar:           (detailInvoice2[0].TotalPesanan + detailInvoice2[0].TotalPesanan) / 2,
 				},
 				TanggalDeadline: time.Now().Format(time.RFC3339),
 				TanggalKirim:    time.Now().Format(time.RFC3339),
-				Keterangan:      "ket invoice 2",
+				KeteranganPesanan:      "ket invoice 2",
 				DetailInvoice:   detailInvoice2,
 			},
 			expectedCode: 400,
@@ -338,21 +338,21 @@ func InvoiceCreate(t *testing.T) {
 				KontakID: kontak[0].ID,
 				Bayar: req_invoice.ReqBayar{
 					BuktiPembayaran: []string{"img-bukti-2.webp"},
-					Keterangan:      "DP 2",
-					AkunID:          "01HP7DVBGTC06PXWT6FD66VERN",
-					Total:           (detailInvoice2[0].Total + detailInvoice2[0].Total) / 2,
+					KeteranganPembayaran:      "DP 2",
+					MetodePembayaran:          "01HP7DVBGTC06PXWT6FD66VERN",
+					TotalBayar:           (detailInvoice2[0].TotalPesanan + detailInvoice2[0].TotalPesanan) / 2,
 				},
 				TanggalDeadline: "2024-10-15T12:00:00Z",
 				TanggalKirim:    "2024-10-15T12:00:00Z",
-				Keterangan:      "ket invoice 2",
+				KeteranganPesanan:      "ket invoice 2",
 				DetailInvoice: []req_invoice.ReqDetailInvoice{
 					{
 						ProdukID:     "01HP7DVBGTC06PXWT6FD66VERC",
 						BordirID:     bordir[1].ID,
 						SablonID:     sablon[1].ID,
 						GambarDesign: "img-design-2.webp",
-						Qty:          5,
-						Total:        (produk[1].HargaDetails[0].Harga + bordir[1].Harga + sablon[1].Harga) * 5,
+						QtyPesanan:          5,
+						TotalPesanan:        (produk[1].HargaDetails[0].Harga + bordir[1].Harga + sablon[1].Harga) * 5,
 					},
 				},
 			},
@@ -370,21 +370,21 @@ func InvoiceCreate(t *testing.T) {
 				KontakID: kontak[0].ID,
 				Bayar: req_invoice.ReqBayar{
 					BuktiPembayaran: []string{"img-bukti-2.webp"},
-					Keterangan:      "DP 2",
-					AkunID:          "01HP7DVBGTC06PXWT6FD66VERN",
-					Total:           (detailInvoice2[0].Total + detailInvoice2[0].Total) / 2,
+					KeteranganPembayaran:      "DP 2",
+					MetodePembayaran:          "01HP7DVBGTC06PXWT6FD66VERN",
+					TotalBayar:           (detailInvoice2[0].TotalPesanan + detailInvoice2[0].TotalPesanan) / 2,
 				},
 				TanggalDeadline: "2024-10-15T12:00:00Z",
 				TanggalKirim:    "2024-10-15T12:00:00Z",
-				Keterangan:      "ket invoice 2",
+				KeteranganPesanan:      "ket invoice 2",
 				DetailInvoice: []req_invoice.ReqDetailInvoice{
 					{
 						ProdukID:     produk[1].ID,
 						BordirID:     "01HP7DVBGTC06PXWT6FD66VERC",
 						SablonID:     sablon[1].ID,
 						GambarDesign: "img-design-2.webp",
-						Qty:          5,
-						Total:        (produk[1].HargaDetails[0].Harga + bordir[1].Harga + sablon[1].Harga) * 5,
+						QtyPesanan:          5,
+						TotalPesanan:        (produk[1].HargaDetails[0].Harga + bordir[1].Harga + sablon[1].Harga) * 5,
 					},
 				},
 			},
@@ -402,21 +402,21 @@ func InvoiceCreate(t *testing.T) {
 				KontakID: kontak[0].ID,
 				Bayar: req_invoice.ReqBayar{
 					BuktiPembayaran: []string{"img-bukti-2.webp"},
-					Keterangan:      "DP 2",
-					AkunID:          "01HP7DVBGTC06PXWT6FD66VERN",
-					Total:           (detailInvoice2[0].Total + detailInvoice2[0].Total) / 2,
+					KeteranganPembayaran:      "DP 2",
+					MetodePembayaran:          "01HP7DVBGTC06PXWT6FD66VERN",
+					TotalBayar:           (detailInvoice2[0].TotalPesanan + detailInvoice2[0].TotalPesanan) / 2,
 				},
 				TanggalDeadline: "2024-10-15T12:00:00Z",
 				TanggalKirim:    "2024-10-15T12:00:00Z",
-				Keterangan:      "ket invoice 2",
+				KeteranganPesanan:      "ket invoice 2",
 				DetailInvoice: []req_invoice.ReqDetailInvoice{
 					{
 						ProdukID:     produk[1].ID,
 						BordirID:     bordir[1].ID,
 						SablonID:     "01HP7DVBGTC06PXWT6FD66VERC",
 						GambarDesign: "img-design-2.webp",
-						Qty:          5,
-						Total:        (produk[1].HargaDetails[0].Harga + bordir[1].Harga + sablon[1].Harga) * 5,
+						QtyPesanan:          5,
+						TotalPesanan:        (produk[1].HargaDetails[0].Harga + bordir[1].Harga + sablon[1].Harga) * 5,
 					},
 				},
 			},
