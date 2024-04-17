@@ -9,6 +9,7 @@ import (
 	dataDefault "github.com/be-sistem-informasi-konveksi/app/static_data"
 	"github.com/be-sistem-informasi-konveksi/common/message"
 	req "github.com/be-sistem-informasi-konveksi/common/request/akuntansi/kelompok_akun"
+	res_kelompok_akun "github.com/be-sistem-informasi-konveksi/common/response/akuntansi/kelompok_akun"
 	"github.com/be-sistem-informasi-konveksi/entity"
 	"github.com/be-sistem-informasi-konveksi/helper"
 	"github.com/be-sistem-informasi-konveksi/pkg"
@@ -17,7 +18,7 @@ import (
 type KelompokAkunUsecase interface {
 	Create(ctx context.Context, reqKelompokAKun req.Create) error
 	Update(ctx context.Context, reqKelompokAKun req.Update) error
-	GetAll(ctx context.Context, reqKelompokAkun req.GetAll) ([]entity.KelompokAkun, error)
+	GetAll(ctx context.Context, reqKelompokAkun req.GetAll) ([]res_kelompok_akun.GetAll, error)
 	GetById(ctx context.Context, id string) (entity.KelompokAkun, error)
 	Delete(ctx context.Context, id string) error
 }
@@ -111,21 +112,34 @@ func (u *kelompokAkunUsecase) Delete(ctx context.Context, id string) error {
 	return u.repo.Delete(ctx, id)
 }
 
-func (u *kelompokAkunUsecase) GetAll(ctx context.Context, reqKelompokAkun req.GetAll) ([]entity.KelompokAkun, error) {
+func (u *kelompokAkunUsecase) GetAll(ctx context.Context, reqKelompokAkun req.GetAll) ([]res_kelompok_akun.GetAll, error) {
 	if reqKelompokAkun.Limit <= 0 {
 		reqKelompokAkun.Limit = 10
 	}
-	datas, err := u.repo.GetAll(ctx, repo.SearchKelompokAkun{
+	kelompokAkuns, err := u.repo.GetAll(ctx, repo.SearchKelompokAkun{
 		Nama:         strings.ToLower(reqKelompokAkun.Nama),
 		KategoriAkun: reqKelompokAkun.KategoriAkun,
 		Kode:         reqKelompokAkun.Kode,
 		Limit:        reqKelompokAkun.Limit,
 		Next:         reqKelompokAkun.Next,
 	})
+
 	if err != nil {
 		return nil, err
 	}
-	return datas, err
+
+	resKelompokAkun := make([]res_kelompok_akun.GetAll, len(kelompokAkuns))
+	for i, kelompokAkun := range kelompokAkuns {
+		defaultData := dataDefault.DefaultKodeAkunNKelompokAkun
+		resKelompokAkun[i] = res_kelompok_akun.GetAll{
+			KelompokAkun: kelompokAkun,
+		}
+		if _, ok := defaultData[kelompokAkun.ID]; ok {
+			resKelompokAkun[i].Default = true
+		}
+	}
+	
+	return resKelompokAkun, err
 }
 
 func (u *kelompokAkunUsecase) GetById(ctx context.Context, id string) (entity.KelompokAkun, error) {

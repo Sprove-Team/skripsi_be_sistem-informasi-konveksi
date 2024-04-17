@@ -10,6 +10,7 @@ import (
 	dataDefault "github.com/be-sistem-informasi-konveksi/app/static_data"
 	"github.com/be-sistem-informasi-konveksi/common/message"
 	req "github.com/be-sistem-informasi-konveksi/common/request/akuntansi/akun"
+	res_akun "github.com/be-sistem-informasi-konveksi/common/response/akuntansi/akun"
 	"github.com/be-sistem-informasi-konveksi/entity"
 	"github.com/be-sistem-informasi-konveksi/pkg"
 )
@@ -18,7 +19,7 @@ type AkunUsecase interface {
 	Create(ctx context.Context, reqAkun req.Create) error
 	Delete(ctx context.Context, id string) error
 	Update(ctx context.Context, reqAkun req.Update) error
-	GetAll(ctx context.Context, reqAkun req.GetAll) ([]entity.Akun, error)
+	GetAll(ctx context.Context, reqAkun req.GetAll) ([]res_akun.GetAll, error)
 	GetById(ctx context.Context, id string) (entity.Akun, error)
 }
 
@@ -120,18 +121,28 @@ func (u *akunUsecase) Delete(ctx context.Context, id string) error {
 	return u.repo.Delete(ctx, id)
 }
 
-func (u *akunUsecase) GetAll(ctx context.Context, reqAkun req.GetAll) ([]entity.Akun, error) {
+func (u *akunUsecase) GetAll(ctx context.Context, reqAkun req.GetAll) ([]res_akun.GetAll, error) {
 	if reqAkun.Limit <= 0 {
 		reqAkun.Limit = 10
 	}
-	datas, err := u.repo.GetAll(ctx, repo.SearchAkun{
+	akuns, err := u.repo.GetAll(ctx, repo.SearchAkun{
 		Nama:  strings.ToLower(reqAkun.Nama),
 		Kode:  reqAkun.Kode,
 		Limit: reqAkun.Limit,
 		Next:  reqAkun.Next,
 	})
+	resAkun := make([]res_akun.GetAll, len(akuns))
+	for i, akun := range akuns {
+		defaultData := dataDefault.DefaultKodeAkunNKelompokAkun
+		resAkun[i] = res_akun.GetAll{
+			Akun: akun,
+		}
+		if _, ok := defaultData[akun.ID]; ok {
+			resAkun[i].Default = true
+		}
+	}
 	if err != nil {
 		return nil, err
 	}
-	return datas, err
+	return resAkun, err
 }
