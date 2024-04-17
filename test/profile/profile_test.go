@@ -148,7 +148,7 @@ func ProfileUpdate(t *testing.T) {
 			expectedBody: test.Response{
 				Status:         fiber.ErrBadRequest.Message,
 				Code:           400,
-				ErrorsMessages: []string{"old password tidak sama dengan new password", "new password tidak sama dengan old password", "no telp harus berformat e164"},
+				ErrorsMessages: []string{"new password tidak boleh sama dengan old password", "no telp harus berformat e164"},
 			},
 		},
 		{
