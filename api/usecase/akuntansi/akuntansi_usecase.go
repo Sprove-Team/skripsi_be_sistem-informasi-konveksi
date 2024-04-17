@@ -62,8 +62,9 @@ func (u *akuntansiUsecase) DownloadJU(req req.GetAllJU, JU res.JurnalUmumRes) (*
 		req.TimeZone = "UTC"
 	}
 	timeLoad, _ := time.LoadLocation(req.TimeZone)
-	startDate, endDate, _ := helper.GetStartEndUTC(req.StartDate, req.EndDate)
-	title := fmt.Sprintf("Dalam Rupiah (%s - %s)", startDate.Format("01 Jan 2006"), endDate.Format("01 Jan 2006"))
+	startDate, _ := time.Parse(time.DateOnly, req.StartDate)
+	endDate, _ := time.Parse(time.DateOnly, req.EndDate)
+	title := fmt.Sprintf("Dalam Rupiah (%s - %s)", startDate.Format("02 Jan 2006"), endDate.Format("02 Jan 2006"))
 	f.SetCellValue(sheetName, "A1", title)
 	f.SetCellStyle(sheetName, "A1", "A1", u.excelize.StyleBold(f))
 
@@ -92,8 +93,8 @@ func (u *akuntansiUsecase) DownloadJU(req req.GetAllJU, JU res.JurnalUmumRes) (*
 	for _, transaksi := range JU.Transaksi {
 		for _, ayat := range transaksi.AyatJurnal {
 			rowStr := strconv.Itoa(row)
-			parse, _ := time.ParseInLocation(time.RFC3339, transaksi.Tanggal, timeLoad)
-			tanggal := parse.Format(time.DateTime)
+			parse, _ := time.Parse(time.RFC3339, transaksi.Tanggal)
+			tanggal := parse.In(timeLoad).Format(time.DateTime)
 			f.SetCellValue(sheetName, "A"+rowStr, tanggal)
 			if cellWidth := u.excelize.GetCellWidth(tanggal, 2); maxLength[0] < cellWidth {
 				maxLength[0] = cellWidth
@@ -159,8 +160,9 @@ func (u *akuntansiUsecase) DownloadBB(req req.GetAllBB, BB []res.BukuBesarRes) (
 		req.TimeZone = "UTC"
 	}
 	timeLoad, _ := time.LoadLocation(req.TimeZone)
-	startDate, endDate, _ := helper.GetStartEndUTC(req.StartDate, req.EndDate)
-	title := fmt.Sprintf("Dalam Rupiah (%s - %s)", startDate.Format("01 Jan 2006"), endDate.Format("01 Jan 2006"))
+	startDate, _ := time.Parse(time.DateOnly, req.StartDate)
+	endDate, _ := time.Parse(time.DateOnly, req.EndDate)
+	title := fmt.Sprintf("Dalam Rupiah (%s - %s)", startDate.Format("02 Jan 2006"), endDate.Format("02 Jan 2006"))
 	f.SetCellValue(sheetName, "A1", title)
 
 	// Make the first cell bold
@@ -214,11 +216,11 @@ func (u *akuntansiUsecase) DownloadBB(req req.GetAllBB, BB []res.BukuBesarRes) (
 		for _, content := range bb.AyatJurnal {
 			var parse time.Time
 			if content.Keterangan != "saldo awal" {
-				parse, _ = time.ParseInLocation(time.RFC3339, content.Tanggal, timeLoad)
+				parse, _ = time.Parse(time.RFC3339, content.Tanggal)
 			} else {
-				parse, _ = time.ParseInLocation("2006-01-02", content.Tanggal, timeLoad)
+				parse, _ = time.Parse("2006-01-02", content.Tanggal)
 			}
-			tanggal := parse.Format(time.DateTime)
+			tanggal := parse.In(timeLoad).Format(time.DateTime)
 			rowStr := strconv.Itoa(row)
 			f.SetCellValue(sheetName, "A"+rowStr, tanggal)
 			if cellWidth := u.excelize.GetCellWidth(tanggal, 2); cellWidth > maxLength[0] {
@@ -388,9 +390,10 @@ func (u *akuntansiUsecase) DownloadLBR(req req.GetAllLBR, LBR []res.LabaRugiRes)
 		req.TimeZone = "UTC"
 	}
 
-	startDate, endDate, _ := helper.GetStartEndUTC(req.StartDate, req.EndDate)
+	startDate, _ := time.Parse(time.DateOnly, req.StartDate)
+	endDate, _ := time.Parse(time.DateOnly, req.EndDate)
 
-	title := fmt.Sprintf("Dalam Rupiah (%s - %s)", startDate.Format("01 Jan 2006"), endDate.Format("01 Jan 2006"))
+	title := fmt.Sprintf("Dalam Rupiah (%s - %s)", startDate.Format("02 Jan 2006"), endDate.Format("02 Jan 2006"))
 	// Make the first cell bold
 	styleBold := u.excelize.StyleBold(f)
 	f.SetCellValue(sheetName, "A1", title)
