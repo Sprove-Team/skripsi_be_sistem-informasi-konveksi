@@ -14,7 +14,7 @@ type HargaDetailProdukRepo interface {
 	GetByInQtyProdukId(ctx context.Context, qty []uint, produkId string) ([]entity.HargaDetailProduk, error)
 	GetById(ctx context.Context, id string) (entity.HargaDetailProduk, error)
 	Delete(ctx context.Context, id string) error
-	Update(ctx context.Context, hargaDetailProduk *entity.HargaDetailProduk) error
+	Update(ctx context.Context, produkId string, hargaDetailProduk *entity.HargaDetailProduk) error
 	GetByProdukId(ctx context.Context, id string) ([]entity.HargaDetailProduk, error)
 	Create(ctx context.Context, hargaDetailProduk *entity.HargaDetailProduk) error
 }
@@ -53,8 +53,18 @@ func (r *hargaDetailProdukRepo) Delete(ctx context.Context, id string) error {
 	return nil
 }
 
-func (r *hargaDetailProdukRepo) Update(ctx context.Context, hargaDetailProduk *entity.HargaDetailProduk) error {
-	err := r.DB.WithContext(ctx).Omit("id", "produk_id").Updates(hargaDetailProduk).Error
+func (r *hargaDetailProdukRepo) Update(ctx context.Context, produkId string, hargaDetailProduk *entity.HargaDetailProduk) error {
+	var count int64
+	err := r.DB.WithContext(ctx).Model(&entity.HargaDetailProduk{}).Where("produk_id = ? AND qty = ?", produkId, hargaDetailProduk.QTY).Count(&count).Error
+	if err != nil {
+		return err
+	}
+	
+	if count > 0 {
+		return gorm.ErrDuplicatedKey
+	}
+
+	err = r.DB.WithContext(ctx).Omit("id", "produk_id").Updates(hargaDetailProduk).Error
 	if err != nil {
 		helper.LogsError(err)
 		return err

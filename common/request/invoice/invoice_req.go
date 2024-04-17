@@ -7,32 +7,32 @@ type ReqDetailInvoice struct {
 	BordirID     string  `json:"bordir_id" validate:"omitempty,ulid"`
 	SablonID     string  `json:"sablon_id" validate:"omitempty,ulid"`
 	GambarDesign string  `json:"gambar_design" validate:"required"`
-	Total        float64 `json:"total" validate:"required,number,gt=0"`
-	Qty          int     `json:"qty" validate:"required,number,gt=0"`
+	TotalPesanan float64 `json:"total" validate:"required,number,gt=0"`
+	QtyPesanan   int     `json:"qty" validate:"required,number,gt=0"`
 }
 
 type ReqNewKontak struct {
-	Nama   string `json:"nama" validate:"required"`
-	NoTelp string `json:"no_telp" validate:"required,e164"`
-	Alamat string `json:"alamat" validate:"required"`
-	Email  string `json:"email" validate:"omitempty,email"`
+	NamaKontak   string `json:"nama" validate:"required"`
+	NoTelpKontak string `json:"no_telp" validate:"required,e164"`
+	AlamatKontak string `json:"alamat" validate:"required"`
+	EmailKontak  string `json:"email" validate:"omitempty,email"`
 }
 
 type ReqBayar struct {
-	BuktiPembayaran entity.BuktiPembayaran `json:"bukti_pembayaran" validate:"required,gt=0"`
-	Keterangan      string                 `json:"keterangan" validate:"required"`
-	AkunID          string                 `json:"akun_id" validate:"required,ulid"`
-	Total           float64                `json:"total" validate:"required,number,gt=0"`
+	BuktiPembayaran      entity.BuktiPembayaran `json:"bukti_pembayaran" validate:"required,gt=0"`
+	KeteranganPembayaran string                 `json:"keterangan" validate:"required"`
+	MetodePembayaran     string                 `json:"akun_id" validate:"required,ulid"`
+	TotalBayar           float64                `json:"total" validate:"required,number,gt=0"`
 }
 
 type Create struct {
-	KontakID        string             `json:"kontak_id" validate:"required_without=NewKontak,excluded_with=NewKontak,omitempty,ulid"`
-	NewKontak       ReqNewKontak       `json:"new_kontak" validate:"omitempty"`
-	Bayar           ReqBayar           `json:"bayar" validate:"required"`
-	TanggalDeadline string             `json:"tanggal_deadline" validate:"required,datetime=2006-01-02T15:04:05Z07:00"`
-	TanggalKirim    string             `json:"tanggal_kirim" validate:"required,datetime=2006-01-02T15:04:05Z07:00"`
-	Keterangan      string             `json:"keterangan" validate:"required"`
-	DetailInvoice   []ReqDetailInvoice `json:"detail_invoice" validate:"required,gt=0,dive"`
+	KontakID          string             `json:"kontak_id" validate:"required_without=NewKontak,excluded_with=NewKontak,omitempty,ulid"`
+	NewKontak         ReqNewKontak       `json:"new_kontak" validate:"omitempty"`
+	Bayar             ReqBayar           `json:"bayar" validate:"required"`
+	TanggalDeadline   string             `json:"tanggal_deadline" validate:"required,datetime=2006-01-02T15:04:05Z07:00"`
+	TanggalKirim      string             `json:"tanggal_kirim" validate:"required,datetime=2006-01-02T15:04:05Z07:00"`
+	KeteranganPesanan string             `json:"keterangan" validate:"required"`
+	DetailInvoice     []ReqDetailInvoice `json:"detail_invoice" validate:"required,gt=0,dive"`
 }
 
 type ReqUpdateDetailInvoice struct {

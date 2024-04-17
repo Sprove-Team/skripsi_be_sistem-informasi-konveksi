@@ -55,11 +55,12 @@ func (u *hargaDetailProdukUsecase) Create(ctx context.Context, reqHargaDetailPro
 
 func (u *hargaDetailProdukUsecase) Update(ctx context.Context, reqHargaDetailProduk req.Update) error {
 
-	if _, err := u.repo.GetById(ctx, reqHargaDetailProduk.ID); err != nil {
+	hd, err := u.repo.GetById(ctx, reqHargaDetailProduk.ID)
+	if ; err != nil {
 		return err
 	}
 
-	err := u.repo.Update(ctx, &entity.HargaDetailProduk{
+	err = u.repo.Update(ctx, hd.ProdukID,&entity.HargaDetailProduk{
 		Base: entity.Base{
 			ID: reqHargaDetailProduk.ID,
 		},
