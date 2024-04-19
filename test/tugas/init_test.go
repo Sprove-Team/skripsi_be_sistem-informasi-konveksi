@@ -29,7 +29,7 @@ var userId = []string{"01HTM8HJD09FDNV2TTXC0GYJQE", "01HTM8HJEP97T9WSVH7SCZWK57"
 
 func setUpData() {
 	kontak := entity.Kontak{
-		Base: entity.Base{
+		BaseSoftDelete: entity.BaseSoftDelete{
 			ID: kontakId,
 		},
 		Nama:       "John Doe",

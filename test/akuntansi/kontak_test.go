@@ -145,7 +145,7 @@ func AkuntansiUpdateKontak(t *testing.T) {
 		panic(helper.LogsError(err))
 	}
 	kontak2 := &entity.Kontak{
-		Base: entity.Base{
+		BaseSoftDelete: entity.BaseSoftDelete{
 			ID: test.UlidPkg.MakeUlid().String(),
 		},
 		Nama:       "test",

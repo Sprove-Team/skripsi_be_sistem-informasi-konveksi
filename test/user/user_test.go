@@ -502,7 +502,7 @@ var idInvoice string = "01HVGG875D1WXWFCTK0JWP62BN"
 var idKontak string = "01HVGGDNZZAXSWE6QPYWC653F5"
 func UserGetAll(t *testing.T) {
 	kontak := entity.Kontak{
-		Base: entity.Base{
+		BaseSoftDelete: entity.BaseSoftDelete{
 			ID: idKontak,
 		},
 		Nama: "test123",
