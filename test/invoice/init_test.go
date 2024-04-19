@@ -121,7 +121,7 @@ func setUpData() {
 	}
 	kontak = []entity.Kontak{
 		{
-			Base: entity.Base{
+			BaseSoftDelete: entity.BaseSoftDelete{
 				ID: "01E9CXBFVX2VH4P9V2FJJXVCZG",
 			},
 			Nama:       "John Doe",
@@ -131,7 +131,7 @@ func setUpData() {
 			Keterangan: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
 		},
 		{
-			Base: entity.Base{
+			BaseSoftDelete: entity.BaseSoftDelete{
 				ID: "01E9CXBFVX2VH4P9V2FJJXVCZH",
 			},
 			Nama:       "Jane Smith",

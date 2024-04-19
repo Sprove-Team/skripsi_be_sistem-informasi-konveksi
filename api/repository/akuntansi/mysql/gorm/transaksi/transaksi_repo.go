@@ -7,7 +7,6 @@ import (
 	"github.com/be-sistem-informasi-konveksi/entity"
 	"github.com/be-sistem-informasi-konveksi/helper"
 	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
 )
 
 type CreateParam struct {
@@ -131,9 +130,10 @@ func (r *transaksiRepo) Delete(ctx context.Context, id string) error {
 			if err := r.OnDeleteTrDataBayarHP(tx, &transaksi); err != nil {
 				return err
 			}
-		}
-
-		if err := tx.Select(clause.Associations).Delete(&transaksi).Error; err != nil {
+		}		
+		// if err := tx.Select(clause.Associations).Delete(&transaksi).Error; err != nil {
+		// delete tr
+		if err := tx.Delete(&transaksi).Error; err != nil {
 			helper.LogsError(err)
 			return err
 		}

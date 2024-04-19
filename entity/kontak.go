@@ -1,7 +1,7 @@
 package entity
 
 type Kontak struct {
-	Base
+	BaseSoftDelete
 	Nama       string      `gorm:"type:varchar(150);not null" json:"nama,omitempty"`
 	NoTelp     string      `gorm:"type:varchar(50)" json:"no_telp,omitempty"`
 	Alamat     string      `gorm:"type:varchar(255)" json:"alamat,omitempty"`

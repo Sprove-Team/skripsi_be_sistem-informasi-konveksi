@@ -206,7 +206,7 @@ func (u *invoiceUsecase) CreateDataInvoice(param ParamCreateDataInvoice) (*entit
 		err := u.repoKontak.Create(kontakRepo.ParamCreate{
 			Ctx: param.Ctx,
 			Kontak: &entity.Kontak{
-				Base: entity.Base{
+				BaseSoftDelete: entity.BaseSoftDelete{
 					ID: param.Req.KontakID,
 				},
 				Nama:       param.Req.NewKontak.NamaKontak,

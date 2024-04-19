@@ -59,7 +59,7 @@ func NewKontakUsecase(repo repo.KontakRepo, ulid pkg.UlidPkg) KontakUsecase {
 
 func (u *kontakUsecase) CreateDataKontak(param ParamCreateDataKontak) (*entity.Kontak, error) {
 	return &entity.Kontak{
-		Base: entity.Base{
+		BaseSoftDelete: entity.BaseSoftDelete{
 			ID: u.ulid.MakeUlid().String(),
 		},
 		Nama:       param.Req.Nama,
@@ -87,7 +87,7 @@ func (u *kontakUsecase) Update(param ParamUpdate) error {
 	paramRepo := repo.ParamUpdate{
 		Ctx: param.Ctx,
 		Kontak: &entity.Kontak{
-			Base: entity.Base{
+			BaseSoftDelete: entity.BaseSoftDelete{
 				ID: param.Req.ID,
 			},
 			Nama:       param.Req.Nama,

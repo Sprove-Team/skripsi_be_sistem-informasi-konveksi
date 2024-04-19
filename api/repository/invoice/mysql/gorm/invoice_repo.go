@@ -139,7 +139,7 @@ func (r *invoiceRepo) GetById(param ParamGetById) (*entity.Invoice, error) {
 			return db.Omit("created_at")
 		}).
 		Preload("Kontak", func(db *gorm.DB) *gorm.DB {
-			return db.Omit("created_at")
+			return db.Unscoped().Omit("created_at")
 		}).Preload("User", func(db *gorm.DB) *gorm.DB {
 		return db.Omit("no_telp", "alamat", "created_at")
 	}).First(data, "id = ?", param.ID)
@@ -158,7 +158,9 @@ func (r *invoiceRepo) GetByIdFullAssoc(param ParamGetById) (*entity.Invoice, err
 		Preload("DetailInvoice").
 		Preload("HutangPiutang.Transaksi").
 		Preload("HutangPiutang.Transaksi.AyatJurnals").
-		Preload("Kontak").
+		Preload("Kontak", func(db *gorm.DB) *gorm.DB {
+			return db.Unscoped()
+		}).
 		Preload("User").
 		First(data, "id = ?", param.ID)
 
@@ -210,12 +212,12 @@ func (r *invoiceRepo) GetAll(param ParamGetAll) ([]entity.Invoice, error) {
 								} else {
 									tx = tx.Where("tanggal_deadline > ?", invoice.TanggalDeadline)
 								}
-							// case "tanggal_dipesan":
-							// 	if order[1] == "DESC" {
-							// 		tx = tx.Where("created_at < ?", invoice.CreatedAt)
-							// 	} else {
-							// 		tx = tx.Where("created_at > ?", invoice.CreatedAt)
-							// 	}
+								// case "tanggal_dipesan":
+								// 	if order[1] == "DESC" {
+								// 		tx = tx.Where("created_at < ?", invoice.CreatedAt)
+								// 	} else {
+								// 		tx = tx.Where("created_at > ?", invoice.CreatedAt)
+								// 	}
 							}
 						}
 					} else {
@@ -237,8 +239,8 @@ func (r *invoiceRepo) GetAll(param ParamGetAll) ([]entity.Invoice, error) {
 					tx = tx.Where("DATE(tanggal_deadline) = ?", t)
 				case "TanggalKirim":
 					tx = tx.Where("DATE(tanggal_kirim) = ?", t)
-				// case "TanggalDipesan":
-				// 	tx = tx.Where("DATE(created_at) = ?", t)
+					// case "TanggalDipesan":
+					// 	tx = tx.Where("DATE(created_at) = ?", t)
 				}
 			}
 		}
@@ -247,7 +249,7 @@ func (r *invoiceRepo) GetAll(param ParamGetAll) ([]entity.Invoice, error) {
 	invoices := make([]entity.Invoice, param.Limit)
 
 	if err := tx.Limit(param.Limit).Preload("Kontak", func(db *gorm.DB) *gorm.DB {
-		return db.Omit("created_at")
+		return db.Unscoped().Omit("created_at")
 	}).Preload("HutangPiutang", func(db *gorm.DB) *gorm.DB {
 		return db.Select("invoice_id", "sisa")
 	}).
