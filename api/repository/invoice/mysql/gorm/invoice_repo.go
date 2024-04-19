@@ -23,6 +23,7 @@ type (
 		KontakID        string
 		TanggalDeadline time.Time
 		TanggalKirim    time.Time
+		TanggalDipesan  time.Time
 		Order           string
 		Next            string
 		Limit           int
@@ -209,6 +210,12 @@ func (r *invoiceRepo) GetAll(param ParamGetAll) ([]entity.Invoice, error) {
 								} else {
 									tx = tx.Where("tanggal_deadline > ?", invoice.TanggalDeadline)
 								}
+							// case "tanggal_dipesan":
+							// 	if order[1] == "DESC" {
+							// 		tx = tx.Where("created_at < ?", invoice.CreatedAt)
+							// 	} else {
+							// 		tx = tx.Where("created_at > ?", invoice.CreatedAt)
+							// 	}
 							}
 						}
 					} else {
@@ -224,12 +231,14 @@ func (r *invoiceRepo) GetAll(param ParamGetAll) ([]entity.Invoice, error) {
 			}
 		case time.Time:
 			if !value.(time.Time).IsZero() {
-				t := value.(time.Time).Format(time.RFC3339)
+				t := value.(time.Time).Format(time.DateOnly)
 				switch key {
 				case "TanggalDeadline":
-					tx = tx.Where("DATE_FORMAT(tanggal_deadline, '%Y-%m-%dT%H:%i:%sZ') = ?", t)
+					tx = tx.Where("DATE(tanggal_deadline) = ?", t)
 				case "TanggalKirim":
-					tx = tx.Where("DATE_FORMAT(tanggal_kirim, '%Y-%m-%dT%H:%i:%sZ') = ?", t)
+					tx = tx.Where("DATE(tanggal_kirim) = ?", t)
+				// case "TanggalDipesan":
+				// 	tx = tx.Where("DATE(created_at) = ?", t)
 				}
 			}
 		}
