@@ -100,7 +100,7 @@ func setUpAkuntansiTr() {
 			},
 		},
 		{
-			Tanggal:         tt.Add(time.Hour * 24).Format(time.RFC3339),
+			Tanggal:         tt.Format(time.RFC3339),
 			BuktiPembayaran: []string{"2"},
 			Keterangan:      "membeli perlatan secara kredit",
 			AyatJurnal: []req_akuntansi_transaksi.ReqAyatJurnal{
@@ -115,7 +115,7 @@ func setUpAkuntansiTr() {
 			},
 		},
 		{
-			Tanggal:         tt.Add(time.Hour * 24 * 2).Format(time.RFC3339),
+			Tanggal:         tt.Format(time.RFC3339),
 			BuktiPembayaran: []string{"3"},
 			Keterangan:      "membeli perlengkapan secara tunai",
 			AyatJurnal: []req_akuntansi_transaksi.ReqAyatJurnal{
@@ -130,7 +130,7 @@ func setUpAkuntansiTr() {
 			},
 		},
 		{
-			Tanggal:         tt.Add(time.Hour * 24 * 3).Format(time.RFC3339),
+			Tanggal:         tt.Format(time.RFC3339),
 			BuktiPembayaran: []string{"4"},
 			Keterangan:      "memperoleh pendapatan jasa",
 			AyatJurnal: []req_akuntansi_transaksi.ReqAyatJurnal{
@@ -145,7 +145,7 @@ func setUpAkuntansiTr() {
 			},
 		},
 		{
-			Tanggal:         tt.Add(time.Hour * 24 * 4).Format(time.RFC3339),
+			Tanggal:         tt.Format(time.RFC3339),
 			BuktiPembayaran: []string{"4"},
 			Keterangan:      "memperoleh pendapatan jasa",
 			AyatJurnal: []req_akuntansi_transaksi.ReqAyatJurnal{
@@ -164,7 +164,7 @@ func setUpAkuntansiTr() {
 			},
 		},
 		{
-			Tanggal:         tt.Add(time.Hour * 24 * 5).Format(time.RFC3339),
+			Tanggal:         tt.Format(time.RFC3339),
 			BuktiPembayaran: []string{"6"},
 			Keterangan:      "pembayaran beban",
 			AyatJurnal: []req_akuntansi_transaksi.ReqAyatJurnal{
@@ -179,7 +179,7 @@ func setUpAkuntansiTr() {
 			},
 		},
 		{
-			Tanggal:         tt.Add(time.Hour * 24 * 6).Format(time.RFC3339),
+			Tanggal:         tt.Format(time.RFC3339),
 			BuktiPembayaran: []string{"7"},
 			Keterangan:      "memperoleh pendapatan jasa",
 			AyatJurnal: []req_akuntansi_transaksi.ReqAyatJurnal{
@@ -194,7 +194,7 @@ func setUpAkuntansiTr() {
 			},
 		},
 		{
-			Tanggal:         tt.Add(time.Hour * 24 * 7).Format(time.RFC3339),
+			Tanggal:         tt.Format(time.RFC3339),
 			BuktiPembayaran: []string{"8"},
 			Keterangan:      "pembayaran beban",
 			AyatJurnal: []req_akuntansi_transaksi.ReqAyatJurnal{
@@ -209,7 +209,7 @@ func setUpAkuntansiTr() {
 			},
 		},
 		{
-			Tanggal:         tt.Add(time.Hour * 24 * 8).Format(time.RFC3339),
+			Tanggal:         tt.Format(time.RFC3339),
 			BuktiPembayaran: []string{"9"},
 			Keterangan:      "memperoleh pendapatan jasa",
 			AyatJurnal: []req_akuntansi_transaksi.ReqAyatJurnal{
@@ -224,7 +224,7 @@ func setUpAkuntansiTr() {
 			},
 		},
 		{
-			Tanggal:         tt.Add(time.Hour * 24 * 9).Format(time.RFC3339),
+			Tanggal:         tt.Format(time.RFC3339),
 			BuktiPembayaran: []string{"10"},
 			Keterangan:      "pembayaran gaji",
 			AyatJurnal: []req_akuntansi_transaksi.ReqAyatJurnal{
