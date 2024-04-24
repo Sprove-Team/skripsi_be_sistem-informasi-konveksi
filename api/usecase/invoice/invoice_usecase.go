@@ -68,6 +68,7 @@ type InvoiceUsecase interface {
 	CreateCommitDB(param ParamCommitDB) error
 	UpdateDataInvoice(param ParamUpdateDataInvoice) (*entity.Invoice, error)
 	SaveCommitDB(param ParamCommitDB) error
+	UpdateCommitDB(param ParamCommitDB) error
 	CheckDataDetails(param ParamCheckDataDetails) error
 	Delete(param ParamDelete) error
 	GetAll(param ParamGetAll) ([]entity.Invoice, error)
@@ -385,6 +386,23 @@ func (u *invoiceUsecase) CreateCommitDB(param ParamCommitDB) error {
 	}
 
 	return u.repo.Create(repo.ParamCreate(param))
+}
+
+func (u *invoiceUsecase) UpdateCommitDB(param ParamCommitDB) error{
+	if param.Invoice.KontakID != "" {
+		_, err := u.repoKontak.GetById(kontakRepo.ParamGetById{
+			Ctx: param.Ctx,
+			ID:  param.Invoice.KontakID,
+		})
+		if err != nil {
+			if err.Error() == "record not found" {
+				return errors.New(message.KontakNotFound)
+			}
+			return err
+		}
+	}
+
+	return u.repo.Update(repo.ParamUpdate(param))
 }
 
 func (u *invoiceUsecase) UpdateDataInvoice(param ParamUpdateDataInvoice) (*entity.Invoice, error) {

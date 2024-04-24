@@ -40,6 +40,10 @@ type (
 		Ctx     context.Context
 		Invoice *entity.Invoice
 	}
+	ParamUpdate struct {
+		Ctx     context.Context
+		Invoice *entity.Invoice
+	}
 
 	ParamDelete struct {
 		Ctx     context.Context
@@ -50,6 +54,7 @@ type (
 type InvoiceRepo interface {
 	Create(param ParamCreate) error
 	UpdateFullAssoc(param ParamUpdateFullAssoc) error
+	Update(param ParamUpdate) error
 	GetLastInvoiceCrrYear(ctx context.Context) (entity.Invoice, error)
 	GetById(param ParamGetById) (*entity.Invoice, error)
 	CheckInvoice(param ParamGetById) error
@@ -78,6 +83,15 @@ func (r *invoiceRepo) Create(param ParamCreate) error {
 
 func (r *invoiceRepo) UpdateFullAssoc(param ParamUpdateFullAssoc) error {
 	err := r.DB.WithContext(param.Ctx).Session(&gorm.Session{FullSaveAssociations: true}).Updates(param.Invoice).Error
+	if err != nil {
+		helper.LogsError(err)
+		return err
+	}
+	return nil
+}
+
+func (r *invoiceRepo) Update(param ParamUpdate) error {
+	err := r.DB.WithContext(param.Ctx).Updates(param.Invoice).Error
 	if err != nil {
 		helper.LogsError(err)
 		return err

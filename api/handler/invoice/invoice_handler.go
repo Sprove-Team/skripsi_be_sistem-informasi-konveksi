@@ -12,6 +12,7 @@ import (
 	reqGlobal "github.com/be-sistem-informasi-konveksi/common/request/global"
 	req "github.com/be-sistem-informasi-konveksi/common/request/invoice"
 	res_global "github.com/be-sistem-informasi-konveksi/common/response"
+	"github.com/be-sistem-informasi-konveksi/entity"
 	"github.com/be-sistem-informasi-konveksi/pkg"
 	"github.com/gofiber/fiber/v2"
 )
@@ -200,10 +201,18 @@ func (h *invoiceHandler) Update(c *fiber.Ctx) error {
 		return errResponse(c, err)
 	}
 
-	err = h.uc.SaveCommitDB(usecase.ParamCommitDB{
-		Ctx:     ctx,
-		Invoice: dataInvoice,
-	})
+	if claims.Role == entity.RolesById[4] {
+		err = h.uc.UpdateCommitDB(usecase.ParamCommitDB{
+			Ctx:     ctx,
+			Invoice: dataInvoice,
+		})
+	}else {
+		err = h.uc.SaveCommitDB(usecase.ParamCommitDB{
+			Ctx:     ctx,
+			Invoice: dataInvoice,
+		})
+	}
+
 
 	if err != nil {
 		return errResponse(c, err)
