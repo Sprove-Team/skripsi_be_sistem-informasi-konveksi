@@ -440,6 +440,8 @@ func (u *invoiceUsecase) UpdateDataInvoice(param ParamUpdateDataInvoice) (*entit
 	oldData.UserID = param.Claims.ID
 	if param.Req.Keterangan != "" {
 		oldData.Keterangan = param.Req.Keterangan
+		// update hutang piutang keterangan
+		oldData.HutangPiutang.Transaksi.Keterangan = param.Req.Keterangan
 	}
 
 	if param.Req.TanggalKirim != "" {
@@ -520,9 +522,6 @@ func (u *invoiceUsecase) UpdateDataInvoice(param ParamUpdateDataInvoice) (*entit
 			oldData.HutangPiutang.Transaksi.AyatJurnals[i] = ay
 		}
 	}
-
-	// update transaksi hutang piutang
-	oldData.HutangPiutang.Transaksi.Keterangan = param.Req.Keterangan
 	return oldData, nil
 }
 
