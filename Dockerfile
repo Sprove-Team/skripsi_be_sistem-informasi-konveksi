@@ -47,7 +47,7 @@ RUN apk --no-cache add libpng libjpeg-turbo giflib tiff && \
 WORKDIR /root/
 
 COPY --from=builder /app/main .
-COPY --from=builder /app/app/tanya.png .
+COPY --from=builder /app/public ./public
 
 EXPOSE 8000
 
