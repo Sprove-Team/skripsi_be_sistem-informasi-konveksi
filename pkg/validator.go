@@ -2,6 +2,7 @@ package pkg
 
 import (
 	"bytes"
+	"reflect"
 	"strings"
 	"sync"
 	"unicode"
@@ -30,7 +31,7 @@ func NewValidator() Validator {
 	// custom validation
 
 	validate.RegisterValidation("ulid", validateULID)
-	// validate.RegisterValidation("url_cloud_storage", validateGoogleStorageURL)
+	validate.RegisterValidation("equalLengthWithField", equalLengthWithField)
 
 	// default translations
 	trans := (&translator{}).Translator()
@@ -48,6 +49,13 @@ func NewValidator() Validator {
 		return ut.Add("ulid", "{0} tidak berupa ulid yang valid", true)
 	}, func(ut ut.Translator, fe validator.FieldError) string {
 		t, _ := ut.T("ulid", fe.Field())
+		return t
+	})
+
+	validate.RegisterTranslation("equalLengthWithField", trans, func(ut ut.Translator) error {
+		return ut.Add("equalLengthWithField", "jumlah data tidak sama dengan jumlah data pada {0}", true)
+	}, func(ut ut.Translator, fe validator.FieldError) string {
+		t, _ := ut.T("equalLengthWithField", convToReadAble(fe.Param()))
 		return t
 	})
 
@@ -152,24 +160,17 @@ func NewValidator() Validator {
 
 // custom validation
 
-// func validateGoogleStorageURL(fl validator.FieldLevel) bool {
-// Parse the URL
-
-// 	inputUrl := fl.Field().String()
-// 	u, err := url.Parse(inputUrl)
-// 	if err != nil {
-// 		return false
-// 	}
-
-// 	if u.Scheme != "https" {
-// 		return false
-// 	}
-
-// 	if u.Hostname() != "storage.googleapis.com" {
-// 		return false
-// 	}
-// 	return true
-// }
+// equalLengthWithField validates that a slice field has the same length as another field
+func equalLengthWithField(fl validator.FieldLevel) bool {
+    // Get the value of the current field
+    fieldValue := fl.Field().Interface()
+    // Get the value of the other field by name from the tag
+    tagValue := fl.Param() // Get the value of the tag (e.g., "OtherField")
+    // otherFieldName := strings.Split(tagValue, "=")[1] // Split the tag value by "=" and take the second part as the field name
+    otherFieldValue := fl.Parent().FieldByName(tagValue).Interface()
+	
+    return reflect.ValueOf(fieldValue).Len() == reflect.ValueOf(otherFieldValue).Len()
+}
 
 func validateULID(fl validator.FieldLevel) bool {
 	ulid := fl.Field().String()

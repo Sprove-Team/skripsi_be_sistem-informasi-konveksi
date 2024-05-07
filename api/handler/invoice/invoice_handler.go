@@ -13,6 +13,7 @@ import (
 	req "github.com/be-sistem-informasi-konveksi/common/request/invoice"
 	res_global "github.com/be-sistem-informasi-konveksi/common/response"
 	"github.com/be-sistem-informasi-konveksi/entity"
+	"github.com/be-sistem-informasi-konveksi/helper"
 	"github.com/be-sistem-informasi-konveksi/pkg"
 	"github.com/gofiber/fiber/v2"
 )
@@ -133,7 +134,24 @@ func (h *invoiceHandler) GetById(c *fiber.Ctx) error {
 func (h *invoiceHandler) Create(c *fiber.Ctx) error {
 	req := new(req.Create)
 
-	c.BodyParser(req)
+	files, err := helper.GetFiles("bukti_pembayaran", c.MultipartForm)
+	if err != nil {
+		helper.LogsError(err)
+		return errResponse(c, err)
+	}
+
+	filesGambarDesign, err := helper.GetFiles("gambar_design", c.MultipartForm)
+	if err != nil {
+		helper.LogsError(err)
+		return errResponse(c, err)
+	}
+	
+	req.BuktiPembayaran = files
+	req.GambarDesign = filesGambarDesign
+
+	if err := helper.DataParser(c.FormValue("data"), req); err != nil {
+		return errResponse(c, err)
+	}
 
 	errValidate := h.validator.Validate(req)
 	if errValidate != nil {
@@ -142,6 +160,7 @@ func (h *invoiceHandler) Create(c *fiber.Ctx) error {
 
 	ctx := c.UserContext()
 	claims := c.Locals("user").(*pkg.Claims)
+
 	dataInvoice, dataReqHp, err := h.uc.CreateDataInvoice(usecase.ParamCreateDataInvoice{
 		Ctx:    ctx,
 		Req:    *req,

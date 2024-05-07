@@ -202,25 +202,25 @@ func (u *invoiceUsecase) CreateDataInvoice(param ParamCreateDataInvoice) (*entit
 	}
 	tanggalKirim = tanggalKirim.UTC()
 
-	if param.Req.NewKontak.NamaKontak != "" {
-		param.Req.KontakID = u.ulid.MakeUlid().String()
-		err := u.repoKontak.Create(kontakRepo.ParamCreate{
-			Ctx: param.Ctx,
-			Kontak: &entity.Kontak{
-				BaseSoftDelete: entity.BaseSoftDelete{
-					ID: param.Req.KontakID,
-				},
-				Nama:       param.Req.NewKontak.NamaKontak,
-				NoTelp:     param.Req.NewKontak.NoTelpKontak,
-				Alamat:     param.Req.NewKontak.AlamatKontak,
-				Email:      param.Req.NewKontak.EmailKontak,
-				Keterangan: "pelanggan pengguna jasa",
-			},
-		})
-		if err != nil {
-			return nil, nil, err
-		}
-	}
+	// if param.Req.NewKontak.NamaKontak != "" {
+	// 	param.Req.KontakID = u.ulid.MakeUlid().String()
+	// 	err := u.repoKontak.Create(kontakRepo.ParamCreate{
+	// 		Ctx: param.Ctx,
+	// 		Kontak: &entity.Kontak{
+	// 			BaseSoftDelete: entity.BaseSoftDelete{
+	// 				ID: param.Req.KontakID,
+	// 			},
+	// 			Nama:       param.Req.NewKontak.NamaKontak,
+	// 			NoTelp:     param.Req.NewKontak.NoTelpKontak,
+	// 			Alamat:     param.Req.NewKontak.AlamatKontak,
+	// 			Email:      param.Req.NewKontak.EmailKontak,
+	// 			Keterangan: "pelanggan pengguna jasa",
+	// 		},
+	// 	})
+	// 	if err != nil {
+	// 		return nil, nil, err
+	// 	}
+	// }
 
 	lengthDetail := len(param.Req.DetailInvoice)
 
@@ -235,6 +235,10 @@ func (u *invoiceUsecase) CreateDataInvoice(param ParamCreateDataInvoice) (*entit
 
 	var totalHarga float64
 	var totalQty int
+	gambarDesigns, err := helper.SaveMultiFileInLocal(param.Req.GambarDesign)
+	if err != nil {
+		return nil, nil, err
+	}
 	for i, v := range param.Req.DetailInvoice {
 		detailInvoice[i] = entity.DetailInvoice{
 			Base: entity.Base{
@@ -244,7 +248,7 @@ func (u *invoiceUsecase) CreateDataInvoice(param ParamCreateDataInvoice) (*entit
 			InvoiceID:    invoiceID,
 			BordirID:     v.BordirID,
 			SablonID:     v.SablonID,
-			GambarDesign: v.GambarDesign,
+			GambarDesign: gambarDesigns[i],
 			Qty:          v.QtyPesanan,
 			Total:        v.TotalPesanan,
 		}
@@ -323,9 +327,8 @@ func (u *invoiceUsecase) CreateDataInvoice(param ParamCreateDataInvoice) (*entit
 		Jenis:      "PIUTANG",
 		Keterangan: param.Req.KeteranganPesanan,
 		Transaksi: reqHP.ReqTransaksi{
-			Tanggal:         tanggalTr,
-			BuktiPembayaran: param.Req.Bayar.BuktiPembayaran,
-			AyatJurnal:      make([]reqHP.ReqAyatJurnal, 0, 2),
+			Tanggal:    tanggalTr,
+			AyatJurnal: make([]reqHP.ReqAyatJurnal, 0, 2),
 		},
 	}
 
@@ -342,13 +345,19 @@ func (u *invoiceUsecase) CreateDataInvoice(param ParamCreateDataInvoice) (*entit
 		reqHpUC.Transaksi.AyatJurnal = append(reqHpUC.Transaksi.AyatJurnal, ayatJurnal)
 	}
 
+	buktiPembayaran, err := helper.SaveMultiFileInLocal(param.Req.BuktiPembayaran)
+	if err != nil {
+		helper.LogsError(err)
+		return nil, nil, err
+	}
+
 	dataBayar := entity.DataBayarInvoice{
 		Base: entity.Base{
 			ID: u.ulid.MakeUlid().String(),
 		},
 		AkunID:          param.Req.Bayar.MetodePembayaran,
+		BuktiPembayaran: buktiPembayaran,
 		Keterangan:      param.Req.Bayar.KeteranganPembayaran,
-		BuktiPembayaran: param.Req.Bayar.BuktiPembayaran,
 		Total:           param.Req.Bayar.TotalBayar,
 	}
 
@@ -388,7 +397,7 @@ func (u *invoiceUsecase) CreateCommitDB(param ParamCommitDB) error {
 	return u.repo.Create(repo.ParamCreate(param))
 }
 
-func (u *invoiceUsecase) UpdateCommitDB(param ParamCommitDB) error{
+func (u *invoiceUsecase) UpdateCommitDB(param ParamCommitDB) error {
 	if param.Invoice.KontakID != "" {
 		_, err := u.repoKontak.GetById(kontakRepo.ParamGetById{
 			Ctx: param.Ctx,

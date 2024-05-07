@@ -98,7 +98,6 @@ func CreateDataBayarHP(trByr req.ReqBayar, ayTagihan entity.AyatJurnal, kontakId
 	// cek jika total bayarnya lebih besar dari sisa tagihan
 	if trByr.Total > math.Abs(ayTagihan.Saldo) {
 		return nil, errors.New(message.BayarMustLessThanSisaTagihan)
-
 	}
 
 	byrHP := entity.DataBayarHutangPiutang{
@@ -111,7 +110,6 @@ func CreateDataBayarHP(trByr req.ReqBayar, ayTagihan entity.AyatJurnal, kontakId
 				ID: ulid.MakeUlid().String(),
 			},
 			Keterangan:      keterangan,
-			BuktiPembayaran: trByr.BuktiPembayaran,
 			Total:           trByr.Total,
 			Tanggal:         tanggal.Local().UTC(),
 			KontakID:        kontakId,

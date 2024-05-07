@@ -60,6 +60,7 @@ func main() {
 
 	// domain
 	app.Use(corsMid.Cors())
+	app.Static("/", "./public")
 	api := app.Group("/api")
 	v1 := api.Group("/v1", timeoutMid.Timeout(nil))
 	// special metrics

@@ -1,15 +1,6 @@
 package req_invoice
 
-import "github.com/be-sistem-informasi-konveksi/entity"
-
-type ReqDetailInvoice struct {
-	ProdukID     string  `json:"produk_id" validate:"required,ulid"`
-	BordirID     string  `json:"bordir_id" validate:"omitempty,ulid"`
-	SablonID     string  `json:"sablon_id" validate:"omitempty,ulid"`
-	GambarDesign string  `json:"gambar_design" validate:"required"`
-	TotalPesanan float64 `json:"total" validate:"required,number,gt=0"`
-	QtyPesanan   int     `json:"qty" validate:"required,number,gt=0"`
-}
+import "mime/multipart"
 
 type ReqNewKontak struct {
 	NamaKontak   string `json:"nama" validate:"required"`
@@ -19,20 +10,29 @@ type ReqNewKontak struct {
 }
 
 type ReqBayar struct {
-	BuktiPembayaran      entity.BuktiPembayaran `json:"bukti_pembayaran" validate:"required,gt=0"`
-	KeteranganPembayaran string                 `json:"keterangan" validate:"required"`
-	MetodePembayaran     string                 `json:"akun_id" validate:"required,ulid"`
-	TotalBayar           float64                `json:"total" validate:"required,number,gt=0"`
+	KeteranganPembayaran string  `json:"keterangan" validate:"required"`
+	MetodePembayaran     string  `json:"akun_id" validate:"required,ulid"`
+	TotalBayar           float64 `json:"total" validate:"required,number,gt=0"`
+}
+
+type ReqDetailInvoice struct {
+	ProdukID     string  `json:"produk_id" validate:"required,ulid"`
+	BordirID     string  `json:"bordir_id" validate:"omitempty,ulid"`
+	SablonID     string  `json:"sablon_id" validate:"omitempty,ulid"`
+	TotalPesanan float64 `json:"total" validate:"required,number,gt=0"`
+	QtyPesanan   int     `json:"qty" validate:"required,number,gt=0"`
 }
 
 type Create struct {
-	KontakID          string             `json:"kontak_id" validate:"required_without=NewKontak,excluded_with=NewKontak,omitempty,ulid"`
-	NewKontak         ReqNewKontak       `json:"new_kontak" validate:"omitempty"`
-	Bayar             ReqBayar           `json:"bayar" validate:"required"`
-	TanggalDeadline   string             `json:"tanggal_deadline" validate:"required,datetime=2006-01-02T15:04:05Z07:00"`
-	TanggalKirim      string             `json:"tanggal_kirim" validate:"required,datetime=2006-01-02T15:04:05Z07:00"`
-	KeteranganPesanan string             `json:"keterangan" validate:"required"`
-	DetailInvoice     []ReqDetailInvoice `json:"detail_invoice" validate:"required,gt=0,dive"`
+	BuktiPembayaran   []*multipart.FileHeader `form:"bukti_pembayaran" validate:"required"`
+	GambarDesign      []*multipart.FileHeader `form:"gambar_design" validate:"required,equalLengthWithField=DetailInvoice"`
+	Data              string                  `form:"data"`
+	KontakID          string                  `json:"kontak_id" validate:"required,ulid"`
+	Bayar             ReqBayar                `json:"bayar" validate:"required"`
+	TanggalDeadline   string                  `json:"tanggal_deadline" validate:"required,datetime=2006-01-02T15:04:05Z07:00"`
+	TanggalKirim      string                  `json:"tanggal_kirim" validate:"required,datetime=2006-01-02T15:04:05Z07:00"`
+	KeteranganPesanan string                  `json:"keterangan" validate:"required"`
+	DetailInvoice     []ReqDetailInvoice      `json:"detail_invoice" validate:"required,gt=0,dive"`
 }
 
 type ReqUpdateDetailInvoice struct {
@@ -56,8 +56,8 @@ type GetAll struct {
 	TanggalDeadline string `query:"tanggal_deadline" validate:"omitempty,datetime=2006-01-02T15:04:05Z07:00"`
 	TanggalKirim    string `query:"tanggal_kirim" validate:"omitempty,datetime=2006-01-02T15:04:05Z07:00"`
 	// TanggalDipesan  string `query:"tanggal_dipesan" validate:"omitempty,datetime=2006-01-02T15:04:05Z07:00"`
-	SortBy          string `query:"sort_by" validate:"omitempty,oneof=TANGGAL_DEADLINE TANGGAL_KIRIM"`
-	OrderBy         string `query:"order_by" validate:"omitempty,oneof=ASC DESC"`
-	Next            string `query:"next" validate:"omitempty,ulid"`
-	Limit           int    `query:"limit" validate:"omitempty,number"`
+	SortBy  string `query:"sort_by" validate:"omitempty,oneof=TANGGAL_DEADLINE TANGGAL_KIRIM"`
+	OrderBy string `query:"order_by" validate:"omitempty,oneof=ASC DESC"`
+	Next    string `query:"next" validate:"omitempty,ulid"`
+	Limit   int    `query:"limit" validate:"omitempty,number"`
 }

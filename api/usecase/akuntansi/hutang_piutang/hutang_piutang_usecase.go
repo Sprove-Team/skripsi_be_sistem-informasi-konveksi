@@ -139,13 +139,23 @@ func (u *hutangPiutangUsecase) CreateDataHP(param ParamCreateDataHp) (*entity.Hu
 		return nil, err
 	}
 
+	// bukti pembayaran sama dengan yang ada pada pembuatan invoice
+	var buktiPembayaran []string
+	if param.Req.BuktiPembayaran != nil && len(param.Req.BuktiPembayaran) > 0 {
+		buktiPembayaran, err = helper.SaveMultiFileInLocal(param.Req.BuktiPembayaran)
+		if err != nil {
+			helper.LogsError(err)
+			return nil, err
+		}
+	}
+
 	// create transaksi HP, based on ay1 and ay2 variable
 	transaksiHP := entity.Transaksi{
 		BaseSoftDelete: entity.BaseSoftDelete{
 			ID: u.ulid.MakeUlid().String(),
 		},
 		Keterangan:      param.Req.Keterangan,
-		BuktiPembayaran: param.Req.Transaksi.BuktiPembayaran,
+		BuktiPembayaran: buktiPembayaran,
 		Total:           math.Abs(ayHP1.Saldo),
 		Tanggal:         tanggalTrHp.Local().UTC(),
 		KontakID:        param.Req.KontakID,
@@ -169,12 +179,16 @@ func (u *hutangPiutangUsecase) CreateCommitDB(ctx context.Context, hp *entity.Hu
 		if err.Error() == "record not found" {
 			return errors.New(message.KontakNotFound)
 		}
+		helper.DeleteMultiFileInLocal(hp.Transaksi.BuktiPembayaran)
 		return err
 	}
-	return u.repo.Create(repo.ParamCreate{
+	if err := u.repo.Create(repo.ParamCreate{
 		Ctx:           ctx,
 		HutangPiutang: hp,
-	})
+	}); err != nil {
+		helper.DeleteMultiFileInLocal(hp.Transaksi.BuktiPembayaran)
+	}
+	return nil
 }
 
 func (u *hutangPiutangUsecase) GetAll(ctx context.Context, reqHutangPiutang req.GetAll) ([]res.GetAll, error) {
@@ -326,6 +340,17 @@ func (u *hutangPiutangUsecase) CreateDataBayar(ctx context.Context, reqHutangPiu
 		}
 
 		byrHP.HutangPiutang = hp
+		// give path bukti pembayaran
+		if reqHutangPiutang.PathBuktiPembayaran != nil {
+			byrHP.Transaksi.BuktiPembayaran = reqHutangPiutang.PathBuktiPembayaran
+		}else if reqHutangPiutang.BuktiPembayaran != nil {
+			buktiPembayaran, err := helper.SaveMultiFileInLocal(reqHutangPiutang.BuktiPembayaran)
+			if err != nil {
+				return nil, err
+			}
+			byrHP.Transaksi.BuktiPembayaran = buktiPembayaran
+		}
+
 		byrHP.HutangPiutang.Sisa = hp.Sisa - reqHutangPiutang.Total
 		if byrHP.HutangPiutang.Sisa <= 0 {
 			byrHP.HutangPiutang.Status = "LUNAS"

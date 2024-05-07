@@ -1,12 +1,11 @@
 package handler_akuntansi_hutang_piutang
 
 import (
-	"fmt"
-
 	usecase "github.com/be-sistem-informasi-konveksi/api/usecase/akuntansi/hutang_piutang"
 	"github.com/be-sistem-informasi-konveksi/common/message"
 	req "github.com/be-sistem-informasi-konveksi/common/request/akuntansi/hutang_piutang"
 	res_global "github.com/be-sistem-informasi-konveksi/common/response"
+	"github.com/be-sistem-informasi-konveksi/helper"
 	"github.com/be-sistem-informasi-konveksi/pkg"
 	"github.com/gofiber/fiber/v2"
 )
@@ -32,6 +31,18 @@ func (h *hutangPiutangHandler) Create(c *fiber.Ctx) error {
 	req := new(req.Create)
 
 	c.BodyParser(req)
+
+	files, err := helper.GetFiles("bukti_pembayaran", c.MultipartForm)
+	if err != nil {
+		helper.LogsError(err)
+		return h.errHP(c, err)
+	}
+
+	req.BuktiPembayaran = files
+
+	if err := helper.DataParser(c.FormValue("data"), req); err != nil {
+		return h.errHP(c, err)
+	}
 
 	errValidate := h.validator.Validate(req)
 	if errValidate != nil {
@@ -62,14 +73,23 @@ func (h *hutangPiutangHandler) CreateBayar(c *fiber.Ctx) error {
 
 	req := new(req.CreateBayar)
 
-	c.BodyParser(req)
 	c.ParamsParser(req)
+
+	files, err := helper.GetFiles("bukti_pembayaran", c.MultipartForm)
+	if err != nil {
+		helper.LogsError(err)
+		return h.errBayar(c, err)
+	}
+	req.BuktiPembayaran = files
+
+	if err := helper.DataParser(c.FormValue("data"), req); err != nil {
+		return h.errBayar(c, err)
+	}
 
 	errValidate := h.validator.Validate(req)
 	if errValidate != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(errValidate)
 	}
-	fmt.Println(req.HutangPiutangID)
 	ctx := c.UserContext()
 	dataBayr, err := h.uc.CreateDataBayar(ctx, *req)
 	// Handle errors

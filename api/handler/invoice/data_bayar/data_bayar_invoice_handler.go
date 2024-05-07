@@ -12,6 +12,7 @@ import (
 	req_global "github.com/be-sistem-informasi-konveksi/common/request/global"
 	req "github.com/be-sistem-informasi-konveksi/common/request/invoice/data_bayar"
 	res_global "github.com/be-sistem-informasi-konveksi/common/response"
+	"github.com/be-sistem-informasi-konveksi/helper"
 	"github.com/be-sistem-informasi-konveksi/pkg"
 	"github.com/gofiber/fiber/v2"
 )
@@ -147,7 +148,16 @@ func (h *dataBayarInvoiceHandler) CreateByInvoiceId(c *fiber.Ctx) error {
 	req := new(req.CreateByInvoiceId)
 
 	c.ParamsParser(req)
-	c.BodyParser(req)
+	files, err := helper.GetFiles("bukti_pembayaran", c.MultipartForm)
+	if err != nil {
+		helper.LogsError(err)
+		return errResponse(c, err)
+	}
+	req.BuktiPembayaran = files
+
+	if err := helper.DataParser(c.FormValue("data"), req); err != nil {
+		return errResponse(c, err)
+	}
 
 	errValidate := h.validator.Validate(req)
 	if errValidate != nil {
@@ -156,7 +166,7 @@ func (h *dataBayarInvoiceHandler) CreateByInvoiceId(c *fiber.Ctx) error {
 
 	ctx := c.UserContext()
 
-	err := h.uc.CreateByInvoiceID(uc_invoice_data_bayar.ParamCreateByInvoiceID{
+	err = h.uc.CreateByInvoiceID(uc_invoice_data_bayar.ParamCreateByInvoiceID{
 		Ctx: ctx,
 		Req: *req,
 	})
@@ -173,7 +183,17 @@ func (h *dataBayarInvoiceHandler) Update(c *fiber.Ctx) error {
 	req := new(req.Update)
 
 	c.ParamsParser(req)
-	c.BodyParser(req)
+	files, err := helper.GetFiles("bukti_pembayaran", c.MultipartForm)
+	if err != nil {
+		helper.LogsError(err)
+		return  errResponse(c, err)
+	}
+	
+	req.BuktiPembayaran = files
+
+	if err := helper.DataParser(c.FormValue("data"), req); err != nil {
+		return errResponse(c, err)
+	}
 
 	errValidate := h.validator.Validate(req)
 	if errValidate != nil {
@@ -191,6 +211,7 @@ func (h *dataBayarInvoiceHandler) Update(c *fiber.Ctx) error {
 	if err != nil {
 		return errResponse(c, err)
 	}
+
 	var paramUpdate = uc_invoice_data_bayar.ParamUpdateCommitDB{
 		Ctx:         ctx,
 		DataBayar:   dataByrInvoice,
@@ -204,9 +225,10 @@ func (h *dataBayarInvoiceHandler) Update(c *fiber.Ctx) error {
 		}
 		dataByrHP, err := h.uc_hp.CreateDataBayar(ctx, akuntansi.CreateBayar{
 			HutangPiutangID: dataHp.ID,
+			PathBuktiPembayaran: dataByrInvoice.BuktiPembayaran,
+			BuktiPembayaran: nil,
 			ReqBayar: akuntansi.ReqBayar{
 				Tanggal:         time.Now().Format(time.RFC3339),
-				BuktiPembayaran: dataByrInvoice.BuktiPembayaran,
 				Keterangan:      dataByrInvoice.Keterangan,
 				AkunBayarID:     dataByrInvoice.AkunID,
 				Total:           dataByrInvoice.Total,

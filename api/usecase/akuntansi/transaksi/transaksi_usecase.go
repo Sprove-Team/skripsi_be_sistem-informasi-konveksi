@@ -63,10 +63,21 @@ func (u *transaksiUsecase) Delete(ctx context.Context, id string) error {
 		Status:    "BELUM_TERKONFIRMASI",
 		InvoiceID: hp.InvoiceID,
 	})
+
 	if err != nil {
 		if err.Error() != "record not found" {
 			return err
 		}
+	}
+
+	tr, err := u.repo.GetById(ctx,id)
+
+	if err != nil {
+		return err
+	}
+	
+	if err := helper.DeleteMultiFileInLocal(tr.BuktiPembayaran); err != nil {
+		return err
 	}
 
 	if len(dataByarInvoice) > 0 {
@@ -147,6 +158,19 @@ func (u *transaksiUsecase) Update(ctx context.Context, reqTransaksi req.Update) 
 	if err != nil {
 		return err
 	}
+	var newBuktiPembayaran []string
+
+	if reqTransaksi.BuktiPembayaran != nil && len(reqTransaksi.BuktiPembayaran) > 0 {
+		newBuktiPembayaran, err = helper.SaveMultiFileInLocal(reqTransaksi.BuktiPembayaran)
+		if err != nil {
+			helper.LogsError(err)
+			return err
+		}
+		if err := helper.DeleteMultiFileInLocal(oldTr.BuktiPembayaran); err != nil {
+			helper.LogsError(err)
+			return err
+		}
+	}
 
 	// setup param tr update
 	repoParam := repo.UpdateParam{
@@ -155,7 +179,7 @@ func (u *transaksiUsecase) Update(ctx context.Context, reqTransaksi req.Update) 
 				ID: reqTransaksi.ID,
 			},
 			Keterangan:      reqTransaksi.Keterangan,
-			BuktiPembayaran: reqTransaksi.BuktiPembayaran,
+			BuktiPembayaran: newBuktiPembayaran,
 		},
 	}
 
@@ -385,6 +409,14 @@ func (u *transaksiUsecase) Create(ctx context.Context, reqTransaksi req.Create) 
 		return err
 	}
 	parsedTime = parsedTime.Local().UTC()
+	var buktiPembayaran []string
+	if reqTransaksi.BuktiPembayaran != nil && len(reqTransaksi.BuktiPembayaran) > 0 {
+		buktiPembayaran, err = helper.SaveMultiFileInLocal(reqTransaksi.BuktiPembayaran)
+		if err != nil {
+			helper.LogsError(err)
+			return err
+		}
+	}
 
 	dataTransaksi := entity.Transaksi{
 		BaseSoftDelete: entity.BaseSoftDelete{
@@ -393,7 +425,7 @@ func (u *transaksiUsecase) Create(ctx context.Context, reqTransaksi req.Create) 
 		Tanggal:         parsedTime,
 		Keterangan:      reqTransaksi.Keterangan,
 		KontakID:        reqTransaksi.KontakID,
-		BuktiPembayaran: reqTransaksi.BuktiPembayaran,
+		BuktiPembayaran: buktiPembayaran,
 		Total:           totalTransaksi,
 	}
 
@@ -428,11 +460,10 @@ func (u *transaksiUsecase) GetAll(ctx context.Context, reqTransaksi req.GetAll) 
 		reqTransaksi.TimeZone = "UTC"
 	}
 
-	
 	searchFilter := repo.SearchTransaksi{
 		EndDate:   *end,
 		StartDate: *start,
-		TimeZone: reqTransaksi.TimeZone,
+		TimeZone:  reqTransaksi.TimeZone,
 	}
 
 	dataTransaksi, err := u.repo.GetAll(ctx, searchFilter)
@@ -457,7 +488,7 @@ func (u *transaksiUsecase) GetHistory(ctx context.Context, reqTransaksi req.GetH
 	searchFilter := repo.SearchTransaksi{
 		EndDate:   *end,
 		StartDate: *start,
-		TimeZone: reqTransaksi.TimeZone,
+		TimeZone:  reqTransaksi.TimeZone,
 	}
 
 	dataHistory, err := u.repo.GetHistory(ctx, searchFilter)

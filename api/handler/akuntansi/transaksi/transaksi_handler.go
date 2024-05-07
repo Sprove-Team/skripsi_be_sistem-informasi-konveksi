@@ -8,6 +8,7 @@ import (
 	req "github.com/be-sistem-informasi-konveksi/common/request/akuntansi/transaksi"
 	reqGlobal "github.com/be-sistem-informasi-konveksi/common/request/global"
 	res_global "github.com/be-sistem-informasi-konveksi/common/response"
+	"github.com/be-sistem-informasi-konveksi/helper"
 	"github.com/be-sistem-informasi-konveksi/pkg"
 	"github.com/gofiber/fiber/v2"
 )
@@ -49,6 +50,8 @@ func errResponse(c *fiber.Ctx, err error) error {
 	case message.AkunCannotBeSame,
 		message.CreditDebitNotSame,
 		message.AkunNotFound,
+		message.InvalidImageSize,
+		message.InvalidImageFormat,
 		message.CantDeleteTrIfDataByrBlmTerkonfirmasiExist,
 		message.AkunHutangPiutangNotEq2,
 		message.BayarMustLessThanSisaTagihan,
@@ -65,9 +68,19 @@ func errResponse(c *fiber.Ctx, err error) error {
 }
 
 func (h *transaksiHandler) Create(c *fiber.Ctx) error {
+	
 	req := new(req.Create)
 
-	c.BodyParser(req)
+	files, err := helper.GetFiles("bukti_pembayaran", c.MultipartForm)
+	if err != nil {
+		helper.LogsError(err)
+		return errResponse(c, err)
+	}
+	req.BuktiPembayaran = files
+
+	if err := helper.DataParser(c.FormValue("data"), req); err != nil {
+		return errResponse(c, err)
+	}
 
 	errValidate := h.validator.Validate(req)
 	if errValidate != nil {
@@ -76,7 +89,7 @@ func (h *transaksiHandler) Create(c *fiber.Ctx) error {
 
 	ctx := c.UserContext()
 	// Call usecase to create KelompokAkun
-	err := h.uc.Create(ctx, *req)
+	err = h.uc.Create(ctx, *req)
 	// Handle errors
 	if err != nil {
 		return errResponse(c, err)
@@ -90,7 +103,16 @@ func (h *transaksiHandler) Update(c *fiber.Ctx) error {
 	req := new(req.Update)
 
 	c.ParamsParser(req)
-	c.BodyParser(req)
+	files, err := helper.GetFiles("bukti_pembayaran", c.MultipartForm)
+	if err != nil {
+		helper.LogsError(err)
+		return errResponse(c, err)
+	}
+	req.BuktiPembayaran = files
+
+	if err := helper.DataParser(c.FormValue("data"), req); err != nil {
+		return errResponse(c, err)
+	}
 
 	errValidate := h.validator.Validate(req)
 	if errValidate != nil {
@@ -100,7 +122,7 @@ func (h *transaksiHandler) Update(c *fiber.Ctx) error {
 	ctx := c.UserContext()
 
 	// Call usecase to create KelompokAkun
-	err := h.uc.Update(ctx, *req)
+	err = h.uc.Update(ctx, *req)
 	// Handle errors
 	if err != nil {
 		return errResponse(c, err)

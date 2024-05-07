@@ -3,7 +3,6 @@ package pkg
 import (
 	"unicode/utf8"
 
-	"github.com/be-sistem-informasi-konveksi/helper"
 	"github.com/xuri/excelize/v2"
 )
 
@@ -37,7 +36,6 @@ func (e *excelizePkg) StyleBold(f *excelize.File) int {
 		},
 	})
 	if err != nil {
-		helper.LogsError(err)
 		return 0
 	}
 	return id
@@ -57,7 +55,6 @@ func (e *excelizePkg) StyleHeader(f *excelize.File, align string, colorFill stri
 		},
 	})
 	if err != nil {
-		helper.LogsError(err)
 		return 0
 	}
 	return id
@@ -86,7 +83,6 @@ func (e *excelizePkg) StyleCurrencyRpIndo(f *excelize.File, bold bool, colorFont
 
 	id, err := f.NewStyle(style)
 	if err != nil {
-		helper.LogsError(err)
 		return 0
 	}
 	return id
@@ -101,7 +97,6 @@ func (e *excelizePkg) StyleFill(f *excelize.File, colorFill string) int {
 	}
 	id, err := f.NewStyle(style)
 	if err != nil {
-		helper.LogsError(err)
 		return 0
 	}
 	return id

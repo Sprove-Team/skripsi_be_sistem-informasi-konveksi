@@ -13,6 +13,7 @@ import (
 	req_global "github.com/be-sistem-informasi-konveksi/common/request/global"
 	req "github.com/be-sistem-informasi-konveksi/common/request/invoice/data_bayar"
 	"github.com/be-sistem-informasi-konveksi/entity"
+	"github.com/be-sistem-informasi-konveksi/helper"
 	"github.com/be-sistem-informasi-konveksi/pkg"
 )
 
@@ -139,6 +140,12 @@ func (u *dataBayarInvoice) CreateByInvoiceID(param ParamCreateByInvoiceID) error
 		return errValidate
 	}
 
+	buktiPembayaran, err := helper.SaveMultiFileInLocal(param.Req.BuktiPembayaran)
+	if err != nil {
+		helper.LogsError(err)
+		return err
+	}
+
 	dataBayar := entity.DataBayarInvoice{
 		Base: entity.Base{
 			ID: u.ulid.MakeUlid().String(),
@@ -146,7 +153,7 @@ func (u *dataBayarInvoice) CreateByInvoiceID(param ParamCreateByInvoiceID) error
 		InvoiceID:       param.Req.InvoiceID,
 		AkunID:          param.Req.AkunID,
 		Keterangan:      param.Req.Keterangan,
-		BuktiPembayaran: param.Req.BuktiPembayaran,
+		BuktiPembayaran: buktiPembayaran,
 		Total:           param.Req.Total,
 	}
 
@@ -201,7 +208,16 @@ func (u *dataBayarInvoice) UpdateDataBayarInvoice(param ParamUpdateDataBayarInvo
 		dataBayarInvoice.AkunID = param.Req.AkunID
 	}
 	if len(param.Req.BuktiPembayaran) > 0 {
-		dataBayarInvoice.BuktiPembayaran = param.Req.BuktiPembayaran
+		if err := helper.DeleteMultiFileInLocal(oldDataByrInvoice.BuktiPembayaran); err != nil {
+			helper.LogsError(err)
+			return nil, err
+		}
+		newBuktiPembayaran, err := helper.SaveMultiFileInLocal(param.Req.BuktiPembayaran)
+		if err != nil {
+			helper.LogsError(err)
+			return nil, err
+		}
+		dataBayarInvoice.BuktiPembayaran = newBuktiPembayaran
 	}
 	if param.Req.Total != 0 {
 		dataBayarInvoice.Total = param.Req.Total
@@ -222,13 +238,29 @@ func (u *dataBayarInvoice) UpdateCommitDB(param ParamUpdateCommitDB) error {
 }
 
 func (u *dataBayarInvoice) Delete(param ParamDelete) error {
-	if err := u.IsStatusTerkonfirmasi(param.Ctx, param.Req.ID); err != nil {
-		return err
-	}
-	err := u.repo.Delete(repo.ParamDelete{Ctx: param.Ctx, ID: param.Req.ID})
+	oldData, err := u.repo.GetByID(repo.ParamGetById{
+		Ctx: param.Ctx,
+		ID:  param.Req.ID,
+	})
+
 	if err != nil {
 		return err
 	}
+
+	if oldData.Status == "TERKONFIRMASI" {
+		return errors.New(message.CannotModifiedTerkonfirmasiDataBayar)
+	}
+
+	if err := helper.DeleteMultiFileInLocal(oldData.BuktiPembayaran); err != nil {
+		return err
+	}
+	
+	err = u.repo.Delete(repo.ParamDelete{Ctx: param.Ctx, ID: param.Req.ID})
+	if err != nil {
+		return err
+	}
+
+
 	return nil
 }
 

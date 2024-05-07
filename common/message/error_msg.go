@@ -28,6 +28,7 @@ var (
 // misc
 var (
 	InvalidImageFormat = "format gambar tidak valid"
+	InvalidImageSize   = "ukuran gambar harus kurang dari 5mb"
 )
 
 // produk
