@@ -55,8 +55,8 @@ type GetAll struct {
 	KontakID        string `query:"kontak_id" validate:"omitempty,ulid"`
 	TanggalDeadline string `query:"tanggal_deadline" validate:"omitempty,datetime=2006-01-02T15:04:05Z07:00"`
 	TanggalKirim    string `query:"tanggal_kirim" validate:"omitempty,datetime=2006-01-02T15:04:05Z07:00"`
-	// TanggalDipesan  string `query:"tanggal_dipesan" validate:"omitempty,datetime=2006-01-02T15:04:05Z07:00"`
-	SortBy  string `query:"sort_by" validate:"omitempty,oneof=TANGGAL_DEADLINE TANGGAL_KIRIM"`
+	TanggalDipesan  string `query:"tanggal_dipesan" validate:"omitempty,datetime=2006-01-02T15:04:05Z07:00"`
+	SortBy  string `query:"sort_by" validate:"omitempty,oneof=TANGGAL_DEADLINE TANGGAL_KIRIM TANGGAL_DIPESAN"`
 	OrderBy string `query:"order_by" validate:"omitempty,oneof=ASC DESC"`
 	Next    string `query:"next" validate:"omitempty,ulid"`
 	Limit   int    `query:"limit" validate:"omitempty,number"`

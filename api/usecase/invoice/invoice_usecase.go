@@ -565,8 +565,7 @@ func (u *invoiceUsecase) Delete(param ParamDelete) error {
 }
 
 func (u *invoiceUsecase) GetAll(param ParamGetAll) ([]entity.Invoice, error) {
-	var tglDeadline, tglKirim time.Time
-	// , tglDipesan time.Time
+	var tglDeadline, tglKirim, tglDipesan time.Time
 	var err error
 	if param.Req.TanggalDeadline != "" {
 		tglDeadline, err = time.Parse(time.RFC3339, param.Req.TanggalDeadline)
@@ -582,13 +581,13 @@ func (u *invoiceUsecase) GetAll(param ParamGetAll) ([]entity.Invoice, error) {
 		}
 		tglKirim = tglKirim.UTC()
 	}
-	// if param.Req.TanggalDipesan != "" {
-	// 	tglDipesan, err = time.Parse(time.RFC3339, param.Req.TanggalDipesan)
-	// 	if err != nil {
-	// 		return nil, err
-	// 	}
-	// 	tglDipesan = tglDipesan.UTC()
-	// }
+	if param.Req.TanggalDipesan != "" {
+		tglDipesan, err = time.Parse(time.RFC3339, param.Req.TanggalDipesan)
+		if err != nil {
+			return nil, err
+		}
+		tglDipesan = tglDipesan.UTC()
+	}
 	paramRepo := repo.ParamGetAll{
 		Ctx:            param.Ctx,
 		StatusProduksi: param.Req.StatusProduksi,
@@ -603,9 +602,9 @@ func (u *invoiceUsecase) GetAll(param ParamGetAll) ([]entity.Invoice, error) {
 	if !tglKirim.IsZero() {
 		paramRepo.TanggalKirim = tglKirim
 	}
-	// if !tglDipesan.IsZero() {
-	// 	paramRepo.TanggalDipesan = tglDipesan
-	// }
+	if !tglDipesan.IsZero() {
+		paramRepo.TanggalDipesan = tglDipesan
+	}
 
 	if param.Req.SortBy != "" {
 		paramRepo.Order += strings.ToLower(param.Req.SortBy)

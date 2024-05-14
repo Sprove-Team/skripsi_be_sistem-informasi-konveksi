@@ -191,7 +191,6 @@ func (r *invoiceRepo) GetAll(param ParamGetAll) ([]entity.Invoice, error) {
 	order := strings.Split(param.Order, " ")
 	if param.Order == "" {
 		tx = tx.Order("id ASC")
-		// param.Order = "id ASC"
 	}
 
 	s := reflect.ValueOf(param)
@@ -226,19 +225,23 @@ func (r *invoiceRepo) GetAll(param ParamGetAll) ([]entity.Invoice, error) {
 								} else {
 									tx = tx.Where("tanggal_deadline > ?", invoice.TanggalDeadline)
 								}
-								// case "tanggal_dipesan":
-								// 	if order[1] == "DESC" {
-								// 		tx = tx.Where("created_at < ?", invoice.CreatedAt)
-								// 	} else {
-								// 		tx = tx.Where("created_at > ?", invoice.CreatedAt)
-								// 	}
+							case "tanggal_dipesan":
+								if order[1] == "DESC" {
+									tx = tx.Where("created_at < ?", invoice.CreatedAt)
+								} else {
+									tx = tx.Where("created_at > ?", invoice.CreatedAt)
+								}
 							}
 						}
 					} else {
 						tx = tx.Where("id > ?", value)
 					}
 				case "Order":
-					tx = tx.Order(value)
+					if order[0] == "tanggal_dipesan" {
+						tx = tx.Order("created_at " + order[1])	
+					}else {
+						tx = tx.Order(value)
+					}
 				case "KontakID":
 					tx = tx.Where("kontak_id = ?", value)
 				case "StatusProduksi":
@@ -253,8 +256,8 @@ func (r *invoiceRepo) GetAll(param ParamGetAll) ([]entity.Invoice, error) {
 					tx = tx.Where("DATE(tanggal_deadline) = ?", t)
 				case "TanggalKirim":
 					tx = tx.Where("DATE(tanggal_kirim) = ?", t)
-					// case "TanggalDipesan":
-					// 	tx = tx.Where("DATE(created_at) = ?", t)
+				case "TanggalDipesan":
+					tx = tx.Where("DATE(created_at) = ?", t)
 				}
 			}
 		}
