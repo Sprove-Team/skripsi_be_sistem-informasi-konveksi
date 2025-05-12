@@ -7,6 +7,7 @@ import (
 	_ "image/png"
 	"io"
 	"os"
+	"path/filepath"
 
 	"github.com/nickalie/go-webpbin"
 )
@@ -19,8 +20,13 @@ func Decode(img io.Reader) (io.Reader, error) {
 	var buff bytes.Buffer
 
 	if os.Getenv("ENVIRONMENT") == "PRODUCTION" {
-		cwebp := webpbin.NewCWebP(webpbin.SetVendorPath("/usr/local/bin/"), webpbin.SetSkipDownload(true))
-		err := cwebp.Quality(50).InputImage(i).Output(&buff).Run()
+		ex, err := os.Executable()
+		if err != nil {
+			panic(err)
+		}
+		exPath := filepath.Dir(ex)
+		cwebp := webpbin.NewCWebP(webpbin.SetVendorPath(exPath + "/.bin/webp"), webpbin.SetSkipDownload(true))
+		err = cwebp.Quality(50).InputImage(i).Output(&buff).Run()
 		if err != nil {
 			return nil, err
 		}

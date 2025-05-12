@@ -4,3 +4,4 @@ db/mysql/backup/*
 db/redis/backup/*
 prometheus.yaml
 .bin
+dist
